@@ -278,10 +278,11 @@ func (pg *DexWalletsPage) Handle() {
 		}
 
 		if assetW.withdraw.Clicked() {
-			fmt.Println("withdraw", assetW.asset.Symbol)
-			// assetW.asset.Info.UnitInfo.Conventional.ConversionFactor
-			// coin, err := pg.Dexc().Core().Withdraw([]byte("123"), assetW.asset.ID, (0.00099857)*1e8, "tb1qqfxkgpmtk60hxs04zgnkglqply03h3x9r5slpm")
-			// fmt.Println(err, coin)
+			newWithdrawModal(pg.Load, &walletInfoWidget{
+				image:    components.CoinImageBySymbol(&pg.Load.Icons, assetW.asset.Symbol),
+				coinName: assetW.asset.Symbol,
+				coinID:   assetW.asset.ID,
+			}, assetW.asset).Show()
 		}
 
 		if assetW.unLock.Clicked() {
