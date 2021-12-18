@@ -56,7 +56,6 @@ type Window struct {
 	err string
 
 	keyEvents             chan *key.Event
-	infoModalEvents       chan *key.Event
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
@@ -100,7 +99,6 @@ func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win.states.loading = false
 
 	win.keyEvents = make(chan *key.Event)
-	win.infoModalEvents = make(chan *key.Event)
 
 	l, err := win.NewLoad()
 	if err != nil {
@@ -136,7 +134,6 @@ func (win *Window) NewLoad() (*load.Load, error) {
 
 	l.Receiver = &load.Receiver{
 		KeyEvents:           win.keyEvents,
-		InfoModalEvents:     win.infoModalEvents,
 		AcctMixerStatus:     win.walletAcctMixerStatus,
 		InternalLog:         win.internalLog,
 		SyncedProposal:      win.proposal,
@@ -373,7 +370,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 						win.keyEvents <- &evt
 					}
 					if win.load.EnableKeyEventOnInfoModal {
-						win.infoModalEvents <- &evt
+						win.keyEvents <- &evt
 					}
 				}()
 			case nil:

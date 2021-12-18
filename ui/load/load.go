@@ -30,7 +30,6 @@ type Receiver struct {
 	InternalLog         chan string
 	NotificationsUpdate chan interface{}
 	KeyEvents           chan *key.Event
-	InfoModalEvents     chan *key.Event
 	AcctMixerStatus     chan *wallet.AccountMixer
 	SyncedProposal      chan *wallet.Proposal
 }
