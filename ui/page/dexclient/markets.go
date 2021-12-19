@@ -7,6 +7,7 @@ import (
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/client/db"
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -31,9 +32,10 @@ type Page struct {
 	addDex           decredmaterial.Button
 	sync             decredmaterial.Button
 	miniTradeFormWdg *miniTradeFormWidget
-	walletSettings   decredmaterial.Button
-	ordersHistory    decredmaterial.Button
+	walletSettings   *decredmaterial.Clickable
+	ordersHistory    *decredmaterial.Clickable
 	orderBook        *core.OrderBook
+	dexSettings      *decredmaterial.Clickable
 }
 
 var marketIDSelected = "dcr_btc"
@@ -41,7 +43,7 @@ var marketIDSelected = "dcr_btc"
 // TODO: Add collapsible button to select a market.
 // Use mktName=marketIDSelected in the meantime.
 
-func (pg *Page) dexMarket(dex *core.Exchange, mktName string) *core.Market {
+func dexMarket(dex *core.Exchange, mktName string) *core.Market {
 	if dex == nil {
 		return nil
 	}
@@ -50,14 +52,24 @@ func (pg *Page) dexMarket(dex *core.Exchange, mktName string) *core.Market {
 
 func NewMarketPage(l *load.Load) *Page {
 	pg := &Page{
-		Load:           l,
-		login:          l.Theme.Button("Login"),
-		initialize:     l.Theme.Button("Start using now"),
-		addDex:         l.Theme.Button("Add a dex"),
-		sync:           l.Theme.Button("Start sync to continue"),
-		walletSettings: l.Theme.Button("Wallet Settings"),
-		ordersHistory:  l.Theme.Button("Orders History"),
+		Load:       l,
+		login:      l.Theme.Button("Login"),
+		initialize: l.Theme.Button("Start using now"),
+		addDex:     l.Theme.Button("Add a dex"),
+		sync:       l.Theme.Button("Start sync to continue"),
 	}
+
+	clickable := func() *decredmaterial.Clickable {
+		cl := pg.Theme.NewClickable(true)
+		style := &values.ClickableStyle{HoverColor: l.Theme.Color.Surface}
+		cl.ChangeStyle(style)
+		cl.Radius = decredmaterial.Radius(0)
+		return cl
+	}
+
+	pg.ordersHistory = clickable()
+	pg.walletSettings = clickable()
+	pg.dexSettings = clickable()
 
 	return pg
 }
@@ -96,9 +108,14 @@ func (pg *Page) Layout(gtx C) D {
 		}
 	case len(pg.Dexc().DEXServers()) == 0:
 		body = func(gtx C) D {
-			return pg.pageSections(gtx, func(gtx C) D {
-				return pg.welcomeLayout(gtx, pg.addDex)
-			})
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(pg.headerLayout),
+				layout.Rigid(func(gtx C) D {
+					return pg.pageSections(gtx, func(gtx C) D {
+						return pg.welcomeLayout(gtx, pg.addDex)
+					})
+				}),
+			)
 		}
 	default:
 		body = func(gtx C) D {
@@ -109,29 +126,85 @@ func (pg *Page) Layout(gtx C) D {
 
 			if dex.PendingFee != nil {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(pg.headerLayout),
 					layout.Rigid(func(gtx C) D {
 						return pg.pageSections(gtx, pg.registrationStatusLayout)
 					}),
-					layout.Rigid(pg.settingsLayout),
 				)
 			}
 
-			mkt := pg.dexMarket(dex, marketIDSelected)
+			mkt := dexMarket(dex, marketIDSelected)
 			if pg.miniTradeFormWdg == nil {
 				// TODO: renew miniTradeFormWdg if change host or market
 				pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load, dex.Host, mkt)
 			}
 
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(pg.headerLayout),
 				layout.Rigid(func(gtx C) D {
 					return pg.pageSections(gtx, pg.miniTradeFormWdg.layout)
 				}),
-				layout.Rigid(pg.settingsLayout),
 			)
 		}
 	}
 
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *Page) headerLayout(gtx C) D {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	border := widget.Border{
+		Color:        pg.Theme.Color.Gray2,
+		CornerRadius: values.MarginPadding0,
+		Width:        values.MarginPadding1,
+	}
+	inset := layout.Inset{
+		Top:    values.MarginPadding4,
+		Bottom: values.MarginPadding4,
+		Left:   values.MarginPadding8,
+		Right:  values.MarginPadding8,
+	}
+	bottom := layout.Inset{Bottom: values.MarginPadding10}
+	return bottom.Layout(gtx, func(gtx C) D {
+		return layout.E.Layout(gtx, func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					if pg.dex() == nil {
+						return D{}
+					}
+					return border.Layout(gtx, func(gtx C) D {
+						return pg.ordersHistory.Layout(gtx, func(gtx C) D {
+							return inset.Layout(gtx, func(gtx C) D {
+								return pg.Theme.Label(values.MarginPadding12, "Order History").Layout(gtx)
+							})
+						})
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return border.Layout(gtx, func(gtx C) D {
+							return pg.walletSettings.Layout(gtx, func(gtx C) D {
+								return inset.Layout(gtx, func(gtx C) D {
+									return pg.Theme.Label(values.MarginPadding12, "Wallets Settings").Layout(gtx)
+								})
+							})
+						})
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return border.Layout(gtx, func(gtx C) D {
+							return pg.dexSettings.Layout(gtx, func(gtx C) D {
+								return inset.Layout(gtx, func(gtx C) D {
+									return pg.Theme.Label(values.MarginPadding12, "Dex Settings").Layout(gtx)
+								})
+							})
+						})
+					})
+				}),
+			)
+		})
+	})
 }
 
 func (pg *Page) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -199,7 +272,7 @@ func (pg *Page) OnNavigatedTo() {
 	go pg.readNotifications()
 	dex := pg.dex()
 	if pg.Dexc().IsLoggedIn() && dex != nil && dex.Connected {
-		mkt := pg.dexMarket(dex, marketIDSelected)
+		mkt := dexMarket(dex, marketIDSelected)
 		go pg.listenerMessages(dex.Host, mkt.BaseID, mkt.QuoteID)
 	}
 }
@@ -249,7 +322,7 @@ func (pg *Page) HandleUserInteractions() {
 						return
 					}
 
-					mkt := pg.dexMarket(dex, marketIDSelected)
+					mkt := dexMarket(dex, marketIDSelected)
 					if mkt == nil {
 						return
 					}
@@ -294,12 +367,16 @@ func (pg *Page) HandleUserInteractions() {
 		pg.miniTradeFormWdg.handle(pg.orderBook)
 	}
 
-	if pg.walletSettings.Button.Clicked() {
+	if pg.walletSettings.Clicked() {
 		pg.ChangeFragment(NewDexWalletsPage(pg.Load))
 	}
 
-	if pg.ordersHistory.Button.Clicked() {
+	if pg.ordersHistory.Clicked() {
 		pg.ChangeFragment(NewOrdersHistoryPage(pg.Load, dex.Host))
+	}
+
+	if pg.dexSettings.Clicked() {
+		pg.ChangeFragment(NewDexSettingsPage(pg.Load))
 	}
 }
 
