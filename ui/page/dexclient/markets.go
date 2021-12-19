@@ -249,6 +249,7 @@ func (pg *Page) HandleUserInteractions() {
 					// Check if there is no dex registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
 						newAddDexModal(pg.Load, pg.dexRegisted).Show()
+						return
 					}
 
 					mkt := pg.dexMarket(dex, marketIDSelected)
