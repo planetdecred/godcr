@@ -11,5 +11,5 @@ const (
 	DarkModeConfigKey               = "dark_mode"
 	FetchProposalConfigKey          = "fetch_proposals"
 	SeedBackupNotificationConfigKey = "seed_backup_notification"
-	ProposalNotificationConfigKey   = "proposalnotificationkey"
+	ProposalNotificationConfigKey   = "proposal_notification_key"
 )
