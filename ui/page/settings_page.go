@@ -684,6 +684,12 @@ func (pg *SettingsPage) updateSettingOptions() {
 		pg.governance.SetChecked(governanceSet)
 	}
 
+	proposalNotificationBool := pg.wal.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
+	pg.proposalNotification.SetChecked(false)
+	if proposalNotificationBool {
+		pg.proposalNotification.SetChecked(proposalNotificationBool)
+	}
+
 	autoSync := pg.wal.ReadBoolConfigValueForKey(load.AutoSyncConfigKey)
 	pg.autoSync.SetChecked(false)
 	if autoSync {
