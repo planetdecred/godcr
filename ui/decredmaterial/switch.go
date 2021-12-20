@@ -174,7 +174,7 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 	m8 := unit.Dp(8)
 	m4 := unit.Dp(4)
 	card := s.t.Card()
-	card.Color = s.t.Color.Gray1
+	card.Color = s.t.Color.Gray2
 	card.Radius = Radius(8)
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx C) D {
