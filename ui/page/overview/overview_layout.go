@@ -3,8 +3,10 @@ package overview
 import (
 	"context"
 	"sync"
+	"time"
 
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/text"
 	"gioui.org/widget"
 
@@ -49,7 +51,6 @@ type AppOverviewPage struct {
 	proposalItems []*components.ProposalItem
 	proposalMu    sync.Mutex
 
-	bestBlock    *dcrlibwallet.BlockInfo
 	rescanUpdate *wallet.RescanUpdate
 
 	scrollContainer        *widget.List
@@ -74,18 +75,12 @@ type AppOverviewPage struct {
 	toggleSyncDetails decredmaterial.Button
 	checkBox          decredmaterial.CheckBoxStyle
 
-	walletSyncing         bool
-	walletSynced          bool
-	isConnnected          bool
 	isBackupModalOpened   bool
-	rescanningBlocks      bool
 	syncDetailsVisibility bool
-	syncCompleted         bool
 
 	remainingSyncTime    string
 	headersToFetchOrScan int32
 	headerFetchProgress  int32
-	connectedPeers       int32
 	syncProgress         int
 	syncStep             int
 }
@@ -100,8 +95,7 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 		scrollContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		checkBox:  l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
-		bestBlock: l.WL.MultiWallet.GetBestBlock(),
+		checkBox: l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
 	}
 
 	pg.toMixer = l.Theme.IconButton(l.Icons.NavigationArrowForward)
@@ -130,22 +124,15 @@ func (pg *AppOverviewPage) ID() string {
 func (pg *AppOverviewPage) WillAppear() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.walletSyncing = pg.WL.MultiWallet.IsSyncing()
-	pg.walletSynced = pg.WL.MultiWallet.IsSynced()
-	pg.isConnnected = pg.WL.MultiWallet.IsConnectedToDecredNetwork()
-	pg.connectedPeers = pg.WL.MultiWallet.ConnectedPeers()
-	pg.bestBlock = pg.WL.MultiWallet.GetBestBlock()
-
 	pg.getMixerWallets()
 	pg.loadTransactions()
 	pg.listenForSyncNotifications()
 	pg.loadRecentProposals()
 }
 
-// Layout draws the page UI components into the provided layout context
-// to be eventually drawn on screen.
+// Layout draws the overview page UI components into the provided layout
+// context to be eventually drawn on screen.
 // Part of the load.Page interface.
-// Layout lays out the entire content for overview pg.
 func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
@@ -204,6 +191,15 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
+	if pg.WL.MultiWallet.IsSyncing() || pg.WL.MultiWallet.IsRescanning() || pg.WL.MultiWallet.Politeia.IsSyncing() {
+		// Will refresh the overview page every 2 seconds while
+		// sync is active. When sync/rescan is started or ended,
+		// sync is considered inactive and no refresh occurs. A
+		// sync state change listener is used to refresh the display
+		// when the sync state changes.
+		op.InvalidateOp{At: gtx.Now.Add(2 * time.Second)}.Add(gtx.Ops)
+	}
+
 	return components.UniformPadding(gtx, func(gtx C) D {
 		return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
 			m := values.MarginPadding5
@@ -259,7 +255,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 	}
 
 	if pg.syncClickable.Clicked() {
-		if pg.rescanningBlocks {
+		if pg.WL.MultiWallet.IsRescanning() {
 			pg.WL.MultiWallet.CancelRescan()
 		} else {
 			// If connected to the Decred network disable button. Prevents multiple clicks.
@@ -305,14 +301,14 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 
 		pg.ChangeFragment(gPage.NewProposalDetailsPage(pg.Load, &selectedProposal))
 	}
-
-	if pg.syncCompleted {
-		pg.syncCompleted = false
-		pg.loadRecentProposals()
-		pg.RefreshWindow()
-	}
 }
 
+// listenForSyncNotifications starts a goroutine to watch for sync updates
+// and update the UI accordingly. To prevent UI lags, this method does not
+// refresh the window display everytime a sync update is received. During
+// active blocks sync, rescan or proposals sync, the Layout method auto
+// refreshes the display every set interval. Other sync updates that affect
+// the UI but occur outside of an active sync requires a display refresh.
 func (pg *AppOverviewPage) listenForSyncNotifications() {
 	go func() {
 		for {
@@ -327,15 +323,23 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 			switch n := notification.(type) {
 			case wallet.NewTransaction:
 				pg.loadTransactions()
+				pg.RefreshWindow()
+
 			case wallet.Proposal:
 				if n.ProposalStatus == wallet.Synced {
-					pg.syncCompleted = true
+					pg.loadRecentProposals()
 					pg.RefreshWindow()
 				}
+
 			case wallet.RescanUpdate:
-				pg.rescanningBlocks = n.Stage != wallet.RescanEnded
 				pg.rescanUpdate = &n
+				if n.Stage == wallet.RescanEnded {
+					pg.RefreshWindow()
+				}
+
 			case wallet.SyncStatusUpdate:
+				// Update sync progress fields which will be displayed
+				// when the next UI invalidation occurs.
 				switch t := n.ProgressReport.(type) {
 				case wallet.SyncHeadersFetchProgress:
 					pg.headerFetchProgress = t.Progress.HeadersFetchProgress
@@ -354,24 +358,20 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 					pg.syncStep = wallet.RescanHeadersStep
 				}
 
+				// We only care about sync state changes here, to
+				// refresh the window display.
 				switch n.Stage {
-				case wallet.PeersConnected:
-					pg.connectedPeers = n.ConnectedPeers
 				case wallet.SyncStarted:
 					fallthrough
 				case wallet.SyncCanceled:
 					fallthrough
 				case wallet.SyncCompleted:
 					pg.loadTransactions()
-					pg.walletSyncing = pg.WL.MultiWallet.IsSyncing()
-					pg.walletSynced = pg.WL.MultiWallet.IsSynced()
-					pg.isConnnected = pg.WL.MultiWallet.IsConnectedToDecredNetwork()
+					pg.RefreshWindow()
 				case wallet.BlockAttached:
-					pg.bestBlock = pg.WL.MultiWallet.GetBestBlock()
+					pg.RefreshWindow()
 				}
 			}
-
-			pg.RefreshWindow()
 		}
 	}()
 }

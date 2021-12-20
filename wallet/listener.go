@@ -104,11 +104,6 @@ type (
 	}
 )
 
-// SyncPeersChanged is sent when the amount of connected peers changes during sync
-type SyncPeersChanged struct {
-	ConnectedPeers int32
-}
-
 // SyncHeadersFetchProgress is sent whenever syncing makes any progress in fetching headers
 type SyncHeadersFetchProgress struct {
 	Progress *dcrlibwallet.HeadersFetchProgressReport

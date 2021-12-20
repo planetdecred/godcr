@@ -27,7 +27,6 @@ type DCRUSDTBittrex struct {
 }
 
 type Receiver struct {
-	InternalLog         chan string
 	NotificationsUpdate chan interface{}
 	KeyEvents           map[string]chan *key.Event
 }
@@ -102,8 +101,6 @@ func NewLoad() (*Load, error) {
 		SelectedProposal: new(dcrlibwallet.Proposal),
 	}
 
-	r := &Receiver{}
-
 	icons := loadIcons()
 
 	th := decredmaterial.NewTheme(assets.FontCollection(), assets.DecredIcons, false)
@@ -115,7 +112,7 @@ func NewLoad() (*Load, error) {
 		Theme:    th,
 		Icons:    icons,
 		WL:       wl,
-		Receiver: r,
+		Receiver: &Receiver{},
 		Toast:    notification.NewToast(th),
 
 		Printer: message.NewPrinter(language.English),

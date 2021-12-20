@@ -49,7 +49,6 @@ type Window struct {
 
 	keyEvents             map[string]chan *key.Event
 	walletAcctMixerStatus chan *wallet.AccountMixer
-	internalLog           chan string
 }
 
 type (
@@ -115,11 +114,10 @@ func (win *Window) NewLoad() (*load.Load, error) {
 
 	l.Receiver = &load.Receiver{
 		KeyEvents:           win.keyEvents,
-		InternalLog:         win.internalLog,
 		NotificationsUpdate: make(chan interface{}, 10),
 	}
 
-	l.RefreshWindow = win.refreshWindow
+	l.RefreshWindow = win.Invalidate
 	l.ShowModal = win.showModal
 	l.DismissModal = win.dismissModal
 	l.PopWindowPage = win.popPage
@@ -251,18 +249,22 @@ func (win *Window) drawWindowUI(gtx C) {
 	)
 }
 
+// changePage displays the provided page on the window and optionally adds
+// the current page to the backstack. This automatically refreshes the display,
+// callers should not re-refresh the display.
 func (win *Window) changePage(page load.Page, keepBackStack bool) {
 	if win.currentPage != nil && keepBackStack {
-		win.currentPage.WillDisappear() // TODO: Unload() if not keeping in backstack.
+		win.currentPage.WillDisappear()
 		win.pageBackStack = append(win.pageBackStack, win.currentPage)
 	}
 
 	win.currentPage = page
-	win.currentPage.WillAppear() // callers shouldn't need to trigger WillAppear(), page is changing, WillAppear naturally should be triggered here
-	win.refreshWindow()          // TODO: Ensure no caller of this method also triggers refreshWindow!
+	win.currentPage.WillAppear()
+	win.Invalidate()
 }
 
-// popPage goes back to the previous page.
+// popPage goes back to the previous page. This automatically refreshes the
+// display, callers should not re-refresh the display.
 // Returns true if page was popped.
 func (win *Window) popPage() bool {
 	if len(win.pageBackStack) == 0 {
@@ -275,18 +277,15 @@ func (win *Window) popPage() bool {
 	win.pageBackStack = win.pageBackStack[:previousPageIndex]
 
 	// close the current page and display the previous page
-	win.currentPage.WillDisappear() // Use Unload() for page that's being closed.
+	win.currentPage.WillDisappear()
 	previousPage.WillAppear()
 	win.currentPage = previousPage
-	win.refreshWindow() // TODO: Ensure no caller of this method also triggers refreshWindow!
+	win.Invalidate()
 
 	return true
 }
 
-func (win *Window) refreshWindow() {
-	win.Invalidate()
-}
-
+// TODO: showModal should refresh display, callers shouldn't.
 func (win *Window) showModal(modal load.Modal) {
 	modal.OnResume() // setup display data
 	win.modalMutex.Lock()
@@ -301,7 +300,8 @@ func (win *Window) dismissModal(modal load.Modal) {
 		if m.ModalID() == modal.ModalID() {
 			modal.OnDismiss() // do garbage collection in modal
 			win.modals = append(win.modals[:i], win.modals[i+1:]...)
-			win.refreshWindow()
+			win.Invalidate()
+			return
 		}
 	}
 }
