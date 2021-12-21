@@ -117,6 +117,7 @@ func (pg *ProposalDetails) Handle() {
 }
 
 func (pg *ProposalDetails) listenForSyncNotifications() {
+
 	go func() {
 		for {
 			var notification interface{}
@@ -140,6 +141,7 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 		}
 	}()
 }
+
 func (pg *ProposalDetails) OnClose() {
 	pg.ctxCancel()
 }

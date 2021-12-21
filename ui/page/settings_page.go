@@ -40,14 +40,15 @@ type SettingsPage struct {
 	backButton       decredmaterial.IconButton
 	infoButton       decredmaterial.IconButton
 
-	isDarkModeOn     *decredmaterial.Switch
-	spendUnconfirmed *decredmaterial.Switch
-	startupPassword  *decredmaterial.Switch
-	beepNewBlocks    *decredmaterial.Switch
-	connectToPeer    *decredmaterial.Switch
-	userAgent        *decredmaterial.Switch
-	governance       *decredmaterial.Switch
-	autoSync         *decredmaterial.Switch
+	isDarkModeOn         *decredmaterial.Switch
+	spendUnconfirmed     *decredmaterial.Switch
+	startupPassword      *decredmaterial.Switch
+	beepNewBlocks        *decredmaterial.Switch
+	connectToPeer        *decredmaterial.Switch
+	userAgent            *decredmaterial.Switch
+	governance           *decredmaterial.Switch
+	autoSync             *decredmaterial.Switch
+	proposalNotification *decredmaterial.Switch
 
 	peerLabel, agentLabel decredmaterial.Label
 
@@ -68,14 +69,15 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		walletInfo: l.WL.Info,
 		wal:        l.WL.Wallet,
 
-		isDarkModeOn:     l.Theme.Switch(),
-		spendUnconfirmed: l.Theme.Switch(),
-		startupPassword:  l.Theme.Switch(),
-		beepNewBlocks:    l.Theme.Switch(),
-		connectToPeer:    l.Theme.Switch(),
-		userAgent:        l.Theme.Switch(),
-		governance:       l.Theme.Switch(),
-		autoSync:         l.Theme.Switch(),
+		isDarkModeOn:         l.Theme.Switch(),
+		spendUnconfirmed:     l.Theme.Switch(),
+		startupPassword:      l.Theme.Switch(),
+		beepNewBlocks:        l.Theme.Switch(),
+		connectToPeer:        l.Theme.Switch(),
+		userAgent:            l.Theme.Switch(),
+		governance:           l.Theme.Switch(),
+		autoSync:             l.Theme.Switch(),
+		proposalNotification: l.Theme.Switch(),
 
 		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
 
@@ -177,7 +179,14 @@ func (pg *SettingsPage) general() layout.Widget {
 func (pg *SettingsPage) notification() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, values.String(values.StrNotifications), func(gtx C) D {
-			return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.subSectionSwitch(gtx, "Proposal notification", pg.proposalNotification)
+				}),
+			)
 		})
 	}
 }
@@ -433,6 +442,15 @@ func (pg *SettingsPage) Handle() {
 		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.IsChecked())
 	}
 
+	if pg.proposalNotification.Changed() {
+		pg.wal.SaveConfigValueForKey(load.ProposalNotificationConfigKey, pg.proposalNotification.IsChecked())
+		if pg.proposalNotification.IsChecked() {
+			pg.Toast.Notify("Proposal notification enabled")
+		} else {
+			pg.Toast.Notify("Proposal notification disabled")
+		}
+	}
+
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).
 			Title("Set up startup password").
@@ -664,6 +682,12 @@ func (pg *SettingsPage) updateSettingOptions() {
 	pg.governance.SetChecked(false)
 	if governanceSet {
 		pg.governance.SetChecked(governanceSet)
+	}
+
+	proposalNotification := pg.wal.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
+	pg.proposalNotification.SetChecked(false)
+	if proposalNotification {
+		pg.proposalNotification.SetChecked(proposalNotification)
 	}
 
 	autoSync := pg.wal.ReadBoolConfigValueForKey(load.AutoSyncConfigKey)

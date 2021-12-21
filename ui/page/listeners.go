@@ -8,6 +8,7 @@ import (
 
 	"github.com/gen2brain/beeep"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -179,6 +180,7 @@ func (mp *MainPage) UpdateNotification(signal interface{}) {
 }
 
 func (mp *MainPage) desktopNotifier(notifier interface{}) {
+	proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
 	var notification string
 	switch t := notifier.(type) {
 	case wallet.NewTransaction:
@@ -221,7 +223,9 @@ func (mp *MainPage) desktopNotifier(notifier interface{}) {
 		default:
 			notification = fmt.Sprintf("New update for proposal with Token: %s", t.Proposal.Token)
 		}
-		initializeBeepNotification(notification)
+		if proposalNotification {
+			initializeBeepNotification(notification)
+		}
 	}
 }
 
