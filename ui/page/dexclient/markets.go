@@ -24,13 +24,12 @@ const MarketPageID = "Markets"
 
 type Page struct {
 	*load.Load
-	ctx                     context.Context
-	ctxCancel               context.CancelFunc
-	login                   decredmaterial.Button
-	initialize              decredmaterial.Button
-	addDex                  decredmaterial.Button
-	sync                    decredmaterial.Button
-	isConnectedToDcrNetwork bool
+	ctx        context.Context
+	ctxCancel  context.CancelFunc
+	login      decredmaterial.Button
+	initialize decredmaterial.Button
+	addDex     decredmaterial.Button
+	sync       decredmaterial.Button
 }
 
 // TODO: Add collapsible button to select a market.
@@ -63,7 +62,7 @@ func (pg *Page) Layout(gtx C) D {
 	var body func(gtx C) D
 
 	switch {
-	case !pg.isConnectedToDcrNetwork:
+	case !pg.WL.MultiWallet.IsConnectedToDecredNetwork():
 		body = func(gtx C) D {
 			return pg.pageSections(gtx, func(gtx C) D {
 				return pg.welcomeLayout(gtx, pg.sync)
@@ -155,7 +154,6 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 func (pg *Page) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	go pg.readNotifications()
-	pg.isConnectedToDcrNetwork = pg.WL.MultiWallet.IsConnectedToDecredNetwork()
 }
 
 func (pg *Page) OnClose() {
@@ -165,7 +163,6 @@ func (pg *Page) OnClose() {
 func (pg *Page) Handle() {
 	if pg.sync.Button.Clicked() {
 		err := pg.WL.MultiWallet.SpvSync()
-		pg.isConnectedToDcrNetwork = err == nil
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
 		}
