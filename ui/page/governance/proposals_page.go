@@ -363,6 +363,7 @@ func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
 }
 
 func (pg *ProposalsPage) listenForSyncNotifications() {
+
 	go func() {
 		for {
 			var notification interface{}
