@@ -22,17 +22,19 @@ type miniTradeFormWidget struct {
 	submit                        decredmaterial.Button
 	direction                     decredmaterial.IconButton
 	invoicedAmount, orderedAmount decredmaterial.Editor
+	host                          string
 	mkt                           *core.Market
 }
 
-func newMiniTradeFormWidget(l *load.Load, mkt *core.Market) *miniTradeFormWidget {
+func newMiniTradeFormWidget(l *load.Load, host string, mkt *core.Market) *miniTradeFormWidget {
 	m := &miniTradeFormWidget{
 		Load:           l,
 		submit:         l.Theme.Button("OK"),
 		invoicedAmount: l.Theme.Editor(new(widget.Editor), "I have"),
 		orderedAmount:  l.Theme.Editor(new(widget.Editor), "I get"),
-		direction:      l.Theme.IconButton(l.Icons.ActionSwapHoriz),
+		direction:      l.Theme.IconButton(l.Icons.ExchangeIcon),
 		isSell:         true,
+		host:           host,
 		mkt:            mkt,
 	}
 
@@ -115,7 +117,7 @@ func (m miniTradeFormWidget) suggestValue(ord *core.OrderBook, amount string, is
 	return strconv.FormatFloat(rate*qty, 'f', -1, bitSize)
 }
 
-func (m *miniTradeFormWidget) handle(ord *core.OrderBook, host string) {
+func (m *miniTradeFormWidget) handle(ord *core.OrderBook) {
 	if m.direction.Button.Clicked() {
 		m.isSell = !m.isSell
 		m.changeDirection()
@@ -186,7 +188,7 @@ func (m *miniTradeFormWidget) handle(ord *core.OrderBook, host string) {
 						Sell:         m.isSell,
 						TifNow:       false,
 					}
-					_, err := m.Dexc().PlaceOrderWithServer(host, &form, []byte(password))
+					_, err := m.Dexc().PlaceOrderWithServer(m.host, &form, []byte(password))
 					if err != nil {
 						pm.SetError(err.Error())
 						pm.SetLoading(false)
