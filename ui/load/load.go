@@ -59,6 +59,8 @@ type Icons struct {
 	TicketExpiredIcon,
 	TicketRevokedIcon,
 	TicketUnminedIcon *decredmaterial.Image
+
+	DexIcon, DexIconInactive, BTC, DCR *decredmaterial.Image
 }
 
 type Load struct {
@@ -115,6 +117,7 @@ func NewLoad() (*Load, error) {
 	if th == nil {
 		return nil, errors.New("unexpected error while loading theme")
 	}
+
 	l := &Load{
 		Theme:    th,
 		Icons:    icons,
@@ -133,6 +136,9 @@ func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)
 	l.RefreshWindow()
+}
+func (l *Load) Dexc() *dcrlibwallet.DexClient {
+	return l.WL.MultiWallet.DexClient()
 }
 
 func loadIcons() Icons {
@@ -222,6 +228,11 @@ func loadIcons() Icons {
 		GovernanceInactiveIcon:   decredmaterial.NewImage(decredIcons["governance_inactive"]),
 		LogoDarkMode:             decredmaterial.NewImage(decredIcons["logo_darkmode"]),
 		TimerDarkMode:            decredmaterial.NewImage(decredIcons["timer_dm"]),
+
+		DexIcon:         decredmaterial.NewImage(decredIcons["dex_icon"]),
+		DexIconInactive: decredmaterial.NewImage(decredIcons["dex_icon_inactive"]),
+		BTC:             decredmaterial.NewImage(decredIcons["dex_btc"]),
+		DCR:             decredmaterial.NewImage(decredIcons["dex_dcr"]),
 	}
 	return ic
 }
