@@ -1,7 +1,6 @@
 package dexclient
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
@@ -11,8 +10,6 @@ import (
 	"decred.org/dcrdex/client/asset"
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/dex"
-	"decred.org/dcrdex/dex/calc"
-	"decred.org/dcrdex/dex/msgjson"
 	"decred.org/dcrdex/dex/order"
 )
 
@@ -200,24 +197,6 @@ func statusString(ord *core.Order) string {
 	return "unknown"
 }
 
-// minifyOrder creates a MiniOrder from a TradeNote. The epoch and order ID must
-// be supplied.
-func minifyOrder(oid dex.Bytes, trade *msgjson.TradeNote, epoch uint64, marketID string) (*core.MiniOrder, error) {
-	b, q, err := marketIDToAsset(marketID)
-	if err != nil {
-		return nil, err
-	}
-	return &core.MiniOrder{
-		Qty:       float64(trade.Quantity) / float64(b.UnitInfo.Conventional.ConversionFactor),
-		QtyAtomic: trade.Quantity,
-		Rate:      calc.ConventionalRate(trade.Rate, b.UnitInfo, q.UnitInfo),
-		MsgRate:   trade.Rate,
-		Sell:      trade.Side == msgjson.SellOrderNum,
-		Token:     token(oid),
-		Epoch:     epoch,
-	}, nil
-}
-
 func marketIDToAsset(marketID string) (baseInfo *asset.WalletInfo, quoteInfo *asset.WalletInfo, err error) {
 	mktIDs := strings.Split(marketID, "_")
 	baseID, ok := dex.BipSymbolID(mktIDs[0])
@@ -239,45 +218,6 @@ func marketIDToAsset(marketID string) (baseInfo *asset.WalletInfo, quoteInfo *as
 	}
 
 	return b, q, nil
-}
-
-// token is a short representation of a byte-slice-like ID, such as a match ID
-// or an order ID. The token is meant for display where the 64-character
-// hexadecimal IDs are untenable.
-func token(id []byte) string {
-	if len(id) < 4 {
-		return ""
-	}
-	return hex.EncodeToString(id[:4])
-}
-
-// removeOrder removes an order from the order book.
-func removeOrder(orID dex.Bytes, sells, buys []*core.MiniOrder) ([]*core.MiniOrder, []*core.MiniOrder) {
-	token := token(orID)
-	if s, ok := removeFromSide(sells, token); ok {
-		return s, buys
-	}
-	b, _ := removeFromSide(buys, token)
-	return sells, b
-}
-
-// removeFromSide removes an order from the list of orders
-func removeFromSide(side []*core.MiniOrder, token string) ([]*core.MiniOrder, bool) {
-	ord, index := findOrder(side, token)
-	if ord != nil {
-		return append(side[:index], side[index+1:]...), true
-	}
-	return side, false
-}
-
-// findOrder finds an order in a specified side
-func findOrder(side []*core.MiniOrder, token string) (*core.MiniOrder, int) {
-	for i, s := range side {
-		if s.Token == token {
-			return s, i
-		}
-	}
-	return nil, -1
 }
 
 func minMaxRateOrderBook(orders []*core.MiniOrder) (float64, float64) {

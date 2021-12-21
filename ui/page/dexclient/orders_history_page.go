@@ -53,7 +53,7 @@ func (pg *OrdersHistoryPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Your Orders",
+			Title:      "Orders History",
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
