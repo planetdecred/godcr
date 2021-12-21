@@ -65,7 +65,7 @@ func main() {
 
 	win, appWindow, err := ui.CreateWindow(wal)
 	if err != nil {
-		fmt.Printf("Could not initialize window: %s\ns", err)
+		log.Errorf("Could not initialize window: %s\ns", err)
 		return
 	}
 

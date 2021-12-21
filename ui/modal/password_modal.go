@@ -23,6 +23,7 @@ type PasswordModal struct {
 	password decredmaterial.Editor
 
 	dialogTitle string
+	description string
 
 	isLoading    bool
 	isCancelable bool
@@ -84,6 +85,11 @@ func (pm *PasswordModal) Dismiss() {
 
 func (pm *PasswordModal) Title(title string) *PasswordModal {
 	pm.dialogTitle = title
+	return pm
+}
+
+func (pm *PasswordModal) Description(description string) *PasswordModal {
+	pm.description = description
 	return pm
 }
 
@@ -167,6 +173,11 @@ func (pm *PasswordModal) Layout(gtx layout.Context) D {
 		return t.Layout(gtx)
 	}
 
+	description := func(gtx C) D {
+		t := pm.Theme.Body2(pm.description)
+		return t.Layout(gtx)
+	}
+
 	editor := func(gtx C) D {
 		return pm.password.Layout(gtx)
 	}
@@ -200,6 +211,7 @@ func (pm *PasswordModal) Layout(gtx layout.Context) D {
 	var w []layout.Widget
 
 	w = append(w, title)
+	w = append(w, description)
 	w = append(w, editor)
 	w = append(w, actionButtons)
 

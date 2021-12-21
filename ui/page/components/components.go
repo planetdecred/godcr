@@ -663,3 +663,14 @@ func TranslateErr(err error) string {
 
 	return err.Error()
 }
+
+// CoinImageBySymbol returns image widget for supported asset coins.
+func CoinImageBySymbol(icons *load.Icons, coinName string) *decredmaterial.Image {
+	switch strings.ToLower(coinName) {
+	case "btc":
+		return icons.BTC
+	case "dcr":
+		return icons.DCR
+	}
+	return nil
+}

@@ -1,6 +1,7 @@
 package page
 
 import (
+	"fmt"
 	"strconv"
 
 	"gioui.org/layout"
@@ -13,6 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/dexclient"
 	"github.com/planetdecred/godcr/ui/page/governance"
 	"github.com/planetdecred/godcr/ui/page/overview"
 	"github.com/planetdecred/godcr/ui/page/send"
@@ -22,15 +24,8 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const MainPageID = "Main"
-
 const (
-	OverviewNavID = iota
-	TransactionsNavID
-	WalletsNavID
-	StakingNavID
-	ProposalsNavID
-	MoreNavID
+	MainPageID = "Main"
 )
 
 var (
@@ -166,6 +161,13 @@ func (mp *MainPage) initNavItems() {
 				ImageInactive: mp.Icons.GovernanceInactiveIcon,
 				Title:         "Governance",
 				PageID:        governance.ProposalsPageID,
+			},
+			{
+				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Icons.DexIcon,
+				ImageInactive: mp.Icons.DexIconInactive,
+				Title:         values.String(values.StrDex),
+				PageID:        dexclient.MarketPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -321,26 +323,32 @@ func (mp *MainPage) Handle() {
 		}
 	}
 
-	for i, item := range mp.drawerNav.DrawerNavItems {
+	for _, item := range mp.drawerNav.DrawerNavItems {
 		for item.Clickable.Clicked() {
 			var pg load.Page
-			if i == OverviewNavID {
+			switch item.PageID {
+			case overview.OverviewPageID:
 				pg = overview.NewOverviewPage(mp.Load)
-			} else if i == TransactionsNavID {
+			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
-			} else if i == WalletsNavID {
+			case wallets.WalletPageID:
 				pg = wallets.NewWalletPage(mp.Load)
-			} else if i == StakingNavID {
+			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
-			} else if i == ProposalsNavID {
+			case governance.ProposalsPageID:
 				pg = governance.NewProposalsPage(mp.Load)
-			} else if i == MoreNavID {
+			case dexclient.MarketPageID:
+				_, err := mp.WL.MultiWallet.StartDexClient() // does nothing if already started
+				if err != nil {
+					mp.Toast.NotifyError(fmt.Sprintf("Unable to start DEX client: %v", err))
+				} else {
+					pg = dexclient.NewMarketPage(mp.Load)
+				}
+			case MorePageID:
 				pg = NewMorePage(mp.Load)
-			} else {
-				continue
 			}
 
-			if pg.ID() == mp.currentPageID() {
+			if pg == nil || pg.ID() == mp.currentPageID() {
 				continue
 			}
 

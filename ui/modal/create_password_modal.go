@@ -37,6 +37,7 @@ type CreatePasswordModal struct {
 	dialogTitle string
 	randomID    string
 	serverError string
+	description string
 
 	materialLoader material.LoaderStyle
 
@@ -139,6 +140,11 @@ func (cm *CreatePasswordModal) SetLoading(loading bool) {
 
 func (cm *CreatePasswordModal) SetCancelable(min bool) *CreatePasswordModal {
 	cm.isCancelable = min
+	return cm
+}
+
+func (cm *CreatePasswordModal) SetDescription(description string) *CreatePasswordModal {
+	cm.description = description
 	return cm
 }
 
@@ -251,6 +257,12 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 			return t.Layout(gtx)
 		},
 		func(gtx C) D {
+			if cm.description != "" {
+				return cm.Theme.Body2(cm.description).Layout(gtx)
+			}
+			return layout.Dimensions{}
+		},
+		func(gtx C) D {
 			if cm.serverError != "" {
 				t := cm.Theme.Body2(cm.serverError)
 				t.Color = cm.Theme.Color.Danger
@@ -258,7 +270,6 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 			}
 			return layout.Dimensions{}
 		},
-
 		func(gtx C) D {
 			if cm.walletNameEnabled {
 				return cm.walletName.Layout(gtx)

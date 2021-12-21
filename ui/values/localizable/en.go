@@ -118,4 +118,5 @@ const EN = `
 "usdBittrex" = "USD (Bittrex)";
 "none" = "None";
 "proposals" = "Proposals";
+"dex" = "Dex";
 `
