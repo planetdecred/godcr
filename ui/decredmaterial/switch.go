@@ -52,7 +52,7 @@ func (t *Theme) SwitchButtonText(i []SwitchItem) *SwitchButtonText {
 	}
 
 	sw.active, sw.inactive = sw.t.Color.Surface, color.NRGBA{}
-	sw.activeTextColor, sw.inactiveTextColor = sw.t.Color.DeepBlue, sw.t.Color.Gray2
+	sw.activeTextColor, sw.inactiveTextColor = sw.t.Color.GrayText1, sw.t.Color.Text
 
 	for index := range i {
 		i[index].button = t.Button(i[index].Text)
