@@ -88,6 +88,7 @@ func (pg *Page) ID() string {
 func (pg *Page) OnNavigatedTo() {
 
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
+
 	go pg.WL.GetVSPList()
 }
 
@@ -469,15 +470,19 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.autoPurchase.Changed() {
 		if pg.autoPurchase.IsChecked() {
-			pg.startTicketBuyerPasswordModal()
-			// newTicketBuyerModal(pg.Load).
-			// 	CancelSave(func() {
-			// 		pg.autoPurchase.SetChecked(false)
-			// 	}).
-			// 	SettingsSaved(func() {
-			// 		pg.Toast.Notify("Auto ticket purchase setting saved successfully")
-			// 	}).
-			// 	Show()
+			if pg.WL.MultiWallet.TicketBuyerConfigIsSet() {
+				pg.startTicketBuyerPasswordModal()
+			} else {
+				newTicketBuyerModal(pg.Load).
+					CancelSave(func() {
+						pg.autoPurchase.SetChecked(false)
+					}).
+					SettingsSaved(func() {
+						pg.startTicketBuyerPasswordModal()
+						pg.Toast.Notify("Auto ticket purchase setting saved successfully")
+					}).
+					Show()
+			}
 		}
 	}
 

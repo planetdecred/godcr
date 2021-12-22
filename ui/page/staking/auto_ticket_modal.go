@@ -1,6 +1,8 @@
 package staking
 
 import (
+	"strconv"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -44,8 +46,6 @@ func newTicketBuyerModal(l *load.Load) *ticketBuyerModal {
 	tb.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), "Balance to maintain (DCR)")
 	tb.balToMaintainEditor.Editor.SetText("")
 	tb.balToMaintainEditor.Editor.SingleLine = true
-
-	// tb.modal.Setbadding(values.MarginPadding0)
 
 	tb.saveSettingsBtn.SetEnabled(false)
 
@@ -197,9 +197,15 @@ func (tb *ticketBuyerModal) Handle() {
 	}
 
 	if tb.canSave() && tb.saveSettingsBtn.Clicked() {
-		//Todo: implement save functionality
+		host := tb.vspSelector.selectedVSP.Host
+		atm, err := strconv.ParseInt(tb.balToMaintainEditor.Editor.Text(), 10, 64)
+		if err != nil {
+			return
+		}
+		account := tb.accountSelector.SelectedAccount()
+
+		tb.WL.MultiWallet.SetAutoTicketsBuyerConfig(host, account.WalletID, account.Number, atm)
 		tb.settingsSaved()
 		tb.Dismiss()
-		// tb.Toast.Notify("Auto ticket purchase setting saved successfully")
 	}
 }

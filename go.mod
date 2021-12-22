@@ -23,3 +23,5 @@ require (
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/text v0.3.7
 )
+
+replace github.com/planetdecred/dcrlibwallet => github.com/Sirmorrison/dcrlibwallet v1.5.1-0.20211219050814-c158518032f7
