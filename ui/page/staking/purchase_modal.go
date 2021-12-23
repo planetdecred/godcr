@@ -42,8 +42,6 @@ type stakingModal struct {
 	tickets          decredmaterial.Editor
 	materialLoader   material.LoaderStyle
 
-	balToMaintainEditor decredmaterial.Editor
-
 	accountSelector *components.AccountSelector
 	vspSelector     *vspSelector
 }
@@ -61,10 +59,6 @@ func newStakingModal(l *load.Load) *stakingModal {
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 	}
-
-	tp.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), "Balance to maintain (DCR)")
-	tp.balToMaintainEditor.Editor.SetText("")
-	tp.balToMaintainEditor.Editor.SingleLine = true
 
 	tp.tickets.Bordered = false
 	tp.tickets.Editor.Alignment = text.Middle

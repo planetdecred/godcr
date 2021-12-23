@@ -198,10 +198,13 @@ func (tb *ticketBuyerModal) Handle() {
 
 	if tb.canSave() && tb.saveSettingsBtn.Clicked() {
 		host := tb.vspSelector.selectedVSP.Host
-		atm, err := strconv.ParseInt(tb.balToMaintainEditor.Editor.Text(), 10, 64)
+
+		amount, err := strconv.ParseFloat(tb.balToMaintainEditor.Editor.Text(), 64)
 		if err != nil {
-			return
+			return //to do error handling
 		}
+
+		atm := dcrlibwallet.AmountAtom(amount)
 		account := tb.accountSelector.SelectedAccount()
 
 		tb.WL.MultiWallet.SetAutoTicketsBuyerConfig(host, account.WalletID, account.Number, atm)

@@ -500,19 +500,17 @@ func (pg *Page) HandleUserInteractions() {
 }
 
 func (pg *Page) startTicketBuyerPasswordModal() {
+	host, _, _, b2m := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+	balToMaintain := dcrutil.Amount(b2m)
+
 	modal.NewPasswordModal(pg.Load).
 		Title("Confirm Automatic Ticket Purchase").
 		SetCancelable(false).
 		ExtraLayout(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %s", balToMaintain)).Layout),
 				layout.Rigid(func(gtx C) D {
-					b2m := "0.000000 DCR"
-					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %s", b2m))
-					return label.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					vsp := "vsp.dcr.farm"
-					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", vsp))
+					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", host))
 					return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, label.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {

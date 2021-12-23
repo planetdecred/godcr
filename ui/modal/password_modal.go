@@ -219,7 +219,9 @@ func (pm *PasswordModal) Layout(gtx layout.Context) D {
 
 	w = append(w, title)
 
-	w = append(w, description)
+	if pm.description != "" {
+		w = append(w, description)
+	}
 
 	if pm.extraLayout != nil {
 		w = append(w, pm.extraLayout)
