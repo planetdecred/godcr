@@ -66,15 +66,36 @@ func (tb *ticketBuyerModal) CancelSave(cancel func()) *ticketBuyerModal {
 
 func (tb *ticketBuyerModal) OnResume() {
 	tb.initializeAccountSelector()
-	err := tb.accountSelector.SelectFirstWalletValidAccount()
-	if err != nil {
-		tb.Toast.NotifyError(err.Error())
+
+	host, walID, accNumber, b2m := tb.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+
+	if walID == -1 {
+		err := tb.accountSelector.SelectFirstWalletValidAccount()
+		if err != nil {
+			tb.Toast.NotifyError(err.Error())
+		}
+	} else {
+		wal := tb.WL.MultiWallet.WalletWithID(walID)
+		accountsResult, err := wal.GetAccountsRaw()
+		if err != nil {
+			tb.Toast.NotifyError(err.Error())
+		}
+
+		for _, account := range accountsResult.Acc {
+			if account.Number == accNumber {
+				tb.accountSelector.SetupSelectedAccount(account)
+			}
+		}
 	}
 
 	tb.vspSelector = newVSPSelector(tb.Load).title("Select a vsp")
 
-	if tb.vspIsFetched && components.StringNotEmpty(tb.WL.GetRememberVSP()) {
-		tb.vspSelector.selectVSP(tb.WL.GetRememberVSP())
+	if tb.vspIsFetched && components.StringNotEmpty(host) {
+		tb.vspSelector.selectVSP(host)
+	}
+
+	if b2m != -1 {
+		tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(b2m), 'f', 0, 64))
 	}
 }
 

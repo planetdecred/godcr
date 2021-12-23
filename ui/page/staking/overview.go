@@ -541,15 +541,8 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			pg.autoPurchase.SetChecked(false)
 		}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
-			// go func() {
-			// 	err := pg.WL.MultiWallet.StartAccountMixer(pg.wallet.ID, password)
-			// 	if err != nil {
-			// 		pm.SetError(err.Error())
-			// 		pm.SetLoading(false)
-			// 		return
-			// 	}
+			// todo: start ticket buyer
 			pm.Dismiss()
-			// }()
 
 			return false
 		}).Show()
