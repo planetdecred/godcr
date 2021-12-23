@@ -90,6 +90,7 @@ func (pg *Page) OnNavigatedTo() {
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
 
 	go pg.WL.GetVSPList()
+	// pg.autoPurchase.SetChecked(pg.WL.MultiWallet.IsAutoTicketsPurchaseActive()) TODO: Set auto ticket button to active when tb is running.
 }
 
 func (pg *Page) loadPageData() {
