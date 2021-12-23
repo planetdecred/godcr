@@ -15,6 +15,7 @@ type Clickable struct {
 	style     *values.ClickableStyle
 	Hoverable bool
 	Radius    CornerRadius
+	Enabled   bool
 }
 
 func (t *Theme) NewClickable(hoverable bool) *Clickable {
@@ -22,6 +23,7 @@ func (t *Theme) NewClickable(hoverable bool) *Clickable {
 		button:    &widget.Clickable{},
 		style:     t.Styles.ClickableStyle,
 		Hoverable: hoverable,
+		Enabled:   true,
 	}
 }
 
