@@ -500,15 +500,15 @@ func (pg *Page) HandleUserInteractions() {
 }
 
 func (pg *Page) startTicketBuyerPasswordModal() {
-	host, _, _, b2m := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
-	balToMaintain := dcrutil.Amount(b2m)
+	host, walID, acctNum, b2m := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+	balToMaintain := dcrlibwallet.AmountCoin(b2m)
 
 	modal.NewPasswordModal(pg.Load).
 		Title("Confirm Automatic Ticket Purchase").
 		SetCancelable(false).
 		ExtraLayout(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %s", balToMaintain)).Layout),
+				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %2.f", balToMaintain)).Layout),
 				layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", host))
 					return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, label.Layout)
@@ -541,7 +541,28 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			pg.autoPurchase.SetChecked(false)
 		}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
-			// todo: start ticket buyer
+			go func() {
+				vsp, err := pg.WL.MultiWallet.NewVSPClient(host, walID, uint32(acctNum))
+				if err != nil {
+					pg.Toast.NotifyError(err.Error())
+					pm.SetLoading(false)
+					return
+				}
+
+				err = vsp.AutoTicketsPurchase(int64(balToMaintain), []byte(password))
+				if err != nil {
+					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+						pm.SetError("Invalid password")
+						pm.SetLoading(false)
+					} else {
+						pg.Toast.NotifyError(err.Error())
+					}
+					return
+				}
+
+				// pm.Dismiss()
+			}()
+
 			pm.Dismiss()
 
 			return false

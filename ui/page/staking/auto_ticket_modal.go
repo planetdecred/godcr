@@ -195,18 +195,6 @@ func (tb *ticketBuyerModal) OnDismiss() {}
 func (tb *ticketBuyerModal) Handle() {
 	tb.saveSettingsBtn.SetEnabled(tb.canSave())
 
-	if tb.vspSelector.Changed() {
-		tb.WL.RememberVSP(tb.vspSelector.selectedVSP.Host)
-	}
-
-	// reselect vsp if there's a delay in fetching the VSP List
-	if !tb.vspIsFetched && len((*tb.WL.VspInfo).List) > 0 {
-		if tb.WL.GetRememberVSP() != "" {
-			tb.vspSelector.selectVSP(tb.WL.GetRememberVSP())
-			tb.vspIsFetched = true
-		}
-	}
-
 	if tb.cancel.Clicked() {
 		tb.cancelFunc()
 		tb.Dismiss()
