@@ -247,7 +247,18 @@ func (pg *AppOverviewPage) Handle() {
 		if pg.rescanningBlocks {
 			pg.WL.MultiWallet.CancelRescan()
 		} else {
-			go pg.ToggleSync()
+			// If connected to the Decred network disable button. Prevents multiple clicks.
+			if pg.isConnnected {
+				pg.syncClickable.Enabled = false
+			}
+
+			// On exit of goroutine update button state.
+			go func() {
+				pg.ToggleSync()
+				if !pg.syncClickable.Enabled {
+					pg.syncClickable.Enabled = true
+				}
+			}()
 		}
 	}
 
