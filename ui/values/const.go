@@ -4,4 +4,5 @@ const (
 	TxDropdownGroup = iota
 	StakingDropdownGroup
 	ProposalDropdownGroup
+	ConsensusDropdownGroup
 )
