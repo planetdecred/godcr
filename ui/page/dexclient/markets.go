@@ -2,7 +2,6 @@ package dexclient
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"decred.org/dcrdex/client/core"
@@ -33,6 +32,7 @@ type Page struct {
 	miniTradeFormWdg *miniTradeFormWidget
 	orderBook        *core.OrderBook
 	dex              *core.Exchange
+	market           *core.Market
 
 	loginBtn          decredmaterial.Button
 	initializeBtn     decredmaterial.Button
@@ -43,8 +43,6 @@ type Page struct {
 	dexSettingsBtn    *decredmaterial.Clickable
 	dexSelectBtn      *decredmaterial.Clickable
 }
-
-var defaultMarketID = "dcr_btc"
 
 func NewMarketPage(l *load.Load) *Page {
 	clickable := func() *decredmaterial.Clickable {
@@ -230,11 +228,10 @@ func (pg *Page) registrationStatusLayout() layout.Widget {
 }
 
 func (pg *Page) initMiniTradeForm() {
-	mkt := pg.dex.Markets[defaultMarketID]
 	if pg.miniTradeFormWdg == nil ||
 		pg.miniTradeFormWdg.host != pg.dex.Host ||
-		pg.miniTradeFormWdg.mkt.Name != mkt.Name {
-		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load, pg.dex.Host, mkt)
+		pg.miniTradeFormWdg.mkt.Name != pg.market.Name {
+		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load, pg.dex.Host, pg.market)
 	}
 
 	if dex.PendingFee == nil {
@@ -263,11 +260,8 @@ func (pg *Page) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	go pg.readNotifications()
 
-	if err := pg.initOrSetDefaultDex(); err == nil {
-		mkt := pg.dex.Markets[defaultMarketID]
-		if pg.Dexc().IsLoggedIn() && mkt != nil {
-			go pg.listenerMessages(pg.dex.Host, mkt.BaseID, mkt.QuoteID)
-		}
+	if pg.initDex() && pg.initMarket() && pg.Dexc().IsLoggedIn() {
+		go pg.listenerMessages(pg.dex.Host, pg.market.BaseID, pg.market.QuoteID)
 	}
 }
 
@@ -316,10 +310,8 @@ func (pg *Page) HandleUserInteractions() {
 						return
 					}
 
-					if err := pg.initOrSetDefaultDex(); err == nil {
-						if mkt := pg.dex.Markets[defaultMarketID]; mkt != nil {
-							go pg.listenerMessages(pg.dex.Host, mkt.BaseID, mkt.QuoteID)
-						}
+					if pg.initDex() && pg.initMarket() {
+						go pg.listenerMessages(pg.dex.Host, pg.market.BaseID, pg.market.QuoteID)
 					}
 				}()
 				return false
@@ -376,12 +368,10 @@ func (pg *Page) HandleUserInteractions() {
 	if pg.dexSelectBtn.Clicked() {
 		newSelectorDexModal(pg.Load, pg.dex.Host).
 			OnDexSelected(func(dex *core.Exchange) {
-				pg.setDex(dex)
-				mkt := dex.Markets[defaultMarketID]
-				if mkt == nil {
-					return
+				pg.selectDex(dex)
+				if pg.initMarket() {
+					go pg.listenerMessages(pg.dex.Host, pg.market.BaseID, pg.market.QuoteID)
 				}
-				go pg.listenerMessages(pg.dex.Host, mkt.BaseID, mkt.QuoteID)
 			}).Show()
 	}
 }
@@ -392,7 +382,7 @@ func (pg *Page) readNotifications() {
 	for {
 		select {
 		case n := <-ch:
-			pg.updateDexState()
+			pg.updateDexMarketState()
 			if n.Type() == core.NoteTypeFeePayment || n.Type() == core.NoteTypeConnEvent {
 				pg.RefreshWindow()
 			}
@@ -415,7 +405,7 @@ func (pg *Page) listenerMessages(host string, baseID, quoteID uint32) {
 
 	for {
 		<-bookFeed.Next()
-		pg.updateDexState()
+		pg.updateDexMarketState()
 		pg.getOrderBook(host, baseID, quoteID)
 		pg.RefreshWindow()
 	}
@@ -430,33 +420,65 @@ func (pg *Page) getOrderBook(host string, baseID, quoteID uint32) {
 	pg.orderBook = orderBoook
 }
 
-func (pg *Page) initOrSetDefaultDex() error {
+func (pg *Page) initDex() bool {
 	valueOut := pg.WL.MultiWallet.ReadStringConfigValueForKey(DexHostConfigKey)
 	if valueOut != "" {
 		if dex, ok := pg.Dexc().DEXServers()[valueOut]; ok {
-			pg.dex = dex
-			return nil
+			pg.selectDex(dex)
+			return true
 		}
-		return errors.New("No dex server")
 	}
 	exchanges := sliceExchanges(pg.Dexc().DEXServers())
 	if len(exchanges) == 0 {
-		return errors.New("No dex server")
+		pg.selectDex(nil)
+		return false
 	}
-	pg.setDex(exchanges[0])
-	return nil
+	pg.selectDex(exchanges[0])
+	return true
 }
 
-func (pg *Page) setDex(dex *core.Exchange) {
+func (pg *Page) selectDex(dex *core.Exchange) {
 	pg.dex = dex
-	pg.WL.MultiWallet.SetStringConfigValueForKey(DexHostConfigKey, dex.Host)
+	value := ""
+	if dex != nil {
+		value = dex.Host
+	}
+	pg.WL.MultiWallet.SetStringConfigValueForKey(DexHostConfigKey, value)
 }
 
-func (pg *Page) updateDexState() {
+func (pg *Page) initMarket() bool {
+	markets := sliceMarkets(pg.dex.Markets)
+	if len(markets) == 0 {
+		return false
+	}
+	pg.selectMarket(markets[0])
+	return true
+}
+
+func (pg *Page) selectMarket(market *core.Market) {
+	pg.market = market
+}
+
+func (pg *Page) updateDexMarketState() {
 	if pg.dex == nil {
 		return
 	}
-	if dex := pg.Dexc().DEXServers()[pg.dex.Host]; dex != nil {
-		pg.dex = dex
+
+	dex := pg.Dexc().DEXServers()[pg.dex.Host]
+	if dex == nil {
+		return
 	}
+
+	pg.selectDex(dex)
+
+	if pg.market == nil {
+		return
+	}
+
+	market := dex.Markets[pg.market.Name]
+	if market == nil {
+		return
+	}
+
+	pg.selectMarket(market)
 }

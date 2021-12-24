@@ -46,8 +46,10 @@ func NewDexSettingsPage(l *load.Load) *DexSettingsPage {
 	}
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
 	inset := layout.Inset{
-		Top: values.MarginPadding5, Bottom: values.MarginPadding5,
-		Left: values.MarginPadding9, Right: values.MarginPadding9,
+		Top:    values.MarginPadding5,
+		Bottom: values.MarginPadding5,
+		Left:   values.MarginPadding9,
+		Right:  values.MarginPadding9,
 	}
 	pg.addDexBtn.Background = l.Theme.Color.Success
 	pg.importAccountBtn.Background = l.Theme.Color.Success
@@ -79,17 +81,21 @@ func (pg *DexSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 					Left:  values.MarginPadding10,
 					Right: values.MarginPadding10,
 				}.Layout(gtx, func(gtx C) D {
-					return pg.pageSections(gtx, func(gtx C) D {
-						gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-						wdgs := []func(gtx C) D{
-							pg.exchangesInfoLayout,
-							pg.addDexAndImportAccountLayout,
-							pg.changeAppPasswordLayout,
-						}
-						return pg.pageContainer.Layout(gtx, len(wdgs), func(gtx C, i int) D {
-							return wdgs[i](gtx)
+					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+							gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+							wdgs := []func(gtx C) D{
+								pg.exchangesInfoLayout,
+								pg.addDexAndImportAccountLayout,
+								pg.changeAppPasswordLayout,
+							}
+							return pg.pageContainer.Layout(gtx, len(wdgs), func(gtx C, i int) D {
+								return wdgs[i](gtx)
+							})
 						})
 					})
+
 				})
 			},
 		}
@@ -100,69 +106,61 @@ func (pg *DexSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *DexSettingsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
-	})
-}
-
 func (pg *DexSettingsPage) exchangesInfoLayout(gtx C) D {
 	var wdgs []layout.FlexChild
+	b := func(btn *decredmaterial.Clickable, labelBtn string) layout.Widget {
+		return func(gtx C) D {
+			return widget.Border{
+				Color:        pg.Theme.Color.Gray2,
+				CornerRadius: values.MarginPadding0,
+				Width:        values.MarginPadding1,
+			}.Layout(gtx, func(gtx C) D {
+				return btn.Layout(gtx, func(gtx C) D {
+					return layout.Inset{
+						Top:    values.MarginPadding4,
+						Bottom: values.MarginPadding4,
+						Left:   values.MarginPadding8,
+						Right:  values.MarginPadding8,
+					}.Layout(gtx, pg.Theme.Label(values.MarginPadding12, labelBtn).Layout)
+				})
+			})
+		}
+	}
+
 	for _, e := range pg.exchangesWdg {
 		eWdg := e
-		border := widget.Border{
-			Color:        pg.Theme.Color.Gray2,
-			CornerRadius: values.MarginPadding0,
-			Width:        values.MarginPadding1,
-		}
-		inset := layout.Inset{
-			Top:    values.MarginPadding4,
-			Bottom: values.MarginPadding4,
-			Left:   values.MarginPadding8,
-			Right:  values.MarginPadding8,
-		}
-		bottom := layout.Inset{Bottom: values.MarginPadding10}
-
+		card := pg.Theme.Card()
+		card.Border = true
+		card.Inset = layout.UniformInset(values.MarginPadding16)
 		wdgs = append(wdgs, layout.Rigid(func(gtx C) D {
-			return bottom.Layout(gtx, func(gtx C) D {
-				return border.Layout(gtx, func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								dexAddress := fmt.Sprintf("Address DEX: %s", eWdg.exchange.Host)
-								account := fmt.Sprintf("Account ID: %s", eWdg.exchange.AcctID)
-								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(pg.Theme.Label(values.TextSize14, dexAddress).Layout),
-									layout.Rigid(pg.Theme.Label(values.TextSize14, account).Layout),
+			return layout.Inset{
+				Bottom: values.MarginPadding10,
+			}.Layout(gtx, func(gtx C) D {
+				return card.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							dexAddress := fmt.Sprintf("Address DEX: %s", eWdg.exchange.Host)
+							account := fmt.Sprintf("Account ID: %s", eWdg.exchange.AcctID)
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(pg.Theme.Label(values.TextSize12, dexAddress).Layout),
+								layout.Rigid(pg.Theme.Label(values.TextSize12, account).Layout),
+							)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{
+								Top: values.MarginPadding10,
+							}.Layout(gtx, func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(b(eWdg.exportAccountBtn, "Export Account")),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{
+											Left: values.MarginPadding10,
+										}.Layout(gtx, b(eWdg.disableAccountBtn, "Disable Account"))
+									}),
 								)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Top: values.MarginPadding10,
-								}.Layout(gtx, func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return border.Layout(gtx, func(gtx C) D {
-												return eWdg.exportAccountBtn.Layout(gtx, func(gtx C) D {
-													return inset.Layout(gtx, pg.Theme.Label(values.MarginPadding12, "Export Account").Layout)
-												})
-											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-												return border.Layout(gtx, func(gtx C) D {
-													return eWdg.disableAccountBtn.Layout(gtx, func(gtx C) D {
-														return inset.Layout(gtx, pg.Theme.Label(values.MarginPadding12, "Disable Account").Layout)
-													})
-												})
-											})
-										}),
-									)
-								})
-							}),
-						)
-					})
+							})
+						}),
+					)
 				})
 			})
 		}))
@@ -176,7 +174,7 @@ func (pg *DexSettingsPage) addDexAndImportAccountLayout(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				t := "The Decred DEX Client supports simultaneous use of any number of DEX servers."
-				return pg.Theme.Label(values.TextSize16, t).Layout(gtx)
+				return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
