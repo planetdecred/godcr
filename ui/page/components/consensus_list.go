@@ -137,7 +137,6 @@ func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 
 func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
 			Top:    values.MarginPadding10,
