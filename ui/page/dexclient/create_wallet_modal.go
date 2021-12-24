@@ -23,8 +23,8 @@ type createWalletModal struct {
 	*load.Load
 	sourceAccountSelector *components.AccountSelector
 	modal                 *decredmaterial.Modal
-	submit                decredmaterial.Button
-	cancel                decredmaterial.Button
+	submitBtn             decredmaterial.Button
+	cancelBtn             decredmaterial.Button
 	walletPassword        decredmaterial.Editor
 	appPassword           decredmaterial.Editor
 	walletInfoWidget      *walletInfoWidget
@@ -45,8 +45,8 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreate
 		modal:            l.Theme.ModalFloatTitle(),
 		walletPassword:   l.Theme.EditorPassword(new(widget.Editor), "Wallet Password"),
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App Password"),
-		submit:           l.Theme.Button("Add"),
-		cancel:           l.Theme.OutlineButton("Cancel"),
+		submitBtn:        l.Theme.Button("Add"),
+		cancelBtn:        l.Theme.OutlineButton("Cancel"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 		walletInfoWidget: wallInfo,
 		walletCreated:    walletCreated,
@@ -94,11 +94,11 @@ func (md *createWalletModal) OnResume() {
 }
 
 func (md *createWalletModal) Handle() {
-	if md.cancel.Button.Clicked() && !md.isSending {
+	if md.cancelBtn.Button.Clicked() && !md.isSending {
 		md.Dismiss()
 	}
 
-	if md.submit.Button.Clicked() {
+	if md.submitBtn.Button.Clicked() {
 		if md.appPassword.Editor.Text() == "" || md.isSending {
 			return
 		}
@@ -203,7 +203,7 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 						return layout.Inset{
 							Right:  values.MarginPadding4,
 							Bottom: values.MarginPadding15,
-						}.Layout(gtx, md.cancel.Layout)
+						}.Layout(gtx, md.cancelBtn.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if md.isSending {
@@ -212,7 +212,7 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 								Bottom: values.MarginPadding15,
 							}.Layout(gtx, md.materialLoader.Layout)
 						}
-						return md.submit.Layout(gtx)
+						return md.submitBtn.Layout(gtx)
 					}),
 				)
 			})

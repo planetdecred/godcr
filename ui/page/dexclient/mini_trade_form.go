@@ -19,8 +19,8 @@ import (
 type miniTradeFormWidget struct {
 	*load.Load
 	isSell                        bool
-	submit                        decredmaterial.Button
-	direction                     decredmaterial.IconButton
+	submitBtn                     decredmaterial.Button
+	directionBtn                  decredmaterial.IconButton
 	invoicedAmount, orderedAmount decredmaterial.Editor
 	host                          string
 	mkt                           *core.Market
@@ -29,17 +29,17 @@ type miniTradeFormWidget struct {
 func newMiniTradeFormWidget(l *load.Load, host string, mkt *core.Market) *miniTradeFormWidget {
 	m := &miniTradeFormWidget{
 		Load:           l,
-		submit:         l.Theme.Button("OK"),
+		submitBtn:      l.Theme.Button("OK"),
 		invoicedAmount: l.Theme.Editor(new(widget.Editor), "I have"),
 		orderedAmount:  l.Theme.Editor(new(widget.Editor), "I get"),
-		direction:      l.Theme.IconButton(l.Icons.ExchangeIcon),
+		directionBtn:   l.Theme.IconButton(l.Icons.ExchangeIcon),
 		isSell:         true,
 		host:           host,
 		mkt:            mkt,
 	}
 
-	m.direction.Size = values.MarginPadding20
-	m.direction.ChangeColorStyle(&values.ColorStyle{Background: color.NRGBA{}})
+	m.directionBtn.Size = values.MarginPadding20
+	m.directionBtn.ChangeColorStyle(&values.ColorStyle{Background: color.NRGBA{}})
 
 	m.invoicedAmount.Editor.SingleLine = true
 	m.invoicedAmount.HasCustomButton = true
@@ -50,8 +50,8 @@ func newMiniTradeFormWidget(l *load.Load, host string, mkt *core.Market) *miniTr
 	m.orderedAmount.CustomButton.Inset = layout.UniformInset(values.MarginPadding6)
 	m.changeDirection()
 
-	m.submit.TextSize = values.TextSize12
-	m.submit.Background = l.Theme.Color.Primary
+	m.submitBtn.TextSize = values.TextSize12
+	m.submitBtn.Background = l.Theme.Color.Primary
 
 	return m
 }
@@ -61,13 +61,13 @@ func (m *miniTradeFormWidget) layout(gtx C) D {
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Flexed(.5, m.invoicedAmount.Layout),
-				layout.Rigid(m.direction.Layout),
+				layout.Rigid(m.directionBtn.Layout),
 				layout.Flexed(.5, m.orderedAmount.Layout),
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-				return m.submit.Layout(gtx)
+				return m.submitBtn.Layout(gtx)
 			})
 		}),
 	)
@@ -118,34 +118,30 @@ func (m miniTradeFormWidget) suggestValue(ord *core.OrderBook, amount string, is
 }
 
 func (m *miniTradeFormWidget) handle(ord *core.OrderBook) {
-	if m.direction.Button.Clicked() {
+	if m.directionBtn.Button.Clicked() {
 		m.isSell = !m.isSell
 		m.changeDirection()
 	}
 
 	if ord != nil {
-		for _, evt := range m.invoicedAmount.Editor.Events() {
-			if m.invoicedAmount.Editor.Focused() {
-				switch evt.(type) {
-				case widget.ChangeEvent:
-					value := m.suggestValue(ord, m.invoicedAmount.Editor.Text(), m.isSell, true)
-					m.orderedAmount.Editor.SetText(value)
-				}
+		if m.invoicedAmount.Editor.Focused() {
+			_, change := decredmaterial.HandleEditorEvents(m.invoicedAmount.Editor)
+			if change {
+				value := m.suggestValue(ord, m.invoicedAmount.Editor.Text(), m.isSell, true)
+				m.orderedAmount.Editor.SetText(value)
 			}
 		}
 
-		for _, evt := range m.orderedAmount.Editor.Events() {
-			if m.orderedAmount.Editor.Focused() {
-				switch evt.(type) {
-				case widget.ChangeEvent:
-					value := m.suggestValue(ord, m.orderedAmount.Editor.Text(), m.isSell, false)
-					m.invoicedAmount.Editor.SetText(value)
-				}
+		if m.orderedAmount.Editor.Focused() {
+			_, change := decredmaterial.HandleEditorEvents(m.orderedAmount.Editor)
+			if change {
+				value := m.suggestValue(ord, m.orderedAmount.Editor.Text(), m.isSell, false)
+				m.invoicedAmount.Editor.SetText(value)
 			}
 		}
 	}
 
-	if m.submit.Button.Clicked() {
+	if m.submitBtn.Button.Clicked() {
 		var qty uint64
 		if m.isSell {
 			assetInfo, err := asset.Info(m.mkt.BaseID)

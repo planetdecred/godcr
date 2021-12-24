@@ -21,13 +21,13 @@ const depositeModalID = "dex_deposit_modal"
 
 type depositModal struct {
 	*load.Load
-	gtx              *layout.Context
-	modal            *decredmaterial.Modal
-	walletInfoWidget *walletInfoWidget
-	wallAddress      string
-	qrImage          *image.Image
-	newAddr, copy    decredmaterial.Button
-	cancel           decredmaterial.Button
+	gtx                 *layout.Context
+	modal               *decredmaterial.Modal
+	walletInfoWidget    *walletInfoWidget
+	wallAddress         string
+	qrImage             *image.Image
+	newAddrBtn, copyBtn decredmaterial.Button
+	cancelBtn           decredmaterial.Button
 }
 
 func newDepositModal(l *load.Load, wallInfo *walletInfoWidget, wallAddress string) *depositModal {
@@ -36,18 +36,18 @@ func newDepositModal(l *load.Load, wallInfo *walletInfoWidget, wallAddress strin
 		walletInfoWidget: wallInfo,
 		wallAddress:      wallAddress,
 		modal:            l.Theme.ModalFloatTitle(),
-		cancel:           l.Theme.OutlineButton("Cancel"),
-		copy:             l.Theme.Button("Copy"),
-		newAddr:          l.Theme.Button("New Address"),
+		cancelBtn:        l.Theme.OutlineButton("Cancel"),
+		copyBtn:          l.Theme.Button("Copy"),
+		newAddrBtn:       l.Theme.Button("New Address"),
 	}
 
-	md.copy.Background = color.NRGBA{}
-	md.copy.HighlightColor = md.Theme.Color.SurfaceHighlight
-	md.copy.Color = md.Theme.Color.Primary
+	md.copyBtn.Background = color.NRGBA{}
+	md.copyBtn.HighlightColor = md.Theme.Color.SurfaceHighlight
+	md.copyBtn.Color = md.Theme.Color.Primary
 
-	md.newAddr.Background = md.Theme.Color.Surface
-	md.newAddr.HighlightColor = md.Theme.Color.SurfaceHighlight
-	md.newAddr.Color = md.Theme.Color.Primary
+	md.newAddrBtn.Background = md.Theme.Color.Surface
+	md.newAddrBtn.HighlightColor = md.Theme.Color.SurfaceHighlight
+	md.newAddrBtn.Color = md.Theme.Color.Primary
 
 	md.generateQRForAddress(wallInfo.coinID)
 
@@ -75,24 +75,24 @@ func (md *depositModal) OnResume() {
 func (md *depositModal) Handle() {
 	gtx := md.gtx
 
-	if md.cancel.Button.Clicked() {
+	if md.cancelBtn.Button.Clicked() {
 		md.Dismiss()
 	}
 
-	if md.copy.Clicked() {
+	if md.copyBtn.Clicked() {
 		clipboard.WriteOp{Text: md.wallAddress}.Add(gtx.Ops)
 		md.Toast.Notify(fmt.Sprintf("Copied %s address to clipboard", md.walletInfoWidget.coinName))
 		return
 	}
 
-	if md.newAddr.Clicked() {
-		newAddr, err := md.generateNewAddress(md.walletInfoWidget.coinID)
+	if md.newAddrBtn.Clicked() {
+		newAddrBtn, err := md.generateNewAddress(md.walletInfoWidget.coinID)
 		if err != nil {
 			fmt.Println("Error generating new address" + err.Error())
 			return
 		}
 
-		md.wallAddress = newAddr
+		md.wallAddress = newAddrBtn
 		md.generateQRForAddress(md.walletInfoWidget.coinID)
 	}
 }
@@ -104,9 +104,7 @@ func (md *depositModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return md.Load.Theme.Label(values.TextSize20, "Deposit").Layout(gtx)
-				}),
+				layout.Rigid(md.Load.Theme.Label(values.TextSize20, "Deposit").Layout),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding8, Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 						ic := md.walletInfoWidget.image
@@ -114,9 +112,7 @@ func (md *depositModal) Layout(gtx layout.Context) D {
 						return md.walletInfoWidget.image.Layout(gtx)
 					})
 				}),
-				layout.Rigid(func(gtx C) D {
-					return md.Load.Theme.Label(values.TextSize20, md.walletInfoWidget.coinName).Layout(gtx)
-				}),
+				layout.Rigid(md.Load.Theme.Label(values.TextSize20, md.walletInfoWidget.coinName).Layout),
 			)
 		},
 		func(gtx C) D {
@@ -144,15 +140,9 @@ func (md *depositModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return md.cancel.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return md.copy.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return md.newAddr.Layout(gtx)
-					}),
+					layout.Rigid(md.cancelBtn.Layout),
+					layout.Rigid(md.copyBtn.Layout),
+					layout.Rigid(md.newAddrBtn.Layout),
 				)
 			})
 		},
@@ -178,9 +168,7 @@ func (md *depositModal) addressLayout(gtx layout.Context) layout.Dimensions {
 						Bottom: values.MarginPadding16,
 						Left:   values.MarginPadding16,
 						Right:  values.MarginPadding16,
-					}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return md.Theme.Label(values.TextSize14, md.wallAddress).Layout(gtx)
-					})
+					}.Layout(gtx, md.Theme.Label(values.TextSize14, md.wallAddress).Layout)
 				})
 			}),
 		)

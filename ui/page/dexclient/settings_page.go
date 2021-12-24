@@ -22,31 +22,37 @@ const DexSettingsPageID = "DexSettings"
 
 type DexSettingsPage struct {
 	*load.Load
-	pageContainer     layout.List
-	backButton        decredmaterial.IconButton
-	exchangesWdg      []*exchangeWidget
-	addDex            decredmaterial.Button
-	importAccount     decredmaterial.Button
-	changeAppPassword decredmaterial.Button
+	pageContainer        layout.List
+	backButton           decredmaterial.IconButton
+	exchangesWdg         []*exchangeWidget
+	addDexBtn            decredmaterial.Button
+	importAccountBtn     decredmaterial.Button
+	changeAppPasswordBtn decredmaterial.Button
 }
 
 type exchangeWidget struct {
-	exchange       *core.Exchange
-	exportAccount  *decredmaterial.Clickable
-	disableAccount *decredmaterial.Clickable
+	exchange          *core.Exchange
+	exportAccountBtn  *decredmaterial.Clickable
+	disableAccountBtn *decredmaterial.Clickable
 }
 
 func NewDexSettingsPage(l *load.Load) *DexSettingsPage {
 	pg := &DexSettingsPage{
-		Load:              l,
-		pageContainer:     layout.List{Axis: layout.Vertical},
-		addDex:            l.Theme.Button("Add a dex"),
-		importAccount:     l.Theme.Button("Inport Account"),
-		changeAppPassword: l.Theme.Button("Change App Password"),
+		Load:                 l,
+		pageContainer:        layout.List{Axis: layout.Vertical},
+		addDexBtn:            l.Theme.Button("Add a dex"),
+		importAccountBtn:     l.Theme.Button("Import Account"),
+		changeAppPasswordBtn: l.Theme.OutlineButton("Change App Password"),
 	}
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
-	pg.addDex.Background = l.Theme.Color.Success
-	pg.importAccount.Background = l.Theme.Color.Success
+	inset := layout.Inset{
+		Top: values.MarginPadding5, Bottom: values.MarginPadding5,
+		Left: values.MarginPadding9, Right: values.MarginPadding9,
+	}
+	pg.addDexBtn.Background = l.Theme.Color.Success
+	pg.importAccountBtn.Background = l.Theme.Color.Success
+	pg.importAccountBtn.Inset, pg.addDexBtn.Inset = inset, inset
+	pg.importAccountBtn.TextSize, pg.addDexBtn.TextSize = values.TextSize14, values.TextSize14
 
 	pg.initExchangeWidget()
 	return pg
@@ -124,15 +130,11 @@ func (pg *DexSettingsPage) exchangesInfoLayout(gtx C) D {
 					return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
+								dexAddress := fmt.Sprintf("Address DEX: %s", eWdg.exchange.Host)
+								account := fmt.Sprintf("Account ID: %s", eWdg.exchange.AcctID)
 								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										dexAddress := fmt.Sprintf("Address DEX: %s", eWdg.exchange.Host)
-										return pg.Theme.Label(values.TextSize14, dexAddress).Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										account := fmt.Sprintf("Account ID: %s", eWdg.exchange.AcctID)
-										return pg.Theme.Label(values.TextSize14, account).Layout(gtx)
-									}),
+									layout.Rigid(pg.Theme.Label(values.TextSize14, dexAddress).Layout),
+									layout.Rigid(pg.Theme.Label(values.TextSize14, account).Layout),
 								)
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -142,20 +144,16 @@ func (pg *DexSettingsPage) exchangesInfoLayout(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											return border.Layout(gtx, func(gtx C) D {
-												return eWdg.exportAccount.Layout(gtx, func(gtx C) D {
-													return inset.Layout(gtx, func(gtx C) D {
-														return pg.Theme.Label(values.MarginPadding12, "Export Account").Layout(gtx)
-													})
+												return eWdg.exportAccountBtn.Layout(gtx, func(gtx C) D {
+													return inset.Layout(gtx, pg.Theme.Label(values.MarginPadding12, "Export Account").Layout)
 												})
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 												return border.Layout(gtx, func(gtx C) D {
-													return eWdg.disableAccount.Layout(gtx, func(gtx C) D {
-														return inset.Layout(gtx, func(gtx C) D {
-															return pg.Theme.Label(values.MarginPadding12, "Disable Account").Layout(gtx)
-														})
+													return eWdg.disableAccountBtn.Layout(gtx, func(gtx C) D {
+														return inset.Layout(gtx, pg.Theme.Label(values.MarginPadding12, "Disable Account").Layout)
 													})
 												})
 											})
@@ -183,11 +181,9 @@ func (pg *DexSettingsPage) addDexAndImportAccountLayout(gtx C) D {
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(pg.addDex.Layout),
+						layout.Rigid(pg.addDexBtn.Layout),
 						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								return pg.importAccount.Layout(gtx)
-							})
+							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, pg.importAccountBtn.Layout)
 						}),
 					)
 				})
@@ -201,9 +197,7 @@ func (pg *DexSettingsPage) changeAppPasswordLayout(gtx C) D {
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, pg.Theme.Separator().Layout)
 		}),
-		layout.Rigid(func(gtx C) D {
-			return pg.changeAppPassword.Layout(gtx)
-		}),
+		layout.Rigid(pg.changeAppPasswordBtn.Layout),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, pg.Theme.Separator().Layout)
 		}),
@@ -220,9 +214,9 @@ func (pg *DexSettingsPage) initExchangeWidget() {
 	}
 	for _, ex := range mapExchanges {
 		ew := &exchangeWidget{
-			exchange:       ex,
-			exportAccount:  clickable(),
-			disableAccount: clickable(),
+			exchange:          ex,
+			exportAccountBtn:  clickable(),
+			disableAccountBtn: clickable(),
 		}
 		pg.exchangesWdg = append(pg.exchangesWdg, ew)
 	}
@@ -233,7 +227,7 @@ func (pg *DexSettingsPage) initExchangeWidget() {
 
 func (pg *DexSettingsPage) Handle() {
 	for _, eWdg := range pg.exchangesWdg {
-		if eWdg.disableAccount.Clicked() {
+		if eWdg.disableAccountBtn.Clicked() {
 			exchange := eWdg.exchange
 			modal.NewPasswordModal(pg.Load).
 				Title("Disable Account").
@@ -256,7 +250,7 @@ func (pg *DexSettingsPage) Handle() {
 				}).Show()
 		}
 
-		if eWdg.exportAccount.Clicked() {
+		if eWdg.exportAccountBtn.Clicked() {
 			exchange := eWdg.exchange
 			modal.NewPasswordModal(pg.Load).
 				Title("Authorize Export").
@@ -312,11 +306,11 @@ func (pg *DexSettingsPage) Handle() {
 		}
 	}
 
-	if pg.addDex.Button.Clicked() {
+	if pg.addDexBtn.Button.Clicked() {
 		newAddDexModal(pg.Load).Show()
 	}
 
-	if pg.importAccount.Button.Clicked() {
+	if pg.importAccountBtn.Button.Clicked() {
 		go func() {
 			filePath, err := zenity.SelectFile(
 				zenity.Title("Select Your Account"),
@@ -376,7 +370,7 @@ func (pg *DexSettingsPage) Handle() {
 		}()
 	}
 
-	if pg.changeAppPassword.Button.Clicked() {
+	if pg.changeAppPasswordBtn.Button.Clicked() {
 		modal.NewCreatePasswordModal(pg.Load).
 			Title("Change Password").
 			EnableName(false).
