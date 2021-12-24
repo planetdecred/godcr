@@ -26,11 +26,11 @@ const testDexHost = "dex-test.ssgen.io:7232"
 type addDexModal struct {
 	*load.Load
 	modal            *decredmaterial.Modal
-	addDexServer     decredmaterial.Button
+	addDexServerBtn  decredmaterial.Button
 	dexServerAddress decredmaterial.Editor
 	isSending        bool
 	cert             decredmaterial.Editor
-	cancel           decredmaterial.Button
+	cancelBtn        decredmaterial.Button
 	materialLoader   material.LoaderStyle
 }
 
@@ -40,8 +40,8 @@ func newAddDexModal(l *load.Load) *addDexModal {
 		modal:            l.Theme.ModalFloatTitle(),
 		dexServerAddress: l.Theme.Editor(new(widget.Editor), "DEX Address"),
 		cert:             l.Theme.Editor(new(widget.Editor), "Cert content"),
-		addDexServer:     l.Theme.Button("Submit"),
-		cancel:           l.Theme.OutlineButton("Cancel"),
+		addDexServerBtn:  l.Theme.Button("Submit"),
+		cancelBtn:        l.Theme.OutlineButton("Cancel"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 	}
 
@@ -74,11 +74,11 @@ func (md *addDexModal) OnResume() {
 }
 
 func (md *addDexModal) Handle() {
-	if md.cancel.Button.Clicked() && !md.isSending {
+	if md.cancelBtn.Button.Clicked() && !md.isSending {
 		md.Dismiss()
 	}
 
-	if md.addDexServer.Button.Clicked() {
+	if md.addDexServerBtn.Button.Clicked() {
 		if md.dexServerAddress.Editor.Text() == "" || md.isSending {
 			return
 		}
@@ -161,7 +161,7 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 						return layout.Inset{
 							Right:  values.MarginPadding4,
 							Bottom: values.MarginPadding15,
-						}.Layout(gtx, md.cancel.Layout)
+						}.Layout(gtx, md.cancelBtn.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if md.isSending {
@@ -170,7 +170,7 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 								Bottom: values.MarginPadding15,
 							}.Layout(gtx, md.materialLoader.Layout)
 						}
-						return md.addDexServer.Layout(gtx)
+						return md.addDexServerBtn.Layout(gtx)
 					}),
 				)
 			})

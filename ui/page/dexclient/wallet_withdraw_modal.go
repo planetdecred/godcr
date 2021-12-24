@@ -27,8 +27,8 @@ type withdrawModal struct {
 	as                   *core.SupportedAsset
 	address, amount, pwd decredmaterial.Editor
 	qrImage              *image.Image
-	cancel               decredmaterial.Button
-	submit               decredmaterial.Button
+	cancelBtn            decredmaterial.Button
+	submitBtn            decredmaterial.Button
 	isLoading            bool
 	materialLoader       material.LoaderStyle
 }
@@ -46,8 +46,8 @@ func newWithdrawModal(l *load.Load, wallInfo *walletInfoWidget, as *core.Support
 		Load:             l,
 		walletInfoWidget: wallInfo,
 		modal:            l.Theme.ModalFloatTitle(),
-		cancel:           l.Theme.OutlineButton("Cancel"),
-		submit:           l.Theme.Button("Withdraw"),
+		cancelBtn:        l.Theme.OutlineButton("Cancel"),
+		submitBtn:        l.Theme.Button("Withdraw"),
 		address:          l.Theme.Editor(new(widget.Editor), "Address"),
 		amount:           l.Theme.Editor(new(widget.Editor), "Amount"),
 		pwd:              l.Theme.EditorPassword(new(widget.Editor), "Password"),
@@ -77,11 +77,11 @@ func (md *withdrawModal) OnResume() {
 }
 
 func (md *withdrawModal) Handle() {
-	if md.cancel.Button.Clicked() {
+	if md.cancelBtn.Button.Clicked() {
 		md.Dismiss()
 	}
 
-	if md.submit.Button.Clicked() {
+	if md.submitBtn.Button.Clicked() {
 		if md.isLoading {
 			return
 		}
@@ -130,9 +130,7 @@ func (md *withdrawModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return md.Load.Theme.Label(values.TextSize20, "Withdraw").Layout(gtx)
-				}),
+				layout.Rigid(md.Load.Theme.Label(values.TextSize20, "Withdraw").Layout),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding8, Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 						ic := md.walletInfoWidget.image
@@ -140,9 +138,7 @@ func (md *withdrawModal) Layout(gtx layout.Context) D {
 						return md.walletInfoWidget.image.Layout(gtx)
 					})
 				}),
-				layout.Rigid(func(gtx C) D {
-					return md.Load.Theme.Label(values.TextSize20, strings.ToUpper(md.walletInfoWidget.coinName)).Layout(gtx)
-				}),
+				layout.Rigid(md.Load.Theme.Label(values.TextSize20, strings.ToUpper(md.walletInfoWidget.coinName)).Layout),
 			)
 		},
 		func(gtx C) D {
@@ -169,7 +165,7 @@ func (md *withdrawModal) Layout(gtx layout.Context) D {
 						return layout.Inset{
 							Right:  values.MarginPadding4,
 							Bottom: values.MarginPadding15,
-						}.Layout(gtx, md.cancel.Layout)
+						}.Layout(gtx, md.cancelBtn.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if md.isLoading {
@@ -178,7 +174,7 @@ func (md *withdrawModal) Layout(gtx layout.Context) D {
 								Bottom: values.MarginPadding15,
 							}.Layout(gtx, md.materialLoader.Layout)
 						}
-						return md.submit.Layout(gtx)
+						return md.submitBtn.Layout(gtx)
 					}),
 				)
 			})

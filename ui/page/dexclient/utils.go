@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"time"
 
@@ -235,4 +236,16 @@ func minMaxRateOrderBook(orders []*core.MiniOrder) (float64, float64) {
 		}
 	}
 	return min, max
+}
+
+// sliceExchanges convert mapExchanges to a slice of sorted exchange
+func sliceExchanges(mapExchanges map[string]*core.Exchange) []*core.Exchange {
+	sliceExchange := make([]*core.Exchange, 0)
+	for _, dex := range mapExchanges {
+		sliceExchange = append(sliceExchange, dex)
+	}
+	sort.Slice(sliceExchange, func(i, j int) bool {
+		return sliceExchange[i].Host < sliceExchange[j].Host
+	})
+	return sliceExchange
 }

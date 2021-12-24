@@ -63,74 +63,45 @@ func (pg *OrdersHistoryPage) Layout(gtx layout.Context) layout.Dimensions {
 					Left:  values.MarginPadding10,
 					Right: values.MarginPadding10,
 				}.Layout(gtx, func(gtx C) D {
-					return pg.pageSections(gtx, func(gtx C) D {
-						gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Flexed(0.125, func(gtx C) D {
-										return pg.Theme.Label(values.TextSize14, "Trade").Layout(gtx)
-									}),
-									layout.Flexed(0.125, func(gtx C) D {
-										return pg.Theme.Label(values.TextSize14, "Side").Layout(gtx)
-									}),
-									layout.Flexed(0.125, func(gtx C) D {
-										return pg.Theme.Label(values.TextSize14, "Rate").Layout(gtx)
-									}),
-									layout.Flexed(0.125, func(gtx C) D {
-										return pg.Theme.Label(values.TextSize14, "Quantity").Layout(gtx)
-									}),
-									layout.Flexed(0.125, func(gtx C) D {
-										return pg.Theme.Label(values.TextSize14, "Filled").Layout(gtx)
-									}),
-									layout.Flexed(0.125, func(gtx C) D {
-										return pg.Theme.Label(values.TextSize14, "Settled").Layout(gtx)
-									}),
-									layout.Flexed(0.125, func(gtx C) D {
-										return pg.Theme.Label(values.TextSize14, "Status").Layout(gtx)
-									}),
-									layout.Flexed(0.125, func(gtx C) D {
-										return pg.Theme.Label(values.TextSize14, "Time").Layout(gtx)
-									}),
-								)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Top:    values.MarginPadding8,
-									Bottom: values.MarginPadding8}.Layout(gtx, pg.Theme.Separator().Layout)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return pg.Theme.List(pg.list).Layout(gtx, len(pg.orders), func(gtx C, i int) D {
-									ord := pg.orders[i]
+					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+							gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
-										layout.Flexed(0.125, func(gtx C) D {
-											return pg.Theme.Label(values.TextSize14, typeString(ord)).Layout(gtx)
-										}),
-										layout.Flexed(0.125, func(gtx C) D {
-											return pg.Theme.Label(values.TextSize14, sellString(ord)).Layout(gtx)
-										}),
-										layout.Flexed(0.125, func(gtx C) D {
-											return pg.Theme.Label(values.TextSize14, rateString(ord)).Layout(gtx)
-										}),
-										layout.Flexed(0.125, func(gtx C) D {
-											return pg.Theme.Label(values.TextSize14, formatCoinValue(ord.Qty)).Layout(gtx)
-										}),
-										layout.Flexed(0.125, func(gtx C) D {
-											return pg.Theme.Label(values.TextSize14, fmt.Sprintf("%.1f%%", (float64(ord.Filled)/float64(ord.Qty))*100)).Layout(gtx)
-										}),
-										layout.Flexed(0.125, func(gtx C) D {
-											return pg.Theme.Label(values.TextSize14, fmt.Sprintf("%.1f%%", settled(ord)/float64(ord.Qty)*100)).Layout(gtx)
-										}),
-										layout.Flexed(0.125, func(gtx C) D {
-											return pg.Theme.Label(values.TextSize14, statusString(ord)).Layout(gtx)
-										}),
-										layout.Flexed(0.125, func(gtx C) D {
-											return pg.Theme.Label(values.TextSize14, timeSince(ord.Stamp)).Layout(gtx)
-										}),
+										layout.Flexed(0.125, pg.layoutLabel("Trade")),
+										layout.Flexed(0.125, pg.layoutLabel("Side")),
+										layout.Flexed(0.125, pg.layoutLabel("Rate")),
+										layout.Flexed(0.125, pg.layoutLabel("Quantity")),
+										layout.Flexed(0.125, pg.layoutLabel("Filled")),
+										layout.Flexed(0.125, pg.layoutLabel("Settled")),
+										layout.Flexed(0.125, pg.layoutLabel("Status")),
+										layout.Flexed(0.125, pg.layoutLabel("Time")),
 									)
-								})
-							}),
-						)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{
+										Top:    values.MarginPadding8,
+										Bottom: values.MarginPadding8}.Layout(gtx, pg.Theme.Separator().Layout)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return pg.Theme.List(pg.list).Layout(gtx, len(pg.orders), func(gtx C, i int) D {
+										order := pg.orders[i]
+										return layout.Flex{}.Layout(gtx,
+											layout.Flexed(0.125, pg.layoutLabel(typeString(order))),
+											layout.Flexed(0.125, pg.layoutLabel(sellString(order))),
+											layout.Flexed(0.125, pg.layoutLabel(rateString(order))),
+											layout.Flexed(0.125, pg.layoutLabel(formatCoinValue(order.Qty))),
+											layout.Flexed(0.125, pg.layoutLabel(fmt.Sprintf("%.1f%%", (float64(order.Filled)/float64(order.Qty))*100))),
+											layout.Flexed(0.125, pg.layoutLabel(fmt.Sprintf("%.1f%%", settled(order)/float64(order.Qty)*100))),
+											layout.Flexed(0.125, pg.layoutLabel(statusString(order))),
+											layout.Flexed(0.125, pg.layoutLabel(timeSince(order.Stamp))),
+										)
+									})
+								}),
+							)
+						})
 					})
 				})
 			},
@@ -142,13 +113,9 @@ func (pg *OrdersHistoryPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *OrdersHistoryPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
-	})
+func (pg *OrdersHistoryPage) layoutLabel(text string) layout.Widget {
+	return pg.Theme.Label(values.TextSize14, text).Layout
 }
-
 func (pg *OrdersHistoryPage) Handle() {
 
 }
@@ -164,10 +131,10 @@ func (pg *OrdersHistoryPage) readNotifications() {
 		case n := <-ch:
 			switch n.Type() {
 			case core.NoteTypeOrder:
-				ord := n.(*core.OrderNote)
+				orderNote := n.(*core.OrderNote)
 				for i, order := range pg.orders {
-					if ord.Order.ID.String() == order.ID.String() {
-						pg.orders[i] = ord.Order
+					if orderNote.Order.ID.String() == order.ID.String() {
+						pg.orders[i] = orderNote.Order
 						pg.RefreshWindow()
 						break
 					}

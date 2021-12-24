@@ -32,12 +32,12 @@ type DexWalletsPage struct {
 }
 
 type assetWidget struct {
-	withdraw     *decredmaterial.Clickable
-	deposit      *decredmaterial.Clickable
-	lock         *decredmaterial.Clickable
-	unLock       *decredmaterial.Clickable
-	createWallet *decredmaterial.Clickable
-	asset        *core.SupportedAsset
+	withdrawBtn     *decredmaterial.Clickable
+	depositBtn      *decredmaterial.Clickable
+	lockBtn         *decredmaterial.Clickable
+	unLockBtn       *decredmaterial.Clickable
+	createWalletBtn *decredmaterial.Clickable
+	asset           *core.SupportedAsset
 }
 
 func NewDexWalletsPage(l *load.Load) *DexWalletsPage {
@@ -109,13 +109,9 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 										return layout.Inset{
 											Left:  values.MarginPadding8,
 											Right: values.MarginPadding8,
-										}.Layout(gtx, func(gtx C) D {
-											return pg.Theme.Body2(asset.Info.Name).Layout(gtx)
-										})
+										}.Layout(gtx, pg.Theme.Body2(asset.Info.Name).Layout)
 									}),
-									layout.Rigid(func(gtx C) D {
-										return pg.Theme.Body2(fmt.Sprintf("(%s)", strings.ToUpper(asset.Symbol))).Layout(gtx)
-									}),
+									layout.Rigid(pg.Theme.Body2(fmt.Sprintf("(%s)", strings.ToUpper(asset.Symbol))).Layout),
 								)
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -183,9 +179,7 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 							return layout.Inset{Left: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 								return border.Layout(gtx, func(gtx C) D {
 									return b.Layout(gtx, func(gtx C) D {
-										return inset.Layout(gtx, func(gtx C) D {
-											return pg.Theme.Label(values.MarginPadding12, label).Layout(gtx)
-										})
+										return inset.Layout(gtx, pg.Theme.Label(values.MarginPadding12, label).Layout)
 									})
 								})
 							})
@@ -193,21 +187,21 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 
 						if asset.Wallet != nil {
 							if !asset.Wallet.Open {
-								return btn(assetW.unLock, "Unlock")
+								return btn(assetW.unLockBtn, "Unlock")
 							}
 							return layout.Flex{}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return btn(assetW.withdraw, "Withdraw")
+									return btn(assetW.withdrawBtn, "Withdraw")
 								}),
 								layout.Rigid(func(gtx C) D {
-									return btn(assetW.deposit, "Deposit")
+									return btn(assetW.depositBtn, "Deposit")
 								}),
 								layout.Rigid(func(gtx C) D {
-									return btn(assetW.lock, "Lock")
+									return btn(assetW.lockBtn, "Lock")
 								}),
 							)
 						}
-						return btn(assetW.createWallet, fmt.Sprintf("Create a %s Wallet", asset.Info.Name))
+						return btn(assetW.createWalletBtn, fmt.Sprintf("Create a %s Wallet", asset.Info.Name))
 					}),
 				)
 			})
@@ -232,12 +226,12 @@ func (pg *DexWalletsPage) initAssetWidgets() []*assetWidget {
 		}
 
 		aw := &assetWidget{
-			withdraw:     clickable(),
-			deposit:      clickable(),
-			createWallet: clickable(),
-			lock:         clickable(),
-			unLock:       clickable(),
-			asset:        asset,
+			withdrawBtn:     clickable(),
+			depositBtn:      clickable(),
+			createWalletBtn: clickable(),
+			lockBtn:         clickable(),
+			unLockBtn:       clickable(),
+			asset:           asset,
 		}
 
 		if asset.Wallet == nil {
@@ -257,7 +251,7 @@ func (pg *DexWalletsPage) initAssetWidgets() []*assetWidget {
 
 func (pg *DexWalletsPage) Handle() {
 	for _, assetW := range pg.assetWidgets {
-		if assetW.createWallet.Clicked() {
+		if assetW.createWalletBtn.Clicked() {
 			newCreateWalletModal(pg.Load,
 				&walletInfoWidget{
 					image:    components.CoinImageBySymbol(&pg.Load.Icons, assetW.asset.Symbol),
@@ -269,7 +263,7 @@ func (pg *DexWalletsPage) Handle() {
 				}).Show()
 		}
 
-		if assetW.deposit.Clicked() {
+		if assetW.depositBtn.Clicked() {
 			newDepositModal(pg.Load, &walletInfoWidget{
 				image:    components.CoinImageBySymbol(&pg.Load.Icons, assetW.asset.Symbol),
 				coinName: assetW.asset.Symbol,
@@ -277,7 +271,7 @@ func (pg *DexWalletsPage) Handle() {
 			}, assetW.asset.Wallet.Address).Show()
 		}
 
-		if assetW.withdraw.Clicked() {
+		if assetW.withdrawBtn.Clicked() {
 			newWithdrawModal(pg.Load, &walletInfoWidget{
 				image:    components.CoinImageBySymbol(&pg.Load.Icons, assetW.asset.Symbol),
 				coinName: assetW.asset.Symbol,
@@ -285,7 +279,7 @@ func (pg *DexWalletsPage) Handle() {
 			}, assetW.asset).Show()
 		}
 
-		if assetW.unLock.Clicked() {
+		if assetW.unLockBtn.Clicked() {
 			a := assetW.asset
 			modal.NewPasswordModal(pg.Load).
 				Title(fmt.Sprintf("Unlock %s Wallet", a.Info.Name)).
@@ -307,7 +301,7 @@ func (pg *DexWalletsPage) Handle() {
 				}).Show()
 		}
 
-		if assetW.lock.Clicked() {
+		if assetW.lockBtn.Clicked() {
 			id := assetW.asset.ID
 			err := pg.Dexc().Core().CloseWallet(id)
 			if err != nil {
