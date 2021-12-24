@@ -76,7 +76,9 @@ func (m *miniTradeFormWidget) layout(gtx C) D {
 func (m *miniTradeFormWidget) changeDirection() {
 	m.orderedAmount.Editor.SetText("0")
 	m.invoicedAmount.Editor.SetText("0")
-
+	if m.mkt == nil {
+		return
+	}
 	if m.isSell {
 		m.invoicedAmount.CustomButton.Text = strings.ToUpper(m.mkt.BaseSymbol)
 		m.invoicedAmount.CustomButton.Background = m.Theme.Color.Primary
@@ -142,6 +144,9 @@ func (m *miniTradeFormWidget) handle(ord *core.OrderBook) {
 	}
 
 	if m.submitBtn.Button.Clicked() {
+		if m.mkt == nil {
+			return
+		}
 		var qty uint64
 		if m.isSell {
 			assetInfo, err := asset.Info(m.mkt.BaseID)

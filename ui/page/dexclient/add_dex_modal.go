@@ -2,6 +2,9 @@ package dexclient
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -11,6 +14,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/ncruces/zenity"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -29,20 +33,24 @@ type addDexModal struct {
 	addDexServerBtn  decredmaterial.Button
 	dexServerAddress decredmaterial.Editor
 	isSending        bool
-	cert             decredmaterial.Editor
 	cancelBtn        decredmaterial.Button
 	materialLoader   material.LoaderStyle
+	certFilePath     string
+	fileSelectBtn    *decredmaterial.Clickable
 }
 
 func newAddDexModal(l *load.Load) *addDexModal {
+	cl := l.Theme.NewClickable(true)
+	cl.Radius = decredmaterial.Radius(0)
+
 	md := &addDexModal{
 		Load:             l,
 		modal:            l.Theme.ModalFloatTitle(),
 		dexServerAddress: l.Theme.Editor(new(widget.Editor), "DEX Address"),
-		cert:             l.Theme.Editor(new(widget.Editor), "Cert content"),
 		addDexServerBtn:  l.Theme.Button("Submit"),
 		cancelBtn:        l.Theme.OutlineButton("Cancel"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
+		fileSelectBtn:    cl,
 	}
 
 	md.dexServerAddress.Editor.SingleLine = true
@@ -85,7 +93,31 @@ func (md *addDexModal) Handle() {
 
 		md.isSending = true
 		go func() {
-			cert := []byte(md.cert.Editor.Text())
+			var cert []byte
+
+			if md.certFilePath != "" {
+				certFile, err := os.Open(md.certFilePath)
+				defer func() {
+					err := certFile.Close()
+					if err != nil {
+						return
+					}
+				}()
+
+				if err != nil {
+					md.Toast.NotifyError(err.Error())
+					md.isSending = false
+					return
+				}
+
+				cert, err = ioutil.ReadAll(certFile)
+				if err != nil {
+					md.Toast.NotifyError(err.Error())
+					md.isSending = false
+					return
+				}
+			}
+
 			dex, err := md.Dexc().DEXServerInfo(md.dexServerAddress.Editor.Text(), cert)
 			md.isSending = false
 			if err != nil {
@@ -126,24 +158,61 @@ func (md *addDexModal) Handle() {
 				}).Show()
 		}()
 	}
+
+	if md.fileSelectBtn.Clicked() {
+		filePath, err := zenity.SelectFile(
+			zenity.Title("Select Cert File"),
+			zenity.FileFilter{
+				Name:     "Cert file",
+				Patterns: []string{"*.cert"},
+			},
+		)
+
+		if err != nil {
+			md.Toast.NotifyError(err.Error())
+			return
+		}
+
+		md.certFilePath = filePath
+	}
 }
 
 func (md *addDexModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
+		md.Load.Theme.Label(values.TextSize20, "Add a dex").Layout,
 		func(gtx C) D {
-			return md.Load.Theme.Label(values.TextSize20, "Add a dex").Layout(gtx)
+			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, md.dexServerAddress.Layout)
 		},
+		md.Theme.Label(values.MarginPadding16, "TLS Certificate").Layout,
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return md.dexServerAddress.Layout(gtx)
-					})
+					fileName := "None file selected"
+					if md.certFilePath != "" {
+						fileName = filepath.Base(md.certFilePath)
+					}
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, md.Theme.Label(values.MarginPadding16, fileName).Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Max.Y = 350
-						return md.cert.Layout(gtx)
+					return md.fileSelectBtn.Layout(gtx, func(gtx C) D {
+						return widget.Border{
+							Color:        md.Theme.Color.Gray2,
+							CornerRadius: values.MarginPadding4,
+							Width:        values.MarginPadding1,
+						}.Layout(gtx, func(gtx C) D {
+							return layout.Inset{
+								Top:    values.MarginPadding4,
+								Bottom: values.MarginPadding4,
+								Left:   values.MarginPadding10,
+								Right:  values.MarginPadding10,
+							}.Layout(gtx, func(gtx C) D {
+								label := "add a file"
+								if md.certFilePath != "" {
+									label = "Choose another file"
+								}
+								return md.Theme.Label(values.MarginPadding14, label).Layout(gtx)
+							})
+						})
 					})
 				}),
 			)
@@ -195,6 +264,7 @@ func (md *addDexModal) completeRegistration(dex *core.Exchange, feeAssetName str
 					pm.SetLoading(false)
 					return
 				}
+				pm.WL.MultiWallet.SetStringConfigValueForKey(DexHostConfigKey, dex.Host)
 				pm.Dismiss()
 				md.ChangeFragment(NewMarketPage(md.Load)) // Reload to market page to listen messages
 			}()

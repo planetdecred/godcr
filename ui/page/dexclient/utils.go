@@ -238,14 +238,26 @@ func minMaxRateOrderBook(orders []*core.MiniOrder) (float64, float64) {
 	return min, max
 }
 
-// sliceExchanges convert mapExchanges to a slice of sorted exchange
+// sliceExchanges convert mapExchanges into a sorted slice
 func sliceExchanges(mapExchanges map[string]*core.Exchange) []*core.Exchange {
-	sliceExchange := make([]*core.Exchange, 0)
+	exchanges := make([]*core.Exchange, 0)
 	for _, dex := range mapExchanges {
-		sliceExchange = append(sliceExchange, dex)
+		exchanges = append(exchanges, dex)
 	}
-	sort.Slice(sliceExchange, func(i, j int) bool {
-		return sliceExchange[i].Host < sliceExchange[j].Host
+	sort.Slice(exchanges, func(i, j int) bool {
+		return exchanges[i].Host < exchanges[j].Host
 	})
-	return sliceExchange
+	return exchanges
+}
+
+// sliceMarkets convert mapMarkets into a sorted slice
+func sliceMarkets(mapMarkets map[string]*core.Market) []*core.Market {
+	markets := make([]*core.Market, 0)
+	for _, dex := range mapMarkets {
+		markets = append(markets, dex)
+	}
+	sort.Slice(markets, func(i, j int) bool {
+		return markets[i].Name < markets[j].Name
+	})
+	return markets
 }
