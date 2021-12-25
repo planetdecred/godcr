@@ -258,7 +258,8 @@ func (pg *DexWalletsPage) Handle() {
 					coinName: assetW.asset.Symbol,
 					coinID:   assetW.asset.ID,
 				},
-				func() {
+				"",
+				func(md *createWalletModal) {
 					pg.assetWidgets = pg.initAssetWidgets()
 				}).Show()
 		}

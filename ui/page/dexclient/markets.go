@@ -78,7 +78,7 @@ func (pg *Page) ID() string {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *Page) Layout(gtx C) D {
-	container := func(gtx C) D {
+	body := func(gtx C) D {
 		switch {
 		case !pg.WL.MultiWallet.IsConnectedToDecredNetwork():
 			return pg.pageSections(gtx, pg.welcomeLayout(pg.syncBtn))
@@ -124,7 +124,7 @@ func (pg *Page) Layout(gtx C) D {
 		}
 	}
 
-	return components.UniformPadding(gtx, container)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *Page) headerLayout() layout.Widget {
@@ -306,7 +306,9 @@ func (pg *Page) HandleUserInteractions() {
 
 					// Check if there is no dex registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
-						newAddDexModal(pg.Load).Show()
+						newAddDexModal(pg.Load, password).DexCreated(func(dex *core.Exchange) {
+							pg.dexCreated(dex)
+						}).Show()
 						return
 					}
 
@@ -338,7 +340,9 @@ func (pg *Page) HandleUserInteractions() {
 					m.Dismiss()
 					// Check if there is no dex registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
-						newAddDexModal(pg.Load).Show()
+						newAddDexModal(pg.Load, password).DexCreated(func(dex *core.Exchange) {
+							pg.dexCreated(dex)
+						}).Show()
 					}
 				}()
 				return false
@@ -346,7 +350,9 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.addDexBtn.Button.Clicked() {
-		newAddDexModal(pg.Load).Show()
+		newAddDexModal(pg.Load, "").DexCreated(func(dex *core.Exchange) {
+			pg.dexCreated(dex)
+		}).Show()
 	}
 
 	if pg.miniTradeFormWdg != nil {
@@ -404,10 +410,14 @@ func (pg *Page) listenerMessages(host string, baseID, quoteID uint32) {
 	}
 
 	for {
-		<-bookFeed.Next()
-		pg.updateDexMarketState()
-		pg.getOrderBook(host, baseID, quoteID)
-		pg.RefreshWindow()
+		select {
+		case <-bookFeed.Next():
+			pg.updateDexMarketState()
+			pg.getOrderBook(host, baseID, quoteID)
+			pg.RefreshWindow()
+		case <-pg.ctx.Done():
+			return
+		}
 	}
 }
 
@@ -416,10 +426,11 @@ func (pg *Page) getOrderBook(host string, baseID, quoteID uint32) {
 	if err != nil {
 		return
 	}
-
 	pg.orderBook = orderBoook
 }
 
+// initDex initialize Page's dex, check for value of DexHostConfigKey in storage,
+// if Dex exist set to Page otherwise choose first Dex on the slice.
 func (pg *Page) initDex() bool {
 	valueOut := pg.WL.MultiWallet.ReadStringConfigValueForKey(DexHostConfigKey)
 	if valueOut != "" {
@@ -437,6 +448,7 @@ func (pg *Page) initDex() bool {
 	return true
 }
 
+// selectDex set Page's Dex and save to storage last choose.
 func (pg *Page) selectDex(dex *core.Exchange) {
 	pg.dex = dex
 	value := ""
@@ -446,6 +458,7 @@ func (pg *Page) selectDex(dex *core.Exchange) {
 	pg.WL.MultiWallet.SetStringConfigValueForKey(DexHostConfigKey, value)
 }
 
+// initMarket initialize Page's Market, choose first Market on the slice.
 func (pg *Page) initMarket() bool {
 	markets := sliceMarkets(pg.dex.Markets)
 	if len(markets) == 0 {
@@ -481,4 +494,12 @@ func (pg *Page) updateDexMarketState() {
 	}
 
 	pg.selectMarket(market)
+}
+
+func (pg *Page) dexCreated(dex *core.Exchange) {
+	pg.selectDex(dex)
+	pg.RefreshWindow()
+	if pg.initMarket() {
+		go pg.listenerMessages(pg.dex.Host, pg.market.BaseID, pg.market.QuoteID)
+	}
 }
