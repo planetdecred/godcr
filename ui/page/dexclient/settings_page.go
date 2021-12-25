@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"sort"
 
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
@@ -204,13 +203,13 @@ func (pg *DexSettingsPage) changeAppPasswordLayout(gtx C) D {
 
 func (pg *DexSettingsPage) initExchangeWidget() {
 	pg.exchangesWdg = make([]*exchangeWidget, 0)
-	mapExchanges := pg.Dexc().DEXServers()
+	exchanges := sliceExchanges(pg.Dexc().DEXServers())
 	clickable := func() *decredmaterial.Clickable {
 		cl := pg.Theme.NewClickable(true)
 		cl.Radius = decredmaterial.Radius(0)
 		return cl
 	}
-	for _, ex := range mapExchanges {
+	for _, ex := range exchanges {
 		ew := &exchangeWidget{
 			exchange:          ex,
 			exportAccountBtn:  clickable(),
@@ -218,9 +217,6 @@ func (pg *DexSettingsPage) initExchangeWidget() {
 		}
 		pg.exchangesWdg = append(pg.exchangesWdg, ew)
 	}
-	sort.Slice(pg.exchangesWdg, func(i, j int) bool {
-		return pg.exchangesWdg[i].exchange.Host < pg.exchangesWdg[j].exchange.Host
-	})
 }
 
 func (pg *DexSettingsPage) Handle() {
@@ -305,7 +301,10 @@ func (pg *DexSettingsPage) Handle() {
 	}
 
 	if pg.addDexBtn.Button.Clicked() {
-		newAddDexModal(pg.Load).Show()
+		newAddDexModal(pg.Load, "").DexCreated(func(dex *core.Exchange) {
+			pg.initExchangeWidget()
+			pg.RefreshWindow()
+		}).Show()
 	}
 
 	if pg.importAccountBtn.Button.Clicked() {

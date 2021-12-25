@@ -30,7 +30,8 @@ type createWalletModal struct {
 	walletInfoWidget      *walletInfoWidget
 	materialLoader        material.LoaderStyle
 	isSending             bool
-	walletCreated         func()
+	appPass               string
+	walletCreated         func(md *createWalletModal)
 }
 
 type walletInfoWidget struct {
@@ -39,7 +40,7 @@ type walletInfoWidget struct {
 	coinID   uint32
 }
 
-func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreated func()) *createWalletModal {
+func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, appPass string, walletCreated func(md *createWalletModal)) *createWalletModal {
 	md := &createWalletModal{
 		Load:             l,
 		modal:            l.Theme.ModalFloatTitle(),
@@ -50,6 +51,7 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreate
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 		walletInfoWidget: wallInfo,
 		walletCreated:    walletCreated,
+		appPass:          appPass,
 	}
 
 	md.appPassword.Editor.SingleLine = true
@@ -99,7 +101,7 @@ func (md *createWalletModal) Handle() {
 	}
 
 	if md.submitBtn.Button.Clicked() {
-		if md.appPassword.Editor.Text() == "" || md.isSending {
+		if md.isSending {
 			return
 		}
 
@@ -118,7 +120,10 @@ func (md *createWalletModal) Handle() {
 
 			settings := make(map[string]string)
 			var walletType string
-			appPass := []byte(md.appPassword.Editor.Text())
+			appPass := md.appPass
+			if appPass == "" {
+				appPass = md.appPassword.Editor.Text()
+			}
 			walletPass := []byte(md.walletPassword.Editor.Text())
 
 			switch coinID {
@@ -133,14 +138,14 @@ func (md *createWalletModal) Handle() {
 				walletPass = nil   // Core doesn't accept wallet passwords for dex-managed spv wallets.
 			}
 
-			err := md.Dexc().AddWallet(coinID, walletType, settings, appPass, walletPass)
+			err := md.Dexc().AddWallet(coinID, walletType, settings, []byte(appPass), walletPass)
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
 			}
 
 			md.Dismiss()
-			md.walletCreated()
+			md.walletCreated(md)
 		}()
 	}
 }
@@ -187,6 +192,9 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 					return D{}
 				}),
 				layout.Rigid(func(gtx C) D {
+					if md.appPass != "" {
+						return D{}
+					}
 					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 						return md.appPassword.Layout(gtx)
 					})

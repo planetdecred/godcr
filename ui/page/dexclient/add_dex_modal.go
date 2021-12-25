@@ -25,7 +25,7 @@ import (
 
 const addDexModalID = "add_dex_modal"
 
-const testDexHost = "dex-test.ssgen.io:7232"
+const dexTestnetHost = "dex-test.ssgen.io:7232"
 
 type addDexModal struct {
 	*load.Load
@@ -37,9 +37,15 @@ type addDexModal struct {
 	materialLoader   material.LoaderStyle
 	certFilePath     string
 	fileSelectBtn    *decredmaterial.Clickable
+
+	// appPass is the password value after login or initialize to continue processing add new DEX
+	// the Add Dex Modal won't show password input on UI
+	appPass      string
+	appPassword  decredmaterial.Editor
+	onDexCreated func(*core.Exchange)
 }
 
-func newAddDexModal(l *load.Load) *addDexModal {
+func newAddDexModal(l *load.Load, appPass string) *addDexModal {
 	cl := l.Theme.NewClickable(true)
 	cl.Radius = decredmaterial.Radius(0)
 
@@ -51,11 +57,13 @@ func newAddDexModal(l *load.Load) *addDexModal {
 		cancelBtn:        l.Theme.OutlineButton("Cancel"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 		fileSelectBtn:    cl,
+		appPass:          appPass,
+		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App Password"),
 	}
-
+	md.appPassword.Editor.SingleLine = true
 	md.dexServerAddress.Editor.SingleLine = true
 	if l.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
-		md.dexServerAddress.Editor.SetText(testDexHost)
+		md.dexServerAddress.Editor.SetText(dexTestnetHost)
 	}
 
 	return md
@@ -74,11 +82,16 @@ func (md *addDexModal) Dismiss() {
 }
 
 func (md *addDexModal) OnDismiss() {
-	md.dexServerAddress.Editor.SetText("")
+	md.appPassword.Editor.SetText("")
 }
 
 func (md *addDexModal) OnResume() {
 	md.dexServerAddress.Editor.Focus()
+}
+
+func (md *addDexModal) DexCreated(callback func(*core.Exchange)) *addDexModal {
+	md.onDexCreated = callback
+	return md
 }
 
 func (md *addDexModal) Handle() {
@@ -118,11 +131,29 @@ func (md *addDexModal) Handle() {
 				}
 			}
 
-			dex, err := md.Dexc().DEXServerInfo(md.dexServerAddress.Editor.Text(), cert)
+			appPass := md.appPass
+			if appPass == "" {
+				appPass = md.appPassword.Editor.Text()
+			}
+			dex, paid, err := md.Dexc().Core().DiscoverAccount(md.dexServerAddress.Editor.Text(), []byte(appPass), cert)
 			md.isSending = false
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
+			}
+
+			if paid {
+				md.onDexCreated(dex)
+				md.Dismiss()
+				return
+			}
+
+			cfRegistration := &confirmRegistration{
+				Load:      md.Load,
+				isSending: &md.isSending,
+				Show:      md.Show,
+				completed: md.onDexCreated,
+				Dismiss:   md.Dismiss,
 			}
 
 			// Ensure a wallet is connected that can be used to pay the fees.
@@ -143,7 +174,7 @@ func (md *addDexModal) Handle() {
 			// or completing the registration.
 			md.Dismiss()
 			if md.Dexc().HasWallet(int32(feeAsset.ID)) {
-				md.completeRegistration(dex, feeAssetName, cert)
+				cfRegistration.confirm(dex, feeAssetName, appPass, cert)
 				return
 			}
 
@@ -153,8 +184,12 @@ func (md *addDexModal) Handle() {
 					coinName: feeAssetName,
 					coinID:   feeAsset.ID,
 				},
-				func() {
-					md.completeRegistration(dex, feeAssetName, cert)
+				appPass,
+				func(wallModal *createWalletModal) {
+					cfRegistration.isSending = &wallModal.isSending
+					cfRegistration.Show = wallModal.Show
+					cfRegistration.Dismiss = wallModal.Dismiss
+					cfRegistration.confirm(dex, feeAssetName, appPass, cert)
 				}).Show()
 		}()
 	}
@@ -217,6 +252,13 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 				}),
 			)
 		},
+		md.Theme.Separator().Layout,
+		func(gtx C) D {
+			if md.appPass != "" {
+				return D{}
+			}
+			return md.appPassword.Layout(gtx)
+		},
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -246,37 +288,46 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 	return md.modal.Layout(gtx, w)
 }
 
-func (md *addDexModal) completeRegistration(dex *core.Exchange, feeAssetName string, cert []byte) {
-	modal.NewPasswordModal(md.Load).
+type confirmRegistration struct {
+	*load.Load
+	isSending *bool
+	Show      func()
+	Dismiss   func()
+	completed func(*core.Exchange)
+}
+
+func (cf *confirmRegistration) confirm(dex *core.Exchange, feeAssetName string, password string, cert []byte) {
+	modal.NewInfoModal(cf.Load).
 		Title("Confirm Registration").
-		Hint("App password").
-		Description(confirmRegisterModalDesc(dex, feeAssetName)).
+		Body(confirmRegisterModalDesc(dex, feeAssetName)).
+		SetCancelable(false).
 		NegativeButton(values.String(values.StrCancel), func() {}).
-		PositiveButton("Register", func(password string, pm *modal.PasswordModal) bool {
+		PositiveButton("Register", func() {
 			go func() {
-				_, err := md.Dexc().RegisterWithDEXServer(dex.Host,
+				// Show previous modal and display loading status or error messages
+				cf.Show()
+				*cf.isSending = true
+				_, err := cf.Dexc().RegisterWithDEXServer(dex.Host,
 					cert,
 					int64(dex.Fee.Amt),
 					int32(dex.Fee.ID),
 					[]byte(password))
 				if err != nil {
-					pm.SetError(err.Error())
-					pm.SetLoading(false)
+					*cf.isSending = false
+					cf.Toast.NotifyError(err.Error())
 					return
 				}
-				pm.WL.MultiWallet.SetStringConfigValueForKey(DexHostConfigKey, dex.Host)
-				pm.Dismiss()
-				md.ChangeFragment(NewMarketPage(md.Load)) // Reload to market page to listen messages
+				*cf.isSending = false
+				cf.completed(dex)
+				cf.Dismiss()
 			}()
-
-			return false
 		}).Show()
 }
 
 func confirmRegisterModalDesc(dex *core.Exchange, selectedFeeAsset string) string {
 	feeAsset := dex.RegFees[selectedFeeAsset]
 	feeAmt := formatAmount(feeAsset.ID, selectedFeeAsset, feeAsset.Amt)
-	txt := fmt.Sprintf("Enter your app password to confirm DEX registration. When you submit this form, %s will be spent from your wallet to pay registration fees.", feeAmt)
+	txt := fmt.Sprintf("Confirm DEX registration. When you submit this form, %s will be spent from your wallet to pay registration fees.", feeAmt)
 	markets := make([]string, 0, len(dex.Markets))
 	for _, mkt := range dex.Markets {
 		lotSize := formatAmount(mkt.BaseID, mkt.BaseSymbol, mkt.LotSize)
