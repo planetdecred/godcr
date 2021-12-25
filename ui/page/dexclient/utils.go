@@ -3,7 +3,9 @@ package dexclient
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -260,4 +262,31 @@ func sliceMarkets(mapMarkets map[string]*core.Market) []*core.Market {
 		return markets[i].Name < markets[j].Name
 	})
 	return markets
+}
+
+func getCertFromFile(certFilePath string) ([]byte, error) {
+	var cert []byte
+
+	if certFilePath == "" {
+		return cert, errors.New("Please choose a cert file")
+	}
+
+	certFile, err := os.Open(certFilePath)
+	defer func() {
+		err := certFile.Close()
+		if err != nil {
+			return
+		}
+	}()
+
+	if err != nil {
+		return cert, err
+	}
+
+	cert, err = ioutil.ReadAll(certFile)
+	if err != nil {
+		return cert, err
+	}
+
+	return cert, nil
 }

@@ -2,8 +2,6 @@ package dexclient
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -15,7 +13,6 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/ncruces/zenity"
-	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -24,8 +21,6 @@ import (
 )
 
 const addDexModalID = "add_dex_modal"
-
-const dexTestnetHost = "dex-test.ssgen.io:7232"
 
 type addDexModal struct {
 	*load.Load
@@ -43,11 +38,26 @@ type addDexModal struct {
 	appPass      string
 	appPassword  decredmaterial.Editor
 	onDexCreated func(*core.Exchange)
+
+	listServer        *widget.List
+	listExchangeWdg   []*knownExchangeWidget
+	selectedServer    string
+	listServerBtn     decredmaterial.Button
+	customServerBtn   decredmaterial.Button
+	isUseCustomServer bool
+}
+
+type knownExchangeWidget struct {
+	selectBtn *decredmaterial.Clickable
+	host      string
 }
 
 func newAddDexModal(l *load.Load, appPass string) *addDexModal {
-	cl := l.Theme.NewClickable(true)
-	cl.Radius = decredmaterial.Radius(0)
+	clickable := func() *decredmaterial.Clickable {
+		cl := l.Theme.NewClickable(true)
+		cl.Radius = decredmaterial.Radius(0)
+		return cl
+	}
 
 	md := &addDexModal{
 		Load:             l,
@@ -56,15 +66,30 @@ func newAddDexModal(l *load.Load, appPass string) *addDexModal {
 		addDexServerBtn:  l.Theme.Button("Submit"),
 		cancelBtn:        l.Theme.OutlineButton("Cancel"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
-		fileSelectBtn:    cl,
 		appPass:          appPass,
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App Password"),
+
+		fileSelectBtn:   clickable(),
+		listServerBtn:   l.Theme.OutlineButton("Pick a Server"),
+		customServerBtn: l.Theme.OutlineButton("Custom Server"),
+		listServer: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 	}
+
+	md.customServerBtn.Background = l.Theme.Color.Background
+	md.listServerBtn.CornerRadius, md.customServerBtn.CornerRadius = values.MarginPadding0, values.MarginPadding0
+	inset := layout.Inset{
+		Top:    values.MarginPadding5,
+		Bottom: values.MarginPadding5,
+		Left:   values.MarginPadding9,
+		Right:  values.MarginPadding9,
+	}
+	md.listServerBtn.Inset, md.customServerBtn.Inset = inset, inset
+	md.listServerBtn.TextSize, md.customServerBtn.TextSize = values.TextSize14, values.TextSize14
+
 	md.appPassword.Editor.SingleLine = true
 	md.dexServerAddress.Editor.SingleLine = true
-	if l.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
-		md.dexServerAddress.Editor.SetText(dexTestnetHost)
-	}
 
 	return md
 }
@@ -86,7 +111,27 @@ func (md *addDexModal) OnDismiss() {
 }
 
 func (md *addDexModal) OnResume() {
-	md.dexServerAddress.Editor.Focus()
+	md.appPassword.Editor.Focus()
+
+	clickable := func() *decredmaterial.Clickable {
+		cl := md.Theme.NewClickable(true)
+		cl.Radius = decredmaterial.Radius(0)
+		return cl
+	}
+
+	// Initialize listExchangeWdg.
+	certs := core.CertStore[md.Dexc().Core().Network()]
+	md.listExchangeWdg = make([]*knownExchangeWidget, 0)
+	for host := range certs {
+		md.listExchangeWdg = append(md.listExchangeWdg, &knownExchangeWidget{
+			host:      host,
+			selectBtn: clickable(),
+		})
+	}
+
+	if len(md.listExchangeWdg) > 0 {
+		md.selectedServer = md.listExchangeWdg[0].host
+	}
 }
 
 func (md *addDexModal) DexCreated(callback func(*core.Exchange)) *addDexModal {
@@ -95,47 +140,87 @@ func (md *addDexModal) DexCreated(callback func(*core.Exchange)) *addDexModal {
 }
 
 func (md *addDexModal) Handle() {
+	if md.listServerBtn.Clicked() {
+		md.isUseCustomServer = false
+		md.listServerBtn.Background = md.Theme.Color.Surface
+		md.customServerBtn.Background = md.Theme.Color.Background
+	}
+
+	if md.customServerBtn.Clicked() {
+		md.isUseCustomServer = true
+		md.dexServerAddress.Editor.Focus()
+		md.customServerBtn.Background = md.Theme.Color.Surface
+		md.listServerBtn.Background = md.Theme.Color.Background
+	}
+
 	if md.cancelBtn.Button.Clicked() && !md.isSending {
 		md.Dismiss()
 	}
 
-	if md.addDexServerBtn.Button.Clicked() {
-		if md.dexServerAddress.Editor.Text() == "" || md.isSending {
+	if md.fileSelectBtn.Clicked() {
+		filePath, err := zenity.SelectFile(
+			zenity.Title("Select Cert File"),
+			zenity.FileFilter{
+				Name:     "Cert file",
+				Patterns: []string{"*.cert"},
+			},
+		)
+
+		if err != nil {
+			md.Toast.NotifyError(err.Error())
 			return
 		}
 
-		md.isSending = true
+		md.certFilePath = filePath
+	}
+
+	for _, eWdg := range md.listExchangeWdg {
+		if eWdg.selectBtn.Clicked() {
+			if md.selectedServer == eWdg.host {
+				md.selectedServer = ""
+				break
+			}
+			md.selectedServer = eWdg.host
+			break
+		}
+	}
+
+	if md.addDexServerBtn.Button.Clicked() {
+		if md.isSending {
+			return
+		}
+
 		go func() {
 			var cert []byte
+			serverAddr := md.selectedServer
 
-			if md.certFilePath != "" {
-				certFile, err := os.Open(md.certFilePath)
-				defer func() {
-					err := certFile.Close()
-					if err != nil {
-						return
-					}
-				}()
-
+			if md.isUseCustomServer {
+				serverAddr = md.dexServerAddress.Editor.Text()
+				c, err := getCertFromFile(md.certFilePath)
 				if err != nil {
 					md.Toast.NotifyError(err.Error())
-					md.isSending = false
 					return
 				}
-
-				cert, err = ioutil.ReadAll(certFile)
-				if err != nil {
-					md.Toast.NotifyError(err.Error())
-					md.isSending = false
-					return
-				}
+				cert = c
 			}
 
 			appPass := md.appPass
 			if appPass == "" {
 				appPass = md.appPassword.Editor.Text()
 			}
-			dex, paid, err := md.Dexc().Core().DiscoverAccount(md.dexServerAddress.Editor.Text(), []byte(appPass), cert)
+
+			if serverAddr == "" {
+				md.Toast.NotifyError("Please choose a server address or set a custom server")
+				return
+			}
+
+			if appPass == "" {
+				md.Toast.NotifyError("Please input your application password")
+				return
+			}
+
+			md.isSending = true
+			dex, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(appPass), cert)
 			md.isSending = false
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
@@ -193,64 +278,32 @@ func (md *addDexModal) Handle() {
 				}).Show()
 		}()
 	}
-
-	if md.fileSelectBtn.Clicked() {
-		filePath, err := zenity.SelectFile(
-			zenity.Title("Select Cert File"),
-			zenity.FileFilter{
-				Name:     "Cert file",
-				Patterns: []string{"*.cert"},
-			},
-		)
-
-		if err != nil {
-			md.Toast.NotifyError(err.Error())
-			return
-		}
-
-		md.certFilePath = filePath
-	}
 }
 
 func (md *addDexModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		md.Load.Theme.Label(values.TextSize20, "Add a dex").Layout,
 		func(gtx C) D {
-			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, md.dexServerAddress.Layout)
-		},
-		md.Theme.Label(values.MarginPadding16, "TLS Certificate").Layout,
-		func(gtx C) D {
-			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					fileName := "None file selected"
-					if md.certFilePath != "" {
-						fileName = filepath.Base(md.certFilePath)
-					}
-					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, md.Theme.Label(values.MarginPadding16, fileName).Layout)
+			return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+				layout.Flexed(.5, func(gtx C) D {
+					return md.listServerBtn.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return md.fileSelectBtn.Layout(gtx, func(gtx C) D {
-						return widget.Border{
-							Color:        md.Theme.Color.Gray2,
-							CornerRadius: values.MarginPadding4,
-							Width:        values.MarginPadding1,
-						}.Layout(gtx, func(gtx C) D {
-							return layout.Inset{
-								Top:    values.MarginPadding4,
-								Bottom: values.MarginPadding4,
-								Left:   values.MarginPadding10,
-								Right:  values.MarginPadding10,
-							}.Layout(gtx, func(gtx C) D {
-								label := "add a file"
-								if md.certFilePath != "" {
-									label = "Choose another file"
-								}
-								return md.Theme.Label(values.MarginPadding14, label).Layout(gtx)
-							})
-						})
-					})
+					return layout.Inset{
+						Left:  values.MarginPadding1,
+						Right: values.MarginPadding1,
+					}.Layout(gtx, func(gtx C) D { return D{} })
+				}),
+				layout.Flexed(.5, func(gtx C) D {
+					return md.customServerBtn.Layout(gtx)
 				}),
 			)
+		},
+		func(gtx C) D {
+			if md.isUseCustomServer {
+				return md.customServerLayout(gtx)
+			}
+			return md.listServerLayout(gtx)
 		},
 		md.Theme.Separator().Layout,
 		func(gtx C) D {
@@ -286,6 +339,74 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 	}
 
 	return md.modal.Layout(gtx, w)
+}
+
+func (md *addDexModal) listServerLayout(gtx C) D {
+	return md.Theme.List(md.listServer).Layout(gtx, len(md.listExchangeWdg), func(gtx C, i int) D {
+		return md.listExchangeWdg[i].selectBtn.Layout(gtx, func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.Inset{
+				Top:    values.MarginPadding8,
+				Bottom: values.MarginPadding8,
+				Left:   values.MarginPadding12,
+				Right:  values.MarginPadding12,
+			}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return md.Theme.Label(values.MarginPadding14, md.listExchangeWdg[i].host).Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						if md.selectedServer != md.listExchangeWdg[i].host {
+							return D{}
+						}
+						gtx.Constraints.Min.X = 30
+						ic := md.Load.Icons.NavigationCheck
+						return ic.Layout(gtx, md.Theme.Color.Success)
+					}),
+				)
+			})
+		})
+	})
+}
+
+func (md *addDexModal) customServerLayout(gtx C) D {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(md.dexServerAddress.Layout),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, md.Theme.Label(values.MarginPadding16, "TLS Certificate").Layout)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					fileName := "None file selected"
+					if md.certFilePath != "" {
+						fileName = filepath.Base(md.certFilePath)
+					}
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, md.Theme.Label(values.MarginPadding16, fileName).Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return widget.Border{
+						Color:        md.Theme.Color.Gray2,
+						CornerRadius: values.MarginPadding4,
+						Width:        values.MarginPadding1,
+					}.Layout(gtx, func(gtx C) D {
+						labelBtn := "add a file"
+						if md.certFilePath != "" {
+							labelBtn = "Choose another file"
+						}
+						return md.fileSelectBtn.Layout(gtx, func(gtx C) D {
+							return layout.Inset{
+								Top:    values.MarginPadding4,
+								Bottom: values.MarginPadding4,
+								Left:   values.MarginPadding10,
+								Right:  values.MarginPadding10,
+							}.Layout(gtx, md.Theme.Label(values.MarginPadding14, labelBtn).Layout)
+						})
+					})
+				}),
+			)
+		}),
+	)
 }
 
 type confirmRegistration struct {

@@ -23,13 +23,13 @@ type DexSettingsPage struct {
 	*load.Load
 	pageContainer        layout.List
 	backButton           decredmaterial.IconButton
-	exchangesWdg         []*exchangeWidget
+	exchangesWdg         []*settingExchangeWidget
 	addDexBtn            decredmaterial.Button
 	importAccountBtn     decredmaterial.Button
 	changeAppPasswordBtn decredmaterial.Button
 }
 
-type exchangeWidget struct {
+type settingExchangeWidget struct {
 	exchange          *core.Exchange
 	exportAccountBtn  *decredmaterial.Clickable
 	disableAccountBtn *decredmaterial.Clickable
@@ -202,7 +202,7 @@ func (pg *DexSettingsPage) changeAppPasswordLayout(gtx C) D {
 }
 
 func (pg *DexSettingsPage) initExchangeWidget() {
-	pg.exchangesWdg = make([]*exchangeWidget, 0)
+	pg.exchangesWdg = make([]*settingExchangeWidget, 0)
 	exchanges := sliceExchanges(pg.Dexc().DEXServers())
 	clickable := func() *decredmaterial.Clickable {
 		cl := pg.Theme.NewClickable(true)
@@ -210,7 +210,7 @@ func (pg *DexSettingsPage) initExchangeWidget() {
 		return cl
 	}
 	for _, ex := range exchanges {
-		ew := &exchangeWidget{
+		ew := &settingExchangeWidget{
 			exchange:          ex,
 			exportAccountBtn:  clickable(),
 			disableAccountBtn: clickable(),

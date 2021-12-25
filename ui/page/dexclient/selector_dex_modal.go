@@ -17,7 +17,7 @@ type selectorDexModal struct {
 	list                 *widget.List
 	cancelBtn            decredmaterial.Button
 	selectorExchangeWdgs []*selectorExchangeWidget
-	hostSelected         string
+	selectedHost         string
 	callback             func(*core.Exchange)
 }
 
@@ -26,10 +26,10 @@ type selectorExchangeWidget struct {
 	*core.Exchange
 }
 
-func newSelectorDexModal(l *load.Load, hostSelected string) *selectorDexModal {
+func newSelectorDexModal(l *load.Load, selectedHost string) *selectorDexModal {
 	md := &selectorDexModal{
 		Load:         l,
-		hostSelected: hostSelected,
+		selectedHost: selectedHost,
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -97,9 +97,10 @@ func (md *selectorDexModal) Layout(gtx layout.Context) D {
 								return md.Theme.Label(values.TextSize14, selectorExchangeWdg.Host).Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								if md.hostSelected != selectorExchangeWdg.Host {
+								if md.selectedHost != selectorExchangeWdg.Host {
 									return D{}
 								}
+								gtx.Constraints.Min.X = 30
 								ic := md.Load.Icons.NavigationCheck
 								return ic.Layout(gtx, md.Theme.Color.Success)
 							}),
