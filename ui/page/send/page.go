@@ -354,11 +354,13 @@ func (pg *Page) Handle() {
 				pg.amount.dcrAmountEditor.Editor.Focus()
 			}
 		default:
-			fmt.Println(pg.sendDestination.validate())
-			if !pg.sendDestination.validate() {
-				pg.sendDestination.destinationAddressEditor.Editor.Focus()
-			} else {
-				pg.amount.dcrAmountEditor.Editor.Focus()
+			if pg.sendDestination.accountSwitch.Changed() {
+				if !pg.sendDestination.validate() {
+					pg.sendDestination.destinationAddressEditor.Editor.Focus()
+				} else {
+					pg.amount.dcrAmountEditor.Editor.Focus()
+				}
+
 			}
 
 			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
@@ -367,16 +369,17 @@ func (pg *Page) Handle() {
 		switch {
 		case !pg.sendDestination.sendToAddress && !(pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()):
 			pg.amount.dcrAmountEditor.Editor.Focus()
-			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
 		case !pg.sendDestination.sendToAddress && (pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()):
 			decredmaterial.SwitchEditors(pg.keyEvent, pg.amount.usdAmountEditor.Editor, pg.amount.dcrAmountEditor.Editor)
 		default:
-			if !pg.sendDestination.validate() {
-				pg.sendDestination.destinationAddressEditor.Editor.Focus()
-			} else {
-				pg.amount.dcrAmountEditor.Editor.Focus()
+			if pg.sendDestination.accountSwitch.Changed() {
+				if !pg.sendDestination.validate() {
+					pg.sendDestination.destinationAddressEditor.Editor.Focus()
+				} else {
+					pg.amount.dcrAmountEditor.Editor.Focus()
+				}
 			}
-			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
 		}
 	}
 }

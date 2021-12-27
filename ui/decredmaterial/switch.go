@@ -36,6 +36,7 @@ type SwitchButtonText struct {
 	active, inactive                   color.NRGBA
 	items                              []SwitchItem
 	selected                           int
+	changed                            bool
 }
 
 func (t *Theme) Switch() *Switch {
@@ -203,6 +204,9 @@ func (s *SwitchButtonText) handleClickEvent() {
 	for index := range s.items {
 		if index != 0 {
 			if s.items[index].button.Clicked() {
+				if s.selected != index {
+					s.changed = true
+				}
 				s.selected = index
 			}
 		}
@@ -223,4 +227,10 @@ func (s *SwitchButtonText) SelectedOption() string {
 
 func (s *SwitchButtonText) SelectedIndex() int {
 	return s.selected
+}
+
+func (s *SwitchButtonText) Changed() bool {
+	changed := s.changed
+	s.changed = false
+	return changed
 }
