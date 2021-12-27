@@ -129,7 +129,6 @@ func (pg *Page) Layout(gtx C) D {
 
 func (pg *Page) headerLayout() layout.Widget {
 	return func(gtx C) D {
-		bottom := layout.Inset{Bottom: values.MarginPadding15}
 		btn := func(btn *decredmaterial.Clickable, textBtn string, ic *decredmaterial.Image) layout.Widget {
 			return func(gtx C) D {
 				return widget.Border{
@@ -156,7 +155,7 @@ func (pg *Page) headerLayout() layout.Widget {
 			}
 		}
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return bottom.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 			dexIc := pg.Load.Icons.DexIcon
 			orderHistoryIc := pg.Load.Icons.TimerIcon
 			walletIc := pg.Load.Icons.WalletIcon
@@ -498,8 +497,8 @@ func (pg *Page) updateDexMarketState() {
 
 func (pg *Page) dexCreated(dex *core.Exchange) {
 	pg.selectDex(dex)
-	pg.RefreshWindow()
 	if pg.initMarket() {
 		go pg.listenerMessages(pg.dex.Host, pg.market.BaseID, pg.market.QuoteID)
 	}
+	pg.RefreshWindow()
 }

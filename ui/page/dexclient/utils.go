@@ -48,7 +48,6 @@ func rateString(ord *core.Order) string {
 	if ord.Type == order.MarketOrderType {
 		return "market"
 	}
-	// return ord.Type == Market ? 'market' : Doc.formatCoinValue(ord.rate / 1e8)
 	return formatCoinValue(ord.Rate)
 }
 
@@ -133,7 +132,7 @@ func settled(ord *core.Order) float64 {
 		}
 	}
 
-	var settl float64 = 0
+	var settle float64 = 0
 	for _, match := range ord.Matches {
 		if match.IsCancel {
 			continue
@@ -142,13 +141,13 @@ func settled(ord *core.Order) float64 {
 			(match.Side == order.Taker && match.Status >= order.MatchComplete)
 
 		if redeemed {
-			settl += settl + qty(match)
+			settle += settle + qty(match)
 		} else {
-			settl += settl
+			settle += settle
 		}
 	}
 
-	return settl
+	return settle
 }
 
 // hasLiveMatches returns true if the order has matches that have not completed

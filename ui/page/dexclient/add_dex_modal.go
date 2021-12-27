@@ -289,18 +289,14 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 		md.Load.Theme.Label(values.TextSize20, "Add a dex").Layout,
 		func(gtx C) D {
 			return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-				layout.Flexed(.5, func(gtx C) D {
-					return md.listServerBtn.Layout(gtx)
-				}),
+				layout.Flexed(.5, md.listServerBtn.Layout),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
 						Left:  values.MarginPadding1,
 						Right: values.MarginPadding1,
 					}.Layout(gtx, func(gtx C) D { return D{} })
 				}),
-				layout.Flexed(.5, func(gtx C) D {
-					return md.customServerBtn.Layout(gtx)
-				}),
+				layout.Flexed(.5, md.customServerBtn.Layout),
 			)
 		},
 		func(gtx C) D {
@@ -356,9 +352,7 @@ func (md *addDexModal) listServerLayout(gtx C) D {
 				Right:  values.MarginPadding12,
 			}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return md.Theme.Label(values.MarginPadding14, md.listExchangeWdg[i].host).Layout(gtx)
-					}),
+					layout.Rigid(md.Theme.Label(values.MarginPadding14, md.listExchangeWdg[i].host).Layout),
 					layout.Rigid(func(gtx C) D {
 						if md.selectedServer != md.listExchangeWdg[i].host {
 							return D{}
