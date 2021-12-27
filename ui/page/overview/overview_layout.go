@@ -252,7 +252,7 @@ func (pg *AppOverviewPage) Handle() {
 				pg.syncClickable.Enabled = false
 			}
 
-			// On exit of goroutine update button state.
+			// On exit update button state.
 			go func() {
 				pg.ToggleSync()
 				if !pg.syncClickable.Enabled {
