@@ -42,6 +42,8 @@ type stakingModal struct {
 	tickets          decredmaterial.Editor
 	materialLoader   material.LoaderStyle
 
+	balToMaintainEditor decredmaterial.Editor
+
 	accountSelector *components.AccountSelector
 	vspSelector     *vspSelector
 }
@@ -59,6 +61,10 @@ func newStakingModal(l *load.Load) *stakingModal {
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 	}
+
+	tp.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), "Balance to maintain (DCR)")
+	tp.balToMaintainEditor.Editor.SetText("")
+	tp.balToMaintainEditor.Editor.SingleLine = true
 
 	tp.tickets.Bordered = false
 	tp.tickets.Editor.Alignment = text.Middle
@@ -90,11 +96,21 @@ func (tp *stakingModal) OnResume() {
 	}
 
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
-	tp.ticketPrice = dcrutil.Amount(tp.WL.TicketPrice())
+	// tp.ticketPrice = dcrutil.Amount(tp.WL.TicketPrice())
 
-	if tp.vspIsFetched && components.StringNotEmpty(tp.WL.GetRememberVSP()) {
-		tp.vspSelector.selectVSP(tp.WL.GetRememberVSP())
+	if tp.vspIsFetched && components.StringNotEmpty(tp.WL.MultiWallet.GetRememberVSP()) {
+		tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
 	}
+
+	go func() {
+		ticketPrice, err := tp.WL.MultiWallet.TicketPrice()
+		if err != nil {
+			tp.Toast.NotifyError(err.Error())
+		} else {
+			tp.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice)
+			tp.RefreshWindow()
+		}
+	}()
 }
 
 func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
@@ -329,7 +345,7 @@ func (tp *stakingModal) Handle() {
 	tp.stakeBtn.SetEnabled(tp.canPurchase())
 
 	if tp.vspSelector.Changed() {
-		tp.WL.RememberVSP(tp.vspSelector.selectedVSP.Host)
+		tp.WL.MultiWallet.RememberVSP(tp.vspSelector.selectedVSP.Host)
 	}
 
 	_, isChanged := decredmaterial.HandleEditorEvents(tp.spendingPassword.Editor)
@@ -339,8 +355,8 @@ func (tp *stakingModal) Handle() {
 
 	// reselect vsp if there's a delay in fetching the VSP List
 	if !tp.vspIsFetched && len((*tp.WL.VspInfo).List) > 0 {
-		if tp.WL.GetRememberVSP() != "" {
-			tp.vspSelector.selectVSP(tp.WL.GetRememberVSP())
+		if tp.WL.MultiWallet.GetRememberVSP() != "" {
+			tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
 			tp.vspIsFetched = true
 		}
 	}

@@ -95,7 +95,7 @@ func NewLoad() (*Load, error) {
 		Account:        new(wallet.Account),
 		Transactions:   new(wallet.Transactions),
 		UnspentOutputs: new(wallet.UnspentOutputs),
-		VspInfo:        new(wallet.VSP),
+		VspInfo:        new(dcrlibwallet.VSPList),
 		Proposals:      new(wallet.Proposals),
 
 		SelectedProposal: new(dcrlibwallet.Proposal),

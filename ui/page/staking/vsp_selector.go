@@ -7,11 +7,11 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 type vspSelector struct {
@@ -21,7 +21,7 @@ type vspSelector struct {
 
 	changed      bool
 	showVSPModal *decredmaterial.Clickable
-	selectedVSP  *wallet.VSPInfo
+	selectedVSP  *dcrlibwallet.VSPInfo
 }
 
 func newVSPSelector(l *load.Load) *vspSelector {
@@ -53,7 +53,7 @@ func (v *vspSelector) selectVSP(vspHost string) {
 	}
 }
 
-func (v *vspSelector) SelectedVSP() *wallet.VSPInfo {
+func (v *vspSelector) SelectedVSP() *dcrlibwallet.VSPInfo {
 	return v.selectedVSP
 }
 
@@ -61,7 +61,7 @@ func (v *vspSelector) handle() {
 	if v.showVSPModal.Clicked() {
 		newVSPSelectorModal(v.Load).
 			title("Voting service provider").
-			vspSelected(func(info *wallet.VSPInfo) {
+			vspSelected(func(info *dcrlibwallet.VSPInfo) {
 				v.selectVSP(info.Host)
 			}).
 			Show()
@@ -129,10 +129,10 @@ type vspSelectorModal struct {
 	inputVSP decredmaterial.Editor
 	addVSP   decredmaterial.Button
 
-	selectedVSP *wallet.VSPInfo
+	selectedVSP *dcrlibwallet.VSPInfo
 	vspList     *decredmaterial.ClickableList
 
-	vspSelectedCallback func(*wallet.VSPInfo)
+	vspSelectedCallback func(*dcrlibwallet.VSPInfo)
 }
 
 func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
@@ -170,7 +170,8 @@ func (v *vspSelectorModal) Handle() {
 	v.addVSP.SetEnabled(v.editorsNotEmpty(v.inputVSP.Editor))
 	if v.addVSP.Clicked() {
 		go func() {
-			err := v.WL.AddVSP(v.inputVSP.Editor.Text())
+			//Todo: dcrlibwallet AddVSP code update
+			err := v.WL.MultiWallet.AddVSP(v.WL.Wallet.Net, v.inputVSP.Editor.Text())
 			if err != nil {
 				v.Toast.NotifyError(err.Error())
 			} else {
@@ -195,7 +196,7 @@ func (v *vspSelectorModal) title(title string) *vspSelectorModal {
 	return v
 }
 
-func (v *vspSelectorModal) vspSelected(callback func(*wallet.VSPInfo)) *vspSelectorModal {
+func (v *vspSelectorModal) vspSelected(callback func(*dcrlibwallet.VSPInfo)) *vspSelectorModal {
 	v.vspSelectedCallback = callback
 	v.Dismiss()
 	return v

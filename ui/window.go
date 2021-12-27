@@ -28,7 +28,7 @@ type Window struct {
 	walletTransactions   *wallet.Transactions
 	walletTransaction    *wallet.Transaction
 	walletAccount        *wallet.Account
-	vspInfo              *wallet.VSP
+	vspInfo              *dcrlibwallet.VSPList
 	proposals            *wallet.Proposals
 	selectedProposal     *dcrlibwallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs
@@ -78,7 +78,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 		walletTransactions:    new(wallet.Transactions),
 		walletUnspentOutputs:  new(wallet.UnspentOutputs),
 		walletAcctMixerStatus: make(chan *wallet.AccountMixer),
-		vspInfo:               new(wallet.VSP),
+		vspInfo:               new(dcrlibwallet.VSPList),
 		proposals:             new(wallet.Proposals),
 		keyEvents:             make(map[string]chan *key.Event),
 	}

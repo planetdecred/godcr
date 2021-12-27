@@ -414,7 +414,6 @@ func (mp *MainPage) OnNavigatedFrom() {
 	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
 	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
-	// mo.WL.MultiWallet.StopAutoTicketsPurchase() TODO: add cancel TB on app close
 }
 
 func (mp *MainPage) currentPageID() string {
