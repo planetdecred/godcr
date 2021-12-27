@@ -93,9 +93,7 @@ func (md *selectorDexModal) Layout(gtx layout.Context) D {
 						Left: values.MarginPadding8, Right: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return md.Theme.Label(values.TextSize14, selectorExchangeWdg.Host).Layout(gtx)
-							}),
+							layout.Rigid(md.Theme.Label(values.TextSize14, selectorExchangeWdg.Host).Layout),
 							layout.Rigid(func(gtx C) D {
 								if md.selectedHost != selectorExchangeWdg.Host {
 									return D{}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
@@ -94,7 +95,6 @@ func (pg *DexSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						})
 					})
-
 				})
 			},
 		}
@@ -368,24 +368,40 @@ func (pg *DexSettingsPage) Handle() {
 	}
 
 	if pg.changeAppPasswordBtn.Button.Clicked() {
-		modal.NewCreatePasswordModal(pg.Load).
-			Title("Change Password").
-			EnableName(false).
-			EnableOldPassword(true).
-			OldPasswordHint("Current password").
-			PasswordHint("New Password").
-			ConfirmPasswordHint("Confirm New password").
-			WithOldPasswordCreated(func(oldPassword, password string, m *modal.CreatePasswordModal) bool {
+		modal.NewPasswordModal(pg.Load).
+			Title("Current Password").
+			Hint("Current app password").
+			NegativeButton(values.String(values.StrCancel), func() {}).
+			PositiveButton(values.String(values.StrConfirm), func(oldPassword string, pm *modal.PasswordModal) bool {
 				go func() {
-					err := pg.Dexc().Core().ChangeAppPass([]byte(oldPassword), []byte(password))
-					if err != nil {
-						m.SetError(err.Error())
-						m.SetLoading(false)
-						return
-					}
-					pg.Toast.Notify("Change password successfully!")
-					m.Dismiss()
-					pg.RefreshWindow()
+					pm.SetLoading(false)
+					pm.Dismiss()
+					modal.NewCreatePasswordModal(pg.Load).
+						Title("New Password").
+						EnableName(false).
+						PasswordHint("New password").
+						ConfirmPasswordHint("Confirm new password").
+						PasswordCreated(func(walletName, newPassword string, m *modal.CreatePasswordModal) bool {
+							go func() {
+								err := pg.Dexc().Core().ChangeAppPass([]byte(oldPassword), []byte(newPassword))
+								// check if old password error then show previous modal
+								if err != nil {
+									if strings.Contains(err.Error(), "old password error") {
+										m.Dismiss()
+										pm.Show()
+										pm.SetError(err.Error())
+										return
+									}
+									m.SetError(err.Error())
+									m.SetLoading(false)
+									return
+								}
+								pg.Toast.Notify("Change password successfully!")
+								m.Dismiss()
+								pg.RefreshWindow()
+							}()
+							return false
+						}).Show()
 				}()
 				return false
 			}).Show()

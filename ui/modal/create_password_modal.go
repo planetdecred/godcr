@@ -25,7 +25,6 @@ type CreatePasswordModal struct {
 	modal                 decredmaterial.Modal
 	walletName            decredmaterial.Editor
 	passwordEditor        decredmaterial.Editor
-	oldPasswordEditor     decredmaterial.Editor
 	confirmPasswordEditor decredmaterial.Editor
 	passwordStrength      decredmaterial.ProgressBarStyle
 	keyEvent              chan *key.Event
@@ -35,7 +34,6 @@ type CreatePasswordModal struct {
 	walletNameEnabled  bool
 	showWalletWarnInfo bool
 	isEnabled          bool
-	oldPwdEnabled      bool
 
 	dialogTitle string
 	randomID    string
@@ -50,8 +48,6 @@ type CreatePasswordModal struct {
 	btnNegative decredmaterial.Button
 
 	callback func(walletName, password string, m *CreatePasswordModal) bool // return true to dismiss dialog
-
-	withOldPasswordcallback func(oldPassword string, password string, m *CreatePasswordModal) bool
 }
 
 func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
@@ -80,9 +76,6 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	cm.confirmPasswordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	cm.confirmPasswordEditor.Editor.SingleLine, cm.confirmPasswordEditor.Editor.Submit = true, true
 
-	cm.oldPasswordEditor = l.Theme.EditorPassword(new(widget.Editor), "Old password")
-	cm.oldPasswordEditor.Editor.SingleLine, cm.oldPasswordEditor.Editor.Submit = true, true
-
 	th := material.NewTheme(gofont.Collection())
 	cm.materialLoader = material.Loader(th)
 
@@ -98,8 +91,6 @@ func (cm *CreatePasswordModal) ModalID() string {
 func (cm *CreatePasswordModal) OnResume() {
 	if cm.walletNameEnabled {
 		cm.walletName.Editor.Focus()
-	} else if cm.oldPwdEnabled {
-		cm.oldPasswordEditor.Editor.Focus()
 	} else {
 		cm.passwordEditor.Editor.Focus()
 	}
@@ -158,21 +149,6 @@ func (cm *CreatePasswordModal) SetCancelable(min bool) *CreatePasswordModal {
 
 func (cm *CreatePasswordModal) SetDescription(description string) *CreatePasswordModal {
 	cm.description = description
-	return cm
-}
-
-func (cm *CreatePasswordModal) EnableOldPassword(enable bool) *CreatePasswordModal {
-	cm.oldPwdEnabled = enable
-	return cm
-}
-
-func (cm *CreatePasswordModal) OldPasswordHint(hint string) *CreatePasswordModal {
-	cm.oldPasswordEditor.Hint = hint
-	return cm
-}
-
-func (cm *CreatePasswordModal) WithOldPasswordCreated(callback func(oldPassword, password string, m *CreatePasswordModal) bool) *CreatePasswordModal {
-	cm.withOldPasswordcallback = callback
 	return cm
 }
 
@@ -238,13 +214,7 @@ func (cm *CreatePasswordModal) Handle() {
 		if cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
 
 			cm.SetLoading(true)
-			if cm.callback != nil &&
-				cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
-				cm.Dismiss()
-			}
-
-			if cm.withOldPasswordcallback != nil &&
-				cm.withOldPasswordcallback(cm.oldPasswordEditor.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
+			if cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
 				cm.Dismiss()
 			}
 		}

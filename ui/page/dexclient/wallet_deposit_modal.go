@@ -161,7 +161,7 @@ func (md *depositModal) addressLayout(gtx layout.Context) layout.Dimensions {
 	}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				card.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 8, BottomRight: 8, BottomLeft: 8}
+				card.Radius = decredmaterial.Radius(8)
 				return card.Layout(gtx, func(gtx C) D {
 					return layout.Inset{
 						Top:    values.MarginPadding16,
