@@ -611,7 +611,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 
 				pg.updateTBToggle()
 			}()
-
+	pg.WL.MultiWallet.SetBoolConfigValueForKey(load.TicketBuyerConfigKey, true)
 			pm.Dismiss()
 
 			return false
