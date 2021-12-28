@@ -36,6 +36,7 @@ type SwitchButtonText struct {
 	active, inactive                   color.NRGBA
 	items                              []SwitchItem
 	selected                           int
+	changed                            bool
 }
 
 func (t *Theme) Switch() *Switch {
@@ -52,7 +53,7 @@ func (t *Theme) SwitchButtonText(i []SwitchItem) *SwitchButtonText {
 	}
 
 	sw.active, sw.inactive = sw.t.Color.Surface, color.NRGBA{}
-	sw.activeTextColor, sw.inactiveTextColor = sw.t.Color.DeepBlue, sw.t.Color.Gray2
+	sw.activeTextColor, sw.inactiveTextColor = sw.t.Color.GrayText1, sw.t.Color.Text
 
 	for index := range i {
 		i[index].button = t.Button(i[index].Text)
@@ -174,7 +175,7 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 	m8 := unit.Dp(8)
 	m4 := unit.Dp(4)
 	card := s.t.Card()
-	card.Color = s.t.Color.Gray1
+	card.Color = s.t.Color.Gray2
 	card.Radius = Radius(8)
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx C) D {
@@ -203,6 +204,9 @@ func (s *SwitchButtonText) handleClickEvent() {
 	for index := range s.items {
 		if index != 0 {
 			if s.items[index].button.Clicked() {
+				if s.selected != index {
+					s.changed = true
+				}
 				s.selected = index
 			}
 		}
@@ -223,4 +227,10 @@ func (s *SwitchButtonText) SelectedOption() string {
 
 func (s *SwitchButtonText) SelectedIndex() int {
 	return s.selected
+}
+
+func (s *SwitchButtonText) Changed() bool {
+	changed := s.changed
+	s.changed = false
+	return changed
 }

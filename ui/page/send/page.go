@@ -299,7 +299,6 @@ func (pg *Page) resetFields() {
 }
 
 func (pg *Page) Handle() {
-
 	pg.sendDestination.handle()
 	pg.amount.handle()
 
@@ -348,12 +347,41 @@ func (pg *Page) Handle() {
 	}
 
 	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	if currencyValue == values.USDExchangeValue {
-		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
-	} else {
-		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
-	}
+	if currencyValue != values.USDExchangeValue {
+		switch {
+		case !pg.sendDestination.sendToAddress:
+			if !pg.amount.dcrAmountEditor.Editor.Focused() {
+				pg.amount.dcrAmountEditor.Editor.Focus()
+			}
+		default:
+			if pg.sendDestination.accountSwitch.Changed() {
+				if !pg.sendDestination.validate() {
+					pg.sendDestination.destinationAddressEditor.Editor.Focus()
+				} else {
+					pg.amount.dcrAmountEditor.Editor.Focus()
+				}
 
+			}
+
+			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+		}
+	} else {
+		switch {
+		case !pg.sendDestination.sendToAddress && !(pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()):
+			pg.amount.dcrAmountEditor.Editor.Focus()
+		case !pg.sendDestination.sendToAddress && (pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()):
+			decredmaterial.SwitchEditors(pg.keyEvent, pg.amount.usdAmountEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+		default:
+			if pg.sendDestination.accountSwitch.Changed() {
+				if !pg.sendDestination.validate() {
+					pg.sendDestination.destinationAddressEditor.Editor.Focus()
+				} else {
+					pg.amount.dcrAmountEditor.Editor.Focus()
+				}
+			}
+			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
+		}
+	}
 }
 
 func (pg *Page) OnClose() {
