@@ -369,6 +369,9 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 					if win.load.EnableKeyEvent {
 						win.keyEvents <- &evt
 					}
+					if win.load.EnableKeyEventOnInfoModal {
+						win.keyEvents <- &evt
+					}
 				}()
 			case nil:
 				// Ignore
