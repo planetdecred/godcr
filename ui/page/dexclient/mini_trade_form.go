@@ -29,9 +29,9 @@ type miniTradeFormWidget struct {
 func newMiniTradeFormWidget(l *load.Load, host string, mkt *core.Market) *miniTradeFormWidget {
 	m := &miniTradeFormWidget{
 		Load:           l,
-		submitBtn:      l.Theme.Button("OK"),
-		invoicedAmount: l.Theme.Editor(new(widget.Editor), "I have"),
-		orderedAmount:  l.Theme.Editor(new(widget.Editor), "I get"),
+		submitBtn:      l.Theme.Button(strSubmit),
+		invoicedAmount: l.Theme.Editor(new(widget.Editor), strIHave),
+		orderedAmount:  l.Theme.Editor(new(widget.Editor), strIGet),
 		directionBtn:   l.Theme.IconButton(l.Icons.ExchangeIcon),
 		isSell:         true,
 		host:           host,
@@ -175,11 +175,11 @@ func (m *miniTradeFormWidget) handle(ord *core.OrderBook) {
 		}
 
 		modal.NewPasswordModal(m.Load).
-			Title("App password").
-			Hint("Authorize this order with your app password.").
+			Title(strAppPassword).
+			Hint(strAuthOrderAppPassword).
 			Description("IMPORTANT: Trades take time to settle, and you cannot turn off the DEX client software, or the BTC or DCR blockchain and/or wallet software, until settlement is complete. Settlement can complete as quickly as a few minutes or take as long as a few hours.").
 			NegativeButton(values.String(values.StrCancel), func() {}).
-			PositiveButton("Ok", func(password string, pm *modal.PasswordModal) bool {
+			PositiveButton(strOk, func(password string, pm *modal.PasswordModal) bool {
 				go func() {
 					form := dcrlibwallet.FreshOrder{
 						BaseAssetID:  m.mkt.BaseID,
@@ -197,7 +197,7 @@ func (m *miniTradeFormWidget) handle(ord *core.OrderBook) {
 					}
 					m.orderedAmount.Editor.SetText("0")
 					m.invoicedAmount.Editor.SetText("0")
-					m.Toast.Notify("Successfully!")
+					m.Toast.Notify(strSuccessfully)
 					pm.Dismiss()
 				}()
 				return false

@@ -53,7 +53,7 @@ func (pg *OrdersHistoryPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Orders History",
+			Title:      strOrderHistory,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -70,14 +70,14 @@ func (pg *OrdersHistoryPage) Layout(gtx layout.Context) layout.Dimensions {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
-										layout.Flexed(0.125, pg.layoutLabel("Trade")),
-										layout.Flexed(0.125, pg.layoutLabel("Side")),
-										layout.Flexed(0.125, pg.layoutLabel("Rate")),
-										layout.Flexed(0.125, pg.layoutLabel("Quantity")),
-										layout.Flexed(0.125, pg.layoutLabel("Filled")),
-										layout.Flexed(0.125, pg.layoutLabel("Settled")),
-										layout.Flexed(0.125, pg.layoutLabel("Status")),
-										layout.Flexed(0.125, pg.layoutLabel("Time")),
+										layout.Flexed(0.125, pg.layoutLabel(strTrade)),
+										layout.Flexed(0.125, pg.layoutLabel(strSide)),
+										layout.Flexed(0.125, pg.layoutLabel(strRate)),
+										layout.Flexed(0.125, pg.layoutLabel(strQuantity)),
+										layout.Flexed(0.125, pg.layoutLabel(strFilled)),
+										layout.Flexed(0.125, pg.layoutLabel(strSettled)),
+										layout.Flexed(0.125, pg.layoutLabel(strStatus)),
+										layout.Flexed(0.125, pg.layoutLabel(strTime)),
 									)
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -116,8 +116,8 @@ func (pg *OrdersHistoryPage) Layout(gtx layout.Context) layout.Dimensions {
 func (pg *OrdersHistoryPage) layoutLabel(text string) layout.Widget {
 	return pg.Theme.Label(values.TextSize14, text).Layout
 }
-func (pg *OrdersHistoryPage) Handle() {
 
+func (pg *OrdersHistoryPage) Handle() {
 }
 
 func (pg *OrdersHistoryPage) OnClose() {

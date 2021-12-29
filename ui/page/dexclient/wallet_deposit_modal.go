@@ -81,7 +81,7 @@ func (md *depositModal) Handle() {
 
 	if md.copyBtn.Clicked() {
 		clipboard.WriteOp{Text: md.wallAddress}.Add(gtx.Ops)
-		md.Toast.Notify(fmt.Sprintf("Copied %s address to clipboard", md.walletInfoWidget.coinName))
+		md.Toast.Notify(strSuccessfully)
 		return
 	}
 
@@ -104,7 +104,7 @@ func (md *depositModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(md.Load.Theme.Label(values.TextSize20, "Deposit").Layout),
+				layout.Rigid(md.Load.Theme.Label(values.TextSize20, strDeposit).Layout),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding8, Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 						ic := md.walletInfoWidget.image

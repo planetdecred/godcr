@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image/color"
 	"sort"
-	"strconv"
 	"strings"
 
 	"decred.org/dcrdex/client/asset/btc"
@@ -67,7 +66,7 @@ func (pg *DexWalletsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Wallets",
+			Title:      strWalletSetting,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -117,9 +116,7 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 							layout.Rigid(func(gtx C) D {
 								var t string
 								if asset.Wallet != nil {
-									unitInfo := asset.Info.UnitInfo
-									amount := float64(asset.Wallet.Balance.Available) / float64(unitInfo.Conventional.ConversionFactor)
-									t = strconv.FormatFloat(amount, 'f', -1, 64)
+									t = formatAmount(asset.Wallet.Balance.Available, &asset.Info.UnitInfo)
 								} else {
 									t = "0.00000000"
 								}
@@ -130,16 +127,16 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 								var c color.NRGBA
 								switch {
 								case asset.Wallet == nil:
-									t = "No wallet"
+									t = strNoWallet
 									c = pg.Theme.Color.Danger
 								case asset.Wallet.Open:
-									t = "Ready"
+									t = strReady
 									c = pg.Theme.Color.Success
 								case asset.Wallet.Running:
-									t = "Locked"
+									t = strLocked
 									c = pg.Theme.Color.Text
 								default:
-									t = "Off"
+									t = strOff
 									c = pg.Theme.Color.Text
 								}
 								label := pg.Theme.Label(values.TextSize16, t)
@@ -157,7 +154,7 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 								if asset.Wallet.SyncProgress == 1 {
 									syncPercentage = 0
 								}
-								return pg.Theme.Body2(fmt.Sprintf("%.2f%% synced", syncPercentage)).Layout(gtx)
+								return pg.Theme.Body2(fmt.Sprintf("%s %.2f%%", values.String(values.StrSyncingState), syncPercentage)).Layout(gtx)
 							}
 						}
 						return D{}
@@ -187,21 +184,21 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 
 						if asset.Wallet != nil {
 							if !asset.Wallet.Open {
-								return btn(assetW.unLockBtn, "Unlock")
+								return btn(assetW.unLockBtn, values.String(values.StrUnlock))
 							}
 							return layout.Flex{}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return btn(assetW.withdrawBtn, "Withdraw")
+									return btn(assetW.withdrawBtn, strWithdraw)
 								}),
 								layout.Rigid(func(gtx C) D {
-									return btn(assetW.depositBtn, "Deposit")
+									return btn(assetW.depositBtn, strDeposit)
 								}),
 								layout.Rigid(func(gtx C) D {
-									return btn(assetW.lockBtn, "Lock")
+									return btn(assetW.lockBtn, strLock)
 								}),
 							)
 						}
-						return btn(assetW.createWalletBtn, fmt.Sprintf("Create a %s Wallet", asset.Info.Name))
+						return btn(assetW.createWalletBtn, fmt.Sprintf(nStrCreateAWallet, asset.Info.Name))
 					}),
 				)
 			})
@@ -254,19 +251,19 @@ func (pg *DexWalletsPage) Handle() {
 		if assetW.createWalletBtn.Clicked() {
 			newCreateWalletModal(pg.Load,
 				&walletInfoWidget{
-					image:    components.CoinImageBySymbol(&pg.Load.Icons, assetW.asset.Symbol),
+					image:    components.CoinImageBySymbol(&pg.Icons, assetW.asset.Symbol),
 					coinName: assetW.asset.Symbol,
 					coinID:   assetW.asset.ID,
 				},
 				"",
-				func(md *createWalletModal) {
+				func(_ *createWalletModal) {
 					pg.assetWidgets = pg.initAssetWidgets()
 				}).Show()
 		}
 
 		if assetW.depositBtn.Clicked() {
 			newDepositModal(pg.Load, &walletInfoWidget{
-				image:    components.CoinImageBySymbol(&pg.Load.Icons, assetW.asset.Symbol),
+				image:    components.CoinImageBySymbol(&pg.Icons, assetW.asset.Symbol),
 				coinName: assetW.asset.Symbol,
 				coinID:   assetW.asset.ID,
 			}, assetW.asset.Wallet.Address).Show()
@@ -274,7 +271,7 @@ func (pg *DexWalletsPage) Handle() {
 
 		if assetW.withdrawBtn.Clicked() {
 			newWithdrawModal(pg.Load, &walletInfoWidget{
-				image:    components.CoinImageBySymbol(&pg.Load.Icons, assetW.asset.Symbol),
+				image:    components.CoinImageBySymbol(&pg.Icons, assetW.asset.Symbol),
 				coinName: assetW.asset.Symbol,
 				coinID:   assetW.asset.ID,
 			}, assetW.asset).Show()
@@ -283,11 +280,11 @@ func (pg *DexWalletsPage) Handle() {
 		if assetW.unLockBtn.Clicked() {
 			a := assetW.asset
 			modal.NewPasswordModal(pg.Load).
-				Title(fmt.Sprintf("Unlock %s Wallet", a.Info.Name)).
-				Hint("App password").
-				NegativeButton("Exit", func() {
+				Title(fmt.Sprintf(nStrUnlockWall, a.Info.Name)).
+				Hint(strAppPassword).
+				NegativeButton(values.String(values.StrCancel), func() {
 				}).
-				PositiveButton("Unlock", func(password string, m *modal.PasswordModal) bool {
+				PositiveButton(strUnLock, func(password string, m *modal.PasswordModal) bool {
 					go func() {
 						err := pg.Dexc().Core().OpenWallet(a.ID, []byte(password))
 						if err != nil {
