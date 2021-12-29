@@ -249,14 +249,14 @@ func (pg *AppOverviewPage) Handle() {
 		} else {
 			// If connected to the Decred network disable button. Prevents multiple clicks.
 			if pg.isConnnected {
-				pg.syncClickable.Enabled = false
+				pg.syncClickable.SetEnabled(false, nil)
 			}
 
 			// On exit update button state.
 			go func() {
 				pg.ToggleSync()
-				if !pg.syncClickable.Enabled {
-					pg.syncClickable.Enabled = true
+				if !pg.syncClickable.Enabled() {
+					pg.syncClickable.SetEnabled(true, nil)
 				}
 			}()
 		}

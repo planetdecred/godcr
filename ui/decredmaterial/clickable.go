@@ -15,7 +15,7 @@ type Clickable struct {
 	style     *values.ClickableStyle
 	Hoverable bool
 	Radius    CornerRadius
-	Enabled   bool
+	isEnabled bool
 }
 
 func (t *Theme) NewClickable(hoverable bool) *Clickable {
@@ -23,7 +23,7 @@ func (t *Theme) NewClickable(hoverable bool) *Clickable {
 		button:    &widget.Clickable{},
 		style:     t.Styles.ClickableStyle,
 		Hoverable: hoverable,
-		Enabled:   true,
+		isEnabled: true,
 	}
 }
 
@@ -37,6 +37,22 @@ func (cl *Clickable) ChangeStyle(style *values.ClickableStyle) {
 
 func (cl *Clickable) Clicked() bool {
 	return cl.button.Clicked()
+}
+
+// SetEnabled enables/disables the clickable.
+func (cl *Clickable) SetEnabled(enable bool, gtx *layout.Context) layout.Context {
+	var mGtx layout.Context
+	if gtx != nil && !enable {
+		mGtx = gtx.Disabled()
+	}
+
+	cl.isEnabled = enable
+	return mGtx
+}
+
+// Return clickable enabled/disabled state.
+func (cl *Clickable) Enabled() bool {
+	return cl.isEnabled
 }
 
 func (cl *Clickable) Layout(gtx C, w layout.Widget) D {
