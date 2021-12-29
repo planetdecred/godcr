@@ -7,10 +7,13 @@ import (
 	"math"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"decred.org/dcrdex/client/asset"
+	"decred.org/dcrdex/client/asset/btc"
+	"decred.org/dcrdex/client/asset/dcr"
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/dex"
 	"decred.org/dcrdex/dex/order"
@@ -22,6 +25,94 @@ const (
 	aDay    = 86400000
 	anHour  = 3600000
 	aMinute = 60000
+)
+
+// TODO: add localizable support for all these strings values
+const (
+	strSetAppPassword               = "Set App Password"
+	strConfirmPassword              = "Confirm Password"
+	strWalletPassword               = "Wallet Password"
+	strAppPassword                  = "App Password"
+	strStartUseDex                  = "Start using now"
+	strLogin                        = "Login"
+	strAddADex                      = "Add a dex"
+	strStartSyncToUse               = "Start sync to continue"
+	strOrderHistory                 = "Order History"
+	strWalletSetting                = "Wallets Settings"
+	strDexSetting                   = "Dex Settings"
+	strTrade                        = "Trade"
+	strSide                         = "Side"
+	strRate                         = "Rate"
+	strQuantity                     = "Quantity"
+	strFilled                       = "Filled"
+	strSettled                      = "Settled"
+	strStatus                       = "Status"
+	strTime                         = "Time"
+	strRegister                     = "Register"
+	strConfirmReg                   = "Confirm Registration"
+	strSubmit                       = "Submit"
+	strDexAddr                      = "DEX Address"
+	strPickAServer                  = "Pick a Server"
+	strCustomServer                 = "Custom Server"
+	strNoneFileSelect               = "None file selected"
+	strAddAFile                     = "Add a file"
+	strChooseOtherFile              = "Choose other file"
+	strNoWallet                     = "No wallet"
+	strReady                        = "Ready"
+	strLocked                       = "Locked"
+	strOff                          = "Off"
+	strWithdraw                     = "Withdraw"
+	strDeposit                      = "Deposit"
+	strLock                         = "Lock"
+	strUnLock                       = "Unlock"
+	strIHave                        = "I have"
+	strIGet                         = "I get"
+	strSuccessfully                 = "Successfully!"
+	strOk                           = "Ok"
+	strAddress                      = "Address"
+	strAmount                       = "Amount"
+	strSellectWallet                = "Sellect Wallet"
+	strSetupNeeded                  = "Setup Needed"
+	strWalletReady                  = "Wallet Ready"
+	strMarket                       = "Market"
+	strAllMarketAt                  = "All markets at"
+	strLotSize                      = "Lot Size"
+	strTLSCert                      = "TLS Certificate"
+	strAddA                         = "Add a"
+	strImportAccount                = "Import Account"
+	strExportAccount                = "Export Account"
+	strDisableAccount               = "Disable Account"
+	strChangeAppPassword            = "Change App Password"
+	strWaitingConfirms              = "Waiting for confirmations..."
+	strAuthOrderAppPassword         = "Authorize this order with your app password."
+	strRequireWalletPayFee          = "Your wallet is required to pay registration fees."
+	strConfirmSelectAssetPayFee     = "How will you pay the registration fee?"
+	strErrChooseServer              = "Please choose a server address or set a custom server"
+	strErrInputAppPassword          = "Please input your application password"
+	strInitDexPasswordDesc          = "Set your app password. This password will protect your DEX account keys and connected wallets."
+	strDexClientSupportSimultaneous = "The Decred DEX Client supports simultaneous use of any number of DEX servers."
+	strAuthorizeExport              = "Authorize Export"
+	strAuthorizeImport              = "Authorize Import"
+	strPasswordConfirmAcctImport    = "Enter your app password to confirm Account import."
+	strCurrentPassword              = "Current Password"
+	strNewPassword                  = "New Password"
+	strConfirmNewPassword           = "Confirm new password"
+	strErrRequireCertFile           = "Please choose a cert file"
+
+	nStrNoWalletFound         = "no wallet found for %s"
+	nStrCreateAWallet         = "Create a %s Wallet"
+	nStrUnlockWall            = "Unlock %s Wallet"
+	nStrWithdrawErr           = "withdraw error: %s"
+	nStrAmountAvailable       = "%s available"
+	nStrConfirmationsStatus   = "In order to trade at %s, the registration fee payment needs %d confirmations."
+	nStrAlreadyConnectWallet  = "Already connected a %s wallet"
+	nStrNameWallet            = "%s Wallet"
+	nStrNumberConfirmations   = "%d confirmations"
+	nStrConnHostError         = "Connection to dex server %s failed. You can close app and try again later or wait for it to reconnect"
+	nStrAddressDex            = "Address DEX: %s"
+	nStrAccountID             = "Account ID: %s"
+	nStrConfirmDisableAccount = "Enter your app password to disable account: %s \n\nNote: This action is irreversible - once an account is disabled it can't be re-enabled."
+	nStrConfirmExportAccount  = "Enter your app password to confirm Account export for: %s"
 )
 
 func sellString(ord *core.Order) string {
@@ -52,6 +143,7 @@ func rateString(ord *core.Order) string {
 }
 
 // formatCoinValue formats the asset value to a string.
+// TODO: should calculate base on Conventional.ConversionFactor
 func formatCoinValue(val uint64) string {
 	return fmt.Sprintf("%.6f", float64(val)/1e8)
 }
@@ -242,8 +334,8 @@ func minMaxRateOrderBook(orders []*core.MiniOrder) (float64, float64) {
 // sliceExchanges convert mapExchanges into a sorted slice
 func sliceExchanges(mapExchanges map[string]*core.Exchange) []*core.Exchange {
 	exchanges := make([]*core.Exchange, 0)
-	for _, dex := range mapExchanges {
-		exchanges = append(exchanges, dex)
+	for _, dexServer := range mapExchanges {
+		exchanges = append(exchanges, dexServer)
 	}
 	sort.Slice(exchanges, func(i, j int) bool {
 		return exchanges[i].Host < exchanges[j].Host
@@ -254,8 +346,8 @@ func sliceExchanges(mapExchanges map[string]*core.Exchange) []*core.Exchange {
 // sliceMarkets convert mapMarkets into a sorted slice
 func sliceMarkets(mapMarkets map[string]*core.Market) []*core.Market {
 	markets := make([]*core.Market, 0)
-	for _, dex := range mapMarkets {
-		markets = append(markets, dex)
+	for _, market := range mapMarkets {
+		markets = append(markets, market)
 	}
 	sort.Slice(markets, func(i, j int) bool {
 		return markets[i].Name < markets[j].Name
@@ -267,7 +359,7 @@ func getCertFromFile(certFilePath string) ([]byte, error) {
 	var cert []byte
 
 	if certFilePath == "" {
-		return cert, errors.New("Please choose a cert file")
+		return cert, errors.New(strErrRequireCertFile)
 	}
 
 	certFile, err := os.Open(certFilePath)
@@ -288,4 +380,33 @@ func getCertFromFile(certFilePath string) ([]byte, error) {
 	}
 
 	return cert, nil
+}
+
+// supportedMarket check supported market for app depend on dcrlibwallet.
+// TODO: update the logic or remove this when supported all markets.
+func supportedMarket(mkt *core.Market) bool {
+	// dcr_btc
+	if mkt.BaseID == dcr.BipID && mkt.QuoteID == btc.BipID {
+		return true
+	}
+	// btc_dcr
+	if mkt.QuoteID == dcr.BipID && mkt.BaseID == btc.BipID {
+		return true
+	}
+	return false
+}
+
+func formatAmountUnit(assetID uint32, assetName string, amount uint64) string {
+	assetInfo, err := asset.Info(assetID)
+	if err != nil {
+		return fmt.Sprintf("%d [%s units]", amount, assetName)
+	}
+	unitInfo := assetInfo.UnitInfo
+	convertedLotSize := formatAmount(amount, &unitInfo)
+	return fmt.Sprintf("%s %s", convertedLotSize, unitInfo.Conventional.Unit)
+}
+
+func formatAmount(amount uint64, unitInfo *dex.UnitInfo) string {
+	convertedAmount := float64(amount) / float64(unitInfo.Conventional.ConversionFactor)
+	return strconv.FormatFloat(convertedAmount, 'f', -1, 64)
 }

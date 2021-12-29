@@ -31,7 +31,7 @@ type DexSettingsPage struct {
 }
 
 type settingExchangeWidget struct {
-	exchange          *core.Exchange
+	dexServer         *core.Exchange
 	exportAccountBtn  *decredmaterial.Clickable
 	disableAccountBtn *decredmaterial.Clickable
 }
@@ -40,9 +40,9 @@ func NewDexSettingsPage(l *load.Load) *DexSettingsPage {
 	pg := &DexSettingsPage{
 		Load:                 l,
 		pageContainer:        layout.List{Axis: layout.Vertical},
-		addDexBtn:            l.Theme.Button("Add a dex"),
-		importAccountBtn:     l.Theme.Button("Import Account"),
-		changeAppPasswordBtn: l.Theme.OutlineButton("Change App Password"),
+		addDexBtn:            l.Theme.Button(strAddADex),
+		importAccountBtn:     l.Theme.Button(strImportAccount),
+		changeAppPasswordBtn: l.Theme.OutlineButton(strChangeAppPassword),
 	}
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
 	inset := layout.Inset{
@@ -71,7 +71,7 @@ func (pg *DexSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Settings",
+			Title:      strDexSetting,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -138,8 +138,8 @@ func (pg *DexSettingsPage) exchangesInfoLayout(gtx C) D {
 				return card.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							dexAddress := fmt.Sprintf("Address DEX: %s", eWdg.exchange.Host)
-							account := fmt.Sprintf("Account ID: %s", eWdg.exchange.AcctID)
+							dexAddress := fmt.Sprintf(nStrAddressDex, eWdg.dexServer.Host)
+							account := fmt.Sprintf(nStrAccountID, eWdg.dexServer.AcctID)
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(pg.Theme.Label(values.TextSize12, dexAddress).Layout),
 								layout.Rigid(pg.Theme.Label(values.TextSize12, account).Layout),
@@ -150,11 +150,11 @@ func (pg *DexSettingsPage) exchangesInfoLayout(gtx C) D {
 								Top: values.MarginPadding10,
 							}.Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(b(eWdg.exportAccountBtn, "Export Account")),
+									layout.Rigid(b(eWdg.exportAccountBtn, strExportAccount)),
 									layout.Rigid(func(gtx C) D {
 										return layout.Inset{
 											Left: values.MarginPadding10,
-										}.Layout(gtx, b(eWdg.disableAccountBtn, "Disable Account"))
+										}.Layout(gtx, b(eWdg.disableAccountBtn, strDisableAccount))
 									}),
 								)
 							})
@@ -171,10 +171,7 @@ func (pg *DexSettingsPage) exchangesInfoLayout(gtx C) D {
 func (pg *DexSettingsPage) addDexAndImportAccountLayout(gtx C) D {
 	return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				t := "The Decred DEX Client supports simultaneous use of any number of DEX servers."
-				return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
-			}),
+			layout.Rigid(pg.Theme.Label(values.TextSize14, strDexClientSupportSimultaneous).Layout),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
@@ -211,7 +208,7 @@ func (pg *DexSettingsPage) initExchangeWidget() {
 	}
 	for _, ex := range exchanges {
 		ew := &settingExchangeWidget{
-			exchange:          ex,
+			dexServer:         ex,
 			exportAccountBtn:  clickable(),
 			disableAccountBtn: clickable(),
 		}
@@ -222,15 +219,15 @@ func (pg *DexSettingsPage) initExchangeWidget() {
 func (pg *DexSettingsPage) Handle() {
 	for _, eWdg := range pg.exchangesWdg {
 		if eWdg.disableAccountBtn.Clicked() {
-			exchange := eWdg.exchange
+			dexServer := eWdg.dexServer
 			modal.NewPasswordModal(pg.Load).
-				Title("Disable Account").
-				Hint("Password").
-				Description(fmt.Sprintf("Enter your app password to disable account: %s \n\nNote: This action is irreversible - once an account is disabled it can't be re-enabled.", exchange.Host)).
+				Title(strDisableAccount).
+				Hint(strAppPassword).
+				Description(fmt.Sprintf(nStrConfirmDisableAccount, dexServer.Host)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
-				PositiveButton("Disable Account", func(password string, pm *modal.PasswordModal) bool {
+				PositiveButton(strDisableAccount, func(password string, pm *modal.PasswordModal) bool {
 					go func() {
-						err := pg.Dexc().Core().AccountDisable([]byte(password), exchange.Host)
+						err := pg.Dexc().Core().AccountDisable([]byte(password), dexServer.Host)
 						if err != nil {
 							pm.SetError(err.Error())
 							pm.SetLoading(false)
@@ -245,15 +242,15 @@ func (pg *DexSettingsPage) Handle() {
 		}
 
 		if eWdg.exportAccountBtn.Clicked() {
-			exchange := eWdg.exchange
+			dexServer := eWdg.dexServer
 			modal.NewPasswordModal(pg.Load).
-				Title("Authorize Export").
-				Hint("Password").
-				Description(fmt.Sprintf("Enter your app password to confirm Account export for: %s", exchange.Host)).
+				Title(strAuthorizeExport).
+				Hint(strAppPassword).
+				Description(fmt.Sprintf(nStrConfirmExportAccount, dexServer.Host)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
-				PositiveButton("Authorize Export", func(password string, pm *modal.PasswordModal) bool {
+				PositiveButton(strAuthorizeExport, func(password string, pm *modal.PasswordModal) bool {
 					go func() {
-						account, err := pg.Dexc().Core().AccountExport([]byte(password), exchange.Host)
+						account, err := pg.Dexc().Core().AccountExport([]byte(password), dexServer.Host)
 						if err != nil {
 							pm.SetError(err.Error())
 							pm.SetLoading(false)
@@ -267,7 +264,7 @@ func (pg *DexSettingsPage) Handle() {
 							return
 						}
 
-						fileName := fmt.Sprintf("dcrAccount-%s.json", exchange.Host)
+						fileName := fmt.Sprintf("dcrAccount-%s.json", dexServer.Host)
 						filePath, err := zenity.SelectFileSave(
 							zenity.Title("Save Your Account"),
 							zenity.ConfirmOverwrite(),
@@ -301,7 +298,7 @@ func (pg *DexSettingsPage) Handle() {
 	}
 
 	if pg.addDexBtn.Button.Clicked() {
-		newAddDexModal(pg.Load, "").DexCreated(func(dex *core.Exchange) {
+		newAddDexModal(pg.Load).DexCreated(func(_ *core.Exchange) {
 			pg.initExchangeWidget()
 			pg.RefreshWindow()
 		}).Show()
@@ -345,11 +342,11 @@ func (pg *DexSettingsPage) Handle() {
 			}
 
 			modal.NewPasswordModal(pg.Load).
-				Title("Authorize Import").
-				Hint("Password").
-				Description("Enter your app password to confirm Account import.").
+				Title(strAuthorizeImport).
+				Hint(strAppPassword).
+				Description(strPasswordConfirmAcctImport).
 				NegativeButton(values.String(values.StrCancel), func() {}).
-				PositiveButton("Authorize Import", func(password string, pm *modal.PasswordModal) bool {
+				PositiveButton(strAuthorizeImport, func(password string, pm *modal.PasswordModal) bool {
 					go func() {
 						err = pg.Dexc().Core().AccountImport([]byte(password), account)
 						if err != nil {
@@ -369,23 +366,25 @@ func (pg *DexSettingsPage) Handle() {
 
 	if pg.changeAppPasswordBtn.Button.Clicked() {
 		modal.NewPasswordModal(pg.Load).
-			Title("Current Password").
-			Hint("Current app password").
+			Title(strCurrentPassword).
+			Hint(strAppPassword).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(values.String(values.StrConfirm), func(oldPassword string, pm *modal.PasswordModal) bool {
 				go func() {
 					pm.SetLoading(false)
 					pm.Dismiss()
 					modal.NewCreatePasswordModal(pg.Load).
-						Title("New Password").
+						Title(strNewPassword).
 						EnableName(false).
-						PasswordHint("New password").
-						ConfirmPasswordHint("Confirm new password").
-						PasswordCreated(func(walletName, newPassword string, m *modal.CreatePasswordModal) bool {
+						PasswordHint(strNewPassword).
+						ConfirmPasswordHint(strConfirmNewPassword).
+						PasswordCreated(func(_, newPassword string, m *modal.CreatePasswordModal) bool {
 							go func() {
 								err := pg.Dexc().Core().ChangeAppPass([]byte(oldPassword), []byte(newPassword))
 								// check if old password error then show previous modal
 								if err != nil {
+									// TODO: dont know if return in different language
+									// find out more
 									if strings.Contains(err.Error(), "old password error") {
 										m.Dismiss()
 										pm.Show()
@@ -396,7 +395,7 @@ func (pg *DexSettingsPage) Handle() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify("Change password successfully!")
+								pg.Toast.Notify(strSuccessfully)
 								m.Dismiss()
 								pg.RefreshWindow()
 							}()

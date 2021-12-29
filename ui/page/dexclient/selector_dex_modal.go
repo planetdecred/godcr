@@ -99,7 +99,7 @@ func (md *selectorDexModal) Layout(gtx layout.Context) D {
 									return D{}
 								}
 								gtx.Constraints.Min.X = 30
-								ic := md.Load.Icons.NavigationCheck
+								ic := md.Icons.NavigationCheck
 								return ic.Layout(gtx, md.Theme.Color.Success)
 							}),
 						)
@@ -119,12 +119,12 @@ func (md *selectorDexModal) initDEXServersWidget() {
 	exchanges := sliceExchanges(md.Dexc().DEXServers())
 	var selectorExchangeWdgs []*selectorExchangeWidget
 	for i := 0; i < len(exchanges); i++ {
-		exchange := exchanges[i]
+		dexServer := exchanges[i]
 		cl := md.Theme.NewClickable(true)
 		cl.Radius = decredmaterial.Radius(0)
 		selectorExchangeWdgs = append(selectorExchangeWdgs, &selectorExchangeWidget{
 			selectBtn: cl,
-			Exchange:  exchange,
+			Exchange:  dexServer,
 		})
 	}
 	md.selectorExchangeWdgs = selectorExchangeWdgs

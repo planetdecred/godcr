@@ -31,7 +31,7 @@ type Page struct {
 	ctxCancel        context.CancelFunc
 	miniTradeFormWdg *miniTradeFormWidget
 	orderBook        *core.OrderBook
-	dex              *core.Exchange
+	dexServer        *core.Exchange
 	market           *core.Market
 
 	loginBtn          decredmaterial.Button
@@ -54,10 +54,10 @@ func NewMarketPage(l *load.Load) *Page {
 
 	pg := &Page{
 		Load:              l,
-		loginBtn:          l.Theme.Button("Login"),
-		initializeBtn:     l.Theme.Button("Start using now"),
-		addDexBtn:         l.Theme.Button("Add a dex"),
-		syncBtn:           l.Theme.Button("Start sync to continue"),
+		loginBtn:          l.Theme.Button(strLogin),
+		initializeBtn:     l.Theme.Button(strStartUseDex),
+		addDexBtn:         l.Theme.Button(strAddADex),
+		syncBtn:           l.Theme.Button(strStartSyncToUse),
 		ordersHistoryBtn:  clickable(),
 		walletSettingsBtn: clickable(),
 		dexSettingsBtn:    clickable(),
@@ -86,7 +86,7 @@ func (pg *Page) Layout(gtx C) D {
 			return pg.pageSections(gtx, pg.welcomeLayout(pg.initializeBtn))
 		case !pg.Dexc().IsLoggedIn():
 			return pg.pageSections(gtx, pg.welcomeLayout(pg.loginBtn))
-		case pg.dex == nil:
+		case pg.dexServer == nil:
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.headerLayout()),
 				layout.Rigid(func(gtx C) D {
@@ -94,17 +94,17 @@ func (pg *Page) Layout(gtx C) D {
 				}),
 			)
 		default:
-			if !pg.dex.Connected {
+			if !pg.dexServer.Connected {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(pg.headerLayout()),
 					layout.Rigid(func(gtx C) D {
 						return pg.pageSections(gtx,
-							pg.Theme.Label(values.TextSize16, fmt.Sprintf("Connection to dex server %s failed. You can close app and try again later or wait for it to reconnect", pg.dex.Host)).Layout)
+							pg.Theme.Label(values.TextSize16, fmt.Sprintf(nStrConnHostError, pg.dexServer.Host)).Layout)
 					}),
 				)
 			}
 
-			if pg.dex.PendingFee != nil {
+			if pg.dexServer.PendingFee != nil {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(pg.headerLayout()),
 					layout.Rigid(func(gtx C) D {
@@ -156,31 +156,31 @@ func (pg *Page) headerLayout() layout.Widget {
 		}
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-			dexIc := pg.Load.Icons.DexIcon
-			orderHistoryIc := pg.Load.Icons.TimerIcon
-			walletIc := pg.Load.Icons.WalletIcon
-			dexSettingIc := pg.Load.Icons.SettingsIcon
+			dexIc := pg.Icons.DexIcon
+			orderHistoryIc := pg.Icons.TimerIcon
+			walletIc := pg.Icons.WalletIcon
+			dexSettingIc := pg.Icons.SettingsIcon
 			dexIc.Scale, orderHistoryIc.Scale, walletIc.Scale, dexSettingIc.Scale = .1, .5, .3, .3
 
 			return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if pg.dex == nil {
+					if pg.dexServer == nil {
 						return D{}
 					}
-					return layout.W.Layout(gtx, btn(pg.dexSelectBtn, pg.dex.Host, dexIc))
+					return layout.W.Layout(gtx, btn(pg.dexSelectBtn, pg.dexServer.Host, dexIc))
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								if pg.dex == nil {
+								if pg.dexServer == nil {
 									return D{}
 								}
-								return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, btn(pg.ordersHistoryBtn, "Order History", orderHistoryIc))
+								return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, btn(pg.ordersHistoryBtn, strOrderHistory, orderHistoryIc))
 							}),
-							layout.Rigid(btn(pg.walletSettingsBtn, "Wallets Settings", walletIc)),
+							layout.Rigid(btn(pg.walletSettingsBtn, strWalletSetting, walletIc)),
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, btn(pg.dexSettingsBtn, "Dex Settings", dexSettingIc))
+								return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, btn(pg.dexSettingsBtn, strDexSetting, dexSettingIc))
 							}),
 						)
 					})
@@ -202,7 +202,7 @@ func (pg *Page) welcomeLayout(button decredmaterial.Button) layout.Widget {
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					description := "Trade crypto peer-to-peer.\nNo trading fees. No KYC."
+					description := "Trade crypto peer-to-peer.\n"
 					return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
 				}),
 				layout.Rigid(button.Layout),
@@ -213,9 +213,9 @@ func (pg *Page) welcomeLayout(button decredmaterial.Button) layout.Widget {
 
 func (pg *Page) registrationStatusLayout() layout.Widget {
 	return func(gtx C) D {
-		reqConfirms, currentConfs := pg.dex.Fee.Confs, pg.dex.PendingFee.Confs
+		reqConfirms, currentConfs := pg.dexServer.Fee.Confs, pg.dexServer.PendingFee.Confs
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(pg.Theme.Label(values.TextSize14, "Waiting for confirmations...").Layout),
+			layout.Rigid(pg.Theme.Label(values.TextSize14, strWaitingConfirms).Layout),
 			layout.Rigid(func(gtx C) D {
 				description := "Trade crypto peer-to-peer."
 				return layout.Inset{Bottom: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
@@ -228,9 +228,9 @@ func (pg *Page) registrationStatusLayout() layout.Widget {
 
 func (pg *Page) initMiniTradeForm() {
 	if pg.miniTradeFormWdg == nil ||
-		pg.miniTradeFormWdg.host != pg.dex.Host ||
+		pg.miniTradeFormWdg.host != pg.dexServer.Host ||
 		pg.miniTradeFormWdg.mkt.Name != pg.market.Name {
-		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load, pg.dex.Host, pg.market)
+		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load, pg.dexServer.Host, pg.market)
 	}
 
 	if dex.PendingFee == nil {
@@ -259,8 +259,8 @@ func (pg *Page) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	go pg.readNotifications()
 
-	if pg.initDex() && pg.initMarket() && pg.Dexc().IsLoggedIn() {
-		go pg.listenerMessages(pg.dex.Host, pg.market.BaseID, pg.market.QuoteID)
+	if pg.initDexServer() && pg.initMarket() && pg.Dexc().IsLoggedIn() {
+		go pg.listenerMessages(pg.dexServer.Host, pg.market.BaseID, pg.market.QuoteID)
 	}
 }
 
@@ -290,10 +290,10 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.loginBtn.Button.Clicked() {
 		modal.NewPasswordModal(pg.Load).
-			Title("Login").
-			Hint("App password").
+			Title(strLogin).
+			Hint(strAppPassword).
 			NegativeButton(values.String(values.StrCancel), func() {}).
-			PositiveButton("Login", func(password string, pm *modal.PasswordModal) bool {
+			PositiveButton(strLogin, func(password string, pm *modal.PasswordModal) bool {
 				go func() {
 					err := pg.Dexc().Login([]byte(password))
 					if err != nil {
@@ -303,16 +303,17 @@ func (pg *Page) HandleUserInteractions() {
 					}
 					pm.Dismiss()
 
-					// Check if there is no dex registered, show modal to register one
+					// Check if there is no dexServer registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
-						newAddDexModal(pg.Load, password).DexCreated(func(dex *core.Exchange) {
-							pg.dexCreated(dex)
-						}).Show()
+						newAddDexModal(pg.Load).WithAppPassword(password).
+							DexCreated(func(dexServer *core.Exchange) {
+								pg.dexCreated(dexServer)
+							}).Show()
 						return
 					}
 
-					if pg.initDex() && pg.initMarket() {
-						go pg.listenerMessages(pg.dex.Host, pg.market.BaseID, pg.market.QuoteID)
+					if pg.initDexServer() && pg.initMarket() {
+						go pg.listenerMessages(pg.dexServer.Host, pg.market.BaseID, pg.market.QuoteID)
 					}
 				}()
 				return false
@@ -321,12 +322,12 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.initializeBtn.Button.Clicked() {
 		modal.NewCreatePasswordModal(pg.Load).
-			Title("Set App Password").
-			SetDescription("Set your app password. This password will protect your DEX account keys and connected wallets.").
+			Title(strSetAppPassword).
+			SetDescription(strInitDexPasswordDesc).
 			EnableName(false).
-			PasswordHint("Password").
-			ConfirmPasswordHint("Confirm password").
-			PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
+			PasswordHint(strAppPassword).
+			ConfirmPasswordHint(strConfirmPassword).
+			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
 					err := pg.Dexc().InitializeWithPassword([]byte(password))
 					if err != nil {
@@ -334,14 +335,14 @@ func (pg *Page) HandleUserInteractions() {
 						m.SetLoading(false)
 						return
 					}
-					pg.Toast.Notify("App password created")
-
+					pg.Toast.Notify(strSuccessfully)
 					m.Dismiss()
-					// Check if there is no dex registered, show modal to register one
+					// Check if there is no dexServer registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
-						newAddDexModal(pg.Load, password).DexCreated(func(dex *core.Exchange) {
-							pg.dexCreated(dex)
-						}).Show()
+						newAddDexModal(pg.Load).WithAppPassword(password).
+							DexCreated(func(dexServer *core.Exchange) {
+								pg.dexCreated(dexServer)
+							}).Show()
 					}
 				}()
 				return false
@@ -349,8 +350,8 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.addDexBtn.Button.Clicked() {
-		newAddDexModal(pg.Load, "").DexCreated(func(dex *core.Exchange) {
-			pg.dexCreated(dex)
+		newAddDexModal(pg.Load).DexCreated(func(dexServer *core.Exchange) {
+			pg.dexCreated(dexServer)
 		}).Show()
 	}
 
@@ -363,7 +364,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.ordersHistoryBtn.Clicked() {
-		pg.ChangeFragment(NewOrdersHistoryPage(pg.Load, pg.dex.Host))
+		pg.ChangeFragment(NewOrdersHistoryPage(pg.Load, pg.dexServer.Host))
 	}
 
 	if pg.dexSettingsBtn.Clicked() {
@@ -371,11 +372,11 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.dexSelectBtn.Clicked() {
-		newSelectorDexModal(pg.Load, pg.dex.Host).
-			OnDexSelected(func(dex *core.Exchange) {
-				pg.selectDex(dex)
+		newSelectorDexModal(pg.Load, pg.dexServer.Host).
+			OnDexSelected(func(dexServer *core.Exchange) {
+				pg.selectDexServer(dexServer)
 				if pg.initMarket() {
-					go pg.listenerMessages(pg.dex.Host, pg.market.BaseID, pg.market.QuoteID)
+					go pg.listenerMessages(pg.dexServer.Host, pg.market.BaseID, pg.market.QuoteID)
 				}
 			}).Show()
 	}
@@ -428,42 +429,51 @@ func (pg *Page) getOrderBook(host string, baseID, quoteID uint32) {
 	pg.orderBook = orderBoook
 }
 
-// initDex initialize Page's dex, check for value of DexHostConfigKey in storage,
+// initDexServer initialize Page's dexServer, check for value of DexHostConfigKey in storage,
 // if Dex exist set to Page otherwise choose first Dex on the slice.
-func (pg *Page) initDex() bool {
+func (pg *Page) initDexServer() bool {
 	valueOut := pg.WL.MultiWallet.ReadStringConfigValueForKey(DexHostConfigKey)
 	if valueOut != "" {
-		if dex, ok := pg.Dexc().DEXServers()[valueOut]; ok {
-			pg.selectDex(dex)
+		if dexServer, ok := pg.Dexc().DEXServers()[valueOut]; ok {
+			pg.selectDexServer(dexServer)
 			return true
 		}
 	}
 	exchanges := sliceExchanges(pg.Dexc().DEXServers())
 	if len(exchanges) == 0 {
-		pg.selectDex(nil)
+		pg.selectDexServer(nil)
 		return false
 	}
-	pg.selectDex(exchanges[0])
+	pg.selectDexServer(exchanges[0])
 	return true
 }
 
-// selectDex set Page's Dex and save to storage last choose.
-func (pg *Page) selectDex(dex *core.Exchange) {
-	pg.dex = dex
+// selectDexServer set Page's Dex and save to storage last choose.
+func (pg *Page) selectDexServer(dexServer *core.Exchange) {
+	pg.dexServer = dexServer
 	value := ""
-	if dex != nil {
-		value = dex.Host
+	if dexServer != nil {
+		value = dexServer.Host
 	}
 	pg.WL.MultiWallet.SetStringConfigValueForKey(DexHostConfigKey, value)
 }
 
 // initMarket initialize Page's Market, choose first Market on the slice.
 func (pg *Page) initMarket() bool {
-	markets := sliceMarkets(pg.dex.Markets)
+	markets := sliceMarkets(pg.dexServer.Markets)
 	if len(markets) == 0 {
 		return false
 	}
-	pg.selectMarket(markets[0])
+
+	// TODO: select the first Market to use instead check for supported market.
+	for _, mkt := range markets {
+		if supportedMarket(mkt) {
+			pg.selectMarket(mkt)
+			return true
+		}
+	}
+
+	// pg.selectMarket(markets[0])
 	return true
 }
 
@@ -472,22 +482,22 @@ func (pg *Page) selectMarket(market *core.Market) {
 }
 
 func (pg *Page) updateDexMarketState() {
-	if pg.dex == nil {
+	if pg.dexServer == nil {
 		return
 	}
 
-	dex := pg.Dexc().DEXServers()[pg.dex.Host]
-	if dex == nil {
+	dexServer := pg.Dexc().DEXServers()[pg.dexServer.Host]
+	if dexServer == nil {
 		return
 	}
 
-	pg.selectDex(dex)
+	pg.selectDexServer(dexServer)
 
 	if pg.market == nil {
 		return
 	}
 
-	market := dex.Markets[pg.market.Name]
+	market := dexServer.Markets[pg.market.Name]
 	if market == nil {
 		return
 	}
@@ -495,10 +505,10 @@ func (pg *Page) updateDexMarketState() {
 	pg.selectMarket(market)
 }
 
-func (pg *Page) dexCreated(dex *core.Exchange) {
-	pg.selectDex(dex)
+func (pg *Page) dexCreated(dexServer *core.Exchange) {
+	pg.selectDexServer(dexServer)
 	if pg.initMarket() {
-		go pg.listenerMessages(pg.dex.Host, pg.market.BaseID, pg.market.QuoteID)
+		go pg.listenerMessages(pg.dexServer.Host, pg.market.BaseID, pg.market.QuoteID)
 	}
 	pg.RefreshWindow()
 }
