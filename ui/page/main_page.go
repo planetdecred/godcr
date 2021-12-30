@@ -56,7 +56,8 @@ type MainPage struct {
 
 	currentPage   load.Page
 	pageBackStack []load.Page
-	sendPage      *send.Page // reuse value to keep data persistent onresume.
+	sendPage      *send.Page   // reuse value to keep data persistent onresume.
+	receivePage   *ReceivePage // pointer to receive page. to avoid duplication.
 
 	// page state variables
 	dcrUsdtBittrex  load.DCRUSDTBittrex
@@ -312,7 +313,10 @@ func (mp *MainPage) Handle() {
 
 				pg = mp.sendPage
 			} else {
-				pg = NewReceivePage(mp.Load)
+				if mp.receivePage == nil {
+					mp.receivePage = NewReceivePage(mp.Load)
+				}
+				pg = mp.receivePage
 			}
 
 			if pg.ID() == mp.currentPageID() {
