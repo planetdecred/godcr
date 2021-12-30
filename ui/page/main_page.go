@@ -56,7 +56,8 @@ type MainPage struct {
 
 	currentPage   load.Page
 	pageBackStack []load.Page
-	sendPage      *send.Page // reuse value to keep data persistent onresume.
+	sendPage      *send.Page   // reuse value to keep data persistent onresume.
+	receivePage   *ReceivePage // pointer to receive page. to avoid duplication.
 
 	// page state variables
 	dcrUsdtBittrex  load.DCRUSDTBittrex
@@ -312,7 +313,10 @@ func (mp *MainPage) Handle() {
 
 				pg = mp.sendPage
 			} else {
-				pg = NewReceivePage(mp.Load)
+				if mp.receivePage == nil {
+					mp.receivePage = NewReceivePage(mp.Load)
+				}
+				pg = mp.receivePage
 			}
 
 			if pg.ID() == mp.currentPageID() {
@@ -385,6 +389,23 @@ func (mp *MainPage) currentPageID() string {
 }
 
 func (mp *MainPage) changeFragment(page load.Page) {
+
+	// If Page is the last in back stack return.
+	if mp.currentPageID() == page.ID() {
+		return
+	}
+
+	// Maintain one pointer to Page in backstack slice.
+	for i := len(mp.pageBackStack) - 1; i >= 0; i-- {
+		if mp.pageBackStack[i].ID() == page.ID() {
+			var mPages []load.Page
+			mPagesf, mPagesb := mp.pageBackStack[:i], mp.pageBackStack[i+1:]
+			mPages = append(mPages, mPagesf...)
+			mPages = append(mPages, mPagesb...)
+			mp.pageBackStack = mPages
+		}
+	}
+
 	if mp.currentPage != nil {
 		mp.currentPage.OnClose()
 		mp.pageBackStack = append(mp.pageBackStack, mp.currentPage)
