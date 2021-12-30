@@ -15,6 +15,7 @@ import (
 // Transaction notifications
 
 func (mp *MainPage) OnTransaction(transaction string) {
+	transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
 	mp.UpdateBalance()
 
 	var tx dcrlibwallet.Transaction
@@ -24,7 +25,10 @@ func (mp *MainPage) OnTransaction(transaction string) {
 			Transaction: &tx,
 		}
 		mp.UpdateNotification(update)
-		mp.desktopNotifier(update)
+		if transactionNotification {
+			mp.desktopNotifier(update)
+		}
+
 	}
 }
 
