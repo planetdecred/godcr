@@ -385,17 +385,26 @@ func (pg *Page) Handle() {
 
 	if pg.sendDestination.sendToAddress {
 		addEditor := pg.sendDestination.destinationAddressEditor
-		if pg.amount.IsMaxClicked() {
-			validAddress := pg.sendDestination.validate()
-			if validAddress {
+		validAddress := pg.sendDestination.validate()
+		if validAddress {
+			if pg.amount.IsMaxClicked() {
 				pg.amount.setError("")
 				pg.amount.Sendmax = true
 				pg.amount.amountChanged()
-			} else if len(addEditor.Editor.Text()) < 1 {
-				pg.Toast.NotifyError("Set destination amount")
 			}
-
+		} else if len(addEditor.Editor.Text()) < 1 {
+			if len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1 {
+				pg.amount.Sendmax = false
+			}
+			if pg.amount.IsMaxClicked() {
+				if pg.amount.amountIsValid() {
+					pg.amount.setError("")
+				} else {
+					pg.Toast.NotifyError("Set destination amount")
+				}
+			}
 		}
+
 	} else {
 		if pg.amount.IsMaxClicked() {
 			pg.amount.setError("")
