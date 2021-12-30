@@ -389,6 +389,23 @@ func (mp *MainPage) currentPageID() string {
 }
 
 func (mp *MainPage) changeFragment(page load.Page) {
+
+	// If Page is the last in back stack return.
+	if mp.currentPageID() == page.ID() {
+		return
+	}
+
+	// Maintian one pointer to Page in backstack slice.
+	for i := len(mp.pageBackStack) - 1; i >= 0; i-- {
+		if mp.pageBackStack[i].ID() == page.ID() {
+			var mPages []load.Page
+			mPagesf, mPagesb := mp.pageBackStack[:i], mp.pageBackStack[i+1:]
+			mPages = append(mPages, mPagesf...)
+			mPages = append(mPages, mPagesb...)
+			mp.pageBackStack = mPages
+		}
+	}
+
 	if mp.currentPage != nil {
 		mp.currentPage.OnClose()
 		mp.pageBackStack = append(mp.pageBackStack, mp.currentPage)
