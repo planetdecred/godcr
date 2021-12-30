@@ -64,6 +64,12 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx layout.Context, inset layout.In
 		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Flexed(1, syncStatusLabel.Layout),
 			layout.Rigid(func(gtx C) D {
+
+				// Set gxt to Disabled (Sets Queue to nil) if syncClickable state is disabled, prevents double click.
+				if !pg.syncClickable.Enabled() {
+					gtx = pg.syncClickable.SetEnabled(false, &gtx)
+				}
+
 				return decredmaterial.LinearLayout{
 					Width:     decredmaterial.WrapContent,
 					Height:    decredmaterial.WrapContent,
