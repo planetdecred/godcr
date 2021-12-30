@@ -382,6 +382,27 @@ func (pg *Page) Handle() {
 			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
 		}
 	}
+
+	if pg.sendDestination.sendToAddress {
+		addEditor := pg.sendDestination.destinationAddressEditor
+		if pg.amount.IsMaxClicked() {
+			validAddress := pg.sendDestination.validate()
+			if validAddress {
+				pg.amount.setError("")
+				pg.amount.Sendmax = true
+				pg.amount.amountChanged()
+			} else if len(addEditor.Editor.Text()) < 1 {
+				pg.Toast.NotifyError("Set destination amount")
+			}
+
+		}
+	} else {
+		if pg.amount.IsMaxClicked() {
+			pg.amount.setError("")
+			pg.amount.Sendmax = true
+			pg.amount.amountChanged()
+		}
+	}
 }
 
 func (pg *Page) OnClose() {

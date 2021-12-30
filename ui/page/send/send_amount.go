@@ -21,9 +21,9 @@ type sendAmount struct {
 	dcrAmountEditor decredmaterial.Editor
 	usdAmountEditor decredmaterial.Editor
 
-	sendMax               bool
-	dcrSendMaxChangeEvent bool
-	usdSendMaxChangeEvent bool
+	Sendmax               bool
+	dcrSendmaxChangeEvent bool
+	usdSendmaxChangeEvent bool
 	amountChanged         func()
 
 	amountErrorText string
@@ -69,13 +69,13 @@ func (sa *sendAmount) setExchangeRate(exchangeRate float64) {
 func (sa *sendAmount) setAmount(amount int64) {
 	// TODO: this workaround ignores the change events from the
 	// amount input to avoid construct tx cycle.
-	sa.dcrSendMaxChangeEvent = sa.sendMax
+	sa.dcrSendmaxChangeEvent = sa.Sendmax
 	sa.dcrAmountEditor.Editor.SetText(fmt.Sprintf("%.8f", dcrutil.Amount(amount).ToCoin()))
 
 	if sa.exchangeRate != -1 {
 		usdAmount := load.DCRToUSD(sa.exchangeRate, dcrutil.Amount(amount).ToCoin())
 
-		sa.usdSendMaxChangeEvent = true
+		sa.usdSendmaxChangeEvent = true
 		sa.usdAmountEditor.Editor.SetText(fmt.Sprintf("%.2f", usdAmount))
 
 	}
@@ -83,20 +83,20 @@ func (sa *sendAmount) setAmount(amount int64) {
 
 func (sa *sendAmount) amountIsValid() bool {
 	_, err := strconv.ParseFloat(sa.dcrAmountEditor.Editor.Text(), 64)
-	return err == nil || sa.sendMax
+	return err == nil || sa.Sendmax
 }
 
 func (sa *sendAmount) validAmount() (int64, bool, error) {
-	if sa.sendMax {
-		return 0, sa.sendMax, nil
+	if sa.Sendmax {
+		return 0, sa.Sendmax, nil
 	}
 
 	amount, err := strconv.ParseFloat(sa.dcrAmountEditor.Editor.Text(), 64)
 	if err != nil {
-		return -1, sa.sendMax, err
+		return -1, sa.Sendmax, err
 	}
 
-	return dcrlibwallet.AmountAtom(amount), sa.sendMax, nil
+	return dcrlibwallet.AmountAtom(amount), sa.Sendmax, nil
 }
 
 func (sa *sendAmount) validateDCRAmount() {
@@ -162,7 +162,7 @@ func (sa *sendAmount) setError(err string) {
 }
 
 func (sa *sendAmount) resetFields() {
-	sa.sendMax = false
+	sa.Sendmax = false
 
 	sa.clearAmount()
 }
@@ -184,10 +184,10 @@ func (sa *sendAmount) handle() {
 		sa.usdAmountEditor.LineColor = sa.Theme.Color.Gray2
 	}
 
-	if sa.sendMax {
+	if sa.Sendmax {
 		sa.dcrAmountEditor.CustomButton.Background = sa.Theme.Color.Primary
 		sa.usdAmountEditor.CustomButton.Background = sa.Theme.Color.Primary
-	} else if len(sa.dcrAmountEditor.Editor.Text()) < 1 || !sa.sendMax {
+	} else if len(sa.dcrAmountEditor.Editor.Text()) < 1 || !sa.Sendmax {
 		sa.dcrAmountEditor.CustomButton.Background = sa.Theme.Color.Gray1
 		sa.usdAmountEditor.CustomButton.Background = sa.Theme.Color.Gray1
 	}
@@ -196,11 +196,11 @@ func (sa *sendAmount) handle() {
 		if sa.dcrAmountEditor.Editor.Focused() {
 			switch evt.(type) {
 			case widget.ChangeEvent:
-				if sa.dcrSendMaxChangeEvent {
-					sa.dcrSendMaxChangeEvent = false
+				if sa.dcrSendmaxChangeEvent {
+					sa.dcrSendmaxChangeEvent = false
 					continue
 				}
-				sa.sendMax = false
+				sa.Sendmax = false
 				sa.validateDCRAmount()
 				sa.amountChanged()
 
@@ -212,21 +212,21 @@ func (sa *sendAmount) handle() {
 		if sa.usdAmountEditor.Editor.Focused() {
 			switch evt.(type) {
 			case widget.ChangeEvent:
-				if sa.usdSendMaxChangeEvent {
-					sa.usdSendMaxChangeEvent = false
+				if sa.usdSendmaxChangeEvent {
+					sa.usdSendmaxChangeEvent = false
 					continue
 				}
-				sa.sendMax = false
+				sa.Sendmax = false
 				sa.validateUSDAmount()
 				sa.amountChanged()
 			}
 		}
 	}
+}
 
-	for sa.dcrAmountEditor.CustomButton.Clicked() ||
-		sa.usdAmountEditor.CustomButton.Clicked() {
-		sa.setError("")
-		sa.sendMax = true
-		sa.amountChanged()
+func (sa *sendAmount) IsMaxClicked() bool {
+	if sa.dcrAmountEditor.CustomButton.Clicked() || sa.usdAmountEditor.CustomButton.Clicked() {
+		return true
 	}
+	return false
 }
