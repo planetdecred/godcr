@@ -395,7 +395,7 @@ func (mp *MainPage) changeFragment(page load.Page) {
 		return
 	}
 
-	// Maintian one pointer to Page in backstack slice.
+	// Maintain one pointer to Page in backstack slice.
 	for i := len(mp.pageBackStack) - 1; i >= 0; i-- {
 		if mp.pageBackStack[i].ID() == page.ID() {
 			var mPages []load.Page
