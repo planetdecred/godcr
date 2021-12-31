@@ -111,6 +111,9 @@ func (pg *Restore) ID() string {
 }
 
 func (pg *Restore) OnResume() {
+	pg.Load.EnableKeyEvent = true
+	pg.keyEvent = pg.Receiver.KeyEvents
+
 }
 
 func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
@@ -436,10 +439,14 @@ func (pg *Restore) Handle() {
 			return
 		}
 
+		pg.Load.EnableKeyEvent = false
+		pg.keyEvent = nil
+
 		modal.NewCreatePasswordModal(pg.Load).
 			Title("Enter wallet details").
 			EnableName(true).
 			ShowWalletInfoTip(true).
+			SetParent(pg).
 			PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
 					_, err := pg.WL.MultiWallet.RestoreWallet(walletName, pg.seedPhrase, password, dcrlibwallet.PassphraseTypePass)
