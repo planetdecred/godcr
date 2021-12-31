@@ -46,6 +46,7 @@ type TxDetailsPage struct {
 	inputsCollapsible               *decredmaterial.Collapsible
 	backButton                      decredmaterial.IconButton
 	infoButton                      decredmaterial.IconButton
+	rebroadcast                     *decredmaterial.Button
 	gtx                             *layout.Context
 
 	txnWidgets    transactionWdg
@@ -84,6 +85,7 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 
 		transaction: transaction,
 		wallet:      l.WL.MultiWallet.WalletWithID(transaction.WalletID),
+		rebroadcast: new(decredmaterial.Button),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
