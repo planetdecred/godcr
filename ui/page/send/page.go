@@ -400,7 +400,7 @@ func (pg *Page) Handle() {
 				if pg.amount.amountIsValid() {
 					pg.amount.setError("")
 				} else {
-					pg.Toast.NotifyError("Set destination amount")
+					pg.Toast.NotifyError("Set destination address")
 				}
 			}
 		}
@@ -410,6 +410,16 @@ func (pg *Page) Handle() {
 			pg.amount.setError("")
 			pg.amount.SendMax = true
 			pg.amount.amountChanged()
+		}
+	}
+
+	if pg.sendDestination.accountSwitch.Changed() {
+		pg.amount.setError("")
+		if currencyValue == values.USDExchangeValue {
+			pg.amount.dcrAmountEditor.Editor.SetText("")
+			pg.amount.usdAmountEditor.Editor.SetText("")
+		} else {
+			pg.amount.dcrAmountEditor.Editor.SetText("")
 		}
 	}
 }
