@@ -39,6 +39,8 @@ type CreatePasswordModal struct {
 	serverError string
 	description string
 
+	parent load.Page
+
 	materialLoader material.LoaderStyle
 
 	btnPositve  decredmaterial.Button
@@ -161,6 +163,12 @@ func (cm *CreatePasswordModal) validToCreate() bool {
 
 	return nameValid && editorsNotEmpty(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) &&
 		cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+}
+
+// SetParent sets the page that created PasswordModal as it's parent.
+func (cm *CreatePasswordModal) SetParent(parent load.Page) *CreatePasswordModal {
+	cm.parent = parent
+	return cm
 }
 
 func (cm *CreatePasswordModal) Handle() {
