@@ -392,6 +392,11 @@ func (pg *Page) Handle() {
 				pg.amount.SendMax = true
 				pg.amount.amountChanged()
 			}
+
+			editorsAreEmpty := len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1
+			if editorsAreEmpty {
+				pg.amount.SendMax = false
+			}
 		} else if len(addEditor.Editor.Text()) < 1 {
 			if len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1 {
 				pg.amount.SendMax = false
