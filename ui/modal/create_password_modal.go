@@ -222,6 +222,9 @@ func (cm *CreatePasswordModal) Handle() {
 	cm.btnNegative.SetEnabled(!cm.isLoading)
 	if cm.btnNegative.Clicked() {
 		if !cm.isLoading {
+			if cm.parent != nil {
+				cm.parent.OnResume()
+			}
 			cm.Dismiss()
 		}
 	}
