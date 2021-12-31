@@ -383,9 +383,9 @@ func (pg *Page) Handle() {
 		}
 	}
 
+	validAddress := pg.sendDestination.validate()
 	if pg.sendDestination.sendToAddress {
 		addEditor := pg.sendDestination.destinationAddressEditor
-		validAddress := pg.sendDestination.validate()
 		if validAddress {
 			if pg.amount.IsMaxClicked() {
 				pg.amount.setError("")
@@ -406,11 +406,18 @@ func (pg *Page) Handle() {
 		}
 
 	} else {
-		if pg.amount.IsMaxClicked() {
-			pg.amount.setError("")
-			pg.amount.SendMax = true
-			pg.amount.amountChanged()
+		if validAddress {
+			if pg.amount.IsMaxClicked() {
+				pg.amount.setError("")
+				pg.amount.SendMax = true
+				pg.amount.amountChanged()
+			}
 		}
+
+		if len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1 {
+			pg.amount.SendMax = false
+		}
+
 	}
 
 	if pg.sendDestination.accountSwitch.Changed() {
