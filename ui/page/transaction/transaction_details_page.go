@@ -293,7 +293,11 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 					)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.rebroadcast.Layout(gtx)
+					if pg.transaction.BlockHeight == -1 {
+						pg.rebroadcast.SetEnabled(true)
+						return pg.rebroadcast.Layout(gtx)
+					}
+					return D{}
 				}),
 			)
 		}),
@@ -704,6 +708,11 @@ func (pg *TxDetailsPage) Handle() {
 		if pg.ticketSpent != nil {
 			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, pg.ticketSpent))
 		}
+	}
+
+	if pg.rebroadcast.Clicked() {
+		pg.rebroadcast.SetEnabled(false)
+		pg.wallet.PublishUnminedTransactions()
 	}
 }
 
