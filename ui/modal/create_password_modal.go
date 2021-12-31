@@ -76,6 +76,8 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	th := material.NewTheme(gofont.Collection())
 	cm.materialLoader = material.Loader(th)
 
+	cm.Load.EnableKeyEventOnInfoModal = true
+
 	return cm
 }
 
@@ -89,11 +91,10 @@ func (cm *CreatePasswordModal) OnResume() {
 	} else {
 		cm.passwordEditor.Editor.Focus()
 	}
-	cm.Load.EnableKeyEvent = true
 }
 
 func (cm *CreatePasswordModal) OnDismiss() {
-	cm.Load.EnableKeyEvent = false
+	cm.Load.EnableKeyEventOnInfoModal = false
 }
 
 func (cm *CreatePasswordModal) Show() {
@@ -229,7 +230,6 @@ func (cm *CreatePasswordModal) Handle() {
 	} else {
 		decredmaterial.SwitchEditors(cm.keyEvent, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 	}
-
 }
 
 func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
