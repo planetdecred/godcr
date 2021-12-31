@@ -7,6 +7,7 @@ import (
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -46,7 +47,7 @@ type TxDetailsPage struct {
 	inputsCollapsible               *decredmaterial.Collapsible
 	backButton                      decredmaterial.IconButton
 	infoButton                      decredmaterial.IconButton
-	rebroadcast                     *decredmaterial.Button
+	rebroadcast                     decredmaterial.Button
 	gtx                             *layout.Context
 
 	txnWidgets    transactionWdg
@@ -60,6 +61,10 @@ type TxDetailsPage struct {
 }
 
 func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction) *TxDetailsPage {
+	rebroadcast := l.Theme.Button("Rebroadcast")
+	rebroadcast.Font.Weight = text.Medium
+	rebroadcast.SetEnabled(false)
+
 	pg := &TxDetailsPage{
 		Load: l,
 		list: &widget.List{
@@ -85,7 +90,7 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 
 		transaction: transaction,
 		wallet:      l.WL.MultiWallet.WalletWithID(transaction.WalletID),
-		rebroadcast: new(decredmaterial.Button),
+		rebroadcast: rebroadcast,
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
