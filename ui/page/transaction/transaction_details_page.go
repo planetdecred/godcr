@@ -139,6 +139,8 @@ func (pg *TxDetailsPage) OnResume() {
 	if ok, _ := pg.wallet.TicketHasVotedOrRevoked(pg.transaction.Hash); ok {
 		pg.ticketSpender, _ = pg.wallet.TicketSpender(pg.transaction.Hash)
 	}
+
+	pg.rebroadcastClicable.SetEnabled(true, nil)
 }
 
 func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -244,6 +246,30 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 							}
 							return D{}
 						}),
+						layout.Rigid(func(gtx C) D {
+							if pg.transaction.BlockHeight > -1 {
+								return decredmaterial.LinearLayout{
+									Width:     decredmaterial.WrapContent,
+									Height:    decredmaterial.WrapContent,
+									Clickable: pg.rebroadcastClicable,
+									Direction: layout.Center,
+									Alignment: layout.Middle,
+									Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+									Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
+									Margin:    layout.Inset{Left: values.MarginPadding10},
+								}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+											pg.rebroadcastIcon.Color = pg.Theme.Color.Gray1
+											return pg.rebroadcastIcon.Layout(gtx, values.MarginPadding16)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										return pg.rebroadcast.Layout(gtx)
+									}))
+							}
+							return D{}
+						}),
 					)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -295,29 +321,6 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 					)
 				}),
 			)
-		}),
-		layout.Rigid(func(gtx C) D {
-			if pg.transaction.BlockHeight > -1 {
-				return decredmaterial.LinearLayout{
-					Width:     decredmaterial.WrapContent,
-					Height:    decredmaterial.WrapContent,
-					Clickable: pg.rebroadcastClicable,
-					Direction: layout.Center,
-					Alignment: layout.Middle,
-					Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
-					Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
-				}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-							pg.rebroadcastIcon.Color = pg.Theme.Color.Gray1
-							return pg.rebroadcastIcon.Layout(gtx, values.MarginPadding16)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return pg.rebroadcast.Layout(gtx)
-					}))
-			}
-			return D{}
 		}),
 	)
 }
