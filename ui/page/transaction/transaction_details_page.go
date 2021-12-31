@@ -292,6 +292,9 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 						}),
 					)
 				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.rebroadcast.Layout(gtx)
+				}),
 			)
 		}),
 	)
