@@ -205,7 +205,7 @@ func (pg *Page) constructTx() {
 	}
 	destinationAccount := pg.sendDestination.destinationAccount()
 
-	amountAtom, sendMax, err := pg.amount.validAmount()
+	amountAtom, SendMax, err := pg.amount.validAmount()
 	if err != nil {
 		pg.feeEstimationError(err.Error())
 		return
@@ -218,7 +218,7 @@ func (pg *Page) constructTx() {
 		return
 	}
 
-	err = unsignedTx.AddSendDestination(destinationAddress, amountAtom, sendMax)
+	err = unsignedTx.AddSendDestination(destinationAddress, amountAtom, SendMax)
 	if err != nil {
 		pg.feeEstimationError(err.Error())
 		return
@@ -231,7 +231,7 @@ func (pg *Page) constructTx() {
 	}
 
 	feeAtom := feeAndSize.Fee.AtomValue
-	if sendMax {
+	if SendMax {
 		amountAtom = sourceAccount.Balance.Spendable - feeAtom
 	}
 
@@ -248,7 +248,7 @@ func (pg *Page) constructTx() {
 	pg.destinationAccount = destinationAccount
 	pg.sourceAccount = sourceAccount
 
-	if sendMax {
+	if SendMax {
 		// TODO: this workaround ignores the change events from the
 		// amount input to avoid construct tx cycle.
 		pg.amount.setAmount(amountAtom)
@@ -389,12 +389,12 @@ func (pg *Page) Handle() {
 		if validAddress {
 			if pg.amount.IsMaxClicked() {
 				pg.amount.setError("")
-				pg.amount.Sendmax = true
+				pg.amount.SendMax = true
 				pg.amount.amountChanged()
 			}
 		} else if len(addEditor.Editor.Text()) < 1 {
 			if len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1 {
-				pg.amount.Sendmax = false
+				pg.amount.SendMax = false
 			}
 			if pg.amount.IsMaxClicked() {
 				if pg.amount.amountIsValid() {
@@ -408,7 +408,7 @@ func (pg *Page) Handle() {
 	} else {
 		if pg.amount.IsMaxClicked() {
 			pg.amount.setError("")
-			pg.amount.Sendmax = true
+			pg.amount.SendMax = true
 			pg.amount.amountChanged()
 		}
 	}
