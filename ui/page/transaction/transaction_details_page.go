@@ -7,7 +7,6 @@ import (
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -47,7 +46,9 @@ type TxDetailsPage struct {
 	inputsCollapsible               *decredmaterial.Collapsible
 	backButton                      decredmaterial.IconButton
 	infoButton                      decredmaterial.IconButton
-	rebroadcast                     decredmaterial.Button
+	rebroadcast                     decredmaterial.Label
+	rebroadcastClicable             *decredmaterial.Clickable
+	rebroadcastIcon                 *decredmaterial.Icon
 	gtx                             *layout.Context
 
 	txnWidgets    transactionWdg
@@ -61,10 +62,9 @@ type TxDetailsPage struct {
 }
 
 func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction) *TxDetailsPage {
-	rebroadcast := l.Theme.Button("Rebroadcast")
-	rebroadcast.Font.Weight = text.Medium
-	rebroadcast.SetEnabled(false)
-
+	rebroadcast := l.Theme.Label(values.MarginPadding14, "Rebroadcast")
+	rebroadcast.TextSize = values.TextSize14
+	rebroadcast.Color = l.Theme.Color.Text
 	pg := &TxDetailsPage{
 		Load: l,
 		list: &widget.List{
@@ -88,9 +88,11 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		destAddressClickable:      new(widget.Clickable),
 		toDcrdata:                 l.Theme.NewClickable(true),
 
-		transaction: transaction,
-		wallet:      l.WL.MultiWallet.WalletWithID(transaction.WalletID),
-		rebroadcast: rebroadcast,
+		transaction:         transaction,
+		wallet:              l.WL.MultiWallet.WalletWithID(transaction.WalletID),
+		rebroadcast:         rebroadcast,
+		rebroadcastClicable: l.Theme.NewClickable(true),
+		rebroadcastIcon:     decredmaterial.NewIcon(l.Icons.Cached),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
@@ -295,19 +297,25 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			if pg.transaction.BlockHeight == -1 {
-				pg.rebroadcast.SetEnabled(true)
+			if pg.transaction.BlockHeight > -1 {
 				return decredmaterial.LinearLayout{
-					Width:       decredmaterial.WrapContent,
-					Height:      decredmaterial.WrapContent,
-					Orientation: layout.Horizontal,
-					Margin:      layout.Inset{Left: values.MarginPadding350},
-					Alignment:   layout.Start,
+					Width:     decredmaterial.WrapContent,
+					Height:    decredmaterial.WrapContent,
+					Clickable: pg.rebroadcastClicable,
+					Direction: layout.Center,
+					Alignment: layout.Middle,
+					Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+					Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return pg.rebroadcast.Layout(gtx)
+						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+							pg.rebroadcastIcon.Color = pg.Theme.Color.Gray1
+							return pg.rebroadcastIcon.Layout(gtx, values.MarginPadding16)
+						})
 					}),
-				)
+					layout.Rigid(func(gtx C) D {
+						return pg.rebroadcast.Layout(gtx)
+					}))
 			}
 			return D{}
 		}),
@@ -720,8 +728,8 @@ func (pg *TxDetailsPage) Handle() {
 		}
 	}
 
-	if pg.rebroadcast.Clicked() {
-		pg.rebroadcast.SetEnabled(false)
+	if pg.rebroadcastClicable.Clicked() {
+		pg.rebroadcastClicable.SetEnabled(false, nil)
 		pg.wallet.PublishUnminedTransactions()
 	}
 }
