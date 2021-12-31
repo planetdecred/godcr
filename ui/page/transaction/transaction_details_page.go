@@ -247,7 +247,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 							return D{}
 						}),
 						layout.Rigid(func(gtx C) D {
-							if pg.transaction.BlockHeight > -1 {
+							if pg.transaction.BlockHeight == -1 {
 								return decredmaterial.LinearLayout{
 									Width:     decredmaterial.WrapContent,
 									Height:    decredmaterial.WrapContent,
