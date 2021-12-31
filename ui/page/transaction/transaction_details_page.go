@@ -292,14 +292,24 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 						}),
 					)
 				}),
-				layout.Rigid(func(gtx C) D {
-					if pg.transaction.BlockHeight == -1 {
-						pg.rebroadcast.SetEnabled(true)
-						return pg.rebroadcast.Layout(gtx)
-					}
-					return D{}
-				}),
 			)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if pg.transaction.BlockHeight == -1 {
+				pg.rebroadcast.SetEnabled(true)
+				return decredmaterial.LinearLayout{
+					Width:       decredmaterial.WrapContent,
+					Height:      decredmaterial.WrapContent,
+					Orientation: layout.Horizontal,
+					Margin:      layout.Inset{Left: values.MarginPadding350},
+					Alignment:   layout.Start,
+				}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.rebroadcast.Layout(gtx)
+					}),
+				)
+			}
+			return D{}
 		}),
 	)
 }
