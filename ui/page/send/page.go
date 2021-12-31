@@ -395,6 +395,8 @@ func (pg *Page) Handle() {
 
 			editorsAreEmpty := len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1
 			if editorsAreEmpty {
+				pg.amount.dcrAmountEditor.Editor.SetText("")
+				pg.amount.usdAmountEditor.Editor.SetText("")
 				pg.amount.SendMax = false
 			}
 		} else if len(addEditor.Editor.Text()) < 1 {
@@ -420,6 +422,8 @@ func (pg *Page) Handle() {
 		}
 
 		if len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1 {
+			pg.amount.dcrAmountEditor.Editor.SetText("")
+			pg.amount.usdAmountEditor.Editor.SetText("")
 			pg.amount.SendMax = false
 		}
 
