@@ -48,7 +48,7 @@ type TxDetailsPage struct {
 	infoButton                      decredmaterial.IconButton
 	rebroadcast                     decredmaterial.Label
 	rebroadcastClickable            *decredmaterial.Clickable
-	rebroadcastIcon                 *decredmaterial.Icon
+	rebroadcastIcon                 *decredmaterial.Image
 	gtx                             *layout.Context
 
 	txnWidgets    transactionWdg
@@ -92,7 +92,7 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		wallet:               l.WL.MultiWallet.WalletWithID(transaction.WalletID),
 		rebroadcast:          rebroadcast,
 		rebroadcastClickable: l.Theme.NewClickable(true),
-		rebroadcastIcon:      decredmaterial.NewIcon(l.Icons.Cached),
+		rebroadcastIcon:      l.Icons.Rebroadcast,
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
@@ -260,8 +260,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 								}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-											pg.rebroadcastIcon.Color = pg.Theme.Color.Gray1
-											return pg.rebroadcastIcon.Layout(gtx, values.MarginPadding16)
+											return pg.rebroadcastIcon.Layout16dp(gtx)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
