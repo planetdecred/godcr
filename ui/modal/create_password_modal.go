@@ -39,6 +39,8 @@ type CreatePasswordModal struct {
 	serverError string
 	description string
 
+	parent load.Page
+
 	materialLoader material.LoaderStyle
 
 	btnPositve  decredmaterial.Button
@@ -76,6 +78,8 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	th := material.NewTheme(gofont.Collection())
 	cm.materialLoader = material.Loader(th)
 
+	cm.Load.EnableKeyEventOnInfoModal = true
+
 	return cm
 }
 
@@ -89,11 +93,10 @@ func (cm *CreatePasswordModal) OnResume() {
 	} else {
 		cm.passwordEditor.Editor.Focus()
 	}
-	cm.Load.EnableKeyEvent = true
 }
 
 func (cm *CreatePasswordModal) OnDismiss() {
-	cm.Load.EnableKeyEvent = false
+	cm.Load.EnableKeyEventOnInfoModal = false
 }
 
 func (cm *CreatePasswordModal) Show() {
@@ -162,6 +165,12 @@ func (cm *CreatePasswordModal) validToCreate() bool {
 		cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 }
 
+// SetParent sets the page that created PasswordModal as it's parent.
+func (cm *CreatePasswordModal) SetParent(parent load.Page) *CreatePasswordModal {
+	cm.parent = parent
+	return cm
+}
+
 func (cm *CreatePasswordModal) Handle() {
 
 	if editorsNotEmpty(cm.passwordEditor.Editor) || editorsNotEmpty(cm.walletName.Editor) ||
@@ -213,6 +222,9 @@ func (cm *CreatePasswordModal) Handle() {
 	cm.btnNegative.SetEnabled(!cm.isLoading)
 	if cm.btnNegative.Clicked() {
 		if !cm.isLoading {
+			if cm.parent != nil {
+				cm.parent.OnResume()
+			}
 			cm.Dismiss()
 		}
 	}
@@ -229,7 +241,6 @@ func (cm *CreatePasswordModal) Handle() {
 	} else {
 		decredmaterial.SwitchEditors(cm.keyEvent, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 	}
-
 }
 
 func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
