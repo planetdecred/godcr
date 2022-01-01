@@ -47,7 +47,7 @@ type TxDetailsPage struct {
 	backButton                      decredmaterial.IconButton
 	infoButton                      decredmaterial.IconButton
 	rebroadcast                     decredmaterial.Label
-	rebroadcastClicable             *decredmaterial.Clickable
+	rebroadcastClickable            *decredmaterial.Clickable
 	rebroadcastIcon                 *decredmaterial.Icon
 	gtx                             *layout.Context
 
@@ -88,11 +88,11 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		destAddressClickable:      new(widget.Clickable),
 		toDcrdata:                 l.Theme.NewClickable(true),
 
-		transaction:         transaction,
-		wallet:              l.WL.MultiWallet.WalletWithID(transaction.WalletID),
-		rebroadcast:         rebroadcast,
-		rebroadcastClicable: l.Theme.NewClickable(true),
-		rebroadcastIcon:     decredmaterial.NewIcon(l.Icons.Cached),
+		transaction:          transaction,
+		wallet:               l.WL.MultiWallet.WalletWithID(transaction.WalletID),
+		rebroadcast:          rebroadcast,
+		rebroadcastClickable: l.Theme.NewClickable(true),
+		rebroadcastIcon:      decredmaterial.NewIcon(l.Icons.Cached),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
@@ -140,7 +140,7 @@ func (pg *TxDetailsPage) OnResume() {
 		pg.ticketSpender, _ = pg.wallet.TicketSpender(pg.transaction.Hash)
 	}
 
-	pg.rebroadcastClicable.SetEnabled(true, nil)
+	pg.rebroadcastClickable.SetEnabled(true, nil)
 }
 
 func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -251,7 +251,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 								return decredmaterial.LinearLayout{
 									Width:     decredmaterial.WrapContent,
 									Height:    decredmaterial.WrapContent,
-									Clickable: pg.rebroadcastClicable,
+									Clickable: pg.rebroadcastClickable,
 									Direction: layout.Center,
 									Alignment: layout.Middle,
 									Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
@@ -731,8 +731,8 @@ func (pg *TxDetailsPage) Handle() {
 		}
 	}
 
-	if pg.rebroadcastClicable.Clicked() {
-		pg.rebroadcastClicable.SetEnabled(false, nil)
+	if pg.rebroadcastClickable.Clicked() {
+		pg.rebroadcastClickable.SetEnabled(false, nil)
 		pg.wallet.PublishUnminedTransactions()
 	}
 }
