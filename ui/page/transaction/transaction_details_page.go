@@ -246,7 +246,6 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 						}),
 						layout.Rigid(func(gtx C) D {
 							if pg.transaction.BlockHeight == -1 {
-								pg.rebroadcastClickable.SetEnabled(true, nil)
 								if !pg.rebroadcastClickable.Enabled() {
 									gtx = pg.rebroadcastClickable.SetEnabled(false, &gtx)
 								}
