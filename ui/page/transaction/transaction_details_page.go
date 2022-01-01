@@ -50,6 +50,7 @@ type TxDetailsPage struct {
 	rebroadcastClickable            *decredmaterial.Clickable
 	rebroadcastIcon                 *decredmaterial.Image
 	gtx                             *layout.Context
+	unmined                         bool
 
 	txnWidgets    transactionWdg
 	transaction   *dcrlibwallet.Transaction
@@ -139,8 +140,6 @@ func (pg *TxDetailsPage) OnResume() {
 	if ok, _ := pg.wallet.TicketHasVotedOrRevoked(pg.transaction.Hash); ok {
 		pg.ticketSpender, _ = pg.wallet.TicketSpender(pg.transaction.Hash)
 	}
-
-	pg.rebroadcastClickable.SetEnabled(true, nil)
 }
 
 func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -247,7 +246,9 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 							return D{}
 						}),
 						layout.Rigid(func(gtx C) D {
-							if pg.transaction.BlockHeight > -1 {
+							if pg.transaction.BlockHeight == -1 {
+								pg.rebroadcastClickable.SetEnabled(true, nil)
+								pg.unmined = true
 								return decredmaterial.LinearLayout{
 									Width:     decredmaterial.WrapContent,
 									Height:    decredmaterial.WrapContent,
@@ -731,20 +732,26 @@ func (pg *TxDetailsPage) Handle() {
 	}
 
 	if pg.rebroadcastClickable.Clicked() {
-		pg.rebroadcastClickable.SetEnabled(false, nil)
-		if !pg.Load.WL.MultiWallet.IsConnectedToDecredNetwork() {
-			// if user is not conected to the network, notify the user
-			pg.Toast.NotifyError("Not connected to the decred network")
-			return
-		}
+		if pg.unmined {
+			if !pg.Load.WL.MultiWallet.IsConnectedToDecredNetwork() {
+				// if user is not conected to the network, notify the user
+				pg.Toast.NotifyError("Not connected to the decred network")
+				return
+			}
 
-		err := pg.wallet.PublishUnminedTransactions()
-		if err != nil {
-			// If transactions are not published, notify the user
-			pg.Toast.NotifyError(err.Error())
-		} else {
-			pg.Toast.NotifyError("Republished unmined transactions to the decred network")
+			err := pg.wallet.PublishUnminedTransactions()
+			if err != nil {
+				// If transactions are not published, notify the user
+				pg.Toast.NotifyError(err.Error())
+			} else {
+				pg.Toast.NotifyError("Republished unmined transactions to the decred network")
+			}
 		}
+	}
+
+	if pg.transaction.BlockHeight > -1 {
+		pg.unmined = false
+		pg.rebroadcastClickable.SetEnabled(false, nil)
 	}
 }
 
