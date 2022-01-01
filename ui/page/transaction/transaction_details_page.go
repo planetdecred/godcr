@@ -46,6 +46,9 @@ type TxDetailsPage struct {
 	inputsCollapsible               *decredmaterial.Collapsible
 	backButton                      decredmaterial.IconButton
 	infoButton                      decredmaterial.IconButton
+	rebroadcast                     decredmaterial.Label
+	rebroadcastClickable            *decredmaterial.Clickable
+	rebroadcastIcon                 *decredmaterial.Image
 	gtx                             *layout.Context
 
 	txnWidgets    transactionWdg
@@ -59,6 +62,9 @@ type TxDetailsPage struct {
 }
 
 func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction) *TxDetailsPage {
+	rebroadcast := l.Theme.Label(values.MarginPadding14, "Rebroadcast")
+	rebroadcast.TextSize = values.TextSize14
+	rebroadcast.Color = l.Theme.Color.Text
 	pg := &TxDetailsPage{
 		Load: l,
 		list: &widget.List{
@@ -82,8 +88,11 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		destAddressClickable:      new(widget.Clickable),
 		toDcrdata:                 l.Theme.NewClickable(true),
 
-		transaction: transaction,
-		wallet:      l.WL.MultiWallet.WalletWithID(transaction.WalletID),
+		transaction:          transaction,
+		wallet:               l.WL.MultiWallet.WalletWithID(transaction.WalletID),
+		rebroadcast:          rebroadcast,
+		rebroadcastClickable: l.Theme.NewClickable(true),
+		rebroadcastIcon:      l.Icons.Rebroadcast,
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
@@ -232,6 +241,32 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 								return layout.Inset{
 									Left: values.MarginPadding8,
 								}.Layout(gtx, label.Layout)
+							}
+							return D{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							if pg.transaction.BlockHeight == -1 {
+								if !pg.rebroadcastClickable.Enabled() {
+									gtx = pg.rebroadcastClickable.SetEnabled(false, &gtx)
+								}
+								return decredmaterial.LinearLayout{
+									Width:     decredmaterial.WrapContent,
+									Height:    decredmaterial.WrapContent,
+									Clickable: pg.rebroadcastClickable,
+									Direction: layout.Center,
+									Alignment: layout.Middle,
+									Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+									Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
+									Margin:    layout.Inset{Left: values.MarginPadding10},
+								}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+											return pg.rebroadcastIcon.Layout16dp(gtx)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										return pg.rebroadcast.Layout(gtx)
+									}))
 							}
 							return D{}
 						}),
@@ -694,6 +729,31 @@ func (pg *TxDetailsPage) Handle() {
 		if pg.ticketSpent != nil {
 			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, pg.ticketSpent))
 		}
+	}
+
+	if pg.rebroadcastClickable.Clicked() {
+		go func() {
+			pg.rebroadcastClickable.SetEnabled(false, nil)
+			if !pg.Load.WL.MultiWallet.IsConnectedToDecredNetwork() {
+				// if user is not conected to the network, notify the user
+				pg.Toast.NotifyError("Not connected to the decred network")
+				if !pg.rebroadcastClickable.Enabled() {
+					pg.rebroadcastClickable.SetEnabled(true, nil)
+				}
+				return
+			}
+
+			err := pg.wallet.PublishUnminedTransactions()
+			if err != nil {
+				// If transactions are not published, notify the user
+				pg.Toast.NotifyError(err.Error())
+			} else {
+				pg.Toast.Notify("Republished unmined transactions to the decred network")
+			}
+			if !pg.rebroadcastClickable.Enabled() {
+				pg.rebroadcastClickable.SetEnabled(true, nil)
+			}
+		}()
 	}
 }
 
