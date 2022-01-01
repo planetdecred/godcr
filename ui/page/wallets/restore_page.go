@@ -458,7 +458,7 @@ func (pg *Restore) Handle() {
 						pg.PopWindowPage()
 					} else {
 						pg.WL.Wallet.SetupListeners()
-						pg.ChangeWindowPage(NewWalletPage(pg.Load), false)
+						pg.Load.Receiver.WalletRestored <- struct{}{}
 					}
 
 				}()

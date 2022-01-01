@@ -138,6 +138,7 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		InternalLog:         win.internalLog,
 		SyncedProposal:      win.proposal,
 		NotificationsUpdate: make(chan interface{}, 10),
+		WalletRestored:      make(chan struct{}),
 	}
 
 	l.SelectedWallet = &win.selected
@@ -378,6 +379,8 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 			default:
 				log.Tracef("Unhandled window event %+v\n", e)
 			}
+		case <-win.load.Receiver.WalletRestored:
+			win.changePage(page.NewMainPage(win.load), false)
 		}
 	}
 }
