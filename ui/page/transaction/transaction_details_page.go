@@ -247,6 +247,9 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 						layout.Rigid(func(gtx C) D {
 							if pg.transaction.BlockHeight == -1 {
 								pg.rebroadcastClickable.SetEnabled(true, nil)
+								if !pg.rebroadcastClickable.Enabled() {
+									gtx = pg.rebroadcastClickable.SetEnabled(false, &gtx)
+								}
 								return decredmaterial.LinearLayout{
 									Width:     decredmaterial.WrapContent,
 									Height:    decredmaterial.WrapContent,
@@ -731,9 +734,13 @@ func (pg *TxDetailsPage) Handle() {
 
 	if pg.rebroadcastClickable.Clicked() {
 		go func() {
+			pg.rebroadcastClickable.SetEnabled(false, nil)
 			if !pg.Load.WL.MultiWallet.IsConnectedToDecredNetwork() {
 				// if user is not conected to the network, notify the user
 				pg.Toast.NotifyError("Not connected to the decred network")
+				if !pg.rebroadcastClickable.Enabled() {
+					pg.rebroadcastClickable.SetEnabled(true, nil)
+				}
 				return
 			}
 
@@ -743,6 +750,9 @@ func (pg *TxDetailsPage) Handle() {
 				pg.Toast.NotifyError(err.Error())
 			} else {
 				pg.Toast.Notify("Republished unmined transactions to the decred network")
+			}
+			if !pg.rebroadcastClickable.Enabled() {
+				pg.rebroadcastClickable.SetEnabled(true, nil)
 			}
 		}()
 	}
