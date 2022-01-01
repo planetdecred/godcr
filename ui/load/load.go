@@ -32,6 +32,7 @@ type Receiver struct {
 	KeyEvents           chan *key.Event
 	AcctMixerStatus     chan *wallet.AccountMixer
 	SyncedProposal      chan *wallet.Proposal
+	WalletRestored      chan struct{} // Wallet restored channel.
 }
 
 type Icons struct {
