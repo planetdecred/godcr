@@ -379,7 +379,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 			default:
 				log.Tracef("Unhandled window event %+v\n", e)
 			}
-		case <- win.load.Receiver.WalletRestored:
+		case <-win.load.Receiver.WalletRestored:
 			win.changePage(page.NewMainPage(win.load), false)
 		}
 	}
