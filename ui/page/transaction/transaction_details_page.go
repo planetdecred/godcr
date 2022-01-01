@@ -245,7 +245,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 							return D{}
 						}),
 						layout.Rigid(func(gtx C) D {
-							if pg.transaction.BlockHeight > -1 {
+							if pg.transaction.BlockHeight == -1 {
 								pg.rebroadcastClickable.SetEnabled(true, nil)
 								return decredmaterial.LinearLayout{
 									Width:     decredmaterial.WrapContent,
