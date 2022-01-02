@@ -26,7 +26,7 @@ type miniTradeFormWidget struct {
 	mkt                           *core.Market
 }
 
-func newMiniTradeFormWidget(l *load.Load, host string, mkt *core.Market) *miniTradeFormWidget {
+func newMiniTradeFormWidget(l *load.Load) *miniTradeFormWidget {
 	m := &miniTradeFormWidget{
 		Load:           l,
 		submitBtn:      l.Theme.Button(strSubmit),
@@ -34,8 +34,6 @@ func newMiniTradeFormWidget(l *load.Load, host string, mkt *core.Market) *miniTr
 		orderedAmount:  l.Theme.Editor(new(widget.Editor), strIGet),
 		directionBtn:   l.Theme.IconButton(l.Icons.ExchangeIcon),
 		isSell:         true,
-		host:           host,
-		mkt:            mkt,
 	}
 
 	m.directionBtn.Size = values.MarginPadding20
@@ -48,7 +46,6 @@ func newMiniTradeFormWidget(l *load.Load, host string, mkt *core.Market) *miniTr
 	m.orderedAmount.Editor.SingleLine = true
 	m.orderedAmount.HasCustomButton = true
 	m.orderedAmount.CustomButton.Inset = layout.UniformInset(values.MarginPadding6)
-	m.changeDirection()
 
 	m.submitBtn.TextSize = values.TextSize12
 	m.submitBtn.Background = l.Theme.Color.Primary
@@ -56,7 +53,21 @@ func newMiniTradeFormWidget(l *load.Load, host string, mkt *core.Market) *miniTr
 	return m
 }
 
+func (m *miniTradeFormWidget) setHostAndMarket(host string, market *core.Market) *miniTradeFormWidget {
+	if m.host != host || m.mkt == nil || (m.mkt != nil && m.mkt.Name != market.Name) {
+		m.host = host
+		m.mkt = market
+		m.isSell = true
+		m.changeDirection()
+	}
+
+	return m
+}
+
 func (m *miniTradeFormWidget) layout(gtx C) D {
+	if m.mkt == nil {
+		return D{}
+	}
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,

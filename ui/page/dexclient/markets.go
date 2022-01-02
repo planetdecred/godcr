@@ -62,6 +62,7 @@ func NewMarketPage(l *load.Load) *Page {
 		walletSettingsBtn: clickable(),
 		dexSettingsBtn:    clickable(),
 		dexSelectBtn:      clickable(),
+		miniTradeFormWdg:  newMiniTradeFormWidget(l),
 	}
 
 	return pg
@@ -113,12 +114,10 @@ func (pg *Page) Layout(gtx C) D {
 				)
 			}
 
-			pg.initMiniTradeForm()
-
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.headerLayout()),
 				layout.Rigid(func(gtx C) D {
-					return pg.pageSections(gtx, pg.miniTradeFormWdg.layout)
+					return pg.pageSections(gtx, pg.miniTradeFormWdg.setHostAndMarket(pg.dexServer.Host, pg.market).layout)
 				}),
 			)
 		}
@@ -460,6 +459,7 @@ func (pg *Page) selectDexServer(dexServer *core.Exchange) {
 
 // initMarket initialize Page's Market, choose first Market on the slice.
 func (pg *Page) initMarket() bool {
+	pg.market = nil
 	markets := sliceMarkets(pg.dexServer.Markets)
 	if len(markets) == 0 {
 		return false
