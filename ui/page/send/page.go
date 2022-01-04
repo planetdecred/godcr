@@ -194,7 +194,6 @@ func (pg *Page) validate() bool {
 	addressIsValid := pg.sendDestination.validate()
 
 	validForSending := amountIsValid && addressIsValid
-	pg.nextButton.SetEnabled(validForSending)
 
 	return validForSending
 }
@@ -301,6 +300,8 @@ func (pg *Page) resetFields() {
 }
 
 func (pg *Page) Handle() {
+	pg.nextButton.SetEnabled(pg.validate())
+
 	pg.sendDestination.handle()
 	pg.amount.handle()
 
