@@ -446,12 +446,6 @@ func (pg *Page) Handle() {
 		pg.defaultAcccountNumber = pg.currentAccountNumber
 		pg.amount.validateDCRAmount()
 	}
-
-	if pg.validate() {
-		fmt.Println("Validated")
-	} else {
-		fmt.Println("Not validated")
-	}
 }
 
 func (pg *Page) OnClose() {
