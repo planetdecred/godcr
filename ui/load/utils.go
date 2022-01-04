@@ -22,6 +22,10 @@ const (
 	FetchProposalConfigKey          = "fetch_proposals"
 	SeedBackupNotificationConfigKey = "seed_backup_notification"
 	ProposalNotificationConfigKey   = "proposal_notification_key"
+<<<<<<< HEAD
 	TicketBuyerConfigKey= "auto_ticekt_buyer"
 >>>>>>> 5a26d0f (temp)
+=======
+	TicketBuyerConfigKey            = "auto_ticekt_buyer"
+>>>>>>> be2c6bd (fix balance to mentain bug)
 )
