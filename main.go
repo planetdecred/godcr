@@ -49,8 +49,16 @@ func main() {
 		buildDate = time.Now()
 	}
 
+	var net string
+	switch cfg.Network {
+	case "testnet":
+		net = "testnet3"
+	default:
+		net = cfg.Network
+	}
+
 	logFile := filepath.Join(cfg.LogDir, defaultLogFilename)
-	wal, err := wallet.NewWallet(cfg.HomeDir, cfg.Network, Version, logFile, buildDate, make(chan wallet.Response, 3))
+	wal, err := wallet.NewWallet(cfg.HomeDir, net, Version, logFile, buildDate, make(chan wallet.Response, 3))
 	if err != nil {
 		log.Error(err)
 		return

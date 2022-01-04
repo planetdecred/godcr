@@ -53,6 +53,9 @@ func (pg *AppOverviewPage) recentProposalsSection(gtx C) D {
 								return title.Layout(gtx)
 							}),
 							layout.Flexed(1, func(gtx C) D {
+								if len(proposalItems) == 0 {
+									return D{}
+								}
 								return layout.E.Layout(gtx, pg.toProposals.Layout)
 							}),
 						)

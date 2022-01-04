@@ -143,7 +143,7 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 		customTemplate = verifyMessageInfo(in.Theme)
 	case PrivacyInfoTemplate:
 		title = "How to use the mixer?"
-		customTemplate = privacyInfo(in.Theme)
+		customTemplate = privacyInfo(in.Load)
 	case SetupMixerInfoTemplate:
 		customTemplate = setupMixerInfo(in.Theme)
 	case WalletBackupInfoTemplate:

@@ -93,7 +93,7 @@ func (tm *TextInputModal) SetCancelable(min bool) *TextInputModal {
 func (tm *TextInputModal) SetTextWithTemplate(template string) *TextInputModal {
 	switch template {
 	case AllowUnmixedSpendingTemplate:
-		tm.textCustomTemplate = allowUnspendUnmixedAcct(tm.Theme)
+		tm.textCustomTemplate = allowUnspendUnmixedAcct(tm.Load)
 	}
 	return tm
 }

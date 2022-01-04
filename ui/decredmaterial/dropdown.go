@@ -154,7 +154,7 @@ func (d *DropDown) layoutActiveIcon(gtx layout.Context, index int) D {
 func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 	item := d.items[itemIndex]
 
-	width := gtx.Px(values.MarginPadding174)
+	width := gtx.Px(values.MarginPadding180)
 	if d.revs {
 		width = gtx.Px(values.MarginPadding140)
 	}
@@ -166,11 +166,15 @@ func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 		clickable = d.clickable
 	}
 
+	padding := values.MarginPadding10
+	if item.Icon != nil {
+		padding = values.MarginPadding8
+	}
 	return LinearLayout{
 		Width:     width,
 		Height:    WrapContent,
 		Clickable: clickable,
-		Padding:   layout.UniformInset(values.MarginPadding10),
+		Padding:   layout.UniformInset(padding),
 		Border:    Border{Radius: radius},
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {

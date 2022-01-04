@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	defaultNetwork        = "testnet3"
+	defaultNetwork        = "mainnet"
 	defaultConfigFileName = "godcr.conf"
 	defaultLogFilename    = "godcr.log"
 	defaultLogLevel       = "info"
@@ -135,12 +135,11 @@ func loadConfig() (*config, error) {
 	// Pre-parse the command line options to see if an alternative config file
 	// or the version flag was specified. Override any environment variables
 	// with parsed command line flags.
-	preCfg := defaultConfig
-	preParser := flags.NewParser(&preCfg, flags.HelpFlag|flags.PassDoubleDash)
-	_, flagerr := preParser.Parse()
+	preParser := flags.NewParser(&cfg, flags.HelpFlag|flags.PassDoubleDash)
+	_, err := preParser.Parse()
 
-	if flagerr != nil {
-		e, ok := flagerr.(*flags.Error)
+	if err != nil {
+		e, ok := err.(*flags.Error)
 		if !ok || e.Type != flags.ErrHelp {
 			preParser.WriteHelp(os.Stderr)
 		}
@@ -148,13 +147,13 @@ func loadConfig() (*config, error) {
 			preParser.WriteHelp(os.Stdout)
 			os.Exit(0)
 		}
-		return loadConfigError(flagerr)
+		return loadConfigError(err)
 	}
 
 	// Show the version and exit if the version flag was specified.
 	appName := filepath.Base(os.Args[0])
 	appName = strings.TrimSuffix(appName, filepath.Ext(appName))
-	if preCfg.ShowVersion {
+	if cfg.ShowVersion {
 		fmt.Printf("%s version %s (Go version %s)\n", appName,
 			version.Version(), runtime.Version())
 		os.Exit(0)
@@ -166,11 +165,11 @@ func loadConfig() (*config, error) {
 	// should be under the non-default appdata directory. However, if the config
 	// file was specified on the command line, it should be used regardless of
 	// the appdata directory.
-	if defaultHomeDir != preCfg.HomeDir && defaultConfigNow.ConfigFile == preCfg.ConfigFile {
-		preCfg.ConfigFile = filepath.Join(preCfg.HomeDir, defaultConfigFilename)
+	if defaultHomeDir != cfg.HomeDir && defaultConfigNow.ConfigFile == cfg.ConfigFile {
+		cfg.ConfigFile = filepath.Join(cfg.HomeDir, defaultConfigFilename)
 		// Update the defaultConfig to avoid an error if the config file in this
 		// "new default" location does not exist.
-		defaultConfigNow.ConfigFile = preCfg.ConfigFile
+		defaultConfigNow.ConfigFile = cfg.ConfigFile
 	}
 
 	// Load additional config from file.
@@ -180,18 +179,18 @@ func loadConfig() (*config, error) {
 	parser := flags.NewParser(&cfg, flags.Default)
 
 	// Do not error default config file is missing.
-	if _, err := os.Stat(preCfg.ConfigFile); os.IsNotExist(err) {
+	if _, err := os.Stat(cfg.ConfigFile); os.IsNotExist(err) {
 		// Non-default config file must exist
-		if defaultConfigNow.ConfigFile != preCfg.ConfigFile {
+		if defaultConfigNow.ConfigFile != cfg.ConfigFile {
 			fmt.Fprintln(os.Stderr, err)
 			return loadConfigError(err)
 		}
 		// Warn about missing default config file, but continue
 		fmt.Printf("Config file (%s) does not exist. Using defaults.\n",
-			preCfg.ConfigFile)
+			cfg.ConfigFile)
 	} else {
 		// The config file exists, so attempt to parse it.
-		err = flags.NewIniParser(parser).ParseFile(preCfg.ConfigFile)
+		err = flags.NewIniParser(parser).ParseFile(cfg.ConfigFile)
 		if err != nil {
 			if _, ok := err.(*os.PathError); !ok {
 				fmt.Fprintln(os.Stderr, err)
@@ -200,11 +199,11 @@ func loadConfig() (*config, error) {
 			}
 			configFileError = err
 		}
-		configFile = preCfg.ConfigFile
+		configFile = cfg.ConfigFile
 	}
 
 	// Parse command line options again to ensure they take precedence.
-	_, err := parser.Parse()
+	_, err = parser.Parse()
 	if err != nil {
 		if e, ok := err.(*flags.Error); !ok || e.Type != flags.ErrHelp {
 			parser.WriteHelp(os.Stderr)
