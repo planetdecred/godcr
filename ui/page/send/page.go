@@ -190,7 +190,6 @@ func (pg *Page) validateAndConstructTx() {
 }
 
 func (pg *Page) validate() bool {
-
 	amountIsValid := pg.amount.amountIsValid()
 	addressIsValid := pg.sendDestination.validate()
 
@@ -447,6 +446,12 @@ func (pg *Page) Handle() {
 		pg.defaultAcccountNumber = pg.currentAccountNumber
 		pg.amount.validateDCRAmount()
 		pg.amount.validateUSDAmount()
+	}
+
+	if pg.validate() {
+		fmt.Println("Validated")
+	} else {
+		fmt.Println("Not validated")
 	}
 }
 
