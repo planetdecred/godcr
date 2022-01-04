@@ -64,11 +64,13 @@ func (pg *AppOverviewPage) recentTransactionsSection(gtx layout.Context) layout.
 					if len(pg.transactions) == 0 {
 						message := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
 						message.Color = pg.Theme.Color.GrayText3
-						return components.Container{Padding: layout.Inset{
-							Left:   values.MarginPadding18,
-							Bottom: values.MarginPadding16,
-							Top:    values.MarginPadding18,
-						}}.Layout(gtx, message.Layout)
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							return layout.Inset{
+								Top:    values.MarginPadding10,
+								Bottom: values.MarginPadding10,
+							}.Layout(gtx, message.Layout)
+						})
 					}
 
 					return pg.transactionsList.Layout(gtx, len(pg.transactions), func(gtx C, i int) D {

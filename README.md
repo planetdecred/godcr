@@ -13,6 +13,16 @@ Follow the [installation](https://gioui.org/doc/install) instructions for gio.
 
 Then `go build`.
 
+## Running godcr
+### General usage
+By default, **godcr** runs on Mainnet network type. However, godcr can run on testnet by issuing commands on the terminal in the format:
+```bash
+godcr [options]
+```
+- Run `./godcr --network=testnet` to run godcr on the testnet network.
+- Run `godcr -h` or `godcr help` to get general information of commands and options that can be issued on the cli.
+- Use `godcr <command> -h` or   `godcr help <command>` to get detailed information about a command.
+
 ## Profiling 
 Godcr uses [pprof](https://github.com/google/pprof) for profiling. It creates a web server which you can use to save your profiles. To setup a profiling web server, run godcr with the --profile flag and pass a server port to it as an argument.
 

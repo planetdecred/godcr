@@ -3,13 +3,11 @@ package modal
 import (
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/unit"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 const (
@@ -48,37 +46,35 @@ func signMessageInfo(th *decredmaterial.Theme) []layout.Widget {
 	}
 }
 
-func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
+func privacyInfo(l *load.Load) []layout.Widget {
+	ic := decredmaterial.NewIcon(l.Icons.ImageBrightness1)
+	ic.Color = l.Theme.Color.Gray1
 	return []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ImageLens)))
-					ic.Color = th.Color.Gray1
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),
 				layout.Rigid(func(gtx C) D {
-					text := th.Body1("When you turn on the mixer, your unmixed DCRs in this wallet (unmixed balance) will be gradually mixed.")
-					text.Color = th.Color.GrayText2
+					text := l.Theme.Body1("When you turn on the mixer, your unmixed DCRs in this wallet (unmixed balance) will be gradually mixed.")
+					text.Color = l.Theme.Color.GrayText2
 					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, text.Layout)
 				}),
 			)
 		},
 		func(gtx C) D {
-			txt := th.Body1("Important: keep this app opened while mixer is running.")
-			txt.Font.Weight = text.Bold
+			txt := l.Theme.Body1("Important: keep this app opened while mixer is running.")
+			txt.Font.Weight = text.SemiBold
 			return txt.Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ImageLens)))
-					ic.Color = th.Color.Gray1
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),
 				layout.Rigid(func(gtx C) D {
-					text := th.Body1("Mixer will automatically stop when unmixed balance are fully mixed.")
-					text.Color = th.Color.GrayText2
+					text := l.Theme.Body1("Mixer will automatically stop when unmixed balance are fully mixed.")
+					text.Color = l.Theme.Color.GrayText2
 					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, text.Layout)
 				}),
 			)
@@ -124,31 +120,30 @@ func backupInfo(th *decredmaterial.Theme) []layout.Widget {
 	}
 }
 
-func allowUnspendUnmixedAcct(th *decredmaterial.Theme) []layout.Widget {
+func allowUnspendUnmixedAcct(l *load.Load) []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo)))
-					ic.Color = th.Color.GrayText1
+					ic := decredmaterial.NewIcon(l.Icons.ActionInfo)
+					ic.Color = l.Theme.Color.GrayText1
 					return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-						return ic.Layout(gtx, unit.Dp(18))
+						return ic.Layout(gtx, values.MarginPadding18)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					text := th.Body1("Spendings from unmixed accounts could potentially be traced back to you")
-					text.Color = th.Color.GrayText1
+					text := l.Theme.Body1("Spendings from unmixed accounts could potentially be traced back to you")
+					text.Color = l.Theme.Color.GrayText1
 					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, text.Layout)
 				}),
 			)
 		},
-
 		func(gtx C) D {
 			text := `<span style="text-color: grayText1">
 					Please type "<span style="font-weight: bold">I understand the risks</span>
 					" to allow spending from unmixed accounts.
 			</span>`
-			return renderers.RenderHTML(text, th).Layout(gtx)
+			return renderers.RenderHTML(text, l.Theme).Layout(gtx)
 		},
 	}
 }
