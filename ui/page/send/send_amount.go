@@ -126,6 +126,7 @@ func (sa *sendAmount) validateDCRAmount() {
 
 // validateUSDAmount is called when usd text changes
 func (sa *sendAmount) validateUSDAmount() bool {
+
 	sa.amountErrorText = ""
 	if sa.inputsNotEmpty(sa.usdAmountEditor.Editor) {
 		usdAmount, err := strconv.ParseFloat(sa.usdAmountEditor.Editor.Text(), 64)

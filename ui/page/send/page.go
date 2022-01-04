@@ -445,7 +445,6 @@ func (pg *Page) Handle() {
 	if pg.currentAccountNumber != pg.defaultAcccountNumber {
 		pg.defaultAcccountNumber = pg.currentAccountNumber
 		pg.amount.validateDCRAmount()
-		pg.amount.validateUSDAmount()
 	}
 
 	if pg.validate() {
