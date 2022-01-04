@@ -431,16 +431,6 @@ func (pg *Page) Handle() {
 
 	}
 
-	if pg.sendDestination.accountSwitch.Changed() {
-		pg.amount.setError("")
-		if currencyValue == values.USDExchangeValue {
-			pg.amount.dcrAmountEditor.Editor.SetText("")
-			pg.amount.usdAmountEditor.Editor.SetText("")
-		} else {
-			pg.amount.dcrAmountEditor.Editor.SetText("")
-		}
-	}
-
 	pg.currentAccountNumber = pg.sourceAccountSelector.SelectedAccount().Number
 	if pg.currentAccountNumber != pg.defaultAcccountNumber {
 		pg.defaultAcccountNumber = pg.currentAccountNumber
