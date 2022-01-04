@@ -31,7 +31,7 @@ type Icons struct {
 	ContentAdd, NavigationCheck, NavigationMore, ActionCheckCircle, ActionInfo, NavigationArrowBack,
 	NavigationArrowForward, ActionCheck, ChevronRight, NavigationCancel, NavMoreIcon,
 	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ConcealIcon, RevealIcon,
-	SearchIcon *widget.Icon
+	SearchIcon, PlayIcon *widget.Icon
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
@@ -84,6 +84,46 @@ type Load struct {
 	ReloadApp           func()
 }
 
+func NewLoad() (*Load, error) {
+
+	wl := &WalletLoad{
+		Wallet:         new(wallet.Wallet),
+		Account:        new(wallet.Account),
+		Transactions:   new(wallet.Transactions),
+		UnspentOutputs: new(wallet.UnspentOutputs),
+		VspInfo:        new(wallet.VSP),
+		Proposals:      new(wallet.Proposals),
+		Agendas:      new(wallet.Agendas),
+
+		SelectedProposal: new(dcrlibwallet.Proposal),
+	}
+
+	r := &Receiver{
+		AcctMixerStatus: make(chan *wallet.AccountMixer),
+		SyncedProposal:  make(chan *wallet.Proposal),
+		SyncedAgenda:  make(chan *wallet.Agenda),
+	}
+
+	icons := loadIcons()
+
+	th := decredmaterial.NewTheme(assets.FontCollection(), assets.DecredIcons, false)
+	if th == nil {
+		return nil, errors.New("unexpected error while loading theme")
+	}
+
+	l := &Load{
+		Theme:    th,
+		Icons:    icons,
+		WL:       wl,
+		Receiver: &Receiver{},
+		Toast:    notification.NewToast(th),
+
+		Printer: message.NewPrinter(language.English),
+	}
+
+	return l, nil
+}
+
 func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)
@@ -116,6 +156,7 @@ func IconSet() Icons {
 		ConcealIcon:            decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibility)),
 		RevealIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 		SearchIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionSearch)),
+		PlayIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.AVPlayArrow)),
 
 		OverviewIcon:             decredmaterial.NewImage(decredIcons["overview"]),
 		OverviewIconInactive:     decredmaterial.NewImage(decredIcons["overview_inactive"]),
@@ -181,15 +222,12 @@ func IconSet() Icons {
 		LogoDarkMode:             decredmaterial.NewImage(decredIcons["logo_darkmode"]),
 		TimerDarkMode:            decredmaterial.NewImage(decredIcons["timer_dm"]),
 		Rebroadcast:              decredmaterial.NewImage(decredIcons["rebroadcast"]),
-<<<<<<< HEAD
 		SettingsActiveIcon:       decredmaterial.NewImage(decredIcons["settings_active"]),
 		SettingsInactiveIcon:     decredmaterial.NewImage(decredIcons["settings_inactive"]),
-=======
 		ActivatedActiveIcon:     decredmaterial.NewImage(decredIcons["activated_active"]),
 		ActivatedInactiveIcon:   decredmaterial.NewImage(decredIcons["activated_inactive"]),
 		LockinActiveIcon:     decredmaterial.NewImage(decredIcons["lockin_active"]),
 		LockinInactiveIcon:   decredmaterial.NewImage(decredIcons["lockin_inactive"]),
->>>>>>> * add tab to governance page to switch between proposal and consensus pages
 
 		DexIcon:         decredmaterial.NewImage(decredIcons["dex_icon"]),
 		DexIconInactive: decredmaterial.NewImage(decredIcons["dex_icon_inactive"]),

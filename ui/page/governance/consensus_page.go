@@ -2,20 +2,10 @@ package governance
 
 import (
 	"context"
-	// "fmt"
-	// "image"
-	// "image/color"
-	// "strconv"
-	// "strings"
 	"sync"
-	// "time"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
-	// "gioui.org/op/clip"
-	// "gioui.org/op/paint"
-	// "gioui.org/text"
-	// "gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
@@ -24,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	// "github.com/planetdecred/godcr/wallet"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const ConsensusPageID = "Consensus"
@@ -32,12 +22,13 @@ const ConsensusPageID = "Consensus"
 type ConsensusPage struct {
 	*load.Load
 
-	ctx        context.Context // page context
-	ctxCancel  context.CancelFunc
-	agendaMu sync.Mutex
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+	agendaMu  sync.Mutex
 
 	multiWallet       *dcrlibwallet.MultiWallet
 	listContainer     *widget.List
+	walletDropDown    *decredmaterial.DropDown
 	orderDropDown     *decredmaterial.DropDown
 	consensusList     *decredmaterial.ClickableList
 	syncButton        *widget.Clickable
@@ -46,11 +37,12 @@ type ConsensusPage struct {
 
 	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
-	voteButton               decredmaterial.Button
+	voteButton decredmaterial.Button
 
 	updatedIcon *decredmaterial.Icon
 
 	consensusItems []*components.ConsensusItem
+	wallets        []*dcrlibwallet.Wallet
 
 	syncCompleted bool
 	isSyncing     bool
@@ -79,6 +71,8 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 
 	pg.voteButton = l.Theme.Button("Change Vote")
 
+	pg.wallets = pg.WL.SortedWalletList()
+	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
 	pg.orderDropDown = components.CreateOrderDropDown(l, values.ConsensusDropdownGroup, 0)
 
 	pg.initLayoutWidgets()
@@ -98,11 +92,14 @@ func (pg *ConsensusPage) ID() string {
 }
 
 func (pg *ConsensusPage) OnResume() {
-
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.listenForSyncNotifications()
+	pg.fetchAgendas()
+	pg.isSyncing = pg.multiWallet.Consensus.IsSyncing()
 }
 
 func (pg *ConsensusPage) OnClose() {
-	// pg.ctxCancel()
+	pg.ctxCancel()
 }
 
 func (pg *ConsensusPage) Handle() {
@@ -110,9 +107,10 @@ func (pg *ConsensusPage) Handle() {
 }
 
 func (pg *ConsensusPage) fetchAgendas() {
-	// newestFirst := pg.orderDropDown.SelectedIndex() == 0
+	newestFirst := pg.orderDropDown.SelectedIndex() == 0
 
-	consensusItems := components.LoadAgendas(pg.Load)
+	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+	consensusItems := components.LoadAgendas(pg.Load, selectedWallet, newestFirst)
 
 	// group 'In discussion' and 'Active' proposals into under review
 	listItems := make([]*components.ConsensusItem, 0)
@@ -122,19 +120,54 @@ func (pg *ConsensusPage) fetchAgendas() {
 
 	pg.agendaMu.Lock()
 	pg.consensusItems = listItems
-	// if proposalFilter == dcrlibwallet.ProposalCategoryAll {
-	// 	pg.proposalItems = listItems
-	// }
 	pg.agendaMu.Unlock()
 }
 
 func (pg *ConsensusPage) Layout(gtx C) D {
 	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
-		// return components.UniformPadding(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Flexed(1, func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-						return layout.Stack{}.Layout(gtx,
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					// layout.Rigid(pg.backButton.Layout),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+							body := func(gtx C) D {
+								return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										var text string
+										if pg.isSyncing {
+											text = "Syncing..."
+										} else if pg.syncCompleted {
+											text = "Updated"
+										} else {
+											text = "Upated " + components.TimeAgo(pg.multiWallet.Consensus.GetLastSyncedTimeStamp())
+										}
+
+										lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
+										lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
+										if pg.syncCompleted {
+											lastUpdatedInfo.Color = pg.Theme.Color.Success
+										}
+
+										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+											return lastUpdatedInfo.Layout(gtx)
+										})
+									}),
+								)
+							}
+
+							return layout.Flex{}.Layout(gtx,
+								layout.Flexed(1, func(gtx C) D {
+									return layout.E.Layout(gtx, body)
+								}),
+							)
+						})
+					}),
+				)
+			}),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+					return layout.Stack{}.Layout(gtx,
 						layout.Expanded(func(gtx C) D {
 							return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
 						}),
@@ -168,28 +201,16 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 						layout.Expanded(func(gtx C) D {
 							return pg.orderDropDown.Layout(gtx, 45, true)
 						}),
+						layout.Expanded(func(gtx C) D {
+							return pg.walletDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
+						}),
 					)
-					})
-				}),
-			)
-		// })
+				})
+			}),
+		)
 	}
 	return D{}
 }
-
-// func (pg *ConsensusPage) layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
-// 	gtx.Constraints.Min.X, gtx.Constraints.Max.X = 150, 150
-// 	// var voteButton decredmaterial.Button
-// 	// pg.VoteButton = l.Theme.Button("Change Vote")
-// 	if canVote {
-// 		pg.VoteButton.Background = l.Theme.Color.Primary
-// 	} else {
-// 		pg.VoteButton.Background = l.Theme.Color.Gray3
-// 	}
-// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-// 		return pg.VoteButton.Layout(gtx)
-// 	})
-// }
 
 func (pg *ConsensusPage) layoutContent(gtx C) D {
 	return layout.Stack{}.Layout(gtx,
@@ -207,16 +228,6 @@ func (pg *ConsensusPage) layoutContent(gtx C) D {
 						return pg.consensusList.Layout(gtx, len(consensusItems), func(gtx C, i int) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									// txt := pg.Theme.Label(values.MarginPadding24, "Sample agenda item")
-									// txt.Font.Weight = text.SemiBold
-		
-									// return layout.Inset{
-									// 	Top:    values.MarginPadding30,
-									// 	Bottom: values.MarginPadding16,
-									// }.Layout(gtx, txt.Layout)
-									// return pg.Theme.Label(values.MarginPadding24, "How does Governance Work?")
-									// return components.ProposalsList(gtx, pg.Load, consensusItems[i])
-
 									return components.AgendasList(gtx, pg.Load, consensusItems[i])
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -253,4 +264,29 @@ func (pg *ConsensusPage) layoutStartSyncSection(gtx C) D {
 	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
 		return pg.Icons.Restore.Layout24dp(gtx)
 	})
+}
+
+func (pg *ConsensusPage) listenForSyncNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			case <-pg.ctx.Done():
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.Agenda:
+				if n.AgendaStatus == wallet.SyncedAgenda {
+					pg.syncCompleted = true
+					pg.isSyncing = false
+
+					pg.fetchAgendas()
+					pg.RefreshWindow()
+				}
+			}
+		}
+	}()
 }

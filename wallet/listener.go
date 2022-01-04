@@ -69,6 +69,18 @@ const (
 
 	// ProposalAdded indicates that a new proposal was added
 	ProposalAdded
+
+	// AgendaVoteFinished indicates that agenda voting is finished
+	AgendaVoteFinished
+
+	// AgendaVoteStarted indicates that agenda voting has started
+	AgendaVoteStarted
+
+	// AgendaSynced indicates that agenda has finished syncing
+	AgendaSynced
+
+	// AgendaAdded indicates that a new agenda was added
+	AgendaAdded
 )
 
 const (
@@ -95,6 +107,7 @@ type (
 		ConfirmedTxn   TxConfirmed
 		AcctMixerInfo  AccountMixer
 		Proposal       Proposal
+		Agenda			Agenda
 	}
 
 	RescanUpdate struct {

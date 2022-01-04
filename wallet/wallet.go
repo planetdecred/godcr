@@ -63,11 +63,11 @@ func (wal *Wallet) StartupTime() time.Time {
 }
 
 func (wal *Wallet) InitMultiWallet() error {
-	politeiaHost := dcrlibwallet.PoliteiaMainnetHost
-	if wal.Net == dcrlibwallet.Testnet3 {
-		politeiaHost = dcrlibwallet.PoliteiaTestnetHost
-	}
-	multiWal, err := dcrlibwallet.NewMultiWallet(wal.Root, "bdb", wal.Net, politeiaHost)
+	// politeiaHost := dcrlibwallet.PoliteiaMainnetHost
+	// if wal.Net == dcrlibwallet.Testnet3 {
+	// 	politeiaHost = dcrlibwallet.PoliteiaTestnetHost
+	// }
+	multiWal, err := dcrlibwallet.NewMultiWallet(wal.Root, "bdb", wal.Net, "https://dev.planetdecred.org:23132/api")
 	if err != nil {
 		return err
 	}

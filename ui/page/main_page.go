@@ -229,6 +229,8 @@ func (mp *MainPage) OnNavigatedTo() {
 		mp.StartSyncing()
 		if mp.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 			go mp.WL.MultiWallet.Politeia.Sync()
+			println("[][][][] selected wallet ", *mp.Load.SelectedWallet)
+			go mp.WL.MultiWallet.Consensus.Sync(mp.WL.SortedWalletList())
 		}
 	}
 

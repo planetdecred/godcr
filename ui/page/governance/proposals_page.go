@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gioui.org/layout"
-	"gioui.org/text"
+	// "gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
@@ -41,7 +41,6 @@ type ProposalsPage struct {
 	proposalsList     *decredmaterial.ClickableList
 	syncButton        *widget.Clickable
 	searchEditor      decredmaterial.Editor
-	fetchProposalsBtn decredmaterial.Button
 
 	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
@@ -92,7 +91,7 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 		},
 	}, values.ProposalDropdownGroup, 1)
 
-	pg.initializeWidget()
+	// pg.initializeWidget()
 
 	return pg
 }
@@ -110,7 +109,7 @@ func (pg *ProposalsPage) ID() string {
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	pg.listenForSyncNotifications()
+	// pg.listenForSyncNotifications()
 	pg.fetchProposals()
 	pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 }
@@ -160,7 +159,7 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 	}
 
 	for pg.infoButton.Button.Clicked() {
-		pg.showInfoModal()
+		// pg.showInfoModal()
 	}
 
 	for pg.backButton.Button.Clicked() {
@@ -220,28 +219,28 @@ func (pg *ProposalsPage) OnNavigatedFrom() {
 // Part of the load.Page interface.
 func (pg *ProposalsPage) Layout(gtx C) D {
 	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
-		return components.UniformPadding(gtx, func(gtx C) D {
+		// return components.UniformPadding(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(pg.backButton.Layout),
+						// layout.Rigid(pg.backButton.Layout),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 								body := func(gtx C) D {
 									return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													txt := pg.Theme.Label(values.TextSize14, "Available Treasury Balance: ")
-													txt.Font.Weight = text.SemiBold
-													return txt.Layout(gtx)
-												}),
-												layout.Rigid(func(gtx C) D {
-													// Todo get available treasury balance
-													return components.LayoutBalanceSize(gtx, pg.Load, "678,678.687654 DCR", values.TextSize14)
-												}),
-											)
-										}),
+										// layout.Rigid(func(gtx C) D {
+										// 	return layout.Flex{}.Layout(gtx,
+										// 		layout.Rigid(func(gtx C) D {
+										// 			txt := pg.Theme.Label(values.TextSize14, "Available Treasury Balance: ")
+										// 			txt.Font.Weight = text.SemiBold
+										// 			return txt.Layout(gtx)
+										// 		}),
+										// 		layout.Rigid(func(gtx C) D {
+										// 			// Todo get available treasury balance
+										// 			return components.LayoutBalanceSize(gtx, pg.Load, "678,678.687654 DCR", values.TextSize14)
+										// 		}),
+										// 	)
+										// }),
 										layout.Rigid(func(gtx C) D {
 											var text string
 											if pg.isSyncing {
@@ -266,15 +265,15 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 								}
 
 								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-											layout.Rigid(func(gtx C) D {
-												txt := pg.Theme.Label(values.TextSize20, "Proposals")
-												txt.Font.Weight = text.SemiBold
-												return txt.Layout(gtx)
-											}),
-										)
-									}),
+									// layout.Rigid(func(gtx C) D {
+									// 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+									// 		layout.Rigid(func(gtx C) D {
+									// 			txt := pg.Theme.Label(values.TextSize20, "Proposals")
+									// 			txt.Font.Weight = text.SemiBold
+									// 			return txt.Layout(gtx)
+									// 		}),
+									// 	)
+									// }),
 									layout.Flexed(1, func(gtx C) D {
 										return layout.E.Layout(gtx, body)
 									}),
@@ -284,49 +283,51 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 					)
 				}),
 				layout.Flexed(1, func(gtx C) D {
-					return layout.Stack{}.Layout(gtx,
-						layout.Expanded(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
-						}),
-						layout.Expanded(func(gtx C) D {
-							gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+						return layout.Stack{}.Layout(gtx,
+							layout.Expanded(func(gtx C) D {
+								return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
+							}),
+							layout.Expanded(func(gtx C) D {
+								gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-							card := pg.Theme.Card()
-							card.Radius = decredmaterial.Radius(8)
-							return card.Layout(gtx, func(gtx C) D {
-								return layout.Inset{
-									Left:   values.MarginPadding10,
-									Right:  values.MarginPadding10,
-									Top:    values.MarginPadding2,
-									Bottom: values.MarginPadding2,
-								}.Layout(gtx, pg.searchEditor.Layout)
-							})
-						}),
-						layout.Expanded(func(gtx C) D {
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return layout.E.Layout(gtx, func(gtx C) D {
 								card := pg.Theme.Card()
 								card.Radius = decredmaterial.Radius(8)
 								return card.Layout(gtx, func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
-										return pg.layoutSyncSection(gtx)
+									return layout.Inset{
+										Left:   values.MarginPadding10,
+										Right:  values.MarginPadding10,
+										Top:    values.MarginPadding2,
+										Bottom: values.MarginPadding2,
+									}.Layout(gtx, pg.searchEditor.Layout)
+								})
+							}),
+							layout.Expanded(func(gtx C) D {
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								return layout.E.Layout(gtx, func(gtx C) D {
+									card := pg.Theme.Card()
+									card.Radius = decredmaterial.Radius(8)
+									return card.Layout(gtx, func(gtx C) D {
+										return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
+											return pg.layoutSyncSection(gtx)
+										})
 									})
 								})
-							})
-						}),
-						layout.Expanded(func(gtx C) D {
-							return pg.orderDropDown.Layout(gtx, 45, true)
-						}),
-						layout.Expanded(func(gtx C) D {
-							return pg.categoryDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
-						}),
-					)
+							}),
+							layout.Expanded(func(gtx C) D {
+								return pg.orderDropDown.Layout(gtx, 45, true)
+							}),
+							layout.Expanded(func(gtx C) D {
+								return pg.categoryDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
+							}),
+						)
+					})
 				}),
 			)
-		})
+		// })
 	}
-	return components.UniformPadding(gtx, pg.splashScreenLayout)
+	return D{}
 }
 
 func (pg *ProposalsPage) layoutContent(gtx C) D {
