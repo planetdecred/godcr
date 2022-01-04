@@ -128,6 +128,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 									padding := values.MarginPadding16
 									txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
 									txt.Color = pg.Theme.Color.GrayText3
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
 									return layout.Center.Layout(gtx, func(gtx C) D {
 										return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
 									})
