@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gioui.org/layout"
-	"gioui.org/text"
+	// "gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
@@ -107,7 +107,7 @@ func (pg *ProposalsPage) ID() string {
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	pg.listenForSyncNotifications()
+	// pg.listenForSyncNotifications()
 	pg.fetchProposals()
 	pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 }
@@ -289,8 +289,23 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 								card := pg.Theme.Card()
 								card.Radius = decredmaterial.Radius(8)
 								return card.Layout(gtx, func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
-										return pg.layoutSyncSection(gtx)
+									return layout.Inset{
+										Left:   values.MarginPadding10,
+										Right:  values.MarginPadding10,
+										Top:    values.MarginPadding2,
+										Bottom: values.MarginPadding2,
+									}.Layout(gtx, pg.searchEditor.Layout)
+								})
+							}),
+							layout.Expanded(func(gtx C) D {
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								return layout.E.Layout(gtx, func(gtx C) D {
+									card := pg.Theme.Card()
+									card.Radius = decredmaterial.Radius(8)
+									return card.Layout(gtx, func(gtx C) D {
+										return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
+											return pg.layoutSyncSection(gtx)
+										})
 									})
 								})
 							})

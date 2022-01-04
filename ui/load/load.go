@@ -85,6 +85,47 @@ type Load struct {
 	ReloadApp           func()
 }
 
+func NewLoad() (*Load, error) {
+
+	wl := &WalletLoad{
+		Wallet:         new(wallet.Wallet),
+		Account:        new(wallet.Account),
+		Transactions:   new(wallet.Transactions),
+		UnspentOutputs: new(wallet.UnspentOutputs),
+		VspInfo:        new(wallet.VSP),
+		Proposals:      new(wallet.Proposals),
+		Agendas:      new(wallet.Agendas),
+
+		SelectedProposal: new(dcrlibwallet.Proposal),
+	}
+
+	r := &Receiver{
+		AcctMixerStatus: make(chan *wallet.AccountMixer),
+		SyncedProposal:  make(chan *wallet.Proposal),
+		SyncedAgenda:  make(chan *wallet.Agenda),
+	}
+
+	icons := loadIcons()
+
+	th := decredmaterial.NewTheme(assets.FontCollection(), assets.DecredIcons, false)
+	if th == nil {
+		return nil, errors.New("unexpected error while loading theme")
+	}
+
+	l := &Load{
+		Theme:    th,
+		Icons:    icons,
+		WL:       wl,
+		Receiver: &Receiver{},
+		Toast:    notification.NewToast(th),
+
+		Printer: message.NewPrinter(language.English),
+	}
+
+	return l, nil
+}
+
+>>>>>>> - add consensus listeners
 func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)

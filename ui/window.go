@@ -33,6 +33,7 @@ type Window struct {
 	walletTransaction    *wallet.Transaction
 	walletAccount        *wallet.Account
 	proposals            *wallet.Proposals
+	agendas            *wallet.Agendas
 	selectedProposal     *dcrlibwallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
@@ -112,6 +113,7 @@ func (win *Window) NewLoad() (*load.Load, error) {
 			UnspentOutputs:  win.walletUnspentOutputs,
 			BroadcastResult: win.broadcastResult,
 			Proposals:       win.proposals,
+			Agendas:       win.agendas,
 
 			SelectedProposal: win.selectedProposal,
 			TxAuthor:         win.txAuthor,

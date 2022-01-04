@@ -343,3 +343,28 @@ func (pg *ConsensusPage) layoutIsSyncingSection(gtx C) D {
 func (pg *ConsensusPage) layoutStartSyncSection(gtx C) D {
 	return material.Clickable(gtx, pg.syncButton, pg.Icons.Restore.Layout24dp)
 }
+
+func (pg *ConsensusPage) listenForSyncNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			case <-pg.ctx.Done():
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.Agenda:
+				if n.AgendaStatus == wallet.SyncedAgenda {
+					pg.syncCompleted = true
+					pg.isSyncing = false
+
+					pg.fetchAgendas()
+					pg.RefreshWindow()
+				}
+			}
+		}
+	}()
+}
