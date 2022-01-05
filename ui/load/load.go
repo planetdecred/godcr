@@ -29,7 +29,7 @@ type DCRUSDTBittrex struct {
 type Receiver struct {
 	InternalLog         chan string
 	NotificationsUpdate chan interface{}
-	KeyEvents           chan *key.Event
+	KeyEvents           map[string]chan *key.Event
 	AcctMixerStatus     chan *wallet.AccountMixer
 	SyncedProposal      chan *wallet.Proposal
 	WalletRestored      chan struct{} // Wallet restored channel.
@@ -79,8 +79,6 @@ type Load struct {
 	SelectedWallet            *int
 	SelectedAccount           *int
 	SelectedUTXO              map[int]map[int32]map[string]*wallet.UnspentOutput
-	EnableKeyEvent            bool
-	EnableKeyEventOnInfoModal bool
 
 	ToggleSync       func()
 	RefreshWindow    func()
@@ -91,6 +89,8 @@ type Load struct {
 	ChangeFragment   func(page Page)
 	PopFragment      func()
 	PopToFragment    func(pageID string)
+	SubscribeKeyEvent      func(eventChan chan *key.Event, pageID string) // Widgets call this function to recieve key events.
+	UnsubscribeKeyEvent    func(pageID string) error
 }
 
 func NewLoad() (*Load, error) {
@@ -128,8 +128,6 @@ func NewLoad() (*Load, error) {
 		Toast:    notification.NewToast(th),
 
 		Printer:                   message.NewPrinter(language.English),
-		EnableKeyEvent:            false,
-		EnableKeyEventOnInfoModal: false,
 	}
 
 	return l, nil
