@@ -76,21 +76,21 @@ type Load struct {
 
 	Toast *notification.Toast
 
-	SelectedWallet            *int
-	SelectedAccount           *int
-	SelectedUTXO              map[int]map[int32]map[string]*wallet.UnspentOutput
+	SelectedWallet  *int
+	SelectedAccount *int
+	SelectedUTXO    map[int]map[int32]map[string]*wallet.UnspentOutput
 
-	ToggleSync       func()
-	RefreshWindow    func()
-	ShowModal        func(Modal)
-	DismissModal     func(Modal)
-	ChangeWindowPage func(page Page, keepBackStack bool)
-	PopWindowPage    func() bool
-	ChangeFragment   func(page Page)
-	PopFragment      func()
-	PopToFragment    func(pageID string)
-	SubscribeKeyEvent      func(eventChan chan *key.Event, pageID string) // Widgets call this function to recieve key events.
-	UnsubscribeKeyEvent    func(pageID string) error
+	ToggleSync          func()
+	RefreshWindow       func()
+	ShowModal           func(Modal)
+	DismissModal        func(Modal)
+	ChangeWindowPage    func(page Page, keepBackStack bool)
+	PopWindowPage       func() bool
+	ChangeFragment      func(page Page)
+	PopFragment         func()
+	PopToFragment       func(pageID string)
+	SubscribeKeyEvent   func(eventChan chan *key.Event, pageID string) // Widgets call this function to recieve key events.
+	UnsubscribeKeyEvent func(pageID string) error
 }
 
 func NewLoad() (*Load, error) {
@@ -127,7 +127,7 @@ func NewLoad() (*Load, error) {
 		Receiver: r,
 		Toast:    notification.NewToast(th),
 
-		Printer:                   message.NewPrinter(language.English),
+		Printer: message.NewPrinter(language.English),
 	}
 
 	return l, nil
