@@ -58,7 +58,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		btnPositve:       l.Theme.Button("Confirm"),
 		btnNegative:      l.Theme.OutlineButton("Cancel"),
 		isCancelable:     true,
-		keyEvent:         l.Receiver.KeyEvents,
+		keyEvent:         make(chan *key.Event),
 	}
 
 	cm.btnPositve.Font.Weight = text.Medium
@@ -78,7 +78,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	th := material.NewTheme(gofont.Collection())
 	cm.materialLoader = material.Loader(th)
 
-	cm.Load.EnableKeyEventOnInfoModal = true
+	l.SubscribeKeyEvent(cm.keyEvent, cm.randomID)
 
 	return cm
 }
@@ -96,7 +96,7 @@ func (cm *CreatePasswordModal) OnResume() {
 }
 
 func (cm *CreatePasswordModal) OnDismiss() {
-	cm.Load.EnableKeyEventOnInfoModal = false
+	cm.Load.UnsubscribeKeyEvent(cm.randomID)
 }
 
 func (cm *CreatePasswordModal) Show() {

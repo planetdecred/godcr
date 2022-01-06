@@ -47,7 +47,7 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 		btnPositve:   l.Theme.Button(values.String(values.StrImport)),
 		btnNegative:  l.Theme.OutlineButton(values.String(values.StrCancel)),
 		isCancelable: true,
-		keyEvent:     l.Receiver.KeyEvents,
+		keyEvent:     make(chan *key.Event),
 	}
 
 	cm.btnPositve.Font.Weight = text.Medium
@@ -73,11 +73,11 @@ func (cm *CreateWatchOnlyModal) ModalID() string {
 
 func (cm *CreateWatchOnlyModal) OnResume() {
 	cm.walletName.Editor.Focus()
-	cm.Load.EnableKeyEvent = true
+	cm.Load.SubscribeKeyEvent(cm.keyEvent, cm.randomID)
 }
 
 func (cm *CreateWatchOnlyModal) OnDismiss() {
-	cm.Load.EnableKeyEvent = false
+	cm.Load.UnsubscribeKeyEvent(cm.randomID)
 }
 
 func (cm *CreateWatchOnlyModal) Show() {
