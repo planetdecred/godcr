@@ -3,6 +3,7 @@ package ui
 import (
 	"sync"
 	"time"
+	"errors"
 
 	"gioui.org/app"
 	"gioui.org/io/key"
@@ -267,17 +268,17 @@ func (win *Window) layoutPage(gtx C, page load.Page) {
 
 // SubscribeKeyEvent subscribes pages for key events.
 func (win *Window) SubscribeKeyEvent(eventChan chan *key.Event, pageID string) {
-	keyEvents[pageID] = eventChan
+	win.keyEvents[pageID] = eventChan
 }
 
 // UnsubscribeKeyEvent unsubscribe a page with {pageID} from receiving key events.
 func (win *Window) UnsubscribeKeyEvent(pageID string) error {
-	if _, ok := keyEvents[pageID]; ok {
-		delete(keyEvents, pageID)
+	if _, ok := win.keyEvents[pageID]; ok {
+		delete(win.keyEvents, pageID)
 		return nil
 	}
 
-	return errors.new("Page not subscribed for key events.")
+	return errors.New("Page not subscribed for key events.")
 }
 
 // Loop runs main event handling and page rendering loop
@@ -384,7 +385,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				evt.Frame(gtx.Ops)
 			case key.Event:
 				go func() {
-					for _, c := range keyEvents {
+					for _, c := range win.keyEvents {
 						c <- &evt
 					}
 				}()
