@@ -151,7 +151,7 @@ func (pg *Restore) restore(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
 						Bottom: values.MarginPadding10,
-					}.Layout(gtx, pg.Theme.Body1("Enter your seed phase").Layout)
+					}.Layout(gtx, pg.Theme.Body1("Enter your seed phrase").Layout)
 				}),
 				layout.Rigid(pg.seedEditorView),
 				layout.Rigid(pg.resetSeedFields.Layout),

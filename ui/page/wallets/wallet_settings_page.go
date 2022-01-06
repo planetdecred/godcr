@@ -15,6 +15,7 @@ const WalletSettingsPageID = "WalletSettings"
 
 type WalletSettingsPage struct {
 	*load.Load
+
 	wallet *dcrlibwallet.Wallet
 
 	changePass, rescan, deleteWallet *decredmaterial.Clickable
@@ -244,9 +245,15 @@ func (pg *WalletSettingsPage) Handle() {
 								pm.SetLoading(false)
 								return
 							}
+
+							pg.RefreshWindow()
+							if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
+								pg.Toast.Notify("Wallet removed")
+								pg.PopFragment()
+							} else {
+								pg.Load.Receiver.AllWalletsDeleted <- struct{}{}
+							}
 							pm.Dismiss()
-							pg.Toast.Notify("Wallet removed")
-							pg.PopFragment()
 						}()
 						return false
 					}).Show()

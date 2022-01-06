@@ -33,6 +33,7 @@ type Receiver struct {
 	AcctMixerStatus     chan *wallet.AccountMixer
 	SyncedProposal      chan *wallet.Proposal
 	WalletRestored      chan struct{} // Wallet restored channel.
+	AllWalletsDeleted   chan struct{} // all wallets deleted channel.
 }
 
 type Icons struct {

@@ -260,84 +260,81 @@ func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
-	w := []layout.Widget{
-		func(gtx C) D {
-			t := cm.Theme.H6(cm.dialogTitle)
-			t.Font.Weight = text.SemiBold
-			return t.Layout(gtx)
-		},
-		func(gtx C) D {
-			if cm.description != "" {
-				return cm.Theme.Body2(cm.description).Layout(gtx)
-			}
-			return layout.Dimensions{}
-		},
-		func(gtx C) D {
-			if cm.serverError != "" {
-				t := cm.Theme.Body2(cm.serverError)
-				t.Color = cm.Theme.Color.Danger
-				return t.Layout(gtx)
-			}
-			return layout.Dimensions{}
-		},
-		func(gtx C) D {
-			if cm.walletNameEnabled {
-				return cm.walletName.Layout(gtx)
-			}
-			return layout.Dimensions{}
-		},
-		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(cm.passwordEditor.Layout),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								if cm.showWalletWarnInfo {
-									txt := cm.Theme.Label(values.MarginPadding12, "This spending password is for the new wallet only")
-									txt.Color = cm.Theme.Color.GrayText1
-									return txt.Layout(gtx)
-								}
-								return layout.Dimensions{}
-							}),
-							layout.Rigid(func(gtx C) D {
-								txt := cm.Theme.Label(values.MarginPadding12, strconv.Itoa(cm.passwordEditor.Editor.Len()))
+func (cm *CreatePasswordModal) titleLayout() layout.Widget {
+	return func(gtx C) D {
+		t := cm.Theme.H6(cm.dialogTitle)
+		t.Font.Weight = text.SemiBold
+		return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, t.Layout)
+	}
+}
+
+func (cm *CreatePasswordModal) Layout(gtx C) D {
+	w := []layout.Widget{}
+
+	w = append(w, cm.titleLayout())
+
+	if cm.description != "" {
+		w = append(w, cm.Theme.Body2(cm.description).Layout)
+	}
+
+	if cm.serverError != "" {
+		t := cm.Theme.Body2(cm.serverError)
+		t.Color = cm.Theme.Color.Danger
+		w = append(w, t.Layout)
+	}
+
+	if cm.walletNameEnabled {
+		w = append(w, cm.walletName.Layout)
+	}
+
+	w = append(w, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(cm.passwordEditor.Layout),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							if cm.showWalletWarnInfo {
+								txt := cm.Theme.Label(values.MarginPadding12, "This spending password is for the new wallet only")
 								txt.Color = cm.Theme.Color.GrayText1
-								return layout.E.Layout(gtx, txt.Layout)
-							}),
-						)
-					})
+								return txt.Layout(gtx)
+							}
+							return layout.Dimensions{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							txt := cm.Theme.Label(values.MarginPadding12, strconv.Itoa(cm.passwordEditor.Editor.Len()))
+							txt.Color = cm.Theme.Color.GrayText1
+							return layout.E.Layout(gtx, txt.Layout)
+						}),
+					)
+				})
+			}),
+		)
+	})
+
+	w = append(w, cm.passwordStrength.Layout)
+	w = append(w, cm.confirmPasswordEditor.Layout)
+
+	w = append(w, func(gtx C) D {
+		return layout.E.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					if cm.isLoading {
+						return D{}
+					}
+
+					return cm.btnNegative.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if cm.isLoading {
+						return cm.materialLoader.Layout(gtx)
+					}
+
+					return cm.btnPositve.Layout(gtx)
 				}),
 			)
-		},
-		func(gtx C) D {
-			return cm.passwordStrength.Layout(gtx)
-		},
-		func(gtx C) D {
-			return cm.confirmPasswordEditor.Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						if cm.isLoading {
-							return D{}
-						}
-
-						return cm.btnNegative.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						if cm.isLoading {
-							return cm.materialLoader.Layout(gtx)
-						}
-
-						return cm.btnPositve.Layout(gtx)
-					}),
-				)
-			})
-		},
-	}
+		})
+	})
 
 	return cm.modal.Layout(gtx, w)
 }
