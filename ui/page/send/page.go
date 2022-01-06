@@ -430,6 +430,11 @@ func (pg *Page) Handle() {
 			pg.amount.amountChanged()
 		}
 	}
+
+	if len(pg.amount.dcrAmountEditor.Editor.Text()) > 0 && pg.sourceAccountSelector.Changed() {
+		pg.amount.validateDCRAmount()
+		pg.validateAndConstructTx()
+	}
 }
 
 func (pg *Page) OnClose() {
