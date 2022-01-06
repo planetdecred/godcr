@@ -1,9 +1,9 @@
 package ui
 
 import (
+	"errors"
 	"sync"
 	"time"
-	"errors"
 
 	"gioui.org/app"
 	"gioui.org/io/key"
