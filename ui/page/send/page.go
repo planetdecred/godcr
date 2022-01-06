@@ -383,54 +383,52 @@ func (pg *Page) Handle() {
 		}
 	}
 
-	validAddress := pg.sendDestination.validate()
+	// if destination switch is equal to Address
 	if pg.sendDestination.sendToAddress {
-		addEditor := pg.sendDestination.destinationAddressEditor
-		if validAddress {
+		if pg.sendDestination.validate() {
+			fmt.Println("Validated")
+			// Enable max amount if max button is clicked
 			if pg.amount.IsMaxClicked() {
 				pg.amount.setError("")
 				pg.amount.SendMax = true
 				pg.amount.amountChanged()
 			}
 
-			editorsAreEmpty := len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1
-			if editorsAreEmpty {
-				pg.amount.dcrAmountEditor.Editor.SetText("")
-				pg.amount.usdAmountEditor.Editor.SetText("")
-				pg.amount.SendMax = false
-			}
-		} else if len(addEditor.Editor.Text()) < 1 {
-			if len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1 {
-				pg.amount.SendMax = false
-			}
-			if pg.amount.IsMaxClicked() {
-				if pg.amount.amountIsValid() {
-					pg.amount.setError("")
-				} else {
-					pg.Toast.NotifyError("Set destination address")
+			if currencyValue != values.USDExchangeValue {
+				if len(pg.amount.dcrAmountEditor.Editor.Text()) == 0 {
+					pg.amount.SendMax = false
+				}
+			} else {
+				if len(pg.amount.dcrAmountEditor.Editor.Text()) == 0 {
+					pg.amount.usdAmountEditor.Editor.SetText("")
+					pg.amount.SendMax = false
 				}
 			}
 		}
 
-	} else {
-		if validAddress {
+		if len(pg.sendDestination.destinationAddressEditor.Editor.Text()) == 0 {
 			if pg.amount.IsMaxClicked() {
-				pg.amount.setError("")
-				pg.amount.SendMax = true
-				pg.amount.amountChanged()
+				pg.Toast.NotifyError("Set destination address")
+				pg.amount.SendMax = false
+			}
+		}
+	} else {
+		if currencyValue != values.USDExchangeValue {
+			if len(pg.amount.dcrAmountEditor.Editor.Text()) == 0 {
+				pg.amount.SendMax = false
+			}
+		} else {
+			if len(pg.amount.dcrAmountEditor.Editor.Text()) == 0 {
+				pg.amount.usdAmountEditor.Editor.SetText("")
+				pg.amount.SendMax = false
 			}
 		}
 
-		if len(pg.amount.dcrAmountEditor.Editor.Text()) < 1 || len(pg.amount.usdAmountEditor.Editor.Text()) < 1 {
-			pg.amount.dcrAmountEditor.Editor.SetText("")
-			pg.amount.usdAmountEditor.Editor.SetText("")
-			pg.amount.SendMax = false
+		if pg.amount.IsMaxClicked() {
+			pg.amount.setError("")
+			pg.amount.SendMax = true
+			pg.amount.amountChanged()
 		}
-
-	}
-
-	if pg.sourceAccountSelector.Changed() {
-		pg.amount.validateDCRAmount()
 	}
 }
 
