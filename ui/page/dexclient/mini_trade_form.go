@@ -77,9 +77,7 @@ func (m *miniTradeFormWidget) layout(gtx C) D {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-				return m.submitBtn.Layout(gtx)
-			})
+			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, m.submitBtn.Layout)
 		}),
 	)
 }
@@ -188,7 +186,7 @@ func (m *miniTradeFormWidget) handle(ord *core.OrderBook) {
 		modal.NewPasswordModal(m.Load).
 			Title(strAppPassword).
 			Hint(strAuthOrderAppPassword).
-			Description("IMPORTANT: Trades take time to settle, and you cannot turn off the DEX client software, or the BTC or DCR blockchain and/or wallet software, until settlement is complete. Settlement can complete as quickly as a few minutes or take as long as a few hours.").
+			Description(strNoteConfirmTradeMessage).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(strOk, func(password string, pm *modal.PasswordModal) bool {
 				go func() {

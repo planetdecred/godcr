@@ -93,11 +93,9 @@ func (md *createWalletModal) Dismiss() {
 	md.DismissModal(md)
 }
 
-func (md *createWalletModal) OnDismiss() {
-}
+func (md *createWalletModal) OnDismiss() {}
 
-func (md *createWalletModal) OnResume() {
-}
+func (md *createWalletModal) OnResume() {}
 
 func (md *createWalletModal) SetRegisterAction(registerAction bool) *createWalletModal {
 	md.isRegisterAction = registerAction
@@ -286,8 +284,7 @@ func (amd *assetSelectorModal) Dismiss() {
 	amd.DismissModal(amd)
 }
 
-func (amd *assetSelectorModal) OnDismiss() {
-}
+func (amd *assetSelectorModal) OnDismiss() {}
 
 func (amd *assetSelectorModal) AssetSelected(callback func(*core.SupportedAsset)) *assetSelectorModal {
 	amd.assetSelected = callback
@@ -390,9 +387,7 @@ func (amd *assetSelectorModal) assetsInfoLayout() layout.Widget {
 func (amd *assetSelectorModal) marketInfoLayout(feeAsset *core.FeeAsset) layout.Widget {
 	return func(gtx C) D {
 		childrens := []layout.FlexChild{
-			layout.Rigid(func(gtx C) D {
-				return amd.Theme.Label(values.TextSize12, strMarket).Layout(gtx)
-			}),
+			layout.Rigid(amd.Theme.Label(values.TextSize12, strMarket).Layout),
 		}
 
 		for _, mkt := range amd.Markets {

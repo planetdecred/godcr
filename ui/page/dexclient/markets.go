@@ -212,17 +212,14 @@ func (pg *Page) welcomeLayout(button decredmaterial.Button) layout.Widget {
 
 func (pg *Page) registrationStatusLayout() layout.Widget {
 	return func(gtx C) D {
+		txtLabel := func(txt string) layout.Widget {
+			return pg.Theme.Label(values.TextSize14, txt).Layout
+		}
 		reqConfirms, currentConfs := pg.dexServer.Fee.Confs, pg.dexServer.PendingFee.Confs
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(pg.Theme.Label(values.TextSize14, strWaitingConfirms).Layout),
-			layout.Rigid(func(gtx C) D {
-				t := fmt.Sprintf(nStrConfirmationsStatus, pg.dexServer.Host, reqConfirms)
-				return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				t := fmt.Sprintf("%d/%d", currentConfs, reqConfirms)
-				return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
-			}),
+			layout.Rigid(txtLabel(strWaitingConfirms)),
+			layout.Rigid(txtLabel(fmt.Sprintf(nStrConfirmationsStatus, pg.dexServer.Host, reqConfirms))),
+			layout.Rigid(txtLabel(fmt.Sprintf("%d/%d", currentConfs, reqConfirms))),
 		)
 	}
 }
