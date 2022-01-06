@@ -98,6 +98,7 @@ const (
 	strNewPassword                  = "New Password"
 	strConfirmNewPassword           = "Confirm new password"
 	strErrRequireCertFile           = "Please choose a cert file"
+	strNoteConfirmTradeMessage      = "IMPORTANT: Trades take time to settle, and you cannot turn off the DEX client software, or the BTC or DCR blockchain and/or wallet software, until settlement is complete. Settlement can complete as quickly as a few minutes or take as long as a few hours."
 
 	nStrNoWalletFound         = "no wallet found for %s"
 	nStrCreateAWallet         = "Create a %s Wallet"
