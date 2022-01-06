@@ -278,7 +278,7 @@ func (win *Window) UnsubscribeKeyEvent(pageID string) error {
 		return nil
 	}
 
-	return errors.New("Page not subscribed for key events.")
+	return errors.New("Page not subscribed for key events")
 }
 
 // Loop runs main event handling and page rendering loop
