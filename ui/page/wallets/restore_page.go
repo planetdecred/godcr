@@ -70,7 +70,7 @@ func NewRestorePage(l *load.Load) *Restore {
 
 		seedList: &layout.List{Axis: layout.Vertical},
 
-		keyEvent: l.Receiver.KeyEvents,
+		keyEvent: make(chan *key.Event),
 
 		suggestionLimit: 3,
 		openPopupIndex:  -1,
@@ -101,7 +101,7 @@ func NewRestorePage(l *load.Load) *Restore {
 
 	// set suggestions
 	pg.allSuggestions = dcrlibwallet.PGPWordList()
-	pg.Load.EnableKeyEvent = true
+	l.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 
 	return pg
 }
@@ -111,8 +111,7 @@ func (pg *Restore) ID() string {
 }
 
 func (pg *Restore) OnResume() {
-	pg.Load.EnableKeyEvent = true
-	pg.keyEvent = pg.Receiver.KeyEvents
+	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 
 }
 
@@ -439,8 +438,7 @@ func (pg *Restore) Handle() {
 			return
 		}
 
-		pg.Load.EnableKeyEvent = false
-		pg.keyEvent = nil
+		pg.Load.UnsubscribeKeyEvent(pg.ID())
 
 		modal.NewCreatePasswordModal(pg.Load).
 			Title("Enter wallet details").
@@ -519,5 +517,5 @@ func (pg *Restore) Handle() {
 }
 
 func (pg *Restore) OnClose() {
-	pg.Load.EnableKeyEvent = false
+	pg.Load.UnsubscribeKeyEvent(pg.ID())
 }

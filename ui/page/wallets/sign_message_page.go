@@ -72,7 +72,7 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 		copyButton:         l.Theme.Button("Copy"),
 		copySignature:      l.Theme.NewClickable(false),
 		copyIcon:           copyIcon,
-		keyEvent:           l.Receiver.KeyEvents,
+		keyEvent:           make(chan *key.Event),
 	}
 
 	pg.signedMessageLabel.Color = l.Theme.Color.GrayText2
@@ -87,7 +87,7 @@ func (pg *SignMessagePage) ID() string {
 
 func (pg *SignMessagePage) OnResume() {
 	pg.addressEditor.Editor.Focus()
-	pg.Load.EnableKeyEvent = true
+	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 }
 
 func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
@@ -336,5 +336,5 @@ func (pg *SignMessagePage) clearForm() {
 }
 
 func (pg *SignMessagePage) OnClose() {
-	pg.Load.EnableKeyEvent = false
+	pg.Load.UnsubscribeKeyEvent(pg.ID())
 }
