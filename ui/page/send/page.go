@@ -55,6 +55,7 @@ type Page struct {
 	exchangeRate   float64
 	usdExchangeSet bool
 	exchangeError  string
+	confirmTxModal *sendConfirmModal
 
 	*authoredTxData
 }
@@ -86,7 +87,7 @@ func NewSendPage(l *load.Load) *Page {
 		authoredTxData: &authoredTxData{},
 		shadowBox:      l.Theme.Shadow(),
 		backdrop:       new(widget.Clickable),
-		keyEvent:       l.Receiver.KeyEvents,
+		keyEvent:       make(chan *key.Event),
 	}
 
 	// Source account picker
@@ -152,7 +153,7 @@ func (pg *Page) OnResume() {
 	} else {
 		pg.usdExchangeSet = false
 	}
-	pg.Load.EnableKeyEvent = true
+	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 }
 
 func (pg *Page) fetchExchangeValue() {
@@ -324,15 +325,15 @@ func (pg *Page) Handle() {
 
 	for pg.nextButton.Clicked() {
 		if pg.txAuthor != nil {
-			confirmTxModal := newSendConfirmModal(pg.Load, pg.authoredTxData)
-			confirmTxModal.exchangeRateSet = pg.exchangeRate != -1 && pg.usdExchangeSet
+			pg.confirmTxModal = newSendConfirmModal(pg.Load, pg.authoredTxData)
+			pg.confirmTxModal.exchangeRateSet = pg.exchangeRate != -1 && pg.usdExchangeSet
 
-			confirmTxModal.txSent = func() {
+			pg.confirmTxModal.txSent = func() {
 				pg.resetFields()
 				pg.clearEstimates()
 			}
 
-			confirmTxModal.Show()
+			pg.confirmTxModal.Show()
 		}
 	}
 
@@ -346,11 +347,13 @@ func (pg *Page) Handle() {
 		}
 	}
 
+	modalShown := pg.confirmTxModal != nil && pg.confirmTxModal.IsShown()
+
 	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyValue != values.USDExchangeValue {
 		switch {
 		case !pg.sendDestination.sendToAddress:
-			if !pg.amount.dcrAmountEditor.Editor.Focused() {
+			if !pg.amount.dcrAmountEditor.Editor.Focused() && !modalShown {
 				pg.amount.dcrAmountEditor.Editor.Focus()
 			}
 		default:
@@ -368,7 +371,9 @@ func (pg *Page) Handle() {
 	} else {
 		switch {
 		case !pg.sendDestination.sendToAddress && !(pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()):
-			pg.amount.dcrAmountEditor.Editor.Focus()
+			if !modalShown {
+				pg.amount.dcrAmountEditor.Editor.Focus()
+			}
 		case !pg.sendDestination.sendToAddress && (pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()):
 			decredmaterial.SwitchEditors(pg.keyEvent, pg.amount.usdAmountEditor.Editor, pg.amount.dcrAmountEditor.Editor)
 		default:
@@ -441,5 +446,5 @@ func (pg *Page) Handle() {
 }
 
 func (pg *Page) OnClose() {
-	pg.Load.EnableKeyEvent = false
+	pg.Load.UnsubscribeKeyEvent(pg.ID())
 }

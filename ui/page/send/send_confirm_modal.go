@@ -30,6 +30,7 @@ type sendConfirmModal struct {
 
 	*authoredTxData
 	exchangeRateSet bool
+	isShown         bool
 }
 
 func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
@@ -60,10 +61,12 @@ func (scm *sendConfirmModal) ModalID() string {
 }
 
 func (scm *sendConfirmModal) Show() {
+	scm.isShown = true
 	scm.ShowModal(scm)
 }
 
 func (scm *sendConfirmModal) Dismiss() {
+	scm.isShown = false
 	scm.DismissModal(scm)
 }
 
@@ -73,6 +76,10 @@ func (scm *sendConfirmModal) OnResume() {
 
 func (scm *sendConfirmModal) OnDismiss() {
 
+}
+
+func (scm *sendConfirmModal) IsShown() bool {
+	return scm.isShown
 }
 
 func (scm *sendConfirmModal) broadcastTransaction() {
