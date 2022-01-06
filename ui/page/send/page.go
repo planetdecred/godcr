@@ -52,11 +52,9 @@ type Page struct {
 
 	moreOptionIsOpen bool
 
-	exchangeRate          float64
-	usdExchangeSet        bool
-	exchangeError         string
-	defaultAcccountNumber int32
-	currentAccountNumber  int32
+	exchangeRate   float64
+	usdExchangeSet bool
+	exchangeError  string
 
 	*authoredTxData
 }
@@ -155,7 +153,6 @@ func (pg *Page) OnResume() {
 		pg.usdExchangeSet = false
 	}
 	pg.Load.EnableKeyEvent = true
-	pg.defaultAcccountNumber = pg.sourceAccountSelector.SelectedAccount().Number
 }
 
 func (pg *Page) fetchExchangeValue() {
@@ -432,9 +429,7 @@ func (pg *Page) Handle() {
 
 	}
 
-	pg.currentAccountNumber = pg.sourceAccountSelector.SelectedAccount().Number
-	if pg.currentAccountNumber != pg.defaultAcccountNumber {
-		pg.defaultAcccountNumber = pg.currentAccountNumber
+	if pg.sourceAccountSelector.Changed() {
 		pg.amount.validateDCRAmount()
 	}
 }
