@@ -62,11 +62,11 @@ func (pg *PrivacyPage) ID() string {
 	return PrivacyPageID
 }
 
-// WillAppear is called when the page is about to displayed and may
-// be used to initialize page features that are only relevant when
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *PrivacyPage) WillAppear() {
+func (pg *PrivacyPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
 	pg.listenForMixerNotifications()
@@ -438,11 +438,11 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 	}()
 }
 
-// WillDisappear is called when the page is about to be removed from
+// OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable
 // features that are irrelevant when the page is NOT displayed.
 // NOTE: The page may be re-displayed on the app's window, in which case
-// WillAppear() will be called again. This method should not destroy UI
-// components unless they'll be recreated in the WillAppear() method.
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *PrivacyPage) WillDisappear() {}
+func (pg *PrivacyPage) OnNavigatedFrom() {}

@@ -85,7 +85,6 @@ func NewMainPage(l *load.Load) *MainPage {
 			mp.StartSyncing()
 		}
 	}
-	// evaluate these
 	l.ToggleSync = toggleSync
 	l.ChangeFragment = mp.changeFragment
 	l.PopFragment = mp.popFragment
@@ -184,11 +183,11 @@ func (mp *MainPage) initNavItems() {
 	}
 }
 
-// WillAppear is called when the page is about to displayed and may
-// be used to initialize page features that are only relevant when
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (mp *MainPage) WillAppear() {
+func (mp *MainPage) OnNavigatedTo() {
 	// register for notifications, unregister when the page disappears
 	mp.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
 	mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
@@ -203,7 +202,14 @@ func (mp *MainPage) WillAppear() {
 	if mp.currentPage == nil {
 		mp.currentPage = overview.NewOverviewPage(mp.Load)
 	}
-	mp.currentPage.WillAppear()
+	mp.currentPage.OnNavigatedTo()
+
+	if mp.sendPage != nil {
+		mp.sendPage.OnNavigatedTo()
+	}
+	if mp.receivePage != nil {
+		mp.receivePage.OnNavigatedTo()
+	}
 
 	if mp.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey) {
 		mp.StartSyncing()
@@ -384,16 +390,23 @@ func (mp *MainPage) HandleUserInteractions() {
 	}
 }
 
-// WillDisappear is called when the page is about to be removed from
+// OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable
 // features that are irrelevant when the page is NOT displayed.
 // NOTE: The page may be re-displayed on the app's window, in which case
-// WillAppear() will be called again. This method should not destroy UI
-// components unless they'll be recreated in the WillAppear() method.
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (mp *MainPage) WillDisappear() {
+func (mp *MainPage) OnNavigatedFrom() {
+	// Also disappear all child pages.
 	if mp.currentPage != nil {
-		mp.currentPage.WillDisappear()
+		mp.currentPage.OnNavigatedFrom()
+	}
+	if mp.sendPage != nil {
+		mp.sendPage.OnNavigatedFrom()
+	}
+	if mp.receivePage != nil {
+		mp.receivePage.OnNavigatedFrom()
 	}
 
 	mp.WL.MultiWallet.RemoveAccountMixerNotificationListener(MainPageID)
@@ -430,11 +443,11 @@ func (mp *MainPage) changeFragment(page load.Page) {
 	}
 
 	if mp.currentPage != nil {
-		mp.currentPage.WillDisappear() // TODO: Unload unless it is possible that this page will be revisited.
+		mp.currentPage.OnNavigatedFrom() // TODO: Unload unless it is possible that this page will be revisited.
 		mp.pageBackStack = append(mp.pageBackStack, mp.currentPage)
 	}
 
-	page.WillAppear()
+	page.OnNavigatedTo()
 	mp.currentPage = page
 }
 
@@ -445,19 +458,16 @@ func (mp *MainPage) popFragment() {
 		previousPage := mp.pageBackStack[len(mp.pageBackStack)-1]
 		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
 
-		mp.currentPage.WillDisappear()
-		previousPage.WillAppear()
+		mp.currentPage.OnNavigatedFrom()
+		previousPage.OnNavigatedTo()
 		mp.currentPage = previousPage
 	}
 }
 
-// revisit
 func (mp *MainPage) popToFragment(pageID string) {
-
 	// close current page and all pages before `pageID`
-	// TODO: What if currentPage.ID() == pageID?
 	if mp.currentPage != nil {
-		mp.currentPage.WillDisappear()
+		mp.currentPage.OnNavigatedFrom()
 	}
 
 	for i := len(mp.pageBackStack) - 1; i >= 0; i-- {
@@ -466,7 +476,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 			mp.pageBackStack, closedPages = mp.pageBackStack[:i+1], mp.pageBackStack[i+1:]
 
 			for j := len(closedPages) - 1; j >= 0; j-- {
-				closedPages[j].WillDisappear()
+				closedPages[j].OnNavigatedFrom()
 			}
 			break
 		}

@@ -223,7 +223,7 @@ func (cm *CreatePasswordModal) Handle() {
 	if cm.btnNegative.Clicked() {
 		if !cm.isLoading {
 			if cm.parent != nil {
-				cm.parent.WillAppear()
+				cm.parent.OnNavigatedTo()
 			}
 			cm.Dismiss()
 		}

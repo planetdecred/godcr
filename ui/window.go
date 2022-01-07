@@ -130,7 +130,7 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	// a new StartPage will be initialized and displayed.
 	l.ReloadApp = func() {
 		if win.currentPage != nil {
-			win.currentPage.WillDisappear()
+			win.currentPage.OnNavigatedFrom()
 			win.currentPage = nil
 		}
 	}
@@ -158,9 +158,20 @@ func (win *Window) HandleEvents() {
 	for {
 		e := <-win.Events()
 		switch evt := e.(type) {
+		case system.StageEvent:
+			if evt.Stage == system.StageRunning {
+				// App is running, init multiwallet.
+				// TODO: Why wait till now to init MW?
+				err := win.wallet.InitMultiWallet()
+				if err != nil {
+					log.Errorf("init multiwallet error: %v", err)
+					return // exits the loop, caller will exit the program.
+				}
+			}
+
 		case system.DestroyEvent:
 			if win.currentPage != nil {
-				win.currentPage.WillDisappear()
+				win.currentPage.OnNavigatedFrom()
 				win.currentPage = nil
 			}
 			return // exits the loop, caller will exit the program.
@@ -190,7 +201,7 @@ func (win *Window) displayWindow(evt system.FrameEvent) {
 	// Set up the StartPage the first time a FrameEvent is received.
 	if win.currentPage == nil {
 		win.currentPage = page.NewStartPage(win.load)
-		win.currentPage.WillAppear()
+		win.currentPage.OnNavigatedTo()
 	}
 
 	// A FrameEvent may be generated because of a user interaction
@@ -254,12 +265,12 @@ func (win *Window) drawWindowUI(gtx C) {
 // callers should not re-refresh the display.
 func (win *Window) changePage(page load.Page, keepBackStack bool) {
 	if win.currentPage != nil && keepBackStack {
-		win.currentPage.WillDisappear()
+		win.currentPage.OnNavigatedFrom()
 		win.pageBackStack = append(win.pageBackStack, win.currentPage)
 	}
 
 	win.currentPage = page
-	win.currentPage.WillAppear()
+	win.currentPage.OnNavigatedTo()
 	win.Invalidate()
 }
 
@@ -277,8 +288,8 @@ func (win *Window) popPage() bool {
 	win.pageBackStack = win.pageBackStack[:previousPageIndex]
 
 	// close the current page and display the previous page
-	win.currentPage.WillDisappear()
-	previousPage.WillAppear()
+	win.currentPage.OnNavigatedFrom()
+	previousPage.OnNavigatedTo()
 	win.currentPage = previousPage
 	win.Invalidate()
 

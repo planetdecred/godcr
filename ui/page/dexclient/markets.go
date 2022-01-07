@@ -157,23 +157,23 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 	)
 }
 
-// WillAppear is called when the page is about to displayed and may
-// be used to initialize page features that are only relevant when
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *Page) WillAppear() {
+func (pg *Page) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	go pg.readNotifications()
 }
 
-// WillDisappear is called when the page is about to be removed from
+// OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable
 // features that are irrelevant when the page is NOT displayed.
 // NOTE: The page may be re-displayed on the app's window, in which case
-// WillAppear() will be called again. This method should not destroy UI
-// components unless they'll be recreated in the WillAppear() method.
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *Page) WillDisappear() {
+func (pg *Page) OnNavigatedFrom() {
 	pg.ctxCancel()
 }
 
