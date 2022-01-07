@@ -206,30 +206,30 @@ func WeekDayHourMinuteCalculator(timestamp int64) string {
 
 		dateTimeResult = fmt.Sprintf("%d days ago", daysFromTxn)
 		return dateTimeResult
-	} else {
-		hoursFromTxn := minutesFromTxn / 60
-		if hoursFromTxn > 0 {
-			if hoursFromTxn == 1 {
-				dateTimeResult = fmt.Sprintf("%d hour ago", hoursFromTxn)
-				return dateTimeResult
-			}
-
-			dateTimeResult = fmt.Sprintf("%d hours ago", hoursFromTxn)
-			return dateTimeResult
-		} else {
-			if minutesFromTxn > 0 {
-				if minutesFromTxn == 1 {
-					dateTimeResult = fmt.Sprintf("%d minute ago", minutesFromTxn)
-					return dateTimeResult
-				}
-
-				dateTimeResult = fmt.Sprintf("%d minutes ago", minutesFromTxn)
-				return dateTimeResult
-			} else {
-				dateTimeResult = fmt.Sprintln("Just Now")
-			}
-		}
 	}
+
+	hoursFromTxn := minutesFromTxn / 60
+	if hoursFromTxn > 0 {
+		if hoursFromTxn == 1 {
+			dateTimeResult = fmt.Sprintf("%d hour ago", hoursFromTxn)
+			return dateTimeResult
+		}
+
+		dateTimeResult = fmt.Sprintf("%d hours ago", hoursFromTxn)
+		return dateTimeResult
+	}
+
+	if minutesFromTxn > 0 {
+		if minutesFromTxn == 1 {
+			dateTimeResult = fmt.Sprintf("%d minute ago", minutesFromTxn)
+			return dateTimeResult
+		}
+
+		dateTimeResult = fmt.Sprintf("%d minutes ago", minutesFromTxn)
+		return dateTimeResult
+	}
+
+	dateTimeResult = fmt.Sprintln("Just Now")
 
 	return dateTimeResult
 }
