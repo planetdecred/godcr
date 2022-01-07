@@ -325,7 +325,7 @@ func (pg *Page) Handle() {
 
 	for pg.nextButton.Clicked() {
 		if pg.txAuthor != nil {
-			pg.confirmTxModal = newSendConfirmModal(pg.Load, pg.authoredTxData)
+			pg.confirmTxModal = newSendConfirmModal(pg.Load, pg.authoredTxData).SetParent(pg)
 			pg.confirmTxModal.exchangeRateSet = pg.exchangeRate != -1 && pg.usdExchangeSet
 
 			pg.confirmTxModal.txSent = func() {
@@ -333,6 +333,7 @@ func (pg *Page) Handle() {
 				pg.clearEstimates()
 			}
 
+			pg.Load.UnsubscribeKeyEvent(pg.ID())
 			pg.confirmTxModal.Show()
 		}
 	}
