@@ -181,6 +181,59 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 	return &txStatus
 }
 
+func WeekDayHourMinuteCalculator(timestamp int64) string {
+	var dateTimeResult string
+	timeStampNow := time.Now().Unix()
+	minutesFromTxn := (timeStampNow - timestamp) / 60
+	daysFromTxn := minutesFromTxn / 1440 // there are 1440 minutes in 24 hours
+	weeksFromTxn := daysFromTxn / 7
+
+	if weeksFromTxn > 0 {
+		if weeksFromTxn == 1 {
+			dateTimeResult = fmt.Sprintf("%d week ago", weeksFromTxn)
+			return dateTimeResult
+		}
+
+		dateTimeResult = fmt.Sprintf("%d weeks ago", weeksFromTxn)
+		return dateTimeResult
+	}
+
+	if daysFromTxn > 0 {
+		if daysFromTxn == 1 {
+			dateTimeResult = fmt.Sprintf("%d day ago", daysFromTxn)
+			return dateTimeResult
+		}
+
+		dateTimeResult = fmt.Sprintf("%d days ago", daysFromTxn)
+		return dateTimeResult
+	} else {
+		hoursFromTxn := minutesFromTxn / 60
+		if hoursFromTxn > 0 {
+			if hoursFromTxn == 1 {
+				dateTimeResult = fmt.Sprintf("%d hour ago", hoursFromTxn)
+				return dateTimeResult
+			}
+
+			dateTimeResult = fmt.Sprintf("%d hours ago", hoursFromTxn)
+			return dateTimeResult
+		} else {
+			if minutesFromTxn > 0 {
+				if minutesFromTxn == 1 {
+					dateTimeResult = fmt.Sprintf("%d minute ago", minutesFromTxn)
+					return dateTimeResult
+				}
+
+				dateTimeResult = fmt.Sprintf("%d minutes ago", minutesFromTxn)
+				return dateTimeResult
+			} else {
+				dateTimeResult = fmt.Sprintln("Just Now")
+			}
+		}
+	}
+
+	return dateTimeResult
+}
+
 func DurationAgo(timestamp int64) string {
 	//Convert timestamp to date in string format (yyyy:mm:dd hr:m:s +0000 UTC)
 
