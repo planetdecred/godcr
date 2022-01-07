@@ -25,12 +25,11 @@ type AccountSelector struct {
 
 	openSelectorDialog *decredmaterial.Clickable
 
-	wallets               []*dcrlibwallet.Wallet
-	selectedAccount       *dcrlibwallet.Account
-	selectedWalletName    string
-	totalBalance          string
-	defaultAcccountNumber int32
-	isDefaultSet          bool
+	wallets            []*dcrlibwallet.Wallet
+	selectedAccount    *dcrlibwallet.Account
+	selectedWalletName string
+	totalBalance       string
+	changed            bool
 }
 
 func NewAccountSelector(l *load.Load) *AccountSelector {
@@ -41,8 +40,7 @@ func NewAccountSelector(l *load.Load) *AccountSelector {
 		accountIsValid:     func(*dcrlibwallet.Account) bool { return true },
 		openSelectorDialog: l.Theme.NewClickable(true),
 
-		wallets:      l.WL.SortedWalletList(),
-		isDefaultSet: false,
+		wallets: l.WL.SortedWalletList(),
 	}
 }
 
@@ -62,26 +60,20 @@ func (as *AccountSelector) AccountSelected(callback func(*dcrlibwallet.Account))
 }
 
 func (as *AccountSelector) Changed() bool {
-	if as.defaultAcccountNumber != as.selectedAccount.Number {
-		as.defaultAcccountNumber = as.selectedAccount.Number
-		return true
-	}
-
-	return false
+	changed := as.changed
+	as.changed = false
+	return changed
 }
 
 func (as *AccountSelector) Handle() {
-	if !as.isDefaultSet {
-		as.defaultAcccountNumber = as.selectedAccount.Number
-		as.isDefaultSet = true
-	}
-	as.Changed()
-
 	for as.openSelectorDialog.Clicked() {
 		newAccountSelectorModal(as.Load, as.selectedAccount, as.wallets).
 			title(as.dialogTitle).
 			accountValidator(as.accountIsValid).
 			accountSelected(func(account *dcrlibwallet.Account) {
+				if as.selectedAccount.Number != account.Number {
+					as.changed = true
+				}
 				as.setupSelectedAccount(account)
 				as.callback(account)
 			}).Show()

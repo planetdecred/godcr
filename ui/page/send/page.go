@@ -386,7 +386,6 @@ func (pg *Page) Handle() {
 	// if destination switch is equal to Address
 	if pg.sendDestination.sendToAddress {
 		if pg.sendDestination.validate() {
-			fmt.Println("Validated")
 			// Enable max amount if max button is clicked
 			if pg.amount.IsMaxClicked() {
 				pg.amount.setError("")
