@@ -235,124 +235,68 @@ func WeekDayHourMinuteCalculator(timestamp int64) string {
 }
 
 func DurationAgo(timestamp int64) string {
-	//Convert timestamp to date in string format (yyyy:mm:dd hr:m:s +0000 UTC)
+	var duration string
 
+	//Convert timestamp to date in string format (yyyy:mm:dd hr:m:s +0000 UTC)
 	currentTimestamp := time.Now().UTC().String()
 	txnTimestamp := time.Unix(timestamp, 0).UTC().String()
 
 	//Split the date so we can sepparate into date and time for current time and time of txn
-
 	currentTimeSplit := strings.Split(currentTimestamp, " ")
 	txnTimeSplit := strings.Split(txnTimestamp, " ")
 
 	//Split current date and time, and  txn date and time then store in variables
-
 	currentDate := strings.Split(currentTimeSplit[0], "-")
-	currentTime := strings.Split(currentTimeSplit[1], ":")
 	txnDate := strings.Split(txnTimeSplit[0], "-")
-	txnTime := strings.Split(txnTimeSplit[1], ":")
-	var duration string
+	yearNow, _ := strconv.Atoi(currentDate[0])
+	monthNow, _ := strconv.Atoi(currentDate[1])
+	txnYear, _ := strconv.Atoi(txnDate[0])
+	txnMonth, _ := strconv.Atoi(txnDate[1])
+	dayNow, _ := strconv.Atoi(currentDate[2])
+	txnDay, _ := strconv.Atoi(txnDate[2])
+	currentYearStart := 0
+	txnYearEnd := 12
 
-	//Group duration into thresholds
+	if (yearNow - txnYear) > 0 {
+		if (yearNow - txnYear) == 1 {
+			if ((txnYearEnd - txnMonth) + (currentYearStart + monthNow)) < 12 {
+				if ((txnYearEnd - txnMonth) + (currentYearStart + monthNow)) == 1 {
+					if txnDay < dayNow {
+						duration = WeekDayHourMinuteCalculator(timestamp)
+						return duration
+					}
 
-	//Yearly threshold
+					duration = fmt.Sprintln("1 month ago")
+					return duration
+				}
 
-	if currentDate[0] != txnDate[0] {
-		cy, _ := strconv.Atoi(currentDate[0])
-		ty, _ := strconv.Atoi(txnDate[0])
-
-		cm, _ := strconv.Atoi(currentDate[1])
-		tm, _ := strconv.Atoi(txnDate[1])
-
-		txnYearEnd := 13
-		currentYearStart := 1
-
-		result := cy - ty
-		numMonths := (txnYearEnd - tm) + (cm - currentYearStart)
-
-		if numMonths > 12 {
-			duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
-			return duration
-		} else if numMonths == 12 {
-			duration = "1 year ago"
+				duration = fmt.Sprintf("%d months ago", (txnYearEnd-txnMonth)+(currentYearStart+monthNow))
+				return duration
+			}
+			duration = fmt.Sprintf("%d year ago", yearNow-txnYear)
 			return duration
 		}
-		duration = fmt.Sprintf("%s months ago", strconv.Itoa(numMonths))
+
+		duration = fmt.Sprintf("%d years ago", yearNow-txnYear)
 		return duration
-
-	} else if currentDate[0] == txnDate[0] {
-		//Monthly threshold
-
-		if currentDate[1] != txnDate[1] {
-			cm, _ := strconv.Atoi(currentDate[1])
-			tm, _ := strconv.Atoi(txnDate[1])
-			result := cm - tm
-			if result <= 1 {
-				duration = "1 month ago"
-				return duration
-			}
-			duration = fmt.Sprintf("%s months ago", strconv.Itoa(result))
-			return duration
-		} else if currentDate[1] == txnDate[1] {
-			//Weekly threshold
-
-			_, currentWeek := time.Now().UTC().ISOWeek()
-			_, txnWeek := time.Unix(timestamp, 0).UTC().ISOWeek()
-			if currentWeek != txnWeek {
-				result := currentWeek - txnWeek
-				if result <= 1 {
-					duration = "1 week ago"
-					return duration
-				}
-				duration = fmt.Sprintf("%s weeks ago", strconv.Itoa(result))
-				return duration
-			} else if currentWeek == txnWeek {
-				//Daily threshold
-
-				if currentDate[2] != txnDate[2] {
-					cd, _ := strconv.Atoi(currentDate[2])
-					td, _ := strconv.Atoi(txnDate[2])
-					result := cd - td
-					if result <= 1 {
-						duration = "1 day ago"
-						return duration
-					}
-					duration = fmt.Sprintf("%s days ago", strconv.Itoa(result))
-					return duration
-				} else if currentDate[2] == txnDate[2] {
-					//Hourly threshold
-
-					if currentTime[0] != txnTime[0] {
-						ch, _ := strconv.Atoi(currentTime[0])
-						th, _ := strconv.Atoi(txnTime[0])
-						result := ch - th
-						if result <= 1 {
-							duration = "Last hour"
-							return duration
-						}
-						duration = fmt.Sprintf("%s hours ago", strconv.Itoa(result))
-						return duration
-					} else if currentTime[0] == txnTime[0] {
-						//Minute threshold
-
-						if currentTime[1] != txnTime[1] {
-							cm, _ := strconv.Atoi(currentTime[1])
-							tm, _ := strconv.Atoi(txnTime[1])
-							result := cm - tm
-							if result <= 1 {
-								duration = "1 minute ago"
-								return duration
-							}
-							duration = fmt.Sprintf("%s minutes ago", strconv.Itoa(result))
-							return duration
-						} else if currentTime[1] == txnTime[1] {
-							duration = "Just now"
-						}
-					}
-				}
-			}
-		}
 	}
+
+	if (monthNow - txnMonth) > 0 {
+		if (monthNow - txnMonth) == 1 {
+			if txnDay < dayNow {
+				duration = WeekDayHourMinuteCalculator(timestamp)
+				return duration
+			}
+
+			duration = fmt.Sprintln("1 month ago")
+			return duration
+		}
+
+		duration = fmt.Sprintf("%d months ago", monthNow-txnMonth)
+		return duration
+	}
+
+	duration = WeekDayHourMinuteCalculator(timestamp)
 
 	return duration
 }
