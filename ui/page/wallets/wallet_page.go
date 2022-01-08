@@ -431,6 +431,16 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 	inset := layout.Inset{
 		Top:  unit.Dp(30),
 		Left: unit.Dp(-120),
+	var leftInset float32
+	if listItem.wal.IsWatchingOnlyWallet() {
+		leftInset = -35
+	} else {
+		leftInset = -130
+	}
+
+	inset := layout.Inset{
+		Top:  unit.Dp(-120),
+		Left: unit.Dp(leftInset),
 	}
 	menu := listItem.optionsMenu
 
