@@ -261,7 +261,7 @@ func DurationAgo(timestamp int64) string {
 		if (yearNow - txnYear) == 1 {
 			if ((txnYearEnd - txnMonth) + (currentYearStart + monthNow)) < 12 {
 				if ((txnYearEnd - txnMonth) + (currentYearStart + monthNow)) == 1 {
-					if txnDay < dayNow {
+					if dayNow < txnDay {
 						duration = WeekDayHourMinuteCalculator(timestamp)
 						return duration
 					}
@@ -283,7 +283,7 @@ func DurationAgo(timestamp int64) string {
 
 	if (monthNow - txnMonth) > 0 {
 		if (monthNow - txnMonth) == 1 {
-			if txnDay < dayNow {
+			if dayNow < txnDay {
 				duration = WeekDayHourMinuteCalculator(timestamp)
 				return duration
 			}
