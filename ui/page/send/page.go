@@ -357,6 +357,7 @@ func (pg *Page) Handle() {
 			if !pg.amount.dcrAmountEditor.Editor.Focused() && !modalShown {
 				pg.amount.dcrAmountEditor.Editor.Focus()
 			}
+			decredmaterial.SwitchEditors(pg.keyEvent, pg.amount.dcrAmountEditor.Editor)
 		default:
 			if pg.sendDestination.accountSwitch.Changed() {
 				if !pg.sendDestination.validate() {
