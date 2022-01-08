@@ -251,6 +251,7 @@ func (pg *WalletSettingsPage) Handle() {
 								pg.Toast.Notify("Wallet removed")
 								pg.PopFragment()
 							} else {
+								pg.WL.Wallet.ClearListeners()
 								pg.Load.Receiver.AllWalletsDeleted <- struct{}{}
 							}
 							pm.Dismiss()

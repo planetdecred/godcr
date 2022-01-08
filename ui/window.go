@@ -391,6 +391,10 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 		case <-win.load.Receiver.WalletRestored:
 			win.changePage(page.NewMainPage(win.load), false)
 		case <-win.load.Receiver.AllWalletsDeleted:
+			if win.currentPage != nil {
+				win.currentPage.OnClose()
+			}
+
 			win.currentPage = nil
 			win.Start()
 		}

@@ -116,6 +116,13 @@ func (wal *Wallet) SetupListeners() {
 	wal.Send <- resp
 }
 
+func (wal *Wallet) ClearListeners() {
+	wal.multi.RemoveAccountMixerNotificationListener(syncID)
+	wal.multi.Politeia.RemoveNotificationListener(syncID)
+	wal.multi.RemoveTxAndBlockNotificationListener(syncID)
+	wal.multi.RemoveSyncProgressListener(syncID)
+}
+
 // wallets returns an up-to-date map of all opened wallets
 func (wal *Wallet) wallets() ([]dcrlibwallet.Wallet, error) {
 	if wal.multi == nil {
