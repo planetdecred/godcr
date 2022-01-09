@@ -139,6 +139,7 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		SyncedProposal:      win.proposal,
 		NotificationsUpdate: make(chan interface{}, 10),
 		WalletRestored:      make(chan struct{}),
+		AllWalletsDeleted:   make(chan struct{}),
 	}
 
 	l.SelectedWallet = &win.selected
@@ -338,11 +339,19 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 			op.InvalidateOp{}.Add(win.ops)
 		case e := <-w.Events():
 			switch evt := e.(type) {
+
 			case system.StageEvent:
 				if evt.Stage == system.StageRunning {
+					err := win.wallet.InitMultiWallet()
+					if err != nil {
+						if err.Error() == dcrlibwallet.ErrWalletDatabaseInUse {
+							close(shutdown)
+							win.unloaded(w)
+							return
+						}
+					}
 					win.Start()
 				}
-
 			case system.DestroyEvent:
 				if win.currentPage != nil {
 					win.currentPage.OnClose()
@@ -361,7 +370,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				if win.currentPage != nil {
 					win.layoutPage(gtx, win.currentPage)
 				} else {
-					win.Loading(gtx)
+					win.Start()
 				}
 
 				evt.Frame(gtx.Ops)
@@ -381,6 +390,13 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 			}
 		case <-win.load.Receiver.WalletRestored:
 			win.changePage(page.NewMainPage(win.load), false)
+		case <-win.load.Receiver.AllWalletsDeleted:
+			if win.currentPage != nil {
+				win.currentPage.OnClose()
+			}
+
+			win.currentPage = nil
+			win.Start()
 		}
 	}
 }

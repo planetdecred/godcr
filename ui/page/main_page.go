@@ -231,13 +231,17 @@ func (mp *MainPage) UpdateBalance() {
 				mp.totalBalanceUSD = load.FormatUSDBalance(mp.Printer, balanceInUSD)
 			}
 		}
-
 	}
 }
 
 func (mp *MainPage) CalculateTotalWalletsBalance() (dcrutil.Amount, error) {
 	totalBalance := int64(0)
-	for _, wallet := range mp.WL.SortedWalletList() {
+	wallets := mp.WL.SortedWalletList()
+	if len(wallets) == 0 {
+		return 0, nil
+	}
+
+	for _, wallet := range wallets {
 		accountsResult, err := wallet.GetAccountsRaw()
 		if err != nil {
 			return 0, err
@@ -292,6 +296,7 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 }
 
 func (mp *MainPage) Handle() {
+
 	mp.drawerNav.CurrentPage = mp.currentPageID()
 	mp.appBarNav.CurrentPage = mp.currentPageID()
 
@@ -521,7 +526,6 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			mp.UpdateBalance()
 			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" {
 				inset := layout.Inset{
 					Top:  values.MarginPadding3,
