@@ -439,7 +439,7 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 	}
 
 	inset := layout.Inset{
-		Top:  unit.Dp(-120),
+		Top:  unit.Dp(-90),
 		Left: unit.Dp(leftInset),
 	}
 	menu := listItem.optionsMenu
@@ -467,7 +467,7 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 						}),
 						layout.Rigid(func(gtx C) D {
 							if menu[i].separate {
-								m := values.MarginPadding5
+								m := values.MarginPadding1
 								return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.separator.Layout)
 							}
 							return D{}
