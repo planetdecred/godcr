@@ -270,9 +270,37 @@ func DurationAgo(timestamp int64) string {
 					return duration
 				}
 
+				monthDiff := ((txnYearEnd - txnMonth) + (currentYearStart + monthNow)) - 1
+				if dayNow < txnDay {
+					if monthDiff == 1 {
+						duration = fmt.Sprintf("%d month ago", monthDiff)
+						return duration
+					}
+
+					duration = fmt.Sprintf("%d months ago", monthDiff)
+					return duration
+				}
+
 				duration = fmt.Sprintf("%d months ago", (txnYearEnd-txnMonth)+(currentYearStart+monthNow))
 				return duration
 			}
+			y := (yearNow - txnYear) - 1
+
+			if dayNow < txnDay {
+				if y == 0 {
+					duration := fmt.Sprintln("11 months ago")
+					return duration
+				}
+
+				if y == 1 {
+					duration = fmt.Sprintf("%d year ago", y)
+					return duration
+				}
+
+				duration = fmt.Sprintf("%d years ago", y)
+				return duration
+			}
+
 			duration = fmt.Sprintf("%d year ago", yearNow-txnYear)
 			return duration
 		}
@@ -289,6 +317,21 @@ func DurationAgo(timestamp int64) string {
 			}
 
 			duration = fmt.Sprintln("1 month ago")
+			return duration
+		}
+
+		if dayNow < txnDay {
+			if (monthNow-txnMonth)-1 == 0 {
+				duration := fmt.Sprintln("3 weeks ago")
+				return duration
+			}
+
+			if (monthNow-txnMonth)-1 == 1 {
+				duration = fmt.Sprintf("%d month ago", (monthNow-txnMonth)-1)
+				return duration
+			}
+
+			duration = fmt.Sprintf("%d months ago", (monthNow-txnMonth)-1)
 			return duration
 		}
 
@@ -469,7 +512,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
 									return D{}
 								}
-								duration := l.Theme.Label(values.TextSize12, DurationAgo(row.Transaction.Timestamp))
+								duration := l.Theme.Label(values.TextSize12, DurationAgo(1610357945))
 								duration.Color = l.Theme.Color.GrayText4
 								return layout.Inset{Left: values.MarginPadding2}.Layout(gtx, duration.Layout)
 							}),
