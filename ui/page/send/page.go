@@ -434,6 +434,11 @@ func (pg *Page) Handle() {
 		pg.amount.validateDCRAmount()
 		pg.validateAndConstructTx()
 	}
+
+	if pg.sendDestination.sendToAddress && pg.amount.SendMax && len(pg.sendDestination.destinationAddressEditor.Editor.Text()) == 0 {
+		pg.amount.dcrAmountEditor.Editor.SetText("")
+		pg.amount.SendMax = false
+	}
 }
 
 func (pg *Page) OnClose() {
