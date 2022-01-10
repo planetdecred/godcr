@@ -29,6 +29,7 @@ type AccountSelector struct {
 	selectedAccount    *dcrlibwallet.Account
 	selectedWalletName string
 	totalBalance       string
+	changed            bool
 }
 
 func NewAccountSelector(l *load.Load) *AccountSelector {
@@ -58,12 +59,21 @@ func (as *AccountSelector) AccountSelected(callback func(*dcrlibwallet.Account))
 	return as
 }
 
+func (as *AccountSelector) Changed() bool {
+	changed := as.changed
+	as.changed = false
+	return changed
+}
+
 func (as *AccountSelector) Handle() {
 	for as.openSelectorDialog.Clicked() {
 		newAccountSelectorModal(as.Load, as.selectedAccount, as.wallets).
 			title(as.dialogTitle).
 			accountValidator(as.accountIsValid).
 			accountSelected(func(account *dcrlibwallet.Account) {
+				if as.selectedAccount.Number != account.Number {
+					as.changed = true
+				}
 				as.setupSelectedAccount(account)
 				as.callback(account)
 			}).Show()

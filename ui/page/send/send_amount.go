@@ -83,7 +83,8 @@ func (sa *sendAmount) setAmount(amount int64) {
 
 func (sa *sendAmount) amountIsValid() bool {
 	_, err := strconv.ParseFloat(sa.dcrAmountEditor.Editor.Text(), 64)
-	return err == nil || sa.SendMax
+	amountEditorErrors := sa.amountErrorText == ""
+	return err == nil && amountEditorErrors || sa.SendMax
 }
 
 func (sa *sendAmount) validAmount() (int64, bool, error) {
@@ -125,6 +126,7 @@ func (sa *sendAmount) validateDCRAmount() {
 
 // validateUSDAmount is called when usd text changes
 func (sa *sendAmount) validateUSDAmount() bool {
+
 	sa.amountErrorText = ""
 	if sa.inputsNotEmpty(sa.usdAmountEditor.Editor) {
 		usdAmount, err := strconv.ParseFloat(sa.usdAmountEditor.Editor.Text(), 64)
