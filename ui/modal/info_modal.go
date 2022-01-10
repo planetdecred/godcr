@@ -49,7 +49,7 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.OutlineButton("Yes"),
 		btnNegative:  l.Theme.OutlineButton("No"),
-		keyEvent:     l.Receiver.KeyEvents,
+		keyEvent:     make(chan *key.Event),
 		isCancelable: true,
 		btnAlignment: layout.E,
 	}
@@ -73,11 +73,11 @@ func (in *InfoModal) Dismiss() {
 }
 
 func (in *InfoModal) OnResume() {
-	in.Load.EnableKeyEventOnInfoModal = true
+	in.Load.SubscribeKeyEvent(in.keyEvent, in.randomID)
 }
 
 func (in *InfoModal) OnDismiss() {
-	in.Load.EnableKeyEventOnInfoModal = false
+	in.Load.UnsubscribeKeyEvent(in.randomID)
 }
 
 func (in *InfoModal) SetCancelable(min bool) *InfoModal {
