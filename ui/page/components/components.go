@@ -512,7 +512,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
 									return D{}
 								}
-								duration := l.Theme.Label(values.TextSize12, DurationAgo(1610357945))
+								duration := l.Theme.Label(values.TextSize12, DurationAgo(row.Transaction.Timestamp))
 								duration.Color = l.Theme.Color.GrayText4
 								return layout.Inset{Left: values.MarginPadding2}.Layout(gtx, duration.Layout)
 							}),
