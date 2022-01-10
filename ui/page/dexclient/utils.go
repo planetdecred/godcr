@@ -37,7 +37,6 @@ const (
 	strAddADex                      = "Add a dex"
 	strStartSyncToUse               = "Start sync to continue"
 	strOrderHistory                 = "Order History"
-	strWalletSetting                = "Wallets Settings"
 	strDexSetting                   = "Dex Settings"
 	strTrade                        = "Trade"
 	strSide                         = "Side"

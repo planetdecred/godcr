@@ -46,6 +46,7 @@ type Page struct {
 	ordersHistoryBtn  *decredmaterial.Clickable
 	dexSettingsBtn    *decredmaterial.Clickable
 	dexSelectBtn      *decredmaterial.Clickable
+	notificationBtn   *decredmaterial.Clickable
 }
 
 func NewMarketPage(l *load.Load) *Page {
@@ -69,6 +70,7 @@ func NewMarketPage(l *load.Load) *Page {
 		dexSettingsBtn:    clickable(),
 		dexSelectBtn:      clickable(),
 		miniTradeFormWdg:  newMiniTradeFormWidget(l),
+		notificationBtn:   clickable(),
 	}
 
 	return pg
@@ -180,14 +182,19 @@ func (pg *Page) headerLayout() layout.Widget {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Right: values.MarginPadding5,
+								}.Layout(gtx, btn(pg.notificationBtn, values.String(values.StrNotifications), orderHistoryIc))
+							}),
+							layout.Rigid(func(gtx C) D {
 								if pg.dexServer == nil {
 									return D{}
 								}
-								return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, btn(pg.ordersHistoryBtn, strOrderHistory, orderHistoryIc))
+								return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, btn(pg.ordersHistoryBtn, strOrderHistory, orderHistoryIc))
 							}),
-							layout.Rigid(btn(pg.walletSettingsBtn, strWalletSetting, walletIc)),
+							layout.Rigid(btn(pg.walletSettingsBtn, values.String(values.StrWallets), walletIc)),
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, btn(pg.dexSettingsBtn, strDexSetting, dexSettingIc))
+								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, btn(pg.dexSettingsBtn, strDexSetting, dexSettingIc))
 							}),
 						)
 					})
@@ -301,12 +308,14 @@ func (pg *Page) HandleUserInteractions() {
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(strLogin, func(password string, pm *modal.PasswordModal) bool {
 				go func() {
-					err := pg.Dexc().Login([]byte(password))
+					results, err := pg.Dexc().Login([]byte(password))
 					if err != nil {
 						pm.SetError(err.Error())
 						pm.SetLoading(false)
 						return
 					}
+					pg.WL.MultiWallet.SaveUserConfigValue(dexNotificationConfigKey, &results.Notifications)
+
 					// Check if there is no dexServer registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
 						pm.Dismiss()
@@ -383,6 +392,10 @@ func (pg *Page) HandleUserInteractions() {
 					go pg.listenerMessages(pg.dexServer.Host, pg.market.BaseID, pg.market.QuoteID)
 				}
 			}).Show()
+	}
+
+	if pg.notificationBtn.Clicked() {
+		newNotificationModal(pg.Load).Show()
 	}
 }
 

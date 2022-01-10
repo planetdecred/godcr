@@ -70,7 +70,7 @@ func (pg *DexWalletsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      strWalletSetting,
+			Title:      values.String(values.StrWallets),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
