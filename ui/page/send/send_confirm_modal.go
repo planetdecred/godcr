@@ -30,6 +30,8 @@ type sendConfirmModal struct {
 
 	*authoredTxData
 	exchangeRateSet bool
+	isShown         bool
+	parent          load.Page // Reference to the page that this modal is shown on.
 }
 
 func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
@@ -60,10 +62,16 @@ func (scm *sendConfirmModal) ModalID() string {
 }
 
 func (scm *sendConfirmModal) Show() {
+	scm.isShown = true
 	scm.ShowModal(scm)
 }
 
 func (scm *sendConfirmModal) Dismiss() {
+	scm.isShown = false
+	// Call Parent's onResume to resubscribe parent for key events.
+	if scm.parent != nil {
+		scm.parent.OnResume()
+	}
 	scm.DismissModal(scm)
 }
 
@@ -73,6 +81,16 @@ func (scm *sendConfirmModal) OnResume() {
 
 func (scm *sendConfirmModal) OnDismiss() {
 
+}
+
+func (scm *sendConfirmModal) IsShown() bool {
+	return scm.isShown
+}
+
+// SetParent sets the page that created sendConfirmModal as it's parent.
+func (scm *sendConfirmModal) SetParent(parent load.Page) *sendConfirmModal {
+	scm.parent = parent
+	return scm
 }
 
 func (scm *sendConfirmModal) broadcastTransaction() {

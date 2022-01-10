@@ -37,7 +37,7 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg := &VerifyMessagePage{
 		Load:               l,
 		verifyMessage:      l.Theme.Body1(""),
-		keyEvent:           l.Receiver.KeyEvents,
+		keyEvent:           make(chan *key.Event),
 		EnableEditorSwitch: false,
 	}
 
@@ -69,7 +69,7 @@ func (pg *VerifyMessagePage) ID() string {
 
 func (pg *VerifyMessagePage) OnResume() {
 	pg.addressEditor.Editor.Focus()
-	pg.Load.EnableKeyEvent = true
+	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 }
 
 func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
@@ -245,5 +245,5 @@ func (pg *VerifyMessagePage) validateAddress() bool {
 }
 
 func (pg *VerifyMessagePage) OnClose() {
-	pg.Load.EnableKeyEvent = false
+	pg.Load.UnsubscribeKeyEvent(pg.ID())
 }

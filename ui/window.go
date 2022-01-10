@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -55,7 +56,7 @@ type Window struct {
 
 	err string
 
-	keyEvents             chan *key.Event
+	keyEvents             map[string]chan *key.Event
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
@@ -98,7 +99,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win.wallet = wal
 	win.states.loading = false
 
-	win.keyEvents = make(chan *key.Event)
+	win.keyEvents = make(map[string]chan *key.Event)
 
 	l, err := win.NewLoad()
 	if err != nil {
@@ -148,6 +149,8 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	l.DismissModal = win.dismissModal
 	l.PopWindowPage = win.popPage
 	l.ChangeWindowPage = win.changePage
+	l.SubscribeKeyEvent = win.SubscribeKeyEvent
+	l.UnsubscribeKeyEvent = win.UnsubscribeKeyEvent
 
 	return l, nil
 }
@@ -264,6 +267,21 @@ func (win *Window) layoutPage(gtx C, page load.Page) {
 	)
 }
 
+// SubscribeKeyEvent subscribes pages for key events.
+func (win *Window) SubscribeKeyEvent(eventChan chan *key.Event, pageID string) {
+	win.keyEvents[pageID] = eventChan
+}
+
+// UnsubscribeKeyEvent unsubscribe a page with {pageID} from receiving key events.
+func (win *Window) UnsubscribeKeyEvent(pageID string) error {
+	if _, ok := win.keyEvents[pageID]; ok {
+		delete(win.keyEvents, pageID)
+		return nil
+	}
+
+	return errors.New("Page not subscribed for key events")
+}
+
 // Loop runs main event handling and page rendering loop
 func (win *Window) Loop(w *app.Window, shutdown chan int) {
 	for {
@@ -376,11 +394,8 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				evt.Frame(gtx.Ops)
 			case key.Event:
 				go func() {
-					if win.load.EnableKeyEvent {
-						win.keyEvents <- &evt
-					}
-					if win.load.EnableKeyEventOnInfoModal {
-						win.keyEvents <- &evt
+					for _, c := range win.keyEvents {
+						c <- &evt
 					}
 				}()
 			case nil:
