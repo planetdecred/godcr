@@ -28,6 +28,7 @@ const OverviewPageID = "staking"
 type Page struct {
 	*load.Load
 
+	ticketBuyerWallet *dcrlibwallet.Wallet
 	ticketPageContainer *layout.List
 	ticketsLive         *decredmaterial.ClickableList
 
@@ -71,6 +72,7 @@ func NewStakingPage(l *load.Load) *Page {
 	pg.autoPurchaseSettings.Inset = layout.UniformInset(values.MarginPadding0)
 
 	pg.ticketOverview = new(dcrlibwallet.StakingOverview)
+
 	return pg
 }
 
@@ -96,6 +98,31 @@ func (pg *Page) OnNavigatedTo() {
 		}
 		pg.WL.VspInfo = list
 	}()
+
+	pg.updateTBToggle()
+}
+
+func (pg *Page) updateTBToggle() {
+	wal := pg.getTBWalletInfo()
+	if wal != nil {
+		pg.autoPurchase.SetChecked(wal.IsAutoTicketsPurchaseActive())
+	}else{
+		pg.autoPurchase.SetChecked(false)
+	}
+}
+
+func (pg *Page) getTBWalletInfo() *dcrlibwallet.Wallet {
+	if pg.WL.MultiWallet.TicketBuyerConfigIsSet() {
+		_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+		wal := pg.WL.MultiWallet.WalletWithID(walID)
+		if wal != nil {
+			return wal
+		}
+
+		return nil
+	}
+
+	return nil
 }
 
 func (pg *Page) loadPageData() {
@@ -489,20 +516,36 @@ func (pg *Page) HandleUserInteractions() {
 					}).
 					Show()
 			}
+		}else{
+		_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+			pg.autoPurchase.SetChecked(false)
+			go pg.WL.MultiWallet.StopAutoTicketsPurchase(walID)
 		}
 	}
 
 	if pg.autoPurchaseSettings.Button.Clicked() {
-		newTicketBuyerModal(pg.Load).
-			SettingsSaved(func() {
-				pg.Toast.Notify("Auto ticket purchase setting saved successfully")
-			}).
-			CancelSave(func() {
-				pg.autoPurchase.SetChecked(false)
-			}).
-			Show()
-	}
+		wal := pg.getTBWalletInfo()
+		if wal != nil {
+			if wal.IsAutoTicketsPurchaseActive(){
+				return
+			}
 
+			pg.ticketBuyerSettingsModal()
+		}else{
+			pg.ticketBuyerSettingsModal()
+		}
+	}
+}
+
+func (pg *Page) ticketBuyerSettingsModal() {
+	newTicketBuyerModal(pg.Load).
+	SettingsSaved(func() {
+		pg.Toast.Notify("Auto ticket purchase setting saved successfully")
+	}).
+	CancelSave(func() {
+		pg.autoPurchase.SetChecked(false)
+	}).
+	Show()
 }
 
 func (pg *Page) startTicketBuyerPasswordModal() {
@@ -555,7 +598,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 					return
 				}
 
-				err = vsp.AutoTicketsPurchase(int64(balToMaintain), []byte(password))
+				err = vsp.AutoTicketsPurchase(b2m, []byte(password))
 				if err != nil {
 					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 						pm.SetError("Invalid password")
@@ -566,7 +609,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 					return
 				}
 
-				// pm.Dismiss()
+				pg.updateTBToggle()
 			}()
 
 			pm.Dismiss()

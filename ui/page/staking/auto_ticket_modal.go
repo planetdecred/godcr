@@ -133,7 +133,6 @@ func (tb *ticketBuyerModal) Layout(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{
 							Right: values.MarginPadding4,
-							// Bottom: values.MarginPadding15,
 						}.Layout(gtx, tb.cancel.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
