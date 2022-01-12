@@ -81,7 +81,7 @@ func (md *depositModal) Handle() {
 
 	if md.copyBtn.Clicked() {
 		clipboard.WriteOp{Text: md.wallAddress}.Add(gtx.Ops)
-		md.Toast.Notify(strSuccessfully)
+		md.Toast.Notify(strSuccessful)
 		return
 	}
 

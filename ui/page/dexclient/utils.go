@@ -17,6 +17,7 @@ import (
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/dex"
 	"decred.org/dcrdex/dex/order"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 const (
@@ -67,7 +68,7 @@ const (
 	strUnLock                       = "Unlock"
 	strIHave                        = "I have"
 	strIGet                         = "I get"
-	strSuccessfully                 = "Successfully!"
+	strSuccessful                   = "Successfully!"
 	strOk                           = "Ok"
 	strAddress                      = "Address"
 	strAmount                       = "Amount"
@@ -334,7 +335,7 @@ func minMaxRateOrderBook(orders []*core.MiniOrder) (float64, float64) {
 
 // sliceExchanges convert mapExchanges into a sorted slice
 func sliceExchanges(mapExchanges map[string]*core.Exchange) []*core.Exchange {
-	exchanges := make([]*core.Exchange, 0)
+	exchanges := make([]*core.Exchange, 0, len(mapExchanges))
 	for _, dexServer := range mapExchanges {
 		exchanges = append(exchanges, dexServer)
 	}
@@ -346,7 +347,7 @@ func sliceExchanges(mapExchanges map[string]*core.Exchange) []*core.Exchange {
 
 // sliceMarkets convert mapMarkets into a sorted slice
 func sliceMarkets(mapMarkets map[string]*core.Market) []*core.Market {
-	markets := make([]*core.Market, 0)
+	markets := make([]*core.Market, 0, len(mapMarkets))
 	for _, market := range mapMarkets {
 		markets = append(markets, market)
 	}
@@ -354,6 +355,30 @@ func sliceMarkets(mapMarkets map[string]*core.Market) []*core.Market {
 		return markets[i].Name < markets[j].Name
 	})
 	return markets
+}
+
+// sliceFeeAsset convert map FeeAsset into a sorted slice
+func sliceFeeAsset(mapFeeAsset map[string]*core.FeeAsset) []*core.FeeAsset {
+	feeAssets := make([]*core.FeeAsset, 0, len(mapFeeAsset))
+	for _, feeAsset := range mapFeeAsset {
+		feeAssets = append(feeAssets, feeAsset)
+	}
+	sort.Slice(feeAssets, func(i, j int) bool {
+		return feeAssets[i].ID < feeAssets[j].ID
+	})
+	return feeAssets
+}
+
+// sliceSever convert map cert into a sorted slice
+func sliceSever(mapCert map[string][]byte) []string {
+	servers := make([]string, 0, len(mapCert))
+	for host := range mapCert {
+		servers = append(servers, host)
+	}
+	sort.Slice(servers, func(i, j int) bool {
+		return servers[i] < servers[j]
+	})
+	return servers
 }
 
 func getCertFromFile(certFilePath string) ([]byte, error) {
@@ -410,4 +435,12 @@ func formatAmountUnit(assetID uint32, assetName string, amount uint64) string {
 func formatAmount(amount uint64, unitInfo *dex.UnitInfo) string {
 	convertedAmount := float64(amount) / float64(unitInfo.Conventional.ConversionFactor)
 	return strconv.FormatFloat(convertedAmount, 'f', -1, 64)
+}
+
+func walletSyncPercentage(wall *core.WalletState) string {
+	var percentage float32 = 0
+	if wall.SyncProgress != 1 {
+		percentage = wall.SyncProgress * 100
+	}
+	return fmt.Sprintf("%.2f%% %s", percentage, values.String(values.StrSynced))
 }

@@ -6,8 +6,10 @@ import (
 
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/client/db"
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -33,6 +35,8 @@ type Page struct {
 	orderBook        *core.OrderBook
 	dexServer        *core.Exchange
 	market           *core.Market
+	shouldStartDex   bool
+	materialLoader   material.LoaderStyle
 
 	loginBtn          decredmaterial.Button
 	initializeBtn     decredmaterial.Button
@@ -54,6 +58,8 @@ func NewMarketPage(l *load.Load) *Page {
 
 	pg := &Page{
 		Load:              l,
+		shouldStartDex:    l.Dexc().Core() == nil,
+		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
 		loginBtn:          l.Theme.Button(strLogin),
 		initializeBtn:     l.Theme.Button(strStartUseDex),
 		addDexBtn:         l.Theme.Button(strAddADex),
@@ -81,17 +87,19 @@ func (pg *Page) ID() string {
 func (pg *Page) Layout(gtx C) D {
 	body := func(gtx C) D {
 		switch {
+		case pg.Dexc().Core() == nil: // Need start DEX client
+			return pg.pageSections(gtx, pg.welcomeLayout(nil))
 		case !pg.WL.MultiWallet.IsConnectedToDecredNetwork():
-			return pg.pageSections(gtx, pg.welcomeLayout(pg.syncBtn))
+			return pg.pageSections(gtx, pg.welcomeLayout(&pg.syncBtn))
 		case !pg.Dexc().Initialized():
-			return pg.pageSections(gtx, pg.welcomeLayout(pg.initializeBtn))
+			return pg.pageSections(gtx, pg.welcomeLayout(&pg.initializeBtn))
 		case !pg.Dexc().IsLoggedIn():
-			return pg.pageSections(gtx, pg.welcomeLayout(pg.loginBtn))
+			return pg.pageSections(gtx, pg.welcomeLayout(&pg.loginBtn))
 		case pg.dexServer == nil:
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.headerLayout()),
 				layout.Rigid(func(gtx C) D {
-					return pg.pageSections(gtx, pg.welcomeLayout(pg.addDexBtn))
+					return pg.pageSections(gtx, pg.welcomeLayout(&pg.addDexBtn))
 				}),
 			)
 		default:
@@ -196,15 +204,25 @@ func (pg *Page) pageSections(gtx layout.Context, body layout.Widget) layout.Dime
 	})
 }
 
-func (pg *Page) welcomeLayout(button decredmaterial.Button) layout.Widget {
+func (pg *Page) welcomeLayout(button *decredmaterial.Button) layout.Widget {
 	return func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					description := "Trade crypto peer-to-peer.\n"
-					return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
+					return layout.Center.Layout(gtx, pg.Theme.H5("Trade crypto peer-to-peer.\n").Layout)
 				}),
-				layout.Rigid(button.Layout),
+				layout.Rigid(func(gtx C) D {
+					if pg.shouldStartDex {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							gtx.Constraints.Min.X = 50
+							return pg.materialLoader.Layout(gtx)
+						})
+					}
+					if button == nil {
+						return D{}
+					}
+					return button.Layout(gtx)
+				}),
 			)
 		})
 	}
@@ -255,8 +273,12 @@ func (pg *Page) initMiniTradeForm() {
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	go pg.readNotifications()
+	if pg.Dexc().Core() == nil {
+		go pg.startDexClient()
+		return
+	}
 
+	go pg.readNotifications()
 	if pg.initDexServer() && pg.initMarket() && pg.Dexc().IsLoggedIn() {
 		go pg.listenerMessages(pg.dexServer.Host, pg.market.BaseID, pg.market.QuoteID)
 	}
@@ -269,7 +291,20 @@ func (pg *Page) OnNavigatedTo() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *Page) OnNavigatedFrom() {
+func (pg *Page) OnNavigatedFrom() {}
+
+func (pg *Page) startDexClient() {
+	_, err := pg.WL.MultiWallet.StartDexClient()
+	pg.shouldStartDex = false
+	if err != nil {
+		pg.Toast.NotifyError(err.Error())
+		return
+	}
+
+	pg.readNotifications()
+}
+
+func (pg *Page) OnClose() {
 	pg.ctxCancel()
 }
 
@@ -299,12 +334,11 @@ func (pg *Page) HandleUserInteractions() {
 						pm.SetLoading(false)
 						return
 					}
-					pm.Dismiss()
-
 					// Check if there is no dexServer registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
+						pm.Dismiss()
 						newAddDexModal(pg.Load).WithAppPassword(password).
-							DexCreated(func(dexServer *core.Exchange) {
+							OnDexAdded(func(dexServer *core.Exchange) {
 								pg.dexCreated(dexServer)
 							}).Show()
 						return
@@ -313,6 +347,7 @@ func (pg *Page) HandleUserInteractions() {
 					if pg.initDexServer() && pg.initMarket() {
 						go pg.listenerMessages(pg.dexServer.Host, pg.market.BaseID, pg.market.QuoteID)
 					}
+					pm.Dismiss()
 				}()
 				return false
 			}).Show()
@@ -333,12 +368,12 @@ func (pg *Page) HandleUserInteractions() {
 						m.SetLoading(false)
 						return
 					}
-					pg.Toast.Notify(strSuccessfully)
+					pg.Toast.Notify(strSuccessful)
 					m.Dismiss()
 					// Check if there is no dexServer registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
 						newAddDexModal(pg.Load).WithAppPassword(password).
-							DexCreated(func(dexServer *core.Exchange) {
+							OnDexAdded(func(dexServer *core.Exchange) {
 								pg.dexCreated(dexServer)
 							}).Show()
 					}
@@ -348,14 +383,12 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.addDexBtn.Button.Clicked() {
-		newAddDexModal(pg.Load).DexCreated(func(dexServer *core.Exchange) {
+		newAddDexModal(pg.Load).OnDexAdded(func(dexServer *core.Exchange) {
 			pg.dexCreated(dexServer)
 		}).Show()
 	}
 
-	if pg.miniTradeFormWdg != nil {
-		pg.miniTradeFormWdg.handle(pg.orderBook)
-	}
+	pg.miniTradeFormWdg.handle(pg.orderBook)
 
 	if pg.walletSettingsBtn.Clicked() {
 		pg.ChangeFragment(NewDexWalletsPage(pg.Load))
