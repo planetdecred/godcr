@@ -33,21 +33,15 @@ type addDexModal struct {
 
 	// appPass is the password value after login or initialize to continue processing add new DEX
 	// the Add Dex Modal won't show password input on UI
-	appPass      string
-	appPassword  decredmaterial.Editor
-	onDexCreated func(*core.Exchange)
+	appPass     string
+	appPassword decredmaterial.Editor
+	onDexAdded  func(*core.Exchange)
 
-	listServer        *widget.List
-	listExchangeWdg   []*knownExchangeWidget
-	selectedServer    string
-	listServerBtn     decredmaterial.Button
-	customServerBtn   decredmaterial.Button
-	isUseCustomServer bool
-}
-
-type knownExchangeWidget struct {
-	selectBtn *decredmaterial.Clickable
-	host      string
+	listServerClickable map[string]*decredmaterial.Clickable
+	selectedServer      string
+	listServerBtn       decredmaterial.Button
+	customServerBtn     decredmaterial.Button
+	isUseCustomServer   bool
 }
 
 func newAddDexModal(l *load.Load) *addDexModal {
@@ -55,6 +49,22 @@ func newAddDexModal(l *load.Load) *addDexModal {
 		cl := l.Theme.NewClickable(true)
 		cl.Radius = decredmaterial.Radius(0)
 		return cl
+	}
+
+	tabButton := func(text string, active bool) decredmaterial.Button {
+		btn := l.Theme.OutlineButton(text)
+		btn.CornerRadius = values.MarginPadding0
+		btn.Inset = layout.Inset{
+			Top:    values.MarginPadding5,
+			Bottom: values.MarginPadding5,
+			Left:   values.MarginPadding9,
+			Right:  values.MarginPadding9,
+		}
+		btn.TextSize = values.TextSize14
+		if !active {
+			btn.Background = l.Theme.Color.Background
+		}
+		return btn
 	}
 
 	md := &addDexModal{
@@ -66,23 +76,9 @@ func newAddDexModal(l *load.Load) *addDexModal {
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), strAppPassword),
 		fileSelectBtn:    clickable(),
-		listServerBtn:    l.Theme.OutlineButton(strPickAServer),
-		customServerBtn:  l.Theme.OutlineButton(strCustomServer),
-		listServer: &widget.List{
-			List: layout.List{Axis: layout.Vertical},
-		},
+		listServerBtn:    tabButton(strPickAServer, true),
+		customServerBtn:  tabButton(strCustomServer, false),
 	}
-
-	md.customServerBtn.Background = l.Theme.Color.Background
-	md.listServerBtn.CornerRadius, md.customServerBtn.CornerRadius = values.MarginPadding0, values.MarginPadding0
-	inset := layout.Inset{
-		Top:    values.MarginPadding5,
-		Bottom: values.MarginPadding5,
-		Left:   values.MarginPadding9,
-		Right:  values.MarginPadding9,
-	}
-	md.listServerBtn.Inset, md.customServerBtn.Inset = inset, inset
-	md.listServerBtn.TextSize, md.customServerBtn.TextSize = values.TextSize14, values.TextSize14
 
 	md.appPassword.Editor.SingleLine = true
 	md.dexServerAddress.Editor.SingleLine = true
@@ -121,22 +117,18 @@ func (md *addDexModal) OnResume() {
 	}
 
 	// Initialize listExchangeWdg.
-	certs := core.CertStore[md.Dexc().Core().Network()]
-	md.listExchangeWdg = make([]*knownExchangeWidget, 0)
-	for host := range certs {
-		md.listExchangeWdg = append(md.listExchangeWdg, &knownExchangeWidget{
-			host:      host,
-			selectBtn: clickable(),
-		})
+	listServer := sliceSever(core.CertStore[md.Dexc().Core().Network()])
+	md.listServerClickable = make(map[string]*decredmaterial.Clickable, len(listServer))
+	for i := 0; i < len(listServer); i++ {
+		md.listServerClickable[listServer[i]] = clickable()
 	}
-
-	if len(md.listExchangeWdg) > 0 {
-		md.selectedServer = md.listExchangeWdg[0].host
+	if len(listServer) > 0 {
+		md.selectedServer = listServer[0]
 	}
 }
 
-func (md *addDexModal) DexCreated(callback func(*core.Exchange)) *addDexModal {
-	md.onDexCreated = callback
+func (md *addDexModal) OnDexAdded(callback func(*core.Exchange)) *addDexModal {
+	md.onDexAdded = callback
 	return md
 }
 
@@ -175,13 +167,13 @@ func (md *addDexModal) Handle() {
 		md.certFilePath = filePath
 	}
 
-	for _, eWdg := range md.listExchangeWdg {
-		if eWdg.selectBtn.Clicked() {
-			if md.selectedServer == eWdg.host {
+	for host, cl := range md.listServerClickable {
+		if cl.Clicked() {
+			if md.selectedServer == host {
 				md.selectedServer = ""
 				break
 			}
-			md.selectedServer = eWdg.host
+			md.selectedServer = host
 			break
 		}
 	}
@@ -194,6 +186,10 @@ func (md *addDexModal) Handle() {
 		md.isSending = true
 		md.modal.SetDisabled(true)
 		go func() {
+			defer func() {
+				md.isSending = false
+			}()
+
 			var cert []byte
 			serverAddr := md.selectedServer
 
@@ -222,7 +218,6 @@ func (md *addDexModal) Handle() {
 				return
 			}
 
-			md.isSending = true
 			dexServer, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(appPass), cert)
 			md.isSending = false
 			md.modal.SetDisabled(false)
@@ -234,21 +229,20 @@ func (md *addDexModal) Handle() {
 
 			md.Dismiss()
 			if paid {
-				md.onDexCreated(dexServer)
+				md.onDexAdded(dexServer)
 				return
 			}
 
-			cfReg := &confirmRegistration{
-				Load:      md.Load,
-				Exchange:  dexServer,
-				isSending: &md.isSending,
-				Show:      md.Show,
-				completed: md.onDexCreated,
-				Dismiss:   md.Dismiss,
-			}
-
 			newAssetSelectorModal(md.Load, dexServer).
-				AssetSelected(func(asset *core.SupportedAsset) {
+				OnAssetSelected(func(asset *core.SupportedAsset) {
+					cfReg := &confirmRegistration{
+						Load:      md.Load,
+						Exchange:  dexServer,
+						isSending: &md.isSending,
+						Show:      md.Show,
+						completed: md.onDexAdded,
+						Dismiss:   md.Dismiss,
+					}
 					feeAssetName := asset.Symbol
 					if asset.Wallet != nil {
 						cfReg.confirm(feeAssetName, appPass, cert)
@@ -333,29 +327,38 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 }
 
 func (md *addDexModal) listServerLayout(gtx C) D {
-	return md.Theme.List(md.listServer).Layout(gtx, len(md.listExchangeWdg), func(gtx C, i int) D {
-		return md.listExchangeWdg[i].selectBtn.Layout(gtx, func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Inset{
-				Top:    values.MarginPadding8,
-				Bottom: values.MarginPadding8,
-				Left:   values.MarginPadding12,
-				Right:  values.MarginPadding12,
-			}.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(md.Theme.Label(values.MarginPadding14, md.listExchangeWdg[i].host).Layout),
-					layout.Rigid(func(gtx C) D {
-						if md.selectedServer != md.listExchangeWdg[i].host {
-							return D{}
-						}
-						gtx.Constraints.Min.X = 30
-						ic := md.Load.Icons.NavigationCheck
-						return ic.Layout(gtx, md.Theme.Color.Success)
-					}),
-				)
+	listServer := sliceSever(core.CertStore[md.Dexc().Core().Network()])
+	var childrens = make([]layout.FlexChild, 0, len(listServer))
+
+	for i := 0; i < len(listServer); i++ {
+		host := listServer[i]
+
+		childrens = append(childrens, layout.Rigid(func(gtx C) D {
+			return md.listServerClickable[host].Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.Inset{
+					Top:    values.MarginPadding8,
+					Bottom: values.MarginPadding8,
+					Left:   values.MarginPadding12,
+					Right:  values.MarginPadding12,
+				}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(md.Theme.Label(values.MarginPadding14, host).Layout),
+						layout.Rigid(func(gtx C) D {
+							if md.selectedServer != host {
+								return D{}
+							}
+							gtx.Constraints.Min.X = 30
+							ic := md.Load.Icons.NavigationCheck
+							return ic.Layout(gtx, md.Theme.Color.Success)
+						}),
+					)
+				})
 			})
-		})
-	})
+		}))
+	}
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx, childrens...)
 }
 
 func (md *addDexModal) customServerLayout(gtx C) D {

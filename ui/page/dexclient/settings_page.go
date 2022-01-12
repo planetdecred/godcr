@@ -67,7 +67,7 @@ func (pg *DexSettingsPage) ID() string {
 func (pg *DexSettingsPage) OnResume() {
 }
 
-func (pg *DexSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *DexSettingsPage) Layout(gtx layout.Context) D {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -76,23 +76,18 @@ func (pg *DexSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			Back: func() {
 				pg.PopFragment()
 			},
-			Body: func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{
-					Left:  values.MarginPadding10,
-					Right: values.MarginPadding10,
-				}.Layout(gtx, func(gtx C) D {
-					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-							gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-							wdgs := []func(gtx C) D{
-								pg.exchangesInfoLayout,
-								pg.addDexAndImportAccountLayout,
-								pg.changeAppPasswordLayout,
-							}
-							return pg.pageContainer.Layout(gtx, len(wdgs), func(gtx C, i int) D {
-								return wdgs[i](gtx)
-							})
+			Body: func(gtx layout.Context) D {
+				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+						wdgs := []func(gtx C) D{
+							pg.exchangesInfoLayout,
+							pg.addDexAndImportAccountLayout,
+							pg.changeAppPasswordLayout,
+						}
+						return pg.pageContainer.Layout(gtx, len(wdgs), func(gtx C, i int) D {
+							return wdgs[i](gtx)
 						})
 					})
 				})
@@ -298,7 +293,7 @@ func (pg *DexSettingsPage) Handle() {
 	}
 
 	if pg.addDexBtn.Button.Clicked() {
-		newAddDexModal(pg.Load).DexCreated(func(_ *core.Exchange) {
+		newAddDexModal(pg.Load).OnDexAdded(func(_ *core.Exchange) {
 			pg.initExchangeWidget()
 			pg.RefreshWindow()
 		}).Show()
@@ -395,7 +390,7 @@ func (pg *DexSettingsPage) Handle() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify(strSuccessfully)
+								pg.Toast.Notify(strSuccessful)
 								m.Dismiss()
 								pg.RefreshWindow()
 							}()

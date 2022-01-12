@@ -59,49 +59,44 @@ func (pg *OrdersHistoryPage) Layout(gtx layout.Context) layout.Dimensions {
 				pg.PopFragment()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{
-					Left:  values.MarginPadding10,
-					Right: values.MarginPadding10,
-				}.Layout(gtx, func(gtx C) D {
-					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-							gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
+				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Flexed(0.125, pg.layoutLabel(strTrade)),
+									layout.Flexed(0.125, pg.layoutLabel(strSide)),
+									layout.Flexed(0.125, pg.layoutLabel(strRate)),
+									layout.Flexed(0.125, pg.layoutLabel(strQuantity)),
+									layout.Flexed(0.125, pg.layoutLabel(strFilled)),
+									layout.Flexed(0.125, pg.layoutLabel(strSettled)),
+									layout.Flexed(0.125, pg.layoutLabel(strStatus)),
+									layout.Flexed(0.125, pg.layoutLabel(strTime)),
+								)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Top:    values.MarginPadding8,
+									Bottom: values.MarginPadding8}.Layout(gtx, pg.Theme.Separator().Layout)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return pg.Theme.List(pg.list).Layout(gtx, len(pg.orders), func(gtx C, i int) D {
+									order := pg.orders[i]
 									return layout.Flex{}.Layout(gtx,
-										layout.Flexed(0.125, pg.layoutLabel(strTrade)),
-										layout.Flexed(0.125, pg.layoutLabel(strSide)),
-										layout.Flexed(0.125, pg.layoutLabel(strRate)),
-										layout.Flexed(0.125, pg.layoutLabel(strQuantity)),
-										layout.Flexed(0.125, pg.layoutLabel(strFilled)),
-										layout.Flexed(0.125, pg.layoutLabel(strSettled)),
-										layout.Flexed(0.125, pg.layoutLabel(strStatus)),
-										layout.Flexed(0.125, pg.layoutLabel(strTime)),
+										layout.Flexed(0.125, pg.layoutLabel(typeString(order))),
+										layout.Flexed(0.125, pg.layoutLabel(sellString(order))),
+										layout.Flexed(0.125, pg.layoutLabel(rateString(order))),
+										layout.Flexed(0.125, pg.layoutLabel(formatCoinValue(order.Qty))),
+										layout.Flexed(0.125, pg.layoutLabel(fmt.Sprintf("%.1f%%", (float64(order.Filled)/float64(order.Qty))*100))),
+										layout.Flexed(0.125, pg.layoutLabel(fmt.Sprintf("%.1f%%", settled(order)/float64(order.Qty)*100))),
+										layout.Flexed(0.125, pg.layoutLabel(statusString(order))),
+										layout.Flexed(0.125, pg.layoutLabel(timeSince(order.Stamp))),
 									)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Top:    values.MarginPadding8,
-										Bottom: values.MarginPadding8}.Layout(gtx, pg.Theme.Separator().Layout)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return pg.Theme.List(pg.list).Layout(gtx, len(pg.orders), func(gtx C, i int) D {
-										order := pg.orders[i]
-										return layout.Flex{}.Layout(gtx,
-											layout.Flexed(0.125, pg.layoutLabel(typeString(order))),
-											layout.Flexed(0.125, pg.layoutLabel(sellString(order))),
-											layout.Flexed(0.125, pg.layoutLabel(rateString(order))),
-											layout.Flexed(0.125, pg.layoutLabel(formatCoinValue(order.Qty))),
-											layout.Flexed(0.125, pg.layoutLabel(fmt.Sprintf("%.1f%%", (float64(order.Filled)/float64(order.Qty))*100))),
-											layout.Flexed(0.125, pg.layoutLabel(fmt.Sprintf("%.1f%%", settled(order)/float64(order.Qty)*100))),
-											layout.Flexed(0.125, pg.layoutLabel(statusString(order))),
-											layout.Flexed(0.125, pg.layoutLabel(timeSince(order.Stamp))),
-										)
-									})
-								}),
-							)
-						})
+								})
+							}),
+						)
 					})
 				})
 			},

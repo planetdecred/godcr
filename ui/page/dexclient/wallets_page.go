@@ -149,12 +149,7 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 					layout.Rigid(func(gtx C) D {
 						if asset.Wallet != nil {
 							if asset.Wallet.Running && !asset.Wallet.Synced {
-								syncPercentage := asset.Wallet.SyncProgress * 100
-								// TODO: dunno why asset.Wallet.Synced not synced but SyncProgress equal 1
-								if asset.Wallet.SyncProgress == 1 {
-									syncPercentage = 0
-								}
-								return pg.Theme.Body2(fmt.Sprintf("%s %.2f%%", values.String(values.StrSyncingState), syncPercentage)).Layout(gtx)
+								return pg.Theme.Body2(walletSyncPercentage(asset.Wallet)).Layout(gtx)
 							}
 						}
 						return D{}
