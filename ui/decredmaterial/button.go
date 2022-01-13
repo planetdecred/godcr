@@ -106,6 +106,13 @@ func (t *Theme) IconButton(icon *widget.Icon) IconButton {
 	}
 }
 
+func (t *Theme) IconButtonWithStyle(ibs IconButtonStyle, colorStyle *values.ColorStyle) IconButton {
+	return IconButton{
+		ibs,
+		colorStyle,
+	}
+}
+
 func (b *Button) SetClickable(clickable *widget.Clickable) {
 	b.clickable = clickable
 }
@@ -195,6 +202,8 @@ func (bl ButtonLayout) Layout(gtx layout.Context, w layout.Widget) layout.Dimens
 }
 
 // TODO: Test to ensure this works!
+// TODO: Doesn't work, if ib.colorStyle was nil before this method is called,
+// it is temporarily changed but when ib.Layout is called, it returns to nil.
 func (ib IconButton) ChangeColorStyle(colorStyle *values.ColorStyle) {
 	ib.colorStyle = colorStyle
 }

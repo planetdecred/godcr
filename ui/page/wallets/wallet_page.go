@@ -168,19 +168,18 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 		}
 
 		if wal.IsWatchingOnlyWallet() {
-			moreBtn := decredmaterial.IconButton{
-				IconButtonStyle: decredmaterial.IconButtonStyle{
+			listItem.moreButton = pg.Theme.IconButtonWithStyle(
+				decredmaterial.IconButtonStyle{
 					Button: new(widget.Clickable),
 					Icon:   pg.Icons.NavigationMore,
 					Size:   values.MarginPadding25,
 					Inset:  layout.UniformInset(values.MarginPadding0),
 				},
-			}
-			moreBtn.ChangeColorStyle(&values.ColorStyle{
-				Background: color.NRGBA{},
-				Foreground: pg.Theme.Color.Text,
-			})
-			listItem.moreButton = moreBtn
+				&values.ColorStyle{
+					Background: color.NRGBA{},
+					Foreground: pg.Theme.Color.Text,
+				},
+			)
 		} else {
 			listItem.addAcctClickable = pg.Theme.NewClickable(true)
 
@@ -365,7 +364,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
+				return pg.Theme.List(pg.container).Layout(gtx, 2, func(gtx C, i int) D {
 					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 						dims := pageContent[i](gtx)
 						if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
