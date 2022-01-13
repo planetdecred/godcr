@@ -435,13 +435,24 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 	if listItem.wal.IsWatchingOnlyWallet() {
 		leftInset = -35
 	} else {
-		leftInset = -130
+		leftInset = -120
 	}
 
-	inset := layout.Inset{
-		Top:  unit.Dp(-90),
-		Left: unit.Dp(leftInset),
+	listItems := pg.listItems
+	var inset layout.Inset
+
+	if optionsMenuIndex == len(listItems)-1 {
+		inset = layout.Inset{
+			Top:  unit.Dp(-90),
+			Left: unit.Dp(-130),
+		}
+	} else {
+		inset = layout.Inset{
+			Top:  unit.Dp(30),
+			Left: unit.Dp(leftInset),
+		}
 	}
+
 	menu := listItem.optionsMenu
 
 	m := op.Record(gtx.Ops)
@@ -467,7 +478,7 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 						}),
 						layout.Rigid(func(gtx C) D {
 							if menu[i].separate {
-								m := values.MarginPadding1
+								m := values.MarginPadding0
 								return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.separator.Layout)
 							}
 							return D{}
