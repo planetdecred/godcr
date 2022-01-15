@@ -58,27 +58,24 @@ func main() {
 	}
 
 	logFile := filepath.Join(cfg.LogDir, defaultLogFilename)
-	wal, err := wallet.NewWallet(cfg.HomeDir, net, Version, logFile, buildDate, make(chan wallet.Response, 3))
+	wal, err := wallet.NewWallet(cfg.HomeDir, net, Version, logFile, buildDate)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	shutdown := make(chan int)
-	go func() {
-		<-shutdown
-		wal.Shutdown()
-		os.Exit(0)
-	}()
-
-	win, appWindow, err := ui.CreateWindow(wal)
+	win, err := ui.CreateWindow(wal)
 	if err != nil {
 		log.Errorf("Could not initialize window: %s\ns", err)
 		return
 	}
 
-	// Start the ui frontend
-	go win.Loop(appWindow, shutdown)
+	go func() {
+		win.HandleEvents() // blocks until the app window is closed
+		wal.Shutdown()
+		os.Exit(0)
+	}()
 
+	// Start the GUI frontend.
 	app.Main()
 }

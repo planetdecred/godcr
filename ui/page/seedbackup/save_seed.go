@@ -57,11 +57,18 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *SaveSeedPage) ID() string {
 	return SaveSeedPageID
 }
 
-func (pg *SaveSeedPage) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *SaveSeedPage) OnNavigatedTo() {
 
 	modal.NewPasswordModal(pg.Load).
 		Title("Confirm to show seed").
@@ -103,16 +110,29 @@ func (pg *SaveSeedPage) OnResume() {
 
 }
 
-func (pg *SaveSeedPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *SaveSeedPage) HandleUserInteractions() {
 	for pg.actionButton.Clicked() {
 		pg.ChangeFragment(NewVerifySeedPage(pg.Load, pg.wallet, pg.seed))
 	}
 }
 
-func (pg *SaveSeedPage) OnClose() {}
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *SaveSeedPage) OnNavigatedFrom() {}
 
-// - Layout
-
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *SaveSeedPage) Layout(gtx C) D {
 	sp := components.SubPage{
 		Load:       pg.Load,

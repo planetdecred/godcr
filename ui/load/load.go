@@ -27,13 +27,8 @@ type DCRUSDTBittrex struct {
 }
 
 type Receiver struct {
-	InternalLog         chan string
 	NotificationsUpdate chan interface{}
 	KeyEvents           map[string]chan *key.Event
-	AcctMixerStatus     chan *wallet.AccountMixer
-	SyncedProposal      chan *wallet.Proposal
-	WalletRestored      chan struct{} // Wallet restored channel.
-	AllWalletsDeleted   chan struct{} // all wallets deleted channel.
 }
 
 type Icons struct {
@@ -77,9 +72,7 @@ type Load struct {
 
 	Toast *notification.Toast
 
-	SelectedWallet  *int
-	SelectedAccount *int
-	SelectedUTXO    map[int]map[int32]map[string]*wallet.UnspentOutput
+	SelectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 
 	ToggleSync          func()
 	RefreshWindow       func()
@@ -92,6 +85,7 @@ type Load struct {
 	PopToFragment       func(pageID string)
 	SubscribeKeyEvent   func(eventChan chan *key.Event, pageID string) // Widgets call this function to recieve key events.
 	UnsubscribeKeyEvent func(pageID string) error
+	ReloadApp           func()
 }
 
 func NewLoad() (*Load, error) {
@@ -99,19 +93,12 @@ func NewLoad() (*Load, error) {
 	wl := &WalletLoad{
 		Wallet:         new(wallet.Wallet),
 		Account:        new(wallet.Account),
-		Info:           new(wallet.MultiWalletInfo),
-		SyncStatus:     new(wallet.SyncStatus),
 		Transactions:   new(wallet.Transactions),
 		UnspentOutputs: new(wallet.UnspentOutputs),
 		VspInfo:        new(wallet.VSP),
 		Proposals:      new(wallet.Proposals),
 
 		SelectedProposal: new(dcrlibwallet.Proposal),
-	}
-
-	r := &Receiver{
-		AcctMixerStatus: make(chan *wallet.AccountMixer),
-		SyncedProposal:  make(chan *wallet.Proposal),
 	}
 
 	icons := loadIcons()
@@ -125,7 +112,7 @@ func NewLoad() (*Load, error) {
 		Theme:    th,
 		Icons:    icons,
 		WL:       wl,
-		Receiver: r,
+		Receiver: &Receiver{},
 		Toast:    notification.NewToast(th),
 
 		Printer: message.NewPrinter(language.English),

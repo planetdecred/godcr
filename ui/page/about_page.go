@@ -66,14 +66,24 @@ func NewAboutPage(l *load.Load) *AboutPage {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *AboutPage) ID() string {
 	return AboutPageID
 }
 
-func (pg *AboutPage) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *AboutPage) OnNavigatedTo() {
 
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := components.SubPage{
@@ -154,10 +164,22 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *AboutPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *AboutPage) HandleUserInteractions() {
 	if pg.licenseRow.Clicked() {
 		pg.ChangeFragment(NewLicensePage(pg.Load))
 	}
 }
 
-func (pg *AboutPage) OnClose() {}
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *AboutPage) OnNavigatedFrom() {}

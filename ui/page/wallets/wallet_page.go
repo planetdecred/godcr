@@ -128,11 +128,18 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *WalletPage) ID() string {
 	return WalletPageID
 }
 
-func (pg *WalletPage) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *WalletPage) OnNavigatedTo() {
 	pg.loadWalletAndAccounts()
 }
 
@@ -204,7 +211,9 @@ func (pg *WalletPage) initializeFloatingMenu() {
 			text:   values.String(values.StrImportExistingWallet),
 			button: new(widget.Clickable),
 			action: func(l *load.Load) {
-				l.ChangeWindowPage(NewRestorePage(pg.Load), true)
+				// The second nil parameter to NewRestorePage will cause the
+				// restore page to pop back to this one after restore completes.
+				l.ChangeWindowPage(NewRestorePage(pg.Load, nil), true)
 			},
 		},
 		{
@@ -340,6 +349,9 @@ func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
 		}).Show()
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 // Layout lays out the widgets for the main wallets pg.
 func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
@@ -861,7 +873,12 @@ func (pg *WalletPage) openPopup(index int) {
 	pg.openPopupIndex = index
 }
 
-func (pg *WalletPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *WalletPage) HandleUserInteractions() {
 	for pg.backdrop.Clicked() {
 		pg.closePopups()
 	}
@@ -880,8 +897,6 @@ func (pg *WalletPage) Handle() {
 	pg.listLock.Unlock()
 
 	for index, listItem := range listItems {
-		*pg.SelectedWallet = index
-
 		if ok, selectedItem := listItem.accountsList.ItemClicked(); ok {
 			pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[selectedItem]))
 		}
@@ -967,6 +982,13 @@ func (pg *WalletPage) Handle() {
 	}
 }
 
-func (pg *WalletPage) OnClose() {
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *WalletPage) OnNavigatedFrom() {
 	pg.closePopups()
 }

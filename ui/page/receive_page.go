@@ -118,12 +118,20 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *ReceivePage) ID() string {
 	return ReceivePageID
 }
 
-func (pg *ReceivePage) OnResume() {
-	pg.selector.SelectFirstWalletValidAccount()
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *ReceivePage) OnNavigatedTo() {
+	pg.selector.SelectFirstWalletValidAccount() // Want to reset the user's selection everytime this page appears?
+	// might be better to track the last selection in a variable and reselect it.
 }
 
 func (pg *ReceivePage) generateQRForAddress() {
@@ -150,6 +158,9 @@ func (pg *ReceivePage) generateQRForAddress() {
 	pg.qrImage = &imgdec
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx
@@ -317,7 +328,12 @@ func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *ReceivePage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *ReceivePage) HandleUserInteractions() {
 	gtx := pg.gtx
 	if pg.backdrop.Clicked() {
 		pg.isNewAddr = false
@@ -384,4 +400,11 @@ generateAddress:
 	return newAddr, nil
 }
 
-func (pg *ReceivePage) OnClose() {}
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *ReceivePage) OnNavigatedFrom() {}

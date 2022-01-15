@@ -33,6 +33,14 @@ func (mp *MainPage) OnTransaction(transaction string) {
 }
 
 func (mp *MainPage) OnBlockAttached(walletID int, blockHeight int32) {
+	beep := mp.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+	if beep {
+		err := beeep.Beep(5, 1)
+		if err != nil {
+			log.Error(err.Error())
+		}
+	}
+
 	mp.UpdateBalance()
 	mp.UpdateNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.BlockAttached,
