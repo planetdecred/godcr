@@ -127,11 +127,18 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *TxDetailsPage) ID() string {
 	return TransactionDetailsPageID
 }
 
-func (pg *TxDetailsPage) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *TxDetailsPage) OnNavigatedTo() {
 	if pg.transaction.TicketSpentHash != "" {
 		pg.ticketSpent, _ = pg.wallet.GetTransactionRaw(pg.transaction.TicketSpentHash)
 	}
@@ -141,6 +148,9 @@ func (pg *TxDetailsPage) OnResume() {
 	}
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx
@@ -702,7 +712,12 @@ func (pg *TxDetailsPage) pageSections(gtx layout.Context, body layout.Widget) la
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
 }
 
-func (pg *TxDetailsPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *TxDetailsPage) HandleUserInteractions() {
 	gtx := pg.gtx
 	if pg.toDcrdata.Clicked() {
 		components.GoToURL(pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash))
@@ -757,7 +772,14 @@ func (pg *TxDetailsPage) Handle() {
 	}
 }
 
-func (pg *TxDetailsPage) OnClose() {}
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *TxDetailsPage) OnNavigatedFrom() {}
 
 func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transactionWdg {
 

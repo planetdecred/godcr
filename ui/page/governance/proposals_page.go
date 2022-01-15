@@ -96,11 +96,18 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *ProposalsPage) ID() string {
 	return ProposalsPageID
 }
 
-func (pg *ProposalsPage) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *ProposalsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
 	pg.fetchProposals()
@@ -139,7 +146,12 @@ func (pg *ProposalsPage) fetchProposals() {
 	pg.proposalMu.Unlock()
 }
 
-func (pg *ProposalsPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *ProposalsPage) HandleUserInteractions() {
 	for pg.fetchProposalsBtn.Clicked() {
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
@@ -191,12 +203,20 @@ func (pg *ProposalsPage) Handle() {
 	decredmaterial.DisplayOneDropdown(pg.orderDropDown, pg.categoryDropDown)
 }
 
-func (pg *ProposalsPage) OnClose() {
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *ProposalsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 }
 
-// - Layout
-
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *ProposalsPage) Layout(gtx C) D {
 	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 		return components.UniformPadding(gtx, func(gtx C) D {

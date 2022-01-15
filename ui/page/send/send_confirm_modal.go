@@ -70,7 +70,7 @@ func (scm *sendConfirmModal) Dismiss() {
 	scm.isShown = false
 	// Call Parent's onResume to resubscribe parent for key events.
 	if scm.parent != nil {
-		scm.parent.OnResume()
+		scm.parent.OnNavigatedTo()
 	}
 	scm.DismissModal(scm)
 }

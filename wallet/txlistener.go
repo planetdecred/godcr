@@ -18,28 +18,3 @@ type TxConfirmed struct {
 type NewTransaction struct {
 	Transaction *dcrlibwallet.Transaction
 }
-
-func (l *listener) OnTransaction(transaction string) {
-	l.Send <- SyncStatusUpdate{}
-}
-
-func (l *listener) OnBlockAttached(walletID int, blockHeight int32) {
-	l.Send <- SyncStatusUpdate{
-		Stage: BlockAttached,
-		BlockInfo: NewBlock{
-			WalletID: walletID,
-			Height:   blockHeight,
-		},
-	}
-}
-
-func (l *listener) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
-	l.Send <- SyncStatusUpdate{
-		Stage: BlockConfirmed,
-		ConfirmedTxn: TxConfirmed{
-			WalletID: walletID,
-			Height:   blockHeight,
-			Hash:     hash,
-		},
-	}
-}

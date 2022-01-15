@@ -137,11 +137,18 @@ func NewSendPage(l *load.Load) *Page {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *Page) ID() string {
 	return PageID
 }
 
-func (pg *Page) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *Page) OnNavigatedTo() {
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()
@@ -297,9 +304,13 @@ func (pg *Page) resetFields() {
 	pg.amount.resetFields()
 }
 
-func (pg *Page) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *Page) HandleUserInteractions() {
 	pg.nextButton.SetEnabled(pg.validate())
-
 	pg.sendDestination.handle()
 	pg.amount.handle()
 
@@ -448,6 +459,13 @@ func (pg *Page) Handle() {
 	}
 }
 
-func (pg *Page) OnClose() {
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *Page) OnNavigatedFrom() {
 	pg.Load.UnsubscribeKeyEvent(pg.ID())
 }

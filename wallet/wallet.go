@@ -20,20 +20,17 @@ const (
 
 // Wallet represents the wallet back end of the app
 type Wallet struct {
-	multi              *dcrlibwallet.MultiWallet
-	Root, Net          string
-	buildDate          time.Time
-	version            string
-	logFile            string
-	Send               chan Response
-	Sync               chan SyncStatusUpdate
-	OverallBlockHeight int32
-	startUpTime        time.Time
+	multi       *dcrlibwallet.MultiWallet
+	Root, Net   string
+	buildDate   time.Time
+	version     string
+	logFile     string
+	startUpTime time.Time
 }
 
 // NewWallet initializies an new Wallet instance.
 // The Wallet is not loaded until LoadWallets is called.
-func NewWallet(root, net, version, logFile string, buildDate time.Time, send chan Response) (*Wallet, error) {
+func NewWallet(root, net, version, logFile string, buildDate time.Time) (*Wallet, error) {
 	if root == "" || net == "" { // This should really be handled by dcrlibwallet
 		return nil, fmt.Errorf(`root directory or network cannot be ""`)
 	}
@@ -44,8 +41,6 @@ func NewWallet(root, net, version, logFile string, buildDate time.Time, send cha
 		buildDate:   buildDate,
 		version:     version,
 		logFile:     logFile,
-		Sync:        make(chan SyncStatusUpdate, 2),
-		Send:        send,
 		startUpTime: time.Now(),
 	}
 
@@ -80,47 +75,6 @@ func (wal *Wallet) InitMultiWallet() error {
 
 	wal.multi = multiWal
 	return nil
-}
-
-func (wal *Wallet) SetupListeners() {
-	resp := Response{
-		Resp: LoadedWallets{},
-	}
-	l := &listener{
-		Send: wal.Sync,
-	}
-	err := wal.multi.AddSyncProgressListener(l, syncID)
-	if err != nil {
-		resp.Err = err
-		wal.Send <- resp
-		return
-	}
-
-	err = wal.multi.AddTxAndBlockNotificationListener(l, syncID)
-	if err != nil {
-		resp.Err = err
-		wal.Send <- resp
-		return
-	}
-
-	wal.multi.AddAccountMixerNotificationListener(l, syncID)
-
-	wal.multi.Politeia.AddNotificationListener(l, syncID)
-
-	startupPassSet := wal.multi.IsStartupSecuritySet()
-
-	resp.Resp = LoadedWallets{
-		Count:              wal.multi.LoadedWalletsCount(),
-		StartUpSecuritySet: startupPassSet,
-	}
-	wal.Send <- resp
-}
-
-func (wal *Wallet) ClearListeners() {
-	wal.multi.RemoveAccountMixerNotificationListener(syncID)
-	wal.multi.Politeia.RemoveNotificationListener(syncID)
-	wal.multi.RemoveTxAndBlockNotificationListener(syncID)
-	wal.multi.RemoveSyncProgressListener(syncID)
 }
 
 // wallets returns an up-to-date map of all opened wallets

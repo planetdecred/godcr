@@ -37,6 +37,7 @@ type seedItemMenu struct {
 
 type Restore struct {
 	*load.Load
+	restoreComplete func()
 
 	seedList *layout.List
 
@@ -63,10 +64,10 @@ type Restore struct {
 	keyEvent    chan *key.Event
 }
 
-// Loading lays out the loading widget with a faded background
-func NewRestorePage(l *load.Load) *Restore {
+func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 	pg := &Restore{
-		Load: l,
+		Load:            l,
+		restoreComplete: onRestoreComplete,
 
 		seedList: &layout.List{Axis: layout.Vertical},
 
@@ -106,15 +107,24 @@ func NewRestorePage(l *load.Load) *Restore {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *Restore) ID() string {
 	return CreateRestorePageID
 }
 
-func (pg *Restore) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *Restore) OnNavigatedTo() {
 	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
-
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
@@ -428,7 +438,12 @@ func switchSeedEditors(editors []decredmaterial.RestoreEditor) {
 	}
 }
 
-func (pg *Restore) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *Restore) HandleUserInteractions() {
 	for pg.backButton.Button.Clicked() {
 		pg.PopWindowPage()
 	}
@@ -457,15 +472,13 @@ func (pg *Restore) Handle() {
 					pg.Toast.Notify("Wallet restored")
 					pg.resetSeeds()
 					m.Dismiss()
-					// Go back to wallets page if there's more than one wallet
-					// or launch main page.
-					if pg.WL.MultiWallet.LoadedWalletsCount() > 1 {
+					// Close this page and return to the previous page (most likely wallets page)
+					// if there's no restoreComplete callback function.
+					if pg.restoreComplete == nil {
 						pg.PopWindowPage()
 					} else {
-						pg.WL.Wallet.SetupListeners()
-						pg.Load.Receiver.WalletRestored <- struct{}{}
+						pg.restoreComplete()
 					}
-
 				}()
 				return false
 			}).Show()
@@ -516,6 +529,13 @@ func (pg *Restore) Handle() {
 
 }
 
-func (pg *Restore) OnClose() {
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *Restore) OnNavigatedFrom() {
 	pg.Load.UnsubscribeKeyEvent(pg.ID())
 }

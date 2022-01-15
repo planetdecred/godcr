@@ -60,11 +60,18 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *AcctDetailsPage) ID() string {
 	return AccountDetailsPageID
 }
 
-func (pg *AcctDetailsPage) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *AcctDetailsPage) OnNavigatedTo() {
 
 	balance := pg.account.Balance
 
@@ -86,6 +93,9 @@ func (pg *AcctDetailsPage) OnResume() {
 	pg.keys = fmt.Sprintf("%d external, %d internal, %d imported", ext, internal, imp)
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	widgets := []func(gtx C) D{
 		func(gtx C) D {
@@ -272,7 +282,12 @@ func (pg *AcctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
 }
 
-func (pg *AcctDetailsPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *AcctDetailsPage) HandleUserInteractions() {
 	if pg.renameAccount.Clicked() {
 		textModal := modal.NewTextInputModal(pg.Load).
 			Hint("Account name").
@@ -295,4 +310,11 @@ func (pg *AcctDetailsPage) Handle() {
 	}
 }
 
-func (pg *AcctDetailsPage) OnClose() {}
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *AcctDetailsPage) OnNavigatedFrom() {}

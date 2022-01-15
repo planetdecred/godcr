@@ -19,7 +19,6 @@ type WalletLoad struct {
 	SelectedProposal *dcrlibwallet.Proposal
 
 	Proposals       *wallet.Proposals
-	SyncStatus      *wallet.SyncStatus
 	Transactions    *wallet.Transactions
 	Transaction     *wallet.Transaction
 	BroadcastResult wallet.Broadcast
@@ -27,7 +26,6 @@ type WalletLoad struct {
 	UnspentOutputs  *wallet.UnspentOutputs
 	Wallet          *wallet.Wallet
 	Account         *wallet.Account
-	Info            *wallet.MultiWalletInfo
 
 	SelectedWallet  *int
 	SelectedAccount *int

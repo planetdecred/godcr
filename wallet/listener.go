@@ -86,10 +86,6 @@ const (
 const TotalSyncSteps = 3
 
 type (
-	listener struct {
-		Send chan<- SyncStatusUpdate
-	}
-
 	// SyncStatusUpdate represents information about the status of the multiwallet spv sync
 	SyncStatusUpdate struct {
 		Stage          SyncNotificationType
@@ -108,24 +104,6 @@ type (
 	}
 )
 
-// // SyncCompleted is sent when the sync is completed
-// type SyncCompleted struct{}
-
-// // SyncEndedWithError is sent when the sync ends with and error
-// type SyncEndedWithError struct {
-// 	Error error
-// }
-
-// // SyncCanceled is sent when the sync is canceled
-// type SyncCanceled struct {
-// 	WillRestart bool
-// }
-
-// SyncPeersChanged is sent when the amount of connected peers changes during sync
-type SyncPeersChanged struct {
-	ConnectedPeers int32
-}
-
 // SyncHeadersFetchProgress is sent whenever syncing makes any progress in fetching headers
 type SyncHeadersFetchProgress struct {
 	Progress *dcrlibwallet.HeadersFetchProgressReport
@@ -139,73 +117,4 @@ type SyncAddressDiscoveryProgress struct {
 // SyncHeadersRescanProgress is sent whenever syncing makes any progress in rescanning headers
 type SyncHeadersRescanProgress struct {
 	Progress *dcrlibwallet.HeadersRescanProgressReport
-}
-
-func (l *listener) Debug(info *dcrlibwallet.DebugInfo) {
-	log.Trace(info)
-}
-
-func (l *listener) OnSyncStarted(restarted bool) {
-	l.Send <- SyncStatusUpdate{
-		Stage: SyncStarted,
-	}
-}
-
-func (l *listener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
-	l.Send <- SyncStatusUpdate{
-		Stage:          PeersConnected,
-		ConnectedPeers: numberOfConnectedPeers,
-	}
-}
-
-func (l *listener) OnHeadersFetchProgress(progress *dcrlibwallet.HeadersFetchProgressReport) {
-	l.Send <- SyncStatusUpdate{
-		Stage: HeadersFetchProgress,
-		ProgressReport: SyncHeadersFetchProgress{
-			Progress: progress,
-		},
-	}
-}
-func (l *listener) OnAddressDiscoveryProgress(progress *dcrlibwallet.AddressDiscoveryProgressReport) {
-	l.Send <- SyncStatusUpdate{
-		Stage: AddressDiscoveryProgress,
-		ProgressReport: SyncAddressDiscoveryProgress{
-			Progress: progress,
-		},
-	}
-}
-
-func (l *listener) OnHeadersRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
-	l.Send <- SyncStatusUpdate{
-		Stage: HeadersRescanProgress,
-		ProgressReport: SyncHeadersRescanProgress{
-			Progress: progress,
-		},
-	}
-}
-
-func (l *listener) OnSyncCompleted() {
-	l.Send <- SyncStatusUpdate{
-		Stage: SyncCompleted,
-	}
-}
-
-func (l *listener) OnSyncCanceled(willRestart bool) {
-	l.Send <- SyncStatusUpdate{
-		Stage: SyncCanceled,
-	}
-	// l.Send <- SyncCanceled{
-	// 	WillRestart: willRestart,
-	// }
-}
-
-func (l *listener) OnSyncEndedWithError(err error) {
-	// todo: create custom sync error
-	// l.Send <- SyncEndedWithError{
-	// 	Error: err,
-	// }
-}
-
-func (l *listener) OnCFiltersFetchProgress(progress *dcrlibwallet.CFiltersFetchProgressReport) {
-
 }
