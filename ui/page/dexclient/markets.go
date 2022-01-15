@@ -235,31 +235,6 @@ func (pg *Page) registrationStatusLayout() layout.Widget {
 	}
 }
 
-func (pg *Page) initMiniTradeForm() {
-	if pg.miniTradeFormWdg == nil ||
-		pg.miniTradeFormWdg.host != pg.dexServer.Host ||
-		pg.miniTradeFormWdg.mkt.Name != pg.market.Name {
-		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load, pg.dexServer.Host, pg.market)
-	}
-
-	if dex.PendingFee == nil {
-		return pg.Theme.Label(values.TextSize14, "Registration fee payment successful!").Layout(gtx)
-	}
-
-	reqConfirms, currentConfs := dex.Fee.Confs, dex.PendingFee.Confs
-	return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(pg.Theme.Label(values.TextSize14, "Waiting for confirmations...").Layout),
-		layout.Rigid(func(gtx C) D {
-			t := fmt.Sprintf("In order to trade at %s, the registration fee payment needs %d confirmations.", dex.Host, reqConfirms)
-			return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			t := fmt.Sprintf("%d/%d", currentConfs, reqConfirms)
-			return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
-		}),
-	)
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -297,17 +272,13 @@ func (pg *Page) startDexClient() {
 	pg.readNotifications()
 }
 
-func (pg *Page) OnClose() {
-	pg.ctxCancel()
-}
-
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
 // displayed.
 // Part of the load.Page interface.
 func (pg *Page) HandleUserInteractions() {
-	if pg.sync.Button.Clicked() {
+	if pg.syncBtn.Button.Clicked() {
 		err := pg.WL.MultiWallet.SpvSync()
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())

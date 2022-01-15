@@ -43,7 +43,11 @@ func (pg *OrdersHistoryPage) ID() string {
 	return OrdersHistoryPageID
 }
 
-func (pg *OrdersHistoryPage) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *OrdersHistoryPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	go pg.readNotifications()
 	pg.getOrdersHistory()
@@ -112,10 +116,21 @@ func (pg *OrdersHistoryPage) layoutLabel(text string) layout.Widget {
 	return pg.Theme.Label(values.TextSize14, text).Layout
 }
 
-func (pg *OrdersHistoryPage) Handle() {
-}
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *OrdersHistoryPage) HandleUserInteractions() {}
 
-func (pg *OrdersHistoryPage) OnClose() {
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *OrdersHistoryPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 }
 

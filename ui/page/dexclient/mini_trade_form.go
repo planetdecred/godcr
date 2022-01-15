@@ -29,27 +29,29 @@ type miniTradeFormWidget struct {
 }
 
 func newMiniTradeFormWidget(l *load.Load) *miniTradeFormWidget {
+	createEditor := func(hint string) decredmaterial.Editor {
+		e := l.Theme.SingleLineEditor(new(widget.Editor), hint)
+		e.HasCustomButton = true
+		e.CustomButton.Inset = layout.Inset{
+			Top:    values.MarginPadding4,
+			Bottom: values.MarginPadding4,
+			Left:   values.MarginPadding6,
+			Right:  values.MarginPadding6,
+		}
+		return e
+	}
+
 	m := &miniTradeFormWidget{
 		Load:           l,
 		submitBtn:      l.Theme.Button(strSubmit),
-		invoicedAmount: l.Theme.Editor(new(widget.Editor), strIHave),
-		orderedAmount:  l.Theme.Editor(new(widget.Editor), strIGet),
+		invoicedAmount: createEditor(strIHave),
+		orderedAmount:  createEditor(strIGet),
 		directionBtn:   l.Theme.IconButton(l.Icons.ExchangeIcon),
 		isSell:         true,
 	}
 
 	m.directionBtn.Size = values.MarginPadding20
 	m.directionBtn.ChangeColorStyle(&values.ColorStyle{Background: color.NRGBA{}})
-
-	m.invoicedAmount.Editor.SingleLine = true
-	m.invoicedAmount.HasCustomButton = true
-	m.invoicedAmount.CustomButton.Margin.Top = values.MarginPaddingMinus2
-	m.invoicedAmount.CustomButton.Inset = layout.UniformInset(values.MarginPadding6)
-
-	m.orderedAmount.Editor.SingleLine = true
-	m.orderedAmount.HasCustomButton = true
-	m.orderedAmount.CustomButton.Margin.Top = values.MarginPaddingMinus2
-	m.orderedAmount.CustomButton.Inset = layout.UniformInset(values.MarginPadding6)
 
 	m.submitBtn.TextSize = values.TextSize12
 	m.submitBtn.SetEnabled(false)

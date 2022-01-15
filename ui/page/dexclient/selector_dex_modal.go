@@ -3,7 +3,6 @@ package dexclient
 import (
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
-	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -13,28 +12,19 @@ const selectorDexModalID = "selector_dex_modal"
 
 type selectorDexModal struct {
 	*load.Load
-	modal                *decredmaterial.Modal
-	list                 *widget.List
-	cancelBtn            decredmaterial.Button
-	selectorExchangeWdgs []*selectorExchangeWidget
-	selectedHost         string
-	callback             func(*core.Exchange)
-}
-
-type selectorExchangeWidget struct {
-	selectBtn *decredmaterial.Clickable
-	*core.Exchange
+	modal            *decredmaterial.Modal
+	selectDexHostBtn map[string]*decredmaterial.Clickable
+	selectedHost     string
+	cancelBtn        decredmaterial.Button
+	callback         func(*core.Exchange)
 }
 
 func newSelectorDexModal(l *load.Load, selectedHost string) *selectorDexModal {
 	md := &selectorDexModal{
 		Load:         l,
 		selectedHost: selectedHost,
-		list: &widget.List{
-			List: layout.List{Axis: layout.Vertical},
-		},
-		modal:     l.Theme.ModalFloatTitle(),
-		cancelBtn: l.Theme.OutlineButton("Cancel"),
+		modal:        l.Theme.ModalFloatTitle(),
+		cancelBtn:    l.Theme.OutlineButton("Cancel"),
 	}
 
 	return md
@@ -69,9 +59,9 @@ func (md *selectorDexModal) Handle() {
 		md.Dismiss()
 	}
 
-	for _, selectorExchangeWdg := range md.selectorExchangeWdgs {
-		if selectorExchangeWdg.selectBtn.Clicked() {
-			md.callback(selectorExchangeWdg.Exchange)
+	for host, selectBtn := range md.selectDexHostBtn {
+		if selectBtn.Clicked() {
+			md.callback(md.Dexc().DEXServers()[host])
 			md.Dismiss()
 			return
 		}
@@ -84,28 +74,34 @@ func (md *selectorDexModal) Layout(gtx layout.Context) D {
 			return md.Load.Theme.Label(values.TextSize20, "Select Dex").Layout(gtx)
 		},
 		func(gtx C) D {
-			return md.Theme.List(md.list).Layout(gtx, len(md.selectorExchangeWdgs), func(gtx C, i int) D {
-				selectorExchangeWdg := md.selectorExchangeWdgs[i]
-				return selectorExchangeWdg.selectBtn.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return layout.Inset{
-						Top: values.MarginPadding4, Bottom: values.MarginPadding4,
-						Left: values.MarginPadding8, Right: values.MarginPadding8,
-					}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-							layout.Rigid(md.Theme.Label(values.TextSize14, selectorExchangeWdg.Host).Layout),
-							layout.Rigid(func(gtx C) D {
-								if md.selectedHost != selectorExchangeWdg.Host {
-									return D{}
-								}
-								gtx.Constraints.Min.X = 30
-								ic := md.Icons.NavigationCheck
-								return ic.Layout(gtx, md.Theme.Color.Success)
-							}),
-						)
+			var childrens = make([]layout.FlexChild, 0, len(md.selectDexHostBtn))
+			exchanges := sliceExchanges(md.Dexc().DEXServers())
+			for i := 0; i < len(exchanges); i++ {
+				host := exchanges[i].Host
+				childrens = append(childrens, layout.Rigid(func(gtx C) D {
+					return md.selectDexHostBtn[host].Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.Inset{
+							Top: values.MarginPadding4, Bottom: values.MarginPadding4,
+							Left: values.MarginPadding8, Right: values.MarginPadding8,
+						}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+								layout.Rigid(md.Theme.Label(values.TextSize14, host).Layout),
+								layout.Rigid(func(gtx C) D {
+									if md.selectedHost != host {
+										return D{}
+									}
+									gtx.Constraints.Min.X = 30
+									ic := md.Icons.NavigationCheck
+									return ic.Layout(gtx, md.Theme.Color.Success)
+								}),
+							)
+						})
 					})
-				})
-			})
+				}))
+			}
+
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, childrens...)
 		},
 		func(gtx C) D {
 			return layout.E.Layout(gtx, md.cancelBtn.Layout)
@@ -117,15 +113,10 @@ func (md *selectorDexModal) Layout(gtx layout.Context) D {
 
 func (md *selectorDexModal) initDEXServersWidget() {
 	exchanges := sliceExchanges(md.Dexc().DEXServers())
-	var selectorExchangeWdgs []*selectorExchangeWidget
+	md.selectDexHostBtn = make(map[string]*decredmaterial.Clickable, len(exchanges))
 	for i := 0; i < len(exchanges); i++ {
-		dexServer := exchanges[i]
 		cl := md.Theme.NewClickable(true)
 		cl.Radius = decredmaterial.Radius(0)
-		selectorExchangeWdgs = append(selectorExchangeWdgs, &selectorExchangeWidget{
-			selectBtn: cl,
-			Exchange:  dexServer,
-		})
+		md.selectDexHostBtn[exchanges[i].Host] = cl
 	}
-	md.selectorExchangeWdgs = selectorExchangeWdgs
 }

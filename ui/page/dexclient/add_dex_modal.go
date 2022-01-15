@@ -31,11 +31,11 @@ type addDexModal struct {
 	certFilePath     string
 	fileSelectBtn    *decredmaterial.Clickable
 
-	// appPass is the password value after login or initialize to continue processing add new DEX
+	// defaultAppPass is the password value after login or initialize to continue processing add new DEX
 	// the Add Dex Modal won't show password input on UI
-	appPass     string
-	appPassword decredmaterial.Editor
-	onDexAdded  func(*core.Exchange)
+	defaultAppPass string
+	appPassword    decredmaterial.Editor
+	onDexAdded     func(*core.Exchange)
 
 	listServerClickable map[string]*decredmaterial.Clickable
 	selectedServer      string
@@ -70,18 +70,16 @@ func newAddDexModal(l *load.Load) *addDexModal {
 	md := &addDexModal{
 		Load:             l,
 		modal:            l.Theme.ModalFloatTitle(),
-		dexServerAddress: l.Theme.Editor(new(widget.Editor), strDexAddr),
+		dexServerAddress: l.Theme.Editor(&widget.Editor{Submit: true}, strDexAddr),
 		addDexServerBtn:  l.Theme.Button(strSubmit),
 		cancelBtn:        l.Theme.OutlineButton(values.String(values.StrCancel)),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
-		appPassword:      l.Theme.EditorPassword(new(widget.Editor), strAppPassword),
+		appPassword:      l.Theme.EditorPassword(&widget.Editor{Submit: true}, strAppPassword),
 		fileSelectBtn:    clickable(),
 		listServerBtn:    tabButton(strPickAServer, true),
 		customServerBtn:  tabButton(strCustomServer, false),
 	}
-
-	md.appPassword.Editor.SingleLine = true
-	md.dexServerAddress.Editor.SingleLine = true
+	md.addDexServerBtn.SetEnabled(false)
 
 	return md
 }
@@ -103,7 +101,7 @@ func (md *addDexModal) OnDismiss() {
 }
 
 func (md *addDexModal) WithAppPassword(appPass string) *addDexModal {
-	md.appPass = appPass
+	md.defaultAppPass = appPass
 	return md
 }
 
@@ -132,7 +130,42 @@ func (md *addDexModal) OnDexAdded(callback func(*core.Exchange)) *addDexModal {
 	return md
 }
 
+func (md *addDexModal) validateInputs() (bool, string, string) {
+	appPass := md.defaultAppPass
+	if appPass == "" {
+		appPass = md.appPassword.Editor.Text()
+	}
+
+	dexServer := md.selectedServer
+	if md.isUseCustomServer {
+		dexServer = md.dexServerAddress.Editor.Text()
+	}
+
+	if appPass == "" || dexServer == "" {
+		md.addDexServerBtn.SetEnabled(false)
+		return false, "", ""
+	}
+
+	md.addDexServerBtn.SetEnabled(true)
+	return true, appPass, dexServer
+}
+
 func (md *addDexModal) Handle() {
+	canSubmit, appPass, dexServer := md.validateInputs()
+
+	if isDexServerSubmit, _ := decredmaterial.HandleEditorEvents(md.dexServerAddress.Editor); isDexServerSubmit {
+		if md.defaultAppPass != "" && canSubmit {
+			md.doAddDexServer(dexServer, appPass)
+		} else {
+			md.appPassword.Editor.Focus()
+		}
+	}
+
+	isSubmit, _ := decredmaterial.HandleEditorEvents(md.appPassword.Editor)
+	if canSubmit && (md.addDexServerBtn.Button.Clicked() || isSubmit) {
+		md.doAddDexServer(dexServer, appPass)
+	}
+
 	if md.listServerBtn.Clicked() {
 		md.isUseCustomServer = false
 		md.listServerBtn.Background = md.Theme.Color.Surface
@@ -177,96 +210,76 @@ func (md *addDexModal) Handle() {
 			break
 		}
 	}
+}
 
-	if md.addDexServerBtn.Button.Clicked() {
-		if md.isSending {
-			return
-		}
+func (md *addDexModal) doAddDexServer(serverAddr, appPass string) {
+	if md.isSending {
+		return
+	}
 
-		md.isSending = true
-		md.modal.SetDisabled(true)
-		go func() {
-			defer func() {
-				md.isSending = false
-			}()
-
-			var cert []byte
-			serverAddr := md.selectedServer
-
-			if md.isUseCustomServer {
-				serverAddr = md.dexServerAddress.Editor.Text()
-				c, err := getCertFromFile(md.certFilePath)
-				if err != nil {
-					md.Toast.NotifyError(err.Error())
-					return
-				}
-				cert = c
-			}
-
-			appPass := md.appPass
-			if appPass == "" {
-				appPass = md.appPassword.Editor.Text()
-			}
-
-			if serverAddr == "" {
-				md.Toast.NotifyError(strErrChooseServer)
-				return
-			}
-
-			if appPass == "" {
-				md.Toast.NotifyError(strErrInputAppPassword)
-				return
-			}
-
-			dexServer, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(appPass), cert)
+	md.isSending = true
+	md.modal.SetDisabled(true)
+	go func() {
+		defer func() {
 			md.isSending = false
 			md.modal.SetDisabled(false)
+		}()
 
+		var cert []byte
+		if md.isUseCustomServer {
+			c, err := getCertFromFile(md.certFilePath)
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
 			}
+			cert = c
+		}
 
-			md.Dismiss()
-			if paid {
-				md.onDexAdded(dexServer)
-				return
-			}
+		dexServer, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(appPass), cert)
+		if err != nil {
+			md.Toast.NotifyError(err.Error())
+			return
+		}
 
-			newAssetSelectorModal(md.Load, dexServer).
-				OnAssetSelected(func(asset *core.SupportedAsset) {
-					cfReg := &confirmRegistration{
-						Load:      md.Load,
-						Exchange:  dexServer,
-						isSending: &md.isSending,
-						Show:      md.Show,
-						completed: md.onDexAdded,
-						Dismiss:   md.Dismiss,
-					}
-					feeAssetName := asset.Symbol
-					if asset.Wallet != nil {
+		md.Dismiss()
+		if paid {
+			md.onDexAdded(dexServer)
+			return
+		}
+
+		newAssetSelectorModal(md.Load, dexServer).
+			OnAssetSelected(func(asset *core.SupportedAsset) {
+				cfReg := &confirmRegistration{
+					Load:      md.Load,
+					Exchange:  dexServer,
+					isSending: &md.isSending,
+					Show:      md.Show,
+					completed: md.onDexAdded,
+					Dismiss:   md.Dismiss,
+				}
+				feeAssetName := asset.Symbol
+				if asset.Wallet != nil {
+					cfReg.confirm(feeAssetName, appPass, cert)
+					return
+				}
+				newCreateWalletModal(md.Load,
+					&walletInfoWidget{
+						image:    components.CoinImageBySymbol(&md.Icons, feeAssetName),
+						coinName: feeAssetName,
+						coinID:   asset.ID,
+					},
+					appPass,
+					func(wallModal *createWalletModal) {
+						cfReg.isSending = &wallModal.isSending
+						cfReg.Show = wallModal.Show
+						cfReg.Dismiss = wallModal.Dismiss
 						cfReg.confirm(feeAssetName, appPass, cert)
-						return
-					}
-					newCreateWalletModal(md.Load,
-						&walletInfoWidget{
-							image:    components.CoinImageBySymbol(&md.Icons, feeAssetName),
-							coinName: feeAssetName,
-							coinID:   asset.ID,
-						},
-						appPass,
-						func(wallModal *createWalletModal) {
-							cfReg.isSending = &wallModal.isSending
-							cfReg.Show = wallModal.Show
-							cfReg.Dismiss = wallModal.Dismiss
-							cfReg.confirm(feeAssetName, appPass, cert)
-						}).
-						SetRegisterAction(true).
-						Show()
-				}).
-				Show()
-		}()
-	}
+					}).
+					SetRegisterAction(true).
+					Show()
+			}).
+			Show()
+	}()
 }
 
 func (md *addDexModal) Layout(gtx layout.Context) D {
@@ -292,7 +305,7 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 		},
 		md.Theme.Separator().Layout,
 		func(gtx C) D {
-			if md.appPass != "" {
+			if md.defaultAppPass != "" {
 				return D{}
 			}
 			return md.appPassword.Layout(gtx)
