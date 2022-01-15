@@ -11,6 +11,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -183,9 +184,9 @@ func (cm *CreatePasswordModal) Handle() {
 	}
 
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor, cm.walletName.Editor)
-
 	if isChanged {
-		// reset editor errors
+		// reset all modal errors when any editor is modified
+		cm.serverError = ""
 		cm.walletName.SetError("")
 		cm.passwordEditor.SetError("")
 		cm.confirmPasswordEditor.SetError("")
@@ -252,7 +253,7 @@ func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
 	matching := editors[1]
 
 	if password.Text() != matching.Text() {
-		cm.confirmPasswordEditor.SetError("passwords do not match")
+		cm.confirmPasswordEditor.SetError("Passwords do not match")
 		return false
 	}
 
@@ -278,9 +279,14 @@ func (cm *CreatePasswordModal) Layout(gtx C) D {
 	}
 
 	if cm.serverError != "" {
-		t := cm.Theme.Body2(cm.serverError)
-		t.Color = cm.Theme.Color.Danger
-		w = append(w, t.Layout)
+		// set wallet name editor error if wallet name already exist
+		if cm.serverError == dcrlibwallet.ErrExist && cm.walletNameEnabled {
+			cm.walletName.SetError(fmt.Sprintf("Wallet with name: %s already exist", cm.walletName.Editor.Text()))
+		} else {
+			t := cm.Theme.Body2(cm.serverError)
+			t.Color = cm.Theme.Color.Danger
+			w = append(w, t.Layout)
+		}
 	}
 
 	if cm.walletNameEnabled {
