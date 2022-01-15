@@ -88,7 +88,6 @@ const (
 	strAuthOrderAppPassword         = "Authorize this order with your app password."
 	strRequireWalletPayFee          = "Your wallet is required to pay registration fees."
 	strConfirmSelectAssetPayFee     = "How will you pay the registration fee?"
-	strErrChooseServer              = "Please choose a server address or set a custom server"
 	strErrInputAppPassword          = "Please input your application password"
 	strInitDexPasswordDesc          = "Set your app password. This password will protect your DEX account keys and connected wallets."
 	strDexClientSupportSimultaneous = "The Decred DEX Client supports simultaneous use of any number of DEX servers."

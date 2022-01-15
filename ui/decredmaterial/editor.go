@@ -82,6 +82,12 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 	}
 }
 
+func (t *Theme) SingleLineEditor(editor *widget.Editor, hint string) Editor {
+	editor.SingleLine = true
+	e := t.Editor(editor, hint)
+	return e
+}
+
 // IconEditor creates an editor widget with icon of choice
 func (t *Theme) IconEditor(editor *widget.Editor, hint string, icon *widget.Icon, clickableIcon bool) Editor {
 	e := t.Editor(editor, hint)

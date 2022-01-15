@@ -48,8 +48,8 @@ func newWithdrawModal(l *load.Load, wallInfo *walletInfoWidget, as *core.Support
 		modal:            l.Theme.ModalFloatTitle(),
 		cancelBtn:        l.Theme.OutlineButton(values.String(values.StrCancel)),
 		submitBtn:        l.Theme.Button(strWithdraw),
-		address:          l.Theme.Editor(new(widget.Editor), strAddress),
-		amount:           l.Theme.Editor(new(widget.Editor), strAmount),
+		address:          l.Theme.SingleLineEditor(new(widget.Editor), strAddress),
+		amount:           l.Theme.SingleLineEditor(new(widget.Editor), strAmount),
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), strAppPassword),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 		as:               as,
@@ -145,15 +145,9 @@ func (md *withdrawModal) Layout(gtx layout.Context) D {
 			amt := formatAmount(md.as.Wallet.Balance.Available, &md.as.Info.UnitInfo)
 			return md.Load.Theme.Label(values.TextSize14, fmt.Sprintf(nStrAmountAvailable, amt)).Layout(gtx)
 		},
-		func(gtx C) D {
-			return md.address.Layout(gtx)
-		},
-		func(gtx C) D {
-			return md.amount.Layout(gtx)
-		},
-		func(gtx C) D {
-			return md.appPassword.Layout(gtx)
-		},
+		md.address.Layout,
+		md.amount.Layout,
+		md.appPassword.Layout,
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,

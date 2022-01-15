@@ -30,7 +30,7 @@ type createWalletModal struct {
 	walletInfoWidget      *walletInfoWidget
 	materialLoader        material.LoaderStyle
 	isSending             bool
-	appPass               string
+	defaultAppPass        string
 	isRegisterAction      bool
 	walletCreated         func(md *createWalletModal)
 }
@@ -45,19 +45,16 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, appPass stri
 	md := &createWalletModal{
 		Load:             l,
 		modal:            l.Theme.ModalFloatTitle(),
-		walletPassword:   l.Theme.EditorPassword(new(widget.Editor), strWalletPassword),
-		appPassword:      l.Theme.EditorPassword(new(widget.Editor), strAppPassword),
+		walletPassword:   l.Theme.EditorPassword(&widget.Editor{Submit: true}, strWalletPassword),
+		appPassword:      l.Theme.EditorPassword(&widget.Editor{Submit: true}, strAppPassword),
 		submitBtn:        l.Theme.Button(strSubmit),
 		cancelBtn:        l.Theme.OutlineButton(values.String(values.StrCancel)),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 		walletInfoWidget: wallInfo,
 		walletCreated:    walletCreated,
-		appPass:          appPass,
+		defaultAppPass:   appPass,
 	}
-
-	md.appPassword.Editor.SingleLine = true
-	md.appPassword.Editor.SetText("")
-
+	md.submitBtn.SetEnabled(false)
 	md.sourceAccountSelector = components.NewAccountSelector(md.Load).
 		Title(strSellectWallet).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
@@ -99,59 +96,98 @@ func (md *createWalletModal) SetRegisterAction(registerAction bool) *createWalle
 	return md
 }
 
+func (md *createWalletModal) validateInputs(isRequiredWalletPassword bool) (bool, string, string) {
+	appPass := md.defaultAppPass
+	if appPass == "" {
+		appPass = md.appPassword.Editor.Text()
+	}
+
+	if appPass == "" {
+		md.submitBtn.SetEnabled(false)
+		return false, "", ""
+	}
+
+	wallPassword := md.walletPassword.Editor.Text()
+	if isRequiredWalletPassword && wallPassword == "" {
+		md.submitBtn.SetEnabled(false)
+		return false, "", ""
+	}
+
+	md.submitBtn.SetEnabled(true)
+	return true, appPass, wallPassword
+}
+
 func (md *createWalletModal) Handle() {
+	isRequiredWalletPassword := md.walletInfoWidget.coinID == dcr.BipID
+	canSubmit, appPass, walletPass := md.validateInputs(isRequiredWalletPassword)
+
+	if isWalletPasswordSubmit, _ := decredmaterial.HandleEditorEvents(md.walletPassword.Editor); isWalletPasswordSubmit {
+		if md.defaultAppPass != "" && canSubmit {
+			if isRequiredWalletPassword {
+				md.doCreateWallet([]byte(appPass), []byte(walletPass))
+			} else {
+				md.doCreateWallet([]byte(appPass), nil)
+			}
+		} else {
+			md.appPassword.Editor.Focus()
+		}
+	}
+
+	isSubmit, _ := decredmaterial.HandleEditorEvents(md.appPassword.Editor)
+	if canSubmit && (md.submitBtn.Button.Clicked() || isSubmit) {
+		if isRequiredWalletPassword {
+			md.doCreateWallet([]byte(appPass), []byte(walletPass))
+		} else {
+			md.doCreateWallet([]byte(appPass), nil)
+		}
+	}
+
 	if md.cancelBtn.Button.Clicked() && !md.isSending {
 		md.Dismiss()
 	}
+}
 
-	if md.submitBtn.Button.Clicked() {
-		if md.isSending {
+func (md *createWalletModal) doCreateWallet(appPass, walletPass []byte) {
+	if md.isSending {
+		return
+	}
+
+	md.isSending = true
+	go func() {
+		defer func() {
+			md.isSending = false
+		}()
+
+		coinID := md.walletInfoWidget.coinID
+		coinName := md.walletInfoWidget.coinName
+		if md.Dexc().HasWallet(int32(coinID)) {
+			md.Toast.NotifyError(fmt.Sprintf(nStrAlreadyConnectWallet, coinName))
 			return
 		}
 
-		md.isSending = true
-		go func() {
-			defer func() {
-				md.isSending = false
-			}()
+		settings := make(map[string]string)
+		var walletType string
+		switch coinID {
+		case dcr.BipID:
+			selectedAccount := md.sourceAccountSelector.SelectedAccount()
+			settings[dcrlibwallet.DexDcrWalletIDConfigKey] = strconv.Itoa(selectedAccount.WalletID)
+			settings["account"] = selectedAccount.Name
+			settings["password"] = md.walletPassword.Editor.Text()
+			walletType = dcrlibwallet.CustomDexDcrWalletType
+		case btc.BipID:
+			walletType = "SPV" // decred.org/dcrdex/client/asset/btc.walletTypeSPV
+			walletPass = nil   // Core doesn't accept wallet passwords for dex-managed spv wallets.
+		}
 
-			coinID := md.walletInfoWidget.coinID
-			coinName := md.walletInfoWidget.coinName
-			if md.Dexc().HasWallet(int32(coinID)) {
-				md.Toast.NotifyError(fmt.Sprintf(nStrAlreadyConnectWallet, coinName))
-				return
-			}
+		err := md.Dexc().AddWallet(coinID, walletType, settings, appPass, walletPass)
+		if err != nil {
+			md.Toast.NotifyError(err.Error())
+			return
+		}
 
-			settings := make(map[string]string)
-			var walletType string
-			appPass := md.appPass
-			if appPass == "" {
-				appPass = md.appPassword.Editor.Text()
-			}
-			walletPass := []byte(md.walletPassword.Editor.Text())
-
-			switch coinID {
-			case dcr.BipID:
-				selectedAccount := md.sourceAccountSelector.SelectedAccount()
-				settings[dcrlibwallet.DexDcrWalletIDConfigKey] = strconv.Itoa(selectedAccount.WalletID)
-				settings["account"] = selectedAccount.Name
-				settings["password"] = md.walletPassword.Editor.Text()
-				walletType = dcrlibwallet.CustomDexDcrWalletType
-			case btc.BipID:
-				walletType = "SPV" // decred.org/dcrdex/client/asset/btc.walletTypeSPV
-				walletPass = nil   // Core doesn't accept wallet passwords for dex-managed spv wallets.
-			}
-
-			err := md.Dexc().AddWallet(coinID, walletType, settings, []byte(appPass), walletPass)
-			if err != nil {
-				md.Toast.NotifyError(err.Error())
-				return
-			}
-
-			md.Dismiss()
-			md.walletCreated(md)
-		}()
-	}
+		md.Dismiss()
+		md.walletCreated(md)
+	}()
 }
 
 func (md *createWalletModal) Layout(gtx layout.Context) D {
@@ -199,7 +235,7 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 					return D{}
 				}),
 				layout.Rigid(func(gtx C) D {
-					if md.appPass != "" {
+					if md.defaultAppPass != "" {
 						return D{}
 					}
 					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
