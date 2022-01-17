@@ -95,7 +95,7 @@ func NewWalletPage(l *load.Load) *WalletPage {
 		Load:        l,
 		multiWallet: l.WL.MultiWallet,
 		container: &widget.List{
-			List: layout.List{Axis: layout.Vertical},
+			List: layout.List{Axis: layout.Vertical, Position: layout.Position{}},
 		},
 		walletsList:              layout.List{Axis: layout.Vertical},
 		watchWalletsList:         l.Theme.NewClickableList(layout.Vertical),
@@ -441,7 +441,7 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 	listItems := pg.listItems
 	var inset layout.Inset
 
-	if optionsMenuIndex == len(listItems)-1 {
+	if optionsMenuIndex == len(listItems)-1 || optionsMenuIndex == 3 {
 		inset = layout.Inset{
 			Top:  unit.Dp(-90),
 			Left: unit.Dp(-130),
