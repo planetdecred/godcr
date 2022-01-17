@@ -28,7 +28,7 @@ const OverviewPageID = "staking"
 type Page struct {
 	*load.Load
 
-	ticketBuyerWallet *dcrlibwallet.Wallet
+	ticketBuyerWallet   *dcrlibwallet.Wallet
 	ticketPageContainer *layout.List
 	ticketsLive         *decredmaterial.ClickableList
 
@@ -106,7 +106,7 @@ func (pg *Page) updateTBToggle() {
 	wal := pg.getTBWalletInfo()
 	if wal != nil {
 		pg.autoPurchase.SetChecked(wal.IsAutoTicketsPurchaseActive())
-	}else{
+	} else {
 		pg.autoPurchase.SetChecked(false)
 	}
 }
@@ -516,8 +516,8 @@ func (pg *Page) HandleUserInteractions() {
 					}).
 					Show()
 			}
-		}else{
-		_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+		} else {
+			_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
 			pg.autoPurchase.SetChecked(false)
 			go pg.WL.MultiWallet.StopAutoTicketsPurchase(walID)
 		}
@@ -526,12 +526,12 @@ func (pg *Page) HandleUserInteractions() {
 	if pg.autoPurchaseSettings.Button.Clicked() {
 		wal := pg.getTBWalletInfo()
 		if wal != nil {
-			if wal.IsAutoTicketsPurchaseActive(){
+			if wal.IsAutoTicketsPurchaseActive() {
 				return
 			}
 
 			pg.ticketBuyerSettingsModal()
-		}else{
+		} else {
 			pg.ticketBuyerSettingsModal()
 		}
 	}
@@ -539,13 +539,13 @@ func (pg *Page) HandleUserInteractions() {
 
 func (pg *Page) ticketBuyerSettingsModal() {
 	newTicketBuyerModal(pg.Load).
-	SettingsSaved(func() {
-		pg.Toast.Notify("Auto ticket purchase setting saved successfully")
-	}).
-	CancelSave(func() {
-		pg.autoPurchase.SetChecked(false)
-	}).
-	Show()
+		SettingsSaved(func() {
+			pg.Toast.Notify("Auto ticket purchase setting saved successfully")
+		}).
+		CancelSave(func() {
+			pg.autoPurchase.SetChecked(false)
+		}).
+		Show()
 }
 
 func (pg *Page) startTicketBuyerPasswordModal() {
@@ -611,7 +611,6 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 
 				pg.updateTBToggle()
 			}()
-			// pg.WL.MultiWallet.SetBoolConfigValueForKey(load.TicketBuyerConfigKey, true)
 			pm.Dismiss()
 
 			return false

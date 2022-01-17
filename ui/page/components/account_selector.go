@@ -74,7 +74,7 @@ func (as *AccountSelector) Handle() {
 				if as.selectedAccount.Number != account.Number {
 					as.changed = true
 				}
-				as.setupSelectedAccount(account)
+				as.SetupSelectedAccount(account)
 				as.callback(account)
 			}).Show()
 	}
