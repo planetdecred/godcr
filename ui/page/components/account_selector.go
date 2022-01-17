@@ -464,7 +464,6 @@ func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dime
 	desc := "Some accounts are disabled by StakeShuffle settings to protect your privacy."
 	card := asm.Theme.Card()
 	card.Radius = decredmaterial.Radius(7)
-	card.Shadow = true
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding280)
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {

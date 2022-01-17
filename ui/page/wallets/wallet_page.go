@@ -8,7 +8,6 @@ import (
 	"gioui.org/op"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -47,7 +46,7 @@ type walletListItem struct {
 type menuItem struct {
 	text     string
 	id       string
-	button   *widget.Clickable
+	button   *decredmaterial.Clickable
 	action   func(*load.Load)
 	separate bool
 }
@@ -204,12 +203,12 @@ func (pg *WalletPage) initializeFloatingMenu() {
 	pg.addWalletMenu = []menuItem{
 		{
 			text:   values.String(values.StrCreateANewWallet),
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			action: pg.showAddWalletModal,
 		},
 		{
 			text:   values.String(values.StrImportExistingWallet),
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			action: func(l *load.Load) {
 				// The second nil parameter to NewRestorePage will cause the
 				// restore page to pop back to this one after restore completes.
@@ -218,7 +217,7 @@ func (pg *WalletPage) initializeFloatingMenu() {
 		},
 		{
 			text:   values.String(values.StrImportWatchingOnlyWallet),
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			action: pg.showImportWatchOnlyWalletModal,
 		},
 	}
@@ -232,24 +231,24 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 	return []menuItem{
 		{
 			text:   values.String(values.StrSignMessage),
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			id:     SignMessagePageID,
 		},
 		{
 			text:     values.String(values.StrViewProperty),
-			button:   new(widget.Clickable),
+			button:   pg.Theme.NewClickable(true),
 			separate: true,
 			action:   func(load *load.Load) {},
 		},
 		{
 			text:     values.String(values.StrStakeShuffle),
-			button:   new(widget.Clickable),
+			button:   pg.Theme.NewClickable(true),
 			separate: true,
 			id:       PrivacyPageID,
 		},
 		{
 			text:   values.String(values.StrRename),
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			action: func(l *load.Load) {
 				textModal := modal.NewTextInputModal(l).
 					Hint("Wallet name").
@@ -270,7 +269,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 		},
 		{
 			text:   values.String(values.StrSettings),
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			id:     WalletSettingsPageID,
 		},
 	}
@@ -280,12 +279,12 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 	return []menuItem{
 		{
 			text:   values.String(values.StrSettings),
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			id:     WalletSettingsPageID,
 		},
 		{
 			text:   values.String(values.StrRename),
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			action: func(l *load.Load) {
 				textModal := modal.NewTextInputModal(l).
 					Hint("Wallet name").
@@ -425,7 +424,7 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 							card := pg.Theme.Card()
 							card.Radius = decredmaterial.Radius(0)
 							return card.HoverableLayout(gtx, menu[i].button, func(gtx C) D {
-								return material.Clickable(gtx, menu[i].button, func(gtx C) D {
+								return menu[i].button.Layout(gtx, func(gtx C) D {
 									m10 := values.MarginPadding10
 									return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
 										gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -819,7 +818,7 @@ func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 		return pg.Theme.Shadow().Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
-					return material.Clickable(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
+					return pg.addWalletMenu[i].button.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(unit.Dp(10)).Layout(gtx, pg.Theme.Body2(pg.addWalletMenu[i].text).Layout)
 					})
 				})

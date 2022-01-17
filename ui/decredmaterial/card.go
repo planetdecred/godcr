@@ -7,7 +7,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/unit"
-	"gioui.org/widget"
 )
 
 type Card struct {
@@ -15,9 +14,6 @@ type Card struct {
 	Color      color.NRGBA
 	HoverColor color.NRGBA
 	Radius     CornerRadius
-
-	Shadow    bool
-	shadowBox *Shadow
 }
 
 type CornerRadius struct {
@@ -59,7 +55,6 @@ func (t *Theme) Card() Card {
 		Color:      t.Color.Surface,
 		HoverColor: t.Color.Gray4,
 		Radius:     Radius(defaultRadius),
-		shadowBox:  t.Shadow(),
 	}
 }
 
@@ -83,16 +78,11 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 			layout.Stacked(w),
 		)
 	})
-	if c.Shadow {
-		c.shadowBox.SetShadowRadius(defaultRadius)
-		return c.shadowBox.Layout(gtx, func(gtx C) D {
-			return dims
-		})
-	}
+
 	return dims
 }
 
-func (c Card) HoverableLayout(gtx layout.Context, btn *widget.Clickable, w layout.Widget) layout.Dimensions {
+func (c Card) HoverableLayout(gtx layout.Context, btn *Clickable, w layout.Widget) layout.Dimensions {
 	background := c.Color
 	dims := c.Inset.Layout(gtx, func(gtx C) D {
 		return layout.Stack{}.Layout(gtx,
@@ -108,21 +98,16 @@ func (c Card) HoverableLayout(gtx layout.Context, btn *widget.Clickable, w layou
 					}},
 					NW: tl, NE: tr, SE: br, SW: bl,
 				}.Push(gtx.Ops).Pop()
-				switch {
-				case gtx.Queue == nil:
-					background = Disabled(c.Color)
-				case btn.Hovered():
-					background = Hovered(c.HoverColor)
+
+				if btn.Hoverable && btn.button.Hovered() {
+					background = btn.style.HoverColor
 				}
+
 				return fill(gtx, background)
 			}),
 			layout.Stacked(w),
 		)
 	})
-	if c.Shadow {
-		return c.shadowBox.Layout(gtx, func(gtx C) D {
-			return dims
-		})
-	}
+
 	return dims
 }

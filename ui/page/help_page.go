@@ -16,8 +16,8 @@ const HelpPageID = "Help"
 type HelpPage struct {
 	*load.Load
 	documentation *decredmaterial.Clickable
-
-	backButton decredmaterial.IconButton
+	shadowBox     *decredmaterial.Shadow
+	backButton    decredmaterial.IconButton
 }
 
 func NewHelpPage(l *load.Load) *HelpPage {
@@ -25,6 +25,9 @@ func NewHelpPage(l *load.Load) *HelpPage {
 		Load:          l,
 		documentation: l.Theme.NewClickable(true),
 	}
+
+	pg.shadowBox = l.Theme.Shadow()
+	pg.shadowBox.SetShadowRadius(14)
 
 	pg.documentation.Radius = decredmaterial.Radius(14)
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -85,21 +88,21 @@ func (pg *HelpPage) document() layout.Widget {
 
 func (pg *HelpPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *decredmaterial.Clickable, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		card := pg.Theme.Card()
-		card.Shadow = true
-		return card.Layout(gtx, func(gtx C) D {
-			return action.Layout(gtx, func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return icon.Layout24dp(gtx)
-						}),
-						layout.Rigid(body),
-						layout.Rigid(func(gtx C) D {
-							size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
-							return layout.Dimensions{Size: size}
-						}),
-					)
+		return pg.shadowBox.Layout(gtx, func(gtx C) D {
+			return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+				return action.Layout(gtx, func(gtx C) D {
+					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return icon.Layout24dp(gtx)
+							}),
+							layout.Rigid(body),
+							layout.Rigid(func(gtx C) D {
+								size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
+								return layout.Dimensions{Size: size}
+							}),
+						)
+					})
 				})
 			})
 		})
