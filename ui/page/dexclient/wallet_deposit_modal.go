@@ -21,7 +21,6 @@ const depositeModalID = "dex_deposit_modal"
 
 type depositModal struct {
 	*load.Load
-	gtx                 *layout.Context
 	modal               *decredmaterial.Modal
 	walletInfoWidget    *walletInfoWidget
 	wallAddress         string
@@ -73,16 +72,8 @@ func (md *depositModal) OnResume() {
 }
 
 func (md *depositModal) Handle() {
-	gtx := md.gtx
-
 	if md.cancelBtn.Button.Clicked() {
 		md.Dismiss()
-	}
-
-	if md.copyBtn.Clicked() {
-		clipboard.WriteOp{Text: md.wallAddress}.Add(gtx.Ops)
-		md.Toast.Notify(strSuccessful)
-		return
 	}
 
 	if md.newAddrBtn.Clicked() {
@@ -98,9 +89,8 @@ func (md *depositModal) Handle() {
 }
 
 func (md *depositModal) Layout(gtx layout.Context) D {
-	if md.gtx == nil {
-		md.gtx = &gtx
-	}
+	md.handleCopyEvent(gtx)
+
 	w := []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
@@ -215,4 +205,11 @@ func (md *depositModal) generateNewAddress(assetID uint32) (string, error) {
 	}
 
 	return addr, nil
+}
+
+func (md *depositModal) handleCopyEvent(gtx layout.Context) {
+	if md.copyBtn.Clicked() {
+		clipboard.WriteOp{Text: md.wallAddress}.Add(gtx.Ops)
+		md.Toast.Notify(strSuccessful)
+	}
 }

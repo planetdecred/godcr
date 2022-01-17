@@ -74,8 +74,8 @@ func (md *selectorDexModal) Layout(gtx layout.Context) D {
 			return md.Load.Theme.Label(values.TextSize20, "Select Dex").Layout(gtx)
 		},
 		func(gtx C) D {
-			var childrens = make([]layout.FlexChild, 0, len(md.selectDexHostBtn))
 			exchanges := sliceExchanges(md.Dexc().DEXServers())
+			var childrens = make([]layout.FlexChild, 0, len(exchanges))
 			for i := 0; i < len(exchanges); i++ {
 				host := exchanges[i].Host
 				childrens = append(childrens, layout.Rigid(func(gtx C) D {

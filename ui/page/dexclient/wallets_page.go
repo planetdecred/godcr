@@ -159,23 +159,20 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 						return D{}
 					}),
 					layout.Rigid(func(gtx C) D {
-						border := widget.Border{
-							Color:        pg.Theme.Color.Gray2,
-							CornerRadius: values.MarginPadding4,
-							Width:        values.MarginPadding1,
-						}
-						inset := layout.Inset{
-							Top:    values.MarginPadding4,
-							Bottom: values.MarginPadding4,
-							Left:   values.MarginPadding8,
-							Right:  values.MarginPadding8,
-						}
-
 						btn := func(b *decredmaterial.Clickable, label string) D {
 							return layout.Inset{Left: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-								return border.Layout(gtx, func(gtx C) D {
+								return widget.Border{
+									Color:        pg.Theme.Color.Gray2,
+									CornerRadius: values.MarginPadding4,
+									Width:        values.MarginPadding1,
+								}.Layout(gtx, func(gtx C) D {
 									return b.Layout(gtx, func(gtx C) D {
-										return inset.Layout(gtx, pg.Theme.Label(values.MarginPadding12, label).Layout)
+										return layout.Inset{
+											Top:    values.MarginPadding4,
+											Bottom: values.MarginPadding4,
+											Left:   values.MarginPadding8,
+											Right:  values.MarginPadding8,
+										}.Layout(gtx, pg.Theme.Label(values.MarginPadding12, label).Layout)
 									})
 								})
 							})
