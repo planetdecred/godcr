@@ -24,14 +24,13 @@ type DexSettingsPage struct {
 	*load.Load
 	pageContainer        layout.List
 	backButton           decredmaterial.IconButton
-	exchangesWdg         []*settingExchangeWidget
+	accountHandlerBtns   map[string]*accountHandlerButton
 	addDexBtn            decredmaterial.Button
 	importAccountBtn     decredmaterial.Button
 	changeAppPasswordBtn decredmaterial.Button
 }
 
-type settingExchangeWidget struct {
-	dexServer         *core.Exchange
+type accountHandlerButton struct {
 	exportAccountBtn  *decredmaterial.Clickable
 	disableAccountBtn *decredmaterial.Clickable
 }
@@ -56,7 +55,6 @@ func NewDexSettingsPage(l *load.Load) *DexSettingsPage {
 	pg.importAccountBtn.Inset, pg.addDexBtn.Inset = inset, inset
 	pg.importAccountBtn.TextSize, pg.addDexBtn.TextSize = values.TextSize14, values.TextSize14
 
-	pg.initExchangeWidget()
 	return pg
 }
 
@@ -68,7 +66,9 @@ func (pg *DexSettingsPage) ID() string {
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *DexSettingsPage) OnNavigatedTo() {}
+func (pg *DexSettingsPage) OnNavigatedTo() {
+	pg.initHandlerAccountBtns()
+}
 
 func (pg *DexSettingsPage) Layout(gtx layout.Context) D {
 	body := func(gtx C) D {
@@ -124,40 +124,53 @@ func (pg *DexSettingsPage) exchangesInfoLayout(gtx C) D {
 		}
 	}
 
-	for _, e := range pg.exchangesWdg {
-		eWdg := e
+	exchanges := sliceExchanges(pg.Dexc().DEXServers())
+
+	for _, e := range exchanges {
+		if pg.accountHandlerBtns[e.Host] == nil {
+			continue
+		}
+
+		dexServer := e
+		exportAccountBtn := pg.accountHandlerBtns[dexServer.Host].exportAccountBtn
+		disableAccountBtn := pg.accountHandlerBtns[dexServer.Host].disableAccountBtn
 		card := pg.Theme.Card()
-		card.Border = true
 		card.Inset = layout.UniformInset(values.MarginPadding16)
 		wdgs = append(wdgs, layout.Rigid(func(gtx C) D {
 			return layout.Inset{
 				Bottom: values.MarginPadding10,
 			}.Layout(gtx, func(gtx C) D {
-				return card.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							dexAddress := fmt.Sprintf(nStrAddressDex, eWdg.dexServer.Host)
-							account := fmt.Sprintf(nStrAccountID, eWdg.dexServer.AcctID)
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(pg.Theme.Label(values.TextSize12, dexAddress).Layout),
-								layout.Rigid(pg.Theme.Label(values.TextSize12, account).Layout),
-							)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{
-								Top: values.MarginPadding10,
-							}.Layout(gtx, func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(b(eWdg.exportAccountBtn, strExportAccount)),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Left: values.MarginPadding10,
-										}.Layout(gtx, b(eWdg.disableAccountBtn, strDisableAccount))
-									}),
+				return widget.Border{
+					Color:        pg.Theme.Color.Gray2,
+					CornerRadius: values.MarginPadding4,
+					Width:        values.MarginPadding1,
+				}.Layout(gtx, func(gtx C) D {
+					return card.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								dexAddress := fmt.Sprintf(nStrAddressDex, dexServer.Host)
+								account := fmt.Sprintf(nStrAccountID, dexServer.AcctID)
+								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+									layout.Rigid(pg.Theme.Label(values.TextSize12, dexAddress).Layout),
+									layout.Rigid(pg.Theme.Label(values.TextSize12, account).Layout),
 								)
-							})
-						}),
-					)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Top: values.MarginPadding10,
+								}.Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Rigid(b(exportAccountBtn, strExportAccount)),
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{
+												Left: values.MarginPadding10,
+											}.Layout(gtx, b(disableAccountBtn, strDisableAccount))
+										}),
+									)
+								})
+							}),
+						)
+					})
 				})
 			})
 		}))
@@ -196,21 +209,21 @@ func (pg *DexSettingsPage) changeAppPasswordLayout(gtx C) D {
 	)
 }
 
-func (pg *DexSettingsPage) initExchangeWidget() {
-	pg.exchangesWdg = make([]*settingExchangeWidget, 0)
+func (pg *DexSettingsPage) initHandlerAccountBtns() {
 	exchanges := sliceExchanges(pg.Dexc().DEXServers())
+	pg.accountHandlerBtns = make(map[string]*accountHandlerButton, len(exchanges))
 	clickable := func() *decredmaterial.Clickable {
 		cl := pg.Theme.NewClickable(true)
 		cl.Radius = decredmaterial.Radius(0)
 		return cl
 	}
+
 	for _, ex := range exchanges {
-		ew := &settingExchangeWidget{
-			dexServer:         ex,
+		btn := &accountHandlerButton{
 			exportAccountBtn:  clickable(),
 			disableAccountBtn: clickable(),
 		}
-		pg.exchangesWdg = append(pg.exchangesWdg, ew)
+		pg.accountHandlerBtns[ex.Host] = btn
 	}
 }
 
@@ -220,23 +233,23 @@ func (pg *DexSettingsPage) initExchangeWidget() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *DexSettingsPage) HandleUserInteractions() {
-	for _, eWdg := range pg.exchangesWdg {
-		if eWdg.disableAccountBtn.Clicked() {
-			dexServer := eWdg.dexServer
+	for h, btn := range pg.accountHandlerBtns {
+		dexHost := h
+		if btn.disableAccountBtn.Clicked() {
 			modal.NewPasswordModal(pg.Load).
 				Title(strDisableAccount).
 				Hint(strAppPassword).
-				Description(fmt.Sprintf(nStrConfirmDisableAccount, dexServer.Host)).
+				Description(fmt.Sprintf(nStrConfirmDisableAccount, dexHost)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(strDisableAccount, func(password string, pm *modal.PasswordModal) bool {
 					go func() {
-						err := pg.Dexc().Core().AccountDisable([]byte(password), dexServer.Host)
+						err := pg.Dexc().Core().AccountDisable([]byte(password), dexHost)
 						if err != nil {
 							pm.SetError(err.Error())
 							pm.SetLoading(false)
 							return
 						}
-						pg.initExchangeWidget()
+						pg.initHandlerAccountBtns()
 						pm.Dismiss()
 						pg.RefreshWindow()
 					}()
@@ -244,16 +257,15 @@ func (pg *DexSettingsPage) HandleUserInteractions() {
 				}).Show()
 		}
 
-		if eWdg.exportAccountBtn.Clicked() {
-			dexServer := eWdg.dexServer
+		if btn.exportAccountBtn.Clicked() {
 			modal.NewPasswordModal(pg.Load).
 				Title(strAuthorizeExport).
 				Hint(strAppPassword).
-				Description(fmt.Sprintf(nStrConfirmExportAccount, dexServer.Host)).
+				Description(fmt.Sprintf(nStrConfirmExportAccount, dexHost)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(strAuthorizeExport, func(password string, pm *modal.PasswordModal) bool {
 					go func() {
-						account, err := pg.Dexc().Core().AccountExport([]byte(password), dexServer.Host)
+						account, err := pg.Dexc().Core().AccountExport([]byte(password), dexHost)
 						if err != nil {
 							pm.SetError(err.Error())
 							pm.SetLoading(false)
@@ -267,7 +279,7 @@ func (pg *DexSettingsPage) HandleUserInteractions() {
 							return
 						}
 
-						fileName := fmt.Sprintf("dcrAccount-%s.json", dexServer.Host)
+						fileName := fmt.Sprintf("dcrAccount-%s.json", dexHost)
 						filePath, err := zenity.SelectFileSave(
 							zenity.Title("Save Your Account"),
 							zenity.ConfirmOverwrite(),
@@ -302,7 +314,7 @@ func (pg *DexSettingsPage) HandleUserInteractions() {
 
 	if pg.addDexBtn.Button.Clicked() {
 		newAddDexModal(pg.Load).OnDexAdded(func(_ *core.Exchange) {
-			pg.initExchangeWidget()
+			pg.initHandlerAccountBtns()
 			pg.RefreshWindow()
 		}).Show()
 	}
@@ -358,7 +370,7 @@ func (pg *DexSettingsPage) HandleUserInteractions() {
 							return
 						}
 
-						pg.initExchangeWidget()
+						pg.initHandlerAccountBtns()
 						pm.Dismiss()
 						pg.RefreshWindow()
 					}()
