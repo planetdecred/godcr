@@ -93,12 +93,11 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 				if ll.Clickable.Hoverable {
 					if ll.Clickable.button.Hovered() {
 						return ll.Shadow.Layout(gtx, wdg)
-					} else {
-						return wdg(gtx)
 					}
-				} else {
-					return ll.Shadow.Layout(gtx, wdg)
+					return wdg(gtx)
 				}
+
+				return ll.Shadow.Layout(gtx, wdg)
 			}
 
 			return wdg(gtx)
