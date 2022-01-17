@@ -96,7 +96,9 @@ func (pg *SecurityToolsPage) address() layout.Widget {
 
 func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *decredmaterial.Clickable, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+		card := pg.Theme.Card()
+		card.Shadow = true
+		return card.Layout(gtx, func(gtx C) D {
 			return action.Layout(gtx, func(gtx C) D {
 				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,

@@ -12,11 +12,12 @@ import (
 
 type Card struct {
 	layout.Inset
-	Border      bool
-	BorderParam widget.Border
-	Color       color.NRGBA
-	HoverColor  color.NRGBA
-	Radius      CornerRadius
+	Color      color.NRGBA
+	HoverColor color.NRGBA
+	Radius     CornerRadius
+
+	Shadow    bool
+	shadowBox *Shadow
 }
 
 type CornerRadius struct {
@@ -58,11 +59,7 @@ func (t *Theme) Card() Card {
 		Color:      t.Color.Surface,
 		HoverColor: t.Color.Gray4,
 		Radius:     Radius(defaultRadius),
-		BorderParam: widget.Border{
-			Color:        t.Color.Gray2,
-			Width:        unit.Dp(1),
-			CornerRadius: unit.Dp(defaultRadius),
-		},
+		shadowBox:  t.Shadow(),
 	}
 }
 
@@ -86,9 +83,9 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 			layout.Stacked(w),
 		)
 	})
-	if c.Border {
-		border := widget.Border{Color: c.BorderParam.Color, CornerRadius: c.BorderParam.CornerRadius, Width: c.BorderParam.Width}
-		return border.Layout(gtx, func(gtx C) D {
+	if c.Shadow {
+		c.shadowBox.SetShadowRadius(defaultRadius)
+		return c.shadowBox.Layout(gtx, func(gtx C) D {
 			return dims
 		})
 	}
@@ -122,9 +119,8 @@ func (c Card) HoverableLayout(gtx layout.Context, btn *widget.Clickable, w layou
 			layout.Stacked(w),
 		)
 	})
-	if c.Border {
-		border := widget.Border{Color: c.BorderParam.Color, CornerRadius: c.BorderParam.CornerRadius, Width: c.BorderParam.Width}
-		return border.Layout(gtx, func(gtx C) D {
+	if c.Shadow {
+		return c.shadowBox.Layout(gtx, func(gtx C) D {
 			return dims
 		})
 	}
