@@ -3,11 +3,12 @@ module github.com/planetdecred/godcr
 go 1.16
 
 require (
-	decred.org/dcrdex v0.0.0-20211109012459-ce823c3315bc
+	decred.org/dcrdex v0.0.0-20211217203335-620a0258b8cd
 	gioui.org v0.0.0-20211011183043-05f0f5c20f45
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
+	github.com/decred/dcrd/certgen v1.1.2-0.20210914212651-723d86274b0d // indirect
 	github.com/decred/dcrd/chaincfg v1.5.2 // indirect
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
@@ -22,7 +23,7 @@ require (
 	github.com/nxadm/tail v1.4.4
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
-	github.com/planetdecred/dcrlibwallet v1.6.2-0.20211208155954-3ba1589ff83f
+	github.com/planetdecred/dcrlibwallet v1.6.2-0.20220117083048-1cdba274e194
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20210722180016-6781d3edade3
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d

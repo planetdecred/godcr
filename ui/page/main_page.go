@@ -191,7 +191,7 @@ func (mp *MainPage) OnNavigatedTo() {
 	// register for notifications, unregister when the page disappears
 	mp.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
 	mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
-	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, MainPageID)
+	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, true, MainPageID) // notification methods will be invoked asynchronously to prevent potential deadlocks
 	mp.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
 	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
 	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
