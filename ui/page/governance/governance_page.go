@@ -91,7 +91,6 @@ func (pg *Page) OnNavigatedTo() {
 
 	/** begin consensus page OnNavigatedTo method */
 
-	// pg.consensusPage.listenForSyncNotifications()
 	pg.consensusPage.fetchAgendas()
 
 	/** end consensus page OnNavigatedTo method */
