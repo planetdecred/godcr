@@ -2,12 +2,6 @@ package components
 
 import (
 	"image/color"
-<<<<<<< HEAD
-=======
-	"time"
-
-	// "fmt"
->>>>>>> - add consensus listeners
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -23,12 +17,17 @@ var canVote bool
 
 type ConsensusItem struct {
 <<<<<<< HEAD
+<<<<<<< HEAD
 	Agenda     dcrlibwallet.Agenda
 	VoteButton decredmaterial.Button
 =======
 	Agenda       dcrlibwallet.Agenda
 	VoteButton   decredmaterial.Button
 >>>>>>> - add consensus listeners
+=======
+	Agenda     dcrlibwallet.Agenda
+	VoteButton decredmaterial.Button
+>>>>>>> remove notifcation listemers implementations
 }
 
 func AgendasList(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
@@ -238,6 +237,7 @@ func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst bool) []*ConsensusItem {
 	consensusItems := make([]*ConsensusItem, 0)
 <<<<<<< HEAD
+<<<<<<< HEAD
 	agendasResponse, err := l.WL.MultiWallet.GetAllAgendasForWallet(selectedWallet.ID, newestFirst)
 
 	if err == nil {
@@ -251,15 +251,22 @@ func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst 
 	// _, err := l.WL.MultiWallet.Consensus.GetAllAgendas(selectedWallet.ID)
 	
 	agendas, err := l.WL.MultiWallet.Consensus.GetAgendasByWalletIDRaw(selectedWallet.ID, 0, 0, newestFirst)
+=======
+	agendasResponse, err := l.WL.MultiWallet.Consensus.GetAllAgendasForWallet(selectedWallet.ID, newestFirst)
+>>>>>>> remove notifcation listemers implementations
 
 	// fmt.Println("[][][] agendas", agendas)
 	// fmt.Println("[][][] error", err)
 	if err == nil {
 		// fmt.Println("[][][] length of agendas", len(agendas))
-		for i := 0; i < len(agendas); i++ {
+		for i := 0; i < len(agendasResponse.Agendas); i++ {
 			item := &ConsensusItem{
+<<<<<<< HEAD
 				Agenda:     agendas[i],
 >>>>>>> - add consensus listeners
+=======
+				Agenda:     *agendasResponse.Agendas[i],
+>>>>>>> remove notifcation listemers implementations
 				VoteButton: l.Theme.Button("Change Vote"),
 			}
 			consensusItems = append(consensusItems, item)

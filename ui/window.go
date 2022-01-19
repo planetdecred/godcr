@@ -33,7 +33,6 @@ type Window struct {
 	walletTransaction    *wallet.Transaction
 	walletAccount        *wallet.Account
 	proposals            *wallet.Proposals
-	agendas            *wallet.Agendas
 	selectedProposal     *dcrlibwallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs
 

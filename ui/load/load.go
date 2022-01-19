@@ -94,7 +94,6 @@ func NewLoad() (*Load, error) {
 		UnspentOutputs: new(wallet.UnspentOutputs),
 		VspInfo:        new(wallet.VSP),
 		Proposals:      new(wallet.Proposals),
-		Agendas:      new(wallet.Agendas),
 
 		SelectedProposal: new(dcrlibwallet.Proposal),
 	}
@@ -102,7 +101,6 @@ func NewLoad() (*Load, error) {
 	r := &Receiver{
 		AcctMixerStatus: make(chan *wallet.AccountMixer),
 		SyncedProposal:  make(chan *wallet.Proposal),
-		SyncedAgenda:  make(chan *wallet.Agenda),
 	}
 
 	icons := loadIcons()
@@ -125,7 +123,6 @@ func NewLoad() (*Load, error) {
 	return l, nil
 }
 
->>>>>>> - add consensus listeners
 func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)

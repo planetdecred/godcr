@@ -167,8 +167,3 @@ type Balance struct {
 type Proposals struct {
 	Proposals []dcrlibwallet.Proposal
 }
-
-// Agendas is sent when all agendas has been fetched
-type Agendas struct {
-	Agendas []dcrlibwallet.Agenda
-}
