@@ -93,7 +93,7 @@ func (pg *GovernancePage) OnNavigatedTo() {
 
 	/** begin consensus page OnNavigatedTo method */
 
-	pg.consensusPage.fetchAgendas()
+	pg.consensusPage.FetchAgendas()
 
 	/** end consensus page OnNavigatedTo method */
 }
@@ -186,11 +186,11 @@ func (pg *GovernancePage) HandleUserInteractions() {
 	/** begin consensus page handles */
 
 	for pg.consensusPage.walletDropDown.Changed() {
-		pg.consensusPage.fetchAgendas()
+		pg.consensusPage.FetchAgendas()
 	}
 
 	for pg.consensusPage.orderDropDown.Changed() {
-		pg.consensusPage.fetchAgendas()
+		pg.consensusPage.FetchAgendas()
 	}
 
 	for i := range pg.consensusPage.consensusItems {

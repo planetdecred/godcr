@@ -411,7 +411,7 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = wallets.NewWalletPage(mp.Load)
 			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
-			case governance.ProposalsPageID:
+			case governance.GovernancePageID:
 				pg = governance.NewGovernancePage(mp.Load)
 			case dexclient.MarketPageID:
 				_, err := mp.WL.MultiWallet.StartDexClient() // does nothing if already started

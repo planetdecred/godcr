@@ -88,9 +88,13 @@ func (pg *ConsensusPage) ID() string {
 	return ConsensusPageID
 }
 
-func (pg *ConsensusPage) OnResume() {
+// func (pg *ConsensusPage) OnResume() {
+
+// }
+
+func (pg *ConsensusPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	pg.fetchAgendas()
+	pg.FetchAgendas()
 }
 
 func (pg *ConsensusPage) OnClose() {
@@ -101,7 +105,7 @@ func (pg *ConsensusPage) Handle() {
 
 }
 
-func (pg *ConsensusPage) fetchAgendas() {
+func (pg *ConsensusPage) FetchAgendas() {
 	newestFirst := pg.orderDropDown.SelectedIndex() == 0
 
 	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
@@ -116,6 +120,7 @@ func (pg *ConsensusPage) fetchAgendas() {
 	pg.agendaMu.Lock()
 	pg.consensusItems = listItems
 	pg.agendaMu.Unlock()
+	pg.RefreshWindow()
 }
 
 func (pg *ConsensusPage) Layout(gtx C) D {

@@ -5,7 +5,7 @@ import (
 	"time"
 	// "context"
 
-	// "fmt"
+	"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -159,10 +159,8 @@ func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst 
 	consensusItems := make([]*ConsensusItem, 0)
 	agendasResponse, err := l.WL.MultiWallet.Consensus.GetAllAgendasForWallet(selectedWallet.ID, newestFirst)
 
-	// fmt.Println("[][][] agendas", agendas)
-	// fmt.Println("[][][] error", err)
+	fmt.Println("[][][] LOAD AGENDAS IS CALLED")
 	if err == nil {
-		// fmt.Println("[][][] length of agendas", len(agendas))
 		for i := 0; i < len(agendasResponse.Agendas); i++ {
 			item := &ConsensusItem{
 				Agenda:     *agendasResponse.Agendas[i],

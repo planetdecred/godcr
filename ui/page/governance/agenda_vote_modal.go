@@ -187,7 +187,7 @@ func (avm *agendaVoteModal) sendVotes() {
 				}
 				pm.Dismiss()
 				avm.Toast.Notify("Vote updated successfully, refreshing agendas!")
-				go avm.WL.MultiWallet.Consensus.GetAllAgendasForWallet(avm.walletSelector.selectedWallet.ID, false)
+				go avm.consensusPage.FetchAgendas()
 				avm.Dismiss()
 			}()
 
