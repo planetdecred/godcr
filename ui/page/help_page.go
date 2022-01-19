@@ -16,8 +16,8 @@ const HelpPageID = "Help"
 type HelpPage struct {
 	*load.Load
 	documentation *decredmaterial.Clickable
-
-	backButton decredmaterial.IconButton
+	shadowBox     *decredmaterial.Shadow
+	backButton    decredmaterial.IconButton
 }
 
 func NewHelpPage(l *load.Load) *HelpPage {
@@ -25,6 +25,9 @@ func NewHelpPage(l *load.Load) *HelpPage {
 		Load:          l,
 		documentation: l.Theme.NewClickable(true),
 	}
+
+	pg.shadowBox = l.Theme.Shadow()
+	pg.shadowBox.SetShadowRadius(14)
 
 	pg.documentation.Radius = decredmaterial.Radius(14)
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -75,32 +78,33 @@ func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *HelpPage) document() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, pg.Icons.DocumentationIcon, pg.documentation, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.Theme.Body1("Documentation").Layout),
-			)
-		})
+		return pg.pageSections(gtx, pg.Icons.DocumentationIcon, pg.documentation, "Documentation")
 	}
 }
 
-func (pg *HelpPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *decredmaterial.Clickable, body layout.Widget) layout.Dimensions {
+func (pg *HelpPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *decredmaterial.Clickable, title string) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-			return action.Layout(gtx, func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return icon.Layout24dp(gtx)
-						}),
-						layout.Rigid(body),
-						layout.Rigid(func(gtx C) D {
-							size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
-							return layout.Dimensions{Size: size}
-						}),
-					)
-				})
-			})
-		})
+		return decredmaterial.LinearLayout{
+			Orientation: layout.Vertical,
+			Width:       decredmaterial.MatchParent,
+			Height:      decredmaterial.WrapContent,
+			Background:  pg.Theme.Color.Surface,
+			Clickable:   action,
+			Direction:   layout.Center,
+			Alignment:   layout.Middle,
+			Shadow:      pg.shadowBox,
+			Border:      decredmaterial.Border{Radius: decredmaterial.Radius(14)},
+			Padding:     layout.UniformInset(values.MarginPadding15),
+			Margin:      layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return icon.Layout24dp(gtx)
+			}),
+			layout.Rigid(pg.Theme.Body1(title).Layout),
+			layout.Rigid(func(gtx C) D {
+				size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
+				return layout.Dimensions{Size: size}
+			}),
+		)
 	})
 }
 

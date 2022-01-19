@@ -7,16 +7,13 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/unit"
-	"gioui.org/widget"
 )
 
 type Card struct {
 	layout.Inset
-	Border      bool
-	BorderParam widget.Border
-	Color       color.NRGBA
-	HoverColor  color.NRGBA
-	Radius      CornerRadius
+	Color      color.NRGBA
+	HoverColor color.NRGBA
+	Radius     CornerRadius
 }
 
 type CornerRadius struct {
@@ -58,11 +55,6 @@ func (t *Theme) Card() Card {
 		Color:      t.Color.Surface,
 		HoverColor: t.Color.Gray4,
 		Radius:     Radius(defaultRadius),
-		BorderParam: widget.Border{
-			Color:        t.Color.Gray2,
-			Width:        unit.Dp(1),
-			CornerRadius: unit.Dp(defaultRadius),
-		},
 	}
 }
 
@@ -86,16 +78,11 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 			layout.Stacked(w),
 		)
 	})
-	if c.Border {
-		border := widget.Border{Color: c.BorderParam.Color, CornerRadius: c.BorderParam.CornerRadius, Width: c.BorderParam.Width}
-		return border.Layout(gtx, func(gtx C) D {
-			return dims
-		})
-	}
+
 	return dims
 }
 
-func (c Card) HoverableLayout(gtx layout.Context, btn *widget.Clickable, w layout.Widget) layout.Dimensions {
+func (c Card) HoverableLayout(gtx layout.Context, btn *Clickable, w layout.Widget) layout.Dimensions {
 	background := c.Color
 	dims := c.Inset.Layout(gtx, func(gtx C) D {
 		return layout.Stack{}.Layout(gtx,
@@ -111,22 +98,16 @@ func (c Card) HoverableLayout(gtx layout.Context, btn *widget.Clickable, w layou
 					}},
 					NW: tl, NE: tr, SE: br, SW: bl,
 				}.Push(gtx.Ops).Pop()
-				switch {
-				case gtx.Queue == nil:
-					background = Disabled(c.Color)
-				case btn.Hovered():
-					background = Hovered(c.HoverColor)
+
+				if btn.Hoverable && btn.button.Hovered() {
+					background = btn.style.HoverColor
 				}
+
 				return fill(gtx, background)
 			}),
 			layout.Stacked(w),
 		)
 	})
-	if c.Border {
-		border := widget.Border{Color: c.BorderParam.Color, CornerRadius: c.BorderParam.CornerRadius, Width: c.BorderParam.Width}
-		return border.Layout(gtx, func(gtx C) D {
-			return dims
-		})
-	}
+
 	return dims
 }

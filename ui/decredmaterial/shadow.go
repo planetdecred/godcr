@@ -12,45 +12,46 @@ import (
 )
 
 type Shadow struct {
-	surface color.NRGBA
+	surface         color.NRGBA
+	shadowElevation float32
+	shadowRadius    float32
 }
-
-const (
-	shadowElevation = 5
-	shadowRadius    = 8
-)
 
 func (t *Theme) Shadow() *Shadow {
 	return &Shadow{
-		surface: t.Color.Surface,
+		surface:         t.Color.Surface,
+		shadowRadius:    8, // raduis of the shadow
+		shadowElevation: 7, // height/spread of the shadow
 	}
 }
 
 func (s *Shadow) Layout(gtx C, w layout.Widget) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			s.layoutShadow(gtx)
-			defer clip.UniformRRect(f32.Rectangle{Max: layout.FPt(gtx.Constraints.Min)}, shadowRadius).Push(gtx.Ops).Pop()
-			paint.PaintOp{}.Add(gtx.Ops)
-			return D{Size: gtx.Constraints.Min}
+			sz := gtx.Constraints.Min
+			offset := pxf(gtx.Metric, unit.Dp(s.shadowElevation))
+			rr := float32(gtx.Px(unit.Dp(s.shadowRadius)))
+			rect := f32.Rect(0, 0, float32(sz.X), float32(sz.Y))
+
+			// shadow layers arranged from the biggest to the smallest
+			gradientBox(gtx.Ops, rect, rr, offset/0.8, color.NRGBA{A: 0x3})
+			gradientBox(gtx.Ops, rect, rr, offset, color.NRGBA{A: 0x4})
+			gradientBox(gtx.Ops, rect, rr, offset/1.5, color.NRGBA{A: 0x7})
+			gradientBox(gtx.Ops, rect, rr, offset/2.5, color.NRGBA{A: 0x10})
+
+			return layout.Dimensions{Size: sz}
+
 		}),
 		layout.Stacked(w),
 	)
 }
 
-func (s *Shadow) layoutShadow(gtx C) D {
-	sz := gtx.Constraints.Min
-	offset := pxf(gtx.Metric, unit.Dp(shadowElevation))
-	shadowSize := float32(gtx.Px(unit.Dp(shadowElevation)))
-	rect := f32.Rect(0, 0, float32(sz.X), float32(sz.Y))
+func (s *Shadow) SetShadowRadius(radius float32) {
+	s.shadowRadius = radius
+}
 
-	// shadow layers arranged from the biggest to the smallest
-	gradientBox(gtx.Ops, rect, shadowSize, offset/0.8, color.NRGBA{A: 0x5})
-	gradientBox(gtx.Ops, rect, shadowSize, offset, color.NRGBA{A: 0x10})
-	gradientBox(gtx.Ops, rect, shadowSize, offset/1.5, color.NRGBA{A: 0x15})
-	gradientBox(gtx.Ops, rect, shadowSize, offset/2.5, color.NRGBA{A: 0x20})
-
-	return layout.Dimensions{Size: sz}
+func (s *Shadow) SetShadowElevation(elev float32) {
+	s.shadowElevation = elev
 }
 
 func gradientBox(ops *op.Ops, r f32.Rectangle, rr, spread float32, col color.NRGBA) {

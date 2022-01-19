@@ -49,7 +49,6 @@ type TxDetailsPage struct {
 	rebroadcast                     decredmaterial.Label
 	rebroadcastClickable            *decredmaterial.Clickable
 	rebroadcastIcon                 *decredmaterial.Image
-	gtx                             *layout.Context
 
 	txnWidgets    transactionWdg
 	transaction   *dcrlibwallet.Transaction
@@ -152,9 +151,7 @@ func (pg *TxDetailsPage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
-	if pg.gtx == nil {
-		pg.gtx = &gtx
-	}
+	pg.handleTextCopyEvent(gtx)
 
 	body := func(gtx C) D {
 		sp := components.SubPage{
@@ -718,26 +715,8 @@ func (pg *TxDetailsPage) pageSections(gtx layout.Context, body layout.Widget) la
 // displayed.
 // Part of the load.Page interface.
 func (pg *TxDetailsPage) HandleUserInteractions() {
-	gtx := pg.gtx
 	if pg.toDcrdata.Clicked() {
 		components.GoToURL(pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash))
-	}
-
-	for _, b := range pg.txnWidgets.copyTextButtons {
-		for b.Clicked() {
-			clipboard.WriteOp{Text: b.Text}.Add(gtx.Ops)
-			pg.Toast.Notify("Copied")
-		}
-	}
-
-	for pg.hashClickable.Clicked() {
-		clipboard.WriteOp{Text: pg.transaction.Hash}.Add(gtx.Ops)
-		pg.Toast.Notify("Transaction Hash copied")
-	}
-
-	for pg.destAddressClickable.Clicked() {
-		clipboard.WriteOp{Text: pg.txDestinationAddress}.Add(gtx.Ops)
-		pg.Toast.Notify("Address copied")
 	}
 
 	for pg.associatedTicketClickable.Clicked() {
@@ -769,6 +748,25 @@ func (pg *TxDetailsPage) HandleUserInteractions() {
 				pg.rebroadcastClickable.SetEnabled(true, nil)
 			}
 		}()
+	}
+}
+
+func (pg *TxDetailsPage) handleTextCopyEvent(gtx layout.Context) {
+	for _, b := range pg.txnWidgets.copyTextButtons {
+		for b.Clicked() {
+			clipboard.WriteOp{Text: b.Text}.Add(gtx.Ops)
+			pg.Toast.Notify("Copied")
+		}
+	}
+
+	for pg.hashClickable.Clicked() {
+		clipboard.WriteOp{Text: pg.transaction.Hash}.Add(gtx.Ops)
+		pg.Toast.Notify("Transaction Hash copied")
+	}
+
+	for pg.destAddressClickable.Clicked() {
+		clipboard.WriteOp{Text: pg.txDestinationAddress}.Add(gtx.Ops)
+		pg.Toast.Notify("Address copied")
 	}
 }
 
