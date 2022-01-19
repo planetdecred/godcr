@@ -14,7 +14,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const ConsensusPageID = "Consensus"
@@ -93,7 +92,6 @@ func (pg *ConsensusPage) ID() string {
 
 func (pg *ConsensusPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	pg.listenForSyncNotifications()
 	pg.fetchAgendas()
 	pg.isSyncing = pg.multiWallet.Consensus.IsSyncing()
 }
@@ -264,29 +262,4 @@ func (pg *ConsensusPage) layoutStartSyncSection(gtx C) D {
 	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
 		return pg.Icons.Restore.Layout24dp(gtx)
 	})
-}
-
-func (pg *ConsensusPage) listenForSyncNotifications() {
-	go func() {
-		for {
-			var notification interface{}
-
-			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.Agenda:
-				if n.AgendaStatus == wallet.SyncedAgenda {
-					pg.syncCompleted = true
-					pg.isSyncing = false
-
-					pg.fetchAgendas()
-					pg.RefreshWindow()
-				}
-			}
-		}
-	}()
 }

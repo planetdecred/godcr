@@ -3,6 +3,7 @@ package components
 import (
 	"image/color"
 	"time"
+	// "context"
 
 	// "fmt"
 
@@ -18,8 +19,8 @@ import (
 var canVote bool
 
 type ConsensusItem struct {
-	Agenda       dcrlibwallet.Agenda
-	VoteButton   decredmaterial.Button
+	Agenda     dcrlibwallet.Agenda
+	VoteButton decredmaterial.Button
 }
 
 func AgendasList(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
@@ -156,20 +157,15 @@ func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 
 func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst bool) []*ConsensusItem {
 	consensusItems := make([]*ConsensusItem, 0)
-	// agendasResponse, err := selectedWallet.GetAllAgendas()
-	// l.WL.MultiWallet.Consensus.ClearSavedVoteChoices()
-	// l.WL.MultiWallet.Consensus.ClearSavedAgendas()
-	// _, err := l.WL.MultiWallet.Consensus.GetAllAgendas(selectedWallet.ID)
-	
-	agendas, err := l.WL.MultiWallet.Consensus.GetAgendasByWalletIDRaw(selectedWallet.ID, 0, 0, newestFirst)
+	agendasResponse, err := l.WL.MultiWallet.Consensus.GetAllAgendasForWallet(selectedWallet.ID, newestFirst)
 
 	// fmt.Println("[][][] agendas", agendas)
 	// fmt.Println("[][][] error", err)
 	if err == nil {
 		// fmt.Println("[][][] length of agendas", len(agendas))
-		for i := 0; i < len(agendas); i++ {
+		for i := 0; i < len(agendasResponse.Agendas); i++ {
 			item := &ConsensusItem{
-				Agenda:     agendas[i],
+				Agenda:     *agendasResponse.Agendas[i],
 				VoteButton: l.Theme.Button("Change Vote"),
 			}
 			consensusItems = append(consensusItems, item)

@@ -32,6 +32,8 @@ type agendaVoteModal struct {
 	agenda   *dcrlibwallet.Agenda
 	isVoting bool
 
+	consensusPage *ConsensusPage
+
 	walletSelector *WalletSelector
 	materialLoader material.LoaderStyle
 	abstainVote    decredmaterial.CheckBoxStyle
@@ -50,9 +52,10 @@ type agendaVoteModal struct {
 
 func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda) *agendaVoteModal {
 	avm := &agendaVoteModal{
-		Load:   l,
-		modal:  *l.Theme.ModalFloatTitle(),
-		agenda: agenda,
+		Load:          l,
+		modal:         *l.Theme.ModalFloatTitle(),
+		agenda:        agenda,
+		consensusPage: NewConsensusPage(l),
 		// defaultValue: agenda.VotingPreference,
 		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
 		abstainVote:       l.Theme.CheckBox(new(widget.Bool), "Abstain"),
@@ -184,7 +187,7 @@ func (avm *agendaVoteModal) sendVotes() {
 				}
 				pm.Dismiss()
 				avm.Toast.Notify("Vote updated successfully, refreshing agendas!")
-				go avm.WL.MultiWallet.Consensus.Sync(avm.WL.SortedWalletList())
+				go avm.WL.MultiWallet.Consensus.GetAllAgendasForWallet(avm.walletSelector.selectedWallet.ID, false)
 				avm.Dismiss()
 			}()
 

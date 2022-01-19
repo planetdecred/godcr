@@ -30,10 +30,10 @@ type GovernancePage struct {
 
 	multiWallet *dcrlibwallet.MultiWallet
 
-	tabCategoryList  *decredmaterial.ClickableList
-	listContainer *widget.List
-	tabCard       decredmaterial.Card
-	itemCard      decredmaterial.Card
+	tabCategoryList *decredmaterial.ClickableList
+	listContainer   *widget.List
+	tabCard         decredmaterial.Card
+	itemCard        decredmaterial.Card
 
 	selectedCategoryIndex int
 
@@ -42,6 +42,8 @@ type GovernancePage struct {
 
 	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
+
+	enableGovernanceBtn decredmaterial.Button
 }
 
 var (
@@ -112,7 +114,7 @@ func (pg *GovernancePage) ID() string {
 	return GovernancePageID
 }
 
-func (pg *GovernancePage) Handle() {	
+func (pg *GovernancePage) Handle() {
 	for pg.enableGovernanceBtn.Clicked() {
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.proposalsPage.isSyncing = pg.proposalsPage.multiWallet.Politeia.IsSyncing()

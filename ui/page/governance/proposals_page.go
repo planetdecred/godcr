@@ -34,13 +34,13 @@ type ProposalsPage struct {
 	ctxCancel  context.CancelFunc
 	proposalMu sync.Mutex
 
-	multiWallet       *dcrlibwallet.MultiWallet
-	listContainer     *widget.List
-	orderDropDown     *decredmaterial.DropDown
-	categoryDropDown  *decredmaterial.DropDown
-	proposalsList     *decredmaterial.ClickableList
-	syncButton        *widget.Clickable
-	searchEditor      decredmaterial.Editor
+	multiWallet      *dcrlibwallet.MultiWallet
+	listContainer    *widget.List
+	orderDropDown    *decredmaterial.DropDown
+	categoryDropDown *decredmaterial.DropDown
+	proposalsList    *decredmaterial.ClickableList
+	syncButton       *widget.Clickable
+	searchEditor     decredmaterial.Editor
 
 	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
@@ -220,111 +220,111 @@ func (pg *ProposalsPage) OnNavigatedFrom() {
 func (pg *ProposalsPage) Layout(gtx C) D {
 	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 		// return components.UniformPadding(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						// layout.Rigid(pg.backButton.Layout),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-								body := func(gtx C) D {
-									return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-										// layout.Rigid(func(gtx C) D {
-										// 	return layout.Flex{}.Layout(gtx,
-										// 		layout.Rigid(func(gtx C) D {
-										// 			txt := pg.Theme.Label(values.TextSize14, "Available Treasury Balance: ")
-										// 			txt.Font.Weight = text.SemiBold
-										// 			return txt.Layout(gtx)
-										// 		}),
-										// 		layout.Rigid(func(gtx C) D {
-										// 			// Todo get available treasury balance
-										// 			return components.LayoutBalanceSize(gtx, pg.Load, "678,678.687654 DCR", values.TextSize14)
-										// 		}),
-										// 	)
-										// }),
-										layout.Rigid(func(gtx C) D {
-											var text string
-											if pg.isSyncing {
-												text = "Syncing..."
-											} else if pg.syncCompleted {
-												text = "Updated"
-											} else {
-												text = "Upated " + components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
-											}
-
-											lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
-											lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
-											if pg.syncCompleted {
-												lastUpdatedInfo.Color = pg.Theme.Color.Success
-											}
-
-											return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-												return lastUpdatedInfo.Layout(gtx)
-											})
-										}),
-									)
-								}
-
-								return layout.Flex{}.Layout(gtx,
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					// layout.Rigid(pg.backButton.Layout),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+							body := func(gtx C) D {
+								return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
 									// layout.Rigid(func(gtx C) D {
-									// 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+									// 	return layout.Flex{}.Layout(gtx,
 									// 		layout.Rigid(func(gtx C) D {
-									// 			txt := pg.Theme.Label(values.TextSize20, "Proposals")
+									// 			txt := pg.Theme.Label(values.TextSize14, "Available Treasury Balance: ")
 									// 			txt.Font.Weight = text.SemiBold
 									// 			return txt.Layout(gtx)
 									// 		}),
+									// 		layout.Rigid(func(gtx C) D {
+									// 			// Todo get available treasury balance
+									// 			return components.LayoutBalanceSize(gtx, pg.Load, "678,678.687654 DCR", values.TextSize14)
+									// 		}),
 									// 	)
 									// }),
-									layout.Flexed(1, func(gtx C) D {
-										return layout.E.Layout(gtx, body)
+									layout.Rigid(func(gtx C) D {
+										var text string
+										if pg.isSyncing {
+											text = "Syncing..."
+										} else if pg.syncCompleted {
+											text = "Updated"
+										} else {
+											text = "Upated " + components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
+										}
+
+										lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
+										lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
+										if pg.syncCompleted {
+											lastUpdatedInfo.Color = pg.Theme.Color.Success
+										}
+
+										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+											return lastUpdatedInfo.Layout(gtx)
+										})
 									}),
 								)
+							}
+
+							return layout.Flex{}.Layout(gtx,
+								// layout.Rigid(func(gtx C) D {
+								// 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+								// 		layout.Rigid(func(gtx C) D {
+								// 			txt := pg.Theme.Label(values.TextSize20, "Proposals")
+								// 			txt.Font.Weight = text.SemiBold
+								// 			return txt.Layout(gtx)
+								// 		}),
+								// 	)
+								// }),
+								layout.Flexed(1, func(gtx C) D {
+									return layout.E.Layout(gtx, body)
+								}),
+							)
+						})
+					}),
+				)
+			}),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+					return layout.Stack{}.Layout(gtx,
+						layout.Expanded(func(gtx C) D {
+							return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
+						}),
+						layout.Expanded(func(gtx C) D {
+							gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+
+							card := pg.Theme.Card()
+							card.Radius = decredmaterial.Radius(8)
+							return card.Layout(gtx, func(gtx C) D {
+								return layout.Inset{
+									Left:   values.MarginPadding10,
+									Right:  values.MarginPadding10,
+									Top:    values.MarginPadding2,
+									Bottom: values.MarginPadding2,
+								}.Layout(gtx, pg.searchEditor.Layout)
 							})
 						}),
-					)
-				}),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-						return layout.Stack{}.Layout(gtx,
-							layout.Expanded(func(gtx C) D {
-								return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
-							}),
-							layout.Expanded(func(gtx C) D {
-								gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
-								gtx.Constraints.Min.X = gtx.Constraints.Max.X
-
+						layout.Expanded(func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return layout.E.Layout(gtx, func(gtx C) D {
 								card := pg.Theme.Card()
 								card.Radius = decredmaterial.Radius(8)
 								return card.Layout(gtx, func(gtx C) D {
-									return layout.Inset{
-										Left:   values.MarginPadding10,
-										Right:  values.MarginPadding10,
-										Top:    values.MarginPadding2,
-										Bottom: values.MarginPadding2,
-									}.Layout(gtx, pg.searchEditor.Layout)
-								})
-							}),
-							layout.Expanded(func(gtx C) D {
-								gtx.Constraints.Min.X = gtx.Constraints.Max.X
-								return layout.E.Layout(gtx, func(gtx C) D {
-									card := pg.Theme.Card()
-									card.Radius = decredmaterial.Radius(8)
-									return card.Layout(gtx, func(gtx C) D {
-										return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
-											return pg.layoutSyncSection(gtx)
-										})
+									return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
+										return pg.layoutSyncSection(gtx)
 									})
 								})
-							}),
-							layout.Expanded(func(gtx C) D {
-								return pg.orderDropDown.Layout(gtx, 45, true)
-							}),
-							layout.Expanded(func(gtx C) D {
-								return pg.categoryDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
-							}),
-						)
-					})
-				}),
-			)
+							})
+						}),
+						layout.Expanded(func(gtx C) D {
+							return pg.orderDropDown.Layout(gtx, 45, true)
+						}),
+						layout.Expanded(func(gtx C) D {
+							return pg.categoryDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
+						}),
+					)
+				})
+			}),
+		)
 		// })
 	}
 	return D{}
