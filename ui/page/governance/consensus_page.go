@@ -4,10 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -93,7 +91,6 @@ func (pg *ConsensusPage) ID() string {
 func (pg *ConsensusPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.fetchAgendas()
-	pg.isSyncing = pg.multiWallet.Consensus.IsSyncing()
 }
 
 func (pg *ConsensusPage) OnClose() {
@@ -124,45 +121,6 @@ func (pg *ConsensusPage) fetchAgendas() {
 func (pg *ConsensusPage) Layout(gtx C) D {
 	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					// layout.Rigid(pg.backButton.Layout),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							body := func(gtx C) D {
-								return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										var text string
-										if pg.isSyncing {
-											text = "Syncing..."
-										} else if pg.syncCompleted {
-											text = "Updated"
-										} else {
-											text = "Upated " + components.TimeAgo(pg.multiWallet.Consensus.GetLastSyncedTimeStamp())
-										}
-
-										lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
-										lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
-										if pg.syncCompleted {
-											lastUpdatedInfo.Color = pg.Theme.Color.Success
-										}
-
-										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-											return lastUpdatedInfo.Layout(gtx)
-										})
-									}),
-								)
-							}
-
-							return layout.Flex{}.Layout(gtx,
-								layout.Flexed(1, func(gtx C) D {
-									return layout.E.Layout(gtx, body)
-								}),
-							)
-						})
-					}),
-				)
-			}),
 			layout.Flexed(1, func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 					return layout.Stack{}.Layout(gtx,
@@ -185,18 +143,6 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 							})
 						}),
 						layout.Expanded(func(gtx C) D {
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return layout.E.Layout(gtx, func(gtx C) D {
-								card := pg.Theme.Card()
-								card.Radius = decredmaterial.Radius(8)
-								return card.Layout(gtx, func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
-										return pg.layoutSyncSection(gtx)
-									})
-								})
-							})
-						}),
-						layout.Expanded(func(gtx C) D {
 							return pg.orderDropDown.Layout(gtx, 45, true)
 						}),
 						layout.Expanded(func(gtx C) D {
@@ -213,9 +159,7 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 func (pg *ConsensusPage) layoutContent(gtx C) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			// pg.proposalMu.Lock()
 			consensusItems := pg.consensusItems
-			// pg.proposalMu.Unlock()
 
 			return pg.Theme.List(pg.listContainer).Layout(gtx, 1, func(gtx C, i int) D {
 				return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
@@ -238,28 +182,4 @@ func (pg *ConsensusPage) layoutContent(gtx C) D {
 			})
 		}),
 	)
-}
-
-func (pg *ConsensusPage) layoutSyncSection(gtx C) D {
-	if pg.isSyncing {
-		return pg.layoutIsSyncingSection(gtx)
-	} else if pg.syncCompleted {
-		return pg.updatedIcon.Layout(gtx, values.MarginPadding20)
-	}
-	return pg.layoutStartSyncSection(gtx)
-}
-
-func (pg *ConsensusPage) layoutIsSyncingSection(gtx C) D {
-	th := material.NewTheme(gofont.Collection())
-	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding24)
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	loader := material.Loader(th)
-	loader.Color = pg.Theme.Color.Gray1
-	return loader.Layout(gtx)
-}
-
-func (pg *ConsensusPage) layoutStartSyncSection(gtx C) D {
-	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
-		return pg.Icons.Restore.Layout24dp(gtx)
-	})
 }

@@ -90,7 +90,6 @@ func (pg *GovernancePage) OnResume() {
 
 	// pg.consensusPage.listenForSyncNotifications()
 	pg.consensusPage.fetchAgendas()
-	pg.consensusPage.isSyncing = pg.consensusPage.multiWallet.Consensus.IsSyncing()
 
 	/** end consensus page resume method */
 }
@@ -118,8 +117,6 @@ func (pg *GovernancePage) Handle() {
 	for pg.enableGovernanceBtn.Clicked() {
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.proposalsPage.isSyncing = pg.proposalsPage.multiWallet.Politeia.IsSyncing()
-		go pg.WL.MultiWallet.Consensus.Sync(pg.WL.SortedWalletList())
-		pg.consensusPage.isSyncing = pg.consensusPage.multiWallet.Consensus.IsSyncing()
 		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
 	}
 
@@ -192,7 +189,6 @@ func (pg *GovernancePage) Handle() {
 	}
 
 	for pg.consensusPage.syncButton.Clicked() {
-		go pg.multiWallet.Consensus.Sync(pg.Load.WL.SortedWalletList())
 		pg.consensusPage.isSyncing = true
 
 		//Todo: check after 1min if sync does not start, set isSyncing to false and cancel sync
