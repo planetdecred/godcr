@@ -101,9 +101,6 @@ func (pg *SignMessagePage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
-	if pg.gtx == nil {
-		pg.gtx = &gtx
-	}
 
 	body := func(gtx C) D {
 		sp := components.SubPage{
@@ -194,6 +191,10 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 										layout.Flexed(0.1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
 												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+													if pg.copySignature.Clicked() {
+														clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
+														pg.Toast.Notify("Signature copied")
+													}
 													return pg.copySignature.Layout(gtx, pg.copyIcon.Layout24dp)
 												})
 											})
@@ -243,7 +244,6 @@ func (pg *SignMessagePage) updateButtonColors() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *SignMessagePage) HandleUserInteractions() {
-	gtx := pg.gtx
 	pg.updateButtonColors()
 
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pg.addressEditor.Editor, pg.messageEditor.Editor)
@@ -285,11 +285,6 @@ func (pg *SignMessagePage) HandleUserInteractions() {
 					return false
 				}).Show()
 		}
-	}
-
-	if pg.copySignature.Clicked() {
-		clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
-		pg.Toast.Notify("Signature copied")
 	}
 
 	//Switch editors when tab key is pressed

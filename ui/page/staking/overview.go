@@ -88,15 +88,7 @@ func (pg *Page) OnNavigatedTo() {
 }
 
 func (pg *Page) loadPageData() {
-	go func() {
-		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
-		if err != nil {
-			pg.Toast.NotifyError(err.Error())
-		} else {
-			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
-			pg.RefreshWindow()
-		}
-	}()
+	pg.ticketPrice = dcrutil.Amount(pg.WL.TicketPrice()).String()
 
 	go func() {
 		totalRewards, err := pg.WL.MultiWallet.TotalStakingRewards()

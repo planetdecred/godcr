@@ -21,6 +21,7 @@ type morePageHandler struct {
 type MorePage struct {
 	*load.Load
 	container         layout.Flex
+	shadowBox         *decredmaterial.Shadow
 	morePageListItems []morePageHandler
 }
 
@@ -72,6 +73,7 @@ func NewMorePage(l *load.Load) *MorePage {
 		container:         layout.Flex{Axis: layout.Vertical},
 		morePageListItems: morePageListItems,
 		Load:              l,
+		shadowBox:         l.Theme.Shadow(),
 	}
 
 	return pg
@@ -130,6 +132,8 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 	list := layout.List{Axis: layout.Vertical}
 	return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
 		radius := decredmaterial.Radius(14)
+		pg.shadowBox.SetShadowRadius(14)
+		pg.shadowBox.SetShadowElevation(5)
 		return decredmaterial.LinearLayout{
 			Orientation: layout.Horizontal,
 			Width:       decredmaterial.MatchParent,
@@ -137,9 +141,10 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 			Background:  pg.Theme.Color.Surface,
 			Clickable:   pg.morePageListItems[i].clickable,
 			Direction:   layout.W,
+			Shadow:      pg.shadowBox,
 			Border:      decredmaterial.Border{Radius: radius},
 			Padding:     layout.UniformInset(values.MarginPadding15),
-			Margin:      layout.Inset{Bottom: values.MarginPadding8}}.Layout(gtx,
+			Margin:      layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return pg.morePageListItems[i].image.Layout24dp(gtx)
 			}),

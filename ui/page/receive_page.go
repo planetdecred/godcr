@@ -37,9 +37,8 @@ type ReceivePage struct {
 	info, more        decredmaterial.IconButton
 	card              decredmaterial.Card
 	receiveAddress    decredmaterial.Label
-	gtx               *layout.Context
-
-	selector *components.AccountSelector
+	ops               *op.Ops
+	selector          *components.AccountSelector
 
 	backdrop   *widget.Clickable
 	backButton decredmaterial.IconButton
@@ -162,9 +161,7 @@ func (pg *ReceivePage) generateQRForAddress() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
-	if pg.gtx == nil {
-		pg.gtx = &gtx
-	}
+	pg.handleCopyEvent(gtx)
 	pg.pageBackdropLayout(gtx)
 
 	pageContent := []func(gtx C) D{
@@ -334,7 +331,6 @@ func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 // displayed.
 // Part of the load.Page interface.
 func (pg *ReceivePage) HandleUserInteractions() {
-	gtx := pg.gtx
 	if pg.backdrop.Clicked() {
 		pg.isNewAddr = false
 	}
@@ -369,20 +365,8 @@ func (pg *ReceivePage) HandleUserInteractions() {
 	if pg.backButton.Button.Clicked() {
 		pg.PopFragment()
 	}
-
-	if pg.copy.Clicked() {
-
-		clipboard.WriteOp{Text: pg.currentAddress}.Add(gtx.Ops)
-
-		pg.copy.Text = "Copied!"
-		pg.copy.Color = pg.Theme.Color.Success
-		time.AfterFunc(time.Second*3, func() {
-			pg.copy.Text = "Copy"
-			pg.copy.Color = pg.Theme.Color.Primary
-		})
-		return
-	}
 }
+
 func (pg *ReceivePage) generateNewAddress() (string, error) {
 	selectedAccount := pg.selector.SelectedAccount()
 	selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)
@@ -398,6 +382,19 @@ generateAddress:
 	}
 
 	return newAddr, nil
+}
+
+func (pg *ReceivePage) handleCopyEvent(gtx layout.Context) {
+	if pg.copy.Clicked() {
+		clipboard.WriteOp{Text: pg.currentAddress}.Add(gtx.Ops)
+
+		pg.copy.Text = "Copied!"
+		pg.copy.Color = pg.Theme.Color.Success
+		time.AfterFunc(time.Second*3, func() {
+			pg.copy.Text = "Copy"
+			pg.copy.Color = pg.Theme.Color.Primary
+		})
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
