@@ -152,12 +152,6 @@ func (pg *ProposalsPage) fetchProposals() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *ProposalsPage) HandleUserInteractions() {
-	for pg.fetchProposalsBtn.Clicked() {
-		go pg.WL.MultiWallet.Politeia.Sync()
-		pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
-		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
-	}
-
 	for pg.infoButton.Button.Clicked() {
 		// pg.showInfoModal()
 	}

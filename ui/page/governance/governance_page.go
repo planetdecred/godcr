@@ -70,31 +70,42 @@ func NewGovernancePage(l *load.Load) *GovernancePage {
 	return pg
 }
 
-func (pg *GovernancePage) OnResume() {
+// OnNavigatedTo is called when the page is about to be displayed and
+// may be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *GovernancePage) OnNavigatedTo() {
 	selectedCategory := pg.selectedCategoryIndex
 
 	if selectedCategory == -1 {
 		pg.selectedCategoryIndex = 0
 	}
 
-	/** begin proposal page resume method */
+
+	/** begin proposal page OnNavigatedTo method */
 
 	pg.proposalsPage.ctx, pg.proposalsPage.ctxCancel = context.WithCancel(context.TODO())
 	pg.proposalsPage.listenForSyncNotifications()
 	pg.proposalsPage.fetchProposals()
 	pg.proposalsPage.isSyncing = pg.proposalsPage.multiWallet.Politeia.IsSyncing()
 
-	/** begin proposal page resume method */
+	/** end proposal page OnNavigatedTo method */
 
-	/** begin consensus page resume method */
+	/** begin consensus page OnNavigatedTo method */
 
-	// pg.consensusPage.listenForSyncNotifications()
 	pg.consensusPage.fetchAgendas()
 
-	/** end consensus page resume method */
+	/** end consensus page OnNavigatedTo method */
 }
 
-func (pg *GovernancePage) OnClose() {
+// OnNavigatedFrom is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// OnNavigatedTo() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the OnNavigatedTo() method.
+// Part of the load.Page interface.
+func (pg *GovernancePage) OnNavigatedFrom() {
 	// pg.ctxCancel()
 	// pg.proposalsPage.ctxCancel()
 	// pg.consensusPage.ctxCancel()
@@ -113,7 +124,7 @@ func (pg *GovernancePage) ID() string {
 	return GovernancePageID
 }
 
-func (pg *GovernancePage) Handle() {
+func (pg *GovernancePage) HandleUserInteractions() {
 	for pg.enableGovernanceBtn.Clicked() {
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.proposalsPage.isSyncing = pg.proposalsPage.multiWallet.Politeia.IsSyncing()
