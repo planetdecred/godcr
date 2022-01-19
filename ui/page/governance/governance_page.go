@@ -81,7 +81,6 @@ func (pg *GovernancePage) OnNavigatedTo() {
 		pg.selectedCategoryIndex = 0
 	}
 
-
 	/** begin proposal page OnNavigatedTo method */
 
 	pg.proposalsPage.ctx, pg.proposalsPage.ctxCancel = context.WithCancel(context.TODO())
