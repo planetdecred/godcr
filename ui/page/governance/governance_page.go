@@ -91,7 +91,7 @@ func (pg *Page) OnNavigatedTo() {
 
 	/** begin consensus page OnNavigatedTo method */
 
-	pg.consensusPage.fetchAgendas()
+	pg.consensusPage.FetchAgendas()
 
 	/** end consensus page OnNavigatedTo method */
 }

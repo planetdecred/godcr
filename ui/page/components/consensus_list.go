@@ -255,10 +255,8 @@ func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst 
 	agendasResponse, err := l.WL.MultiWallet.Consensus.GetAllAgendasForWallet(selectedWallet.ID, newestFirst)
 >>>>>>> remove notifcation listemers implementations
 
-	// fmt.Println("[][][] agendas", agendas)
-	// fmt.Println("[][][] error", err)
+	fmt.Println("[][][] LOAD AGENDAS IS CALLED")
 	if err == nil {
-		// fmt.Println("[][][] length of agendas", len(agendas))
 		for i := 0; i < len(agendasResponse.Agendas); i++ {
 			item := &ConsensusItem{
 <<<<<<< HEAD
