@@ -98,11 +98,6 @@ func NewLoad() (*Load, error) {
 		SelectedProposal: new(dcrlibwallet.Proposal),
 	}
 
-	r := &Receiver{
-		AcctMixerStatus: make(chan *wallet.AccountMixer),
-		SyncedProposal:  make(chan *wallet.Proposal),
-	}
-
 	icons := loadIcons()
 
 	th := decredmaterial.NewTheme(assets.FontCollection(), assets.DecredIcons, false)
