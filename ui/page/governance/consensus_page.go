@@ -97,11 +97,11 @@ func (pg *ConsensusPage) OnNavigatedTo() {
 	pg.FetchAgendas()
 }
 
-func (pg *ConsensusPage) OnClose() {
+func (pg *ConsensusPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 }
 
-func (pg *ConsensusPage) Handle() {
+func (pg *ConsensusPage) HandleUserInteractions() {
 
 }
 

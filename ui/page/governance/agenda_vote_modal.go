@@ -23,6 +23,7 @@ import (
 type agendaVoteModal struct {
 	*load.Load
 	modal decredmaterial.Modal
+	voteSuccessful func()
 
 	detailsMu     sync.Mutex
 	detailsCancel context.CancelFunc
@@ -50,12 +51,13 @@ type agendaVoteModal struct {
 	cancelBtn         decredmaterial.Button
 }
 
-func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda) *agendaVoteModal {
+func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage *ConsensusPage) *agendaVoteModal {
 	avm := &agendaVoteModal{
 		Load:          l,
 		modal:         *l.Theme.ModalFloatTitle(),
 		agenda:        agenda,
-		consensusPage: NewConsensusPage(l),
+		consensusPage: consensusPage,
+		// voteSuccessful: onVoteSuccessful,
 		// defaultValue: agenda.VotingPreference,
 		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
 		abstainVote:       l.Theme.CheckBox(new(widget.Bool), "Abstain"),
@@ -187,8 +189,12 @@ func (avm *agendaVoteModal) sendVotes() {
 				}
 				pm.Dismiss()
 				avm.Toast.Notify("Vote updated successfully, refreshing agendas!")
-				go avm.consensusPage.FetchAgendas()
+				
 				avm.Dismiss()
+				go avm.consensusPage.FetchAgendas()
+				// if avm.voteSuccessful != nil {
+				// 	avm.voteSuccessful()
+				// }
 			}()
 
 			return false
