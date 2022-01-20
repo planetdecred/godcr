@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/decred/dcrd/dcrutil/v2"
+	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/decred/slog"
 	flags "github.com/jessevdk/go-flags"
 	"github.com/planetdecred/godcr/version"
