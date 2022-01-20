@@ -20,6 +20,7 @@ import (
 type agendaVoteModal struct {
 	*load.Load
 	modal decredmaterial.Modal
+	voteSuccessful func()
 
 	LiveTickets []*dcrlibwallet.Transaction
 
