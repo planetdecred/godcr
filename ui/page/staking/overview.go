@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"context"
 	"fmt"
 	"image/color"
 
@@ -28,6 +29,9 @@ const OverviewPageID = "staking"
 type Page struct {
 	*load.Load
 	list *widget.List
+
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
 
 	ticketPageContainer *layout.List
 	ticketBuyerWallet   *dcrlibwallet.Wallet
@@ -84,6 +88,10 @@ func (pg *Page) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
+	// pg.ctx is used to load known vsps in background and
+	// canceled in OnNavigatedFrom().
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
 	pg.setTBWallet()
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
 
@@ -112,8 +120,9 @@ func (pg *Page) loadPageData() {
 			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
 		}
 
-		if len(pg.WL.MultiWallet.VspList) == 0 {
-			pg.WL.MultiWallet.GetVSPList(pg.WL.Wallet.Net)
+		if len(pg.WL.MultiWallet.KnownVSPs()) == 0 {
+			// TODO: Does this page need this list?
+			pg.WL.MultiWallet.ReloadVSPList(pg.ctx)
 		}
 
 		totalRewards, err := pg.WL.MultiWallet.TotalStakingRewards()
@@ -593,14 +602,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			}
 
 			go func() {
-				vsp, err := pg.WL.MultiWallet.NewVSPClient(tbConfig.VspHost, pg.ticketBuyerWallet.ID, uint32(tbConfig.PurchaseAccount))
-				if err != nil {
-					pg.Toast.NotifyError(err.Error())
-					pm.SetLoading(false)
-					return
-				}
-
-				err = vsp.StartTicketBuyer(tbConfig.BalanceToMaintain, []byte(password))
+				err := pg.ticketBuyerWallet.StartTicketBuyer(tbConfig.VspHost, nil, tbConfig.PurchaseAccount, tbConfig.BalanceToMaintain, []byte(password))
 				if err != nil {
 					pg.Toast.NotifyError(err.Error())
 					pm.SetLoading(false)
@@ -623,4 +625,6 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *Page) OnNavigatedFrom() {}
+func (pg *Page) OnNavigatedFrom() {
+	pg.ctxCancel()
+}

@@ -9,10 +9,14 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/notification"
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -91,27 +95,36 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 }
 
 func (win *Window) NewLoad() (*load.Load, error) {
-	l, err := load.NewLoad()
-	if err != nil {
-		return nil, err
+	th := decredmaterial.NewTheme(assets.FontCollection(), assets.DecredIcons, false)
+	if th == nil {
+		return nil, errors.New("unexpected error while loading theme")
 	}
 
-	l.WL = &load.WalletLoad{
-		MultiWallet:     win.wallet.GetMultiWallet(),
-		Wallet:          win.wallet,
-		Account:         win.walletAccount,
-		Transactions:    win.walletTransactions,
-		UnspentOutputs:  win.walletUnspentOutputs,
-		BroadcastResult: win.broadcastResult,
-		Proposals:       win.proposals,
+	l := &load.Load{
+		Theme: th,
+		Icons: load.IconSet(),
 
-		SelectedProposal: win.selectedProposal,
-		TxAuthor:         win.txAuthor,
-	}
+		WL: &load.WalletLoad{
+			MultiWallet:     win.wallet.GetMultiWallet(),
+			Wallet:          win.wallet,
+			Account:         win.walletAccount,
+			Transactions:    win.walletTransactions,
+			UnspentOutputs:  win.walletUnspentOutputs,
+			BroadcastResult: win.broadcastResult,
+			Proposals:       win.proposals,
 
-	l.Receiver = &load.Receiver{
-		KeyEvents:           win.keyEvents,
-		NotificationsUpdate: make(chan interface{}, 10),
+			SelectedProposal: win.selectedProposal,
+			TxAuthor:         win.txAuthor,
+		},
+
+		Receiver: &load.Receiver{
+			KeyEvents:           win.keyEvents,
+			NotificationsUpdate: make(chan interface{}, 10),
+		},
+
+		Toast: notification.NewToast(th),
+
+		Printer: message.NewPrinter(language.English),
 	}
 
 	l.RefreshWindow = win.Invalidate

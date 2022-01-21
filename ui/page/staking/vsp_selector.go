@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"context"
 	"fmt"
 
 	"gioui.org/layout"
@@ -21,7 +22,7 @@ type vspSelector struct {
 
 	changed      bool
 	showVSPModal *decredmaterial.Clickable
-	selectedVSP  *dcrlibwallet.VSPInfo
+	selectedVSP  *dcrlibwallet.VSP
 }
 
 func newVSPSelector(l *load.Load) *vspSelector {
@@ -44,7 +45,8 @@ func (v *vspSelector) Changed() bool {
 }
 
 func (v *vspSelector) selectVSP(vspHost string) {
-	for _, vsp := range v.WL.MultiWallet.VspList {
+	vsps := v.WL.MultiWallet.KnownVSPs()
+	for _, vsp := range vsps {
 		if vsp.Host == vspHost {
 			v.changed = true
 			v.selectedVSP = vsp
@@ -53,7 +55,7 @@ func (v *vspSelector) selectVSP(vspHost string) {
 	}
 }
 
-func (v *vspSelector) SelectedVSP() *dcrlibwallet.VSPInfo {
+func (v *vspSelector) SelectedVSP() *dcrlibwallet.VSP {
 	return v.selectedVSP
 }
 
@@ -61,7 +63,7 @@ func (v *vspSelector) handle() {
 	if v.showVSPModal.Clicked() {
 		newVSPSelectorModal(v.Load).
 			title("Voting service provider").
-			vspSelected(func(info *dcrlibwallet.VSPInfo) {
+			vspSelected(func(info *dcrlibwallet.VSP) {
 				v.selectVSP(info.Host)
 			}).
 			Show()
@@ -96,7 +98,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 									if v.selectedVSP == nil {
 										return layout.Dimensions{}
 									}
-									txt := v.Theme.Label(values.TextSize16, fmt.Sprintf("%v%%", v.selectedVSP.Info.FeePercentage))
+									txt := v.Theme.Label(values.TextSize16, fmt.Sprintf("%v%%", v.selectedVSP.FeePercentage))
 									return txt.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -129,10 +131,10 @@ type vspSelectorModal struct {
 	inputVSP decredmaterial.Editor
 	addVSP   decredmaterial.Button
 
-	selectedVSP *dcrlibwallet.VSPInfo
+	selectedVSP *dcrlibwallet.VSP
 	vspList     *decredmaterial.ClickableList
 
-	vspSelectedCallback func(*dcrlibwallet.VSPInfo)
+	vspSelectedCallback func(*dcrlibwallet.VSP)
 }
 
 func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
@@ -151,8 +153,11 @@ func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 }
 
 func (v *vspSelectorModal) OnResume() {
-	if len(v.WL.MultiWallet.VspList) == 0 {
-		go v.WL.MultiWallet.GetVSPList(v.WL.Wallet.Net)
+	if len(v.WL.MultiWallet.KnownVSPs()) == 0 {
+		go func() {
+			v.WL.MultiWallet.ReloadVSPList(context.TODO())
+			v.RefreshWindow()
+		}()
 	}
 }
 
@@ -172,7 +177,7 @@ func (v *vspSelectorModal) Handle() {
 	v.addVSP.SetEnabled(v.editorsNotEmpty(v.inputVSP.Editor))
 	if v.addVSP.Clicked() {
 		go func() {
-			err := v.WL.MultiWallet.AddVSP(v.WL.Wallet.Net, v.inputVSP.Editor.Text())
+			err := v.WL.MultiWallet.SaveVSP(v.inputVSP.Editor.Text())
 			if err != nil {
 				v.Toast.NotifyError(err.Error())
 			} else {
@@ -186,8 +191,8 @@ func (v *vspSelectorModal) Handle() {
 	}
 
 	if clicked, selectedItem := v.vspList.ItemClicked(); clicked {
-		v.selectedVSP = v.WL.MultiWallet.VspList[selectedItem]
-		v.vspSelectedCallback(v.WL.MultiWallet.VspList[selectedItem])
+		v.selectedVSP = v.WL.MultiWallet.KnownVSPs()[selectedItem]
+		v.vspSelectedCallback(v.selectedVSP)
 		v.Dismiss()
 	}
 }
@@ -197,7 +202,7 @@ func (v *vspSelectorModal) title(title string) *vspSelectorModal {
 	return v
 }
 
-func (v *vspSelectorModal) vspSelected(callback func(*dcrlibwallet.VSPInfo)) *vspSelectorModal {
+func (v *vspSelectorModal) vspSelected(callback func(*dcrlibwallet.VSP)) *vspSelectorModal {
 	v.vspSelectedCallback = callback
 	v.Dismiss()
 	return v
@@ -221,24 +226,24 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 				}),
 				layout.Rigid(func(gtx C) D {
 					// if no vsp loaded, display a no vsp text
-					if len(v.WL.MultiWallet.VspList) == 0 {
+					vsps := v.WL.MultiWallet.KnownVSPs()
+					if len(vsps) == 0 {
 						noVsp := v.Theme.Label(values.TextSize14, "No vsp loaded. Check internet connection and try again.")
 						noVsp.Color = v.Theme.Color.GrayText2
 						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, noVsp.Layout)
 					}
 
-					listVSP := v.WL.MultiWallet.VspList
-					return v.vspList.Layout(gtx, len(listVSP), func(gtx C, i int) D {
+					return v.vspList.Layout(gtx, len(vsps), func(gtx C, i int) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Flexed(0.8, func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
-									txt := v.Theme.Label(values.TextSize14, fmt.Sprintf("%v", listVSP[i].Info.FeePercentage)+"%")
+									txt := v.Theme.Label(values.TextSize14, fmt.Sprintf("%v%%", vsps[i].FeePercentage))
 									txt.Color = v.Theme.Color.GrayText1
-									return components.EndToEndRow(gtx, v.Theme.Label(values.TextSize16, listVSP[i].Host).Layout, txt.Layout)
+									return components.EndToEndRow(gtx, v.Theme.Label(values.TextSize16, vsps[i].Host).Layout, txt.Layout)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
-								if v.selectedVSP != nil || v.selectedVSP != listVSP[i] {
+								if v.selectedVSP == nil || v.selectedVSP.Host != vsps[i].Host {
 									return layout.Dimensions{}
 								}
 								ic := decredmaterial.NewIcon(v.Icons.NavigationCheck)

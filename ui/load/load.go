@@ -6,10 +6,7 @@
 package load
 
 import (
-	"errors"
-
 	"golang.org/x/exp/shiny/materialdesign/icons"
-	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 
 	"gioui.org/io/key"
@@ -88,38 +85,6 @@ type Load struct {
 	ReloadApp           func()
 }
 
-func NewLoad() (*Load, error) {
-
-	wl := &WalletLoad{
-		Wallet:         new(wallet.Wallet),
-		Account:        new(wallet.Account),
-		Transactions:   new(wallet.Transactions),
-		UnspentOutputs: new(wallet.UnspentOutputs),
-		Proposals:      new(wallet.Proposals),
-
-		SelectedProposal: new(dcrlibwallet.Proposal),
-	}
-
-	icons := loadIcons()
-
-	th := decredmaterial.NewTheme(assets.FontCollection(), assets.DecredIcons, false)
-	if th == nil {
-		return nil, errors.New("unexpected error while loading theme")
-	}
-
-	l := &Load{
-		Theme:    th,
-		Icons:    icons,
-		WL:       wl,
-		Receiver: &Receiver{},
-		Toast:    notification.NewToast(th),
-
-		Printer: message.NewPrinter(language.English),
-	}
-
-	return l, nil
-}
-
 func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)
@@ -129,7 +94,7 @@ func (l *Load) Dexc() *dcrlibwallet.DexClient {
 	return l.WL.MultiWallet.DexClient()
 }
 
-func loadIcons() Icons {
+func IconSet() Icons {
 	decredIcons := assets.DecredIcons
 
 	ic := Icons{
