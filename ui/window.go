@@ -275,7 +275,9 @@ func (win *Window) drawWindowUI(gtx C) {
 // callers should not re-refresh the display.
 func (win *Window) changePage(page load.Page, keepBackStack bool) {
 	if win.currentPage != nil && keepBackStack {
-		win.currentPage.OnNavigatedFrom()
+		if page.ID() != "Restore" && win.currentPage.ID() != "Main" {
+			win.currentPage.OnNavigatedFrom()
+		}
 		win.pageBackStack = append(win.pageBackStack, win.currentPage)
 	}
 
@@ -298,8 +300,10 @@ func (win *Window) popPage() bool {
 	win.pageBackStack = win.pageBackStack[:previousPageIndex]
 
 	// close the current page and display the previous page
+	if win.currentPage.ID() != "Restore" && previousPage.ID() != "Main" {
+		previousPage.OnNavigatedTo()
+	}
 	win.currentPage.OnNavigatedFrom()
-	previousPage.OnNavigatedTo()
 	win.currentPage = previousPage
 	win.Invalidate()
 

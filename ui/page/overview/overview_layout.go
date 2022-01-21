@@ -124,6 +124,14 @@ func (pg *AppOverviewPage) ID() string {
 func (pg *AppOverviewPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
+	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey)
+	if pg.WL.MultiWallet.NumWalletsNeedingSeedBackup() > 0 {
+		if !backupLater && !pg.isBackupModalOpened {
+			pg.showBackupInfo()
+			pg.isBackupModalOpened = true
+		}
+	}
+
 	pg.getMixerWallets()
 	pg.loadTransactions()
 	pg.listenForSyncNotifications()
@@ -239,16 +247,6 @@ func (pg *AppOverviewPage) showBackupInfo() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *AppOverviewPage) HandleUserInteractions() {
-	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey)
-	for _, wal := range pg.allWallets {
-		if len(wal.EncryptedSeed) > 0 {
-			if !backupLater && !pg.isBackupModalOpened {
-				pg.showBackupInfo()
-				pg.isBackupModalOpened = true
-			}
-		}
-	}
-
 	if pg.toMixer.Button.Clicked() {
 		if len(pg.mixerWallets) == 1 {
 			pg.ChangeFragment(wPage.NewPrivacyPage(pg.Load, pg.mixerWallets[0]))
