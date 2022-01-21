@@ -92,7 +92,6 @@ func (pg *Page) OnNavigatedTo() {
 	/** begin consensus page OnNavigatedTo method */
 
 	pg.consensusPage.FetchAgendas()
-	pg.consensusPage.FetchLiveTickets()
 	go pg.WL.GetVSPList()
 
 	/** end consensus page OnNavigatedTo method */
