@@ -107,7 +107,7 @@ func (pg *ProposalsPage) ID() string {
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	// pg.listenForSyncNotifications()
+	pg.listenForSyncNotifications()
 	pg.fetchProposals()
 	pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 }

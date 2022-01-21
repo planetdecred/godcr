@@ -381,7 +381,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *components.TransactionItem
 	)
 }
 
-func ticketListLayout(gtx C, l *load.Load, ticket *components.TransactionItem, i int, showWalletName bool) layout.Dimensions {
+func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showWalletName bool) layout.Dimensions {
 	wal := l.WL.MultiWallet.WalletWithID(ticket.Transaction.WalletID)
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {

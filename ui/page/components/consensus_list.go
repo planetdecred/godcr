@@ -16,18 +16,8 @@ import (
 var canVote bool
 
 type ConsensusItem struct {
-<<<<<<< HEAD
-<<<<<<< HEAD
 	Agenda     dcrlibwallet.Agenda
 	VoteButton decredmaterial.Button
-=======
-	Agenda       dcrlibwallet.Agenda
-	VoteButton   decredmaterial.Button
->>>>>>> - add consensus listeners
-=======
-	Agenda     dcrlibwallet.Agenda
-	VoteButton decredmaterial.Button
->>>>>>> remove notifcation listemers implementations
 }
 
 func AgendasList(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
@@ -54,7 +44,6 @@ func AgendasList(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
 	})
 }
 
-<<<<<<< HEAD
 func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	lbl := l.Theme.H5(agenda.AgendaID)
 	lbl.Font.Weight = text.SemiBold
@@ -89,39 +78,6 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	}
 
 	statusLabel.Color = statusLabelColor
-=======
-func layoutAgendaTitle(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-	lbl := l.Theme.H5(agenda.AgendaID)
-	lbl.Font.Weight = text.SemiBold
-
-	var categoryLabel decredmaterial.Label
-	var categoryLabelColor color.NRGBA
-	var categoryIcon *decredmaterial.Icon
-
-	currentTime := time.Now().Unix()
-	// println("[][][][]", agenda.StartTime, currentTime, agenda.EndTime)
-	if currentTime > agenda.ExpireTime {
-		categoryLabel = l.Theme.Label(values.MarginPadding14, "Finished")
-		categoryLabelColor = l.Theme.Color.Success
-		categoryIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
-		categoryIcon.Color = categoryLabelColor
-		canVote = false
-	} else if currentTime > agenda.StartTime && currentTime < agenda.ExpireTime {
-		categoryLabel = l.Theme.Label(values.MarginPadding14, "In progress")
-		categoryLabelColor = l.Theme.Color.Primary
-		categoryIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
-		categoryIcon.Color = categoryLabelColor
-		canVote = true
-	} else if currentTime > agenda.StartTime {
-		categoryLabel = l.Theme.Label(values.MarginPadding14, "Upcoming")
-		categoryLabelColor = l.Theme.Color.Black
-		categoryIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
-		categoryIcon.Color = categoryLabelColor
-		canVote = false
-	}
-
-	categoryLabel.Color = categoryLabelColor
->>>>>>> - add consensus listeners
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
@@ -129,7 +85,6 @@ func layoutAgendaTitle(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-<<<<<<< HEAD
 			return decredmaterial.LinearLayout{
 				Background: backgroundColor,
 				Width:      decredmaterial.WrapContent,
@@ -146,68 +101,30 @@ func layoutAgendaTitle(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 					})
 				}),
 				layout.Rigid(statusLabel.Layout))
-=======
-			// return layout.Flex{}.Layout(gtx,
-			// 	layout.Rigid(categoryLabel.Layout),
-			// )
-			return decredmaterial.LinearLayout{
-				Width:     decredmaterial.WrapContent,
-				Height:    decredmaterial.WrapContent,
-				Direction: layout.Center,
-				Alignment: layout.Middle,
-				Border:    decredmaterial.Border{Color: categoryLabelColor, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
-				Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
-				Margin:    layout.Inset{Left: values.MarginPadding10},
-			}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-						return categoryIcon.Layout(gtx, values.MarginPadding16)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return categoryLabel.Layout(gtx)
-				}))
->>>>>>> - add consensus listeners
 		}),
 	)
 }
 
 func layoutAgendaDescription(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-<<<<<<< HEAD
 	lbl := l.Theme.Label(values.MarginPadding16, agenda.Description)
-=======
-	lbl := l.Theme.H6(agenda.Description)
->>>>>>> - add consensus listeners
 	lbl.Font.Weight = text.Light
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
 func layoutAgendaID(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-<<<<<<< HEAD
 	lbl := l.Theme.Label(values.MarginPadding16, "ID: #"+agenda.AgendaID)
-=======
-	lbl := l.Theme.H6("ID: #" + agenda.AgendaID)
->>>>>>> - add consensus listeners
 	lbl.Font.Weight = text.Light
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
 func layoutAgendaVotingPreference(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-<<<<<<< HEAD
 	lbl := l.Theme.Label(values.MarginPadding16, "Voting Preference: "+agenda.VotingPreference)
-=======
-	lbl := l.Theme.H6("Voting Preference: " + agenda.VotingPreference)
->>>>>>> - add consensus listeners
 	lbl.Font.Weight = text.Light
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
 func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
-<<<<<<< HEAD
 	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Px(unit.Dp(150)), gtx.Px(unit.Dp(150))
-=======
-	gtx.Constraints.Min.X, gtx.Constraints.Max.X = 150, 150
->>>>>>> - add consensus listeners
 	if canVote {
 		item.VoteButton.Background = l.Theme.Color.Primary
 		item.VoteButton.SetEnabled(true)
@@ -215,13 +132,7 @@ func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 		item.VoteButton.Background = l.Theme.Color.Gray3
 		item.VoteButton.SetEnabled(false)
 	}
-<<<<<<< HEAD
 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, item.VoteButton.Layout)
-=======
-	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-		return item.VoteButton.Layout(gtx)
-	})
->>>>>>> - add consensus listeners
 }
 
 func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
@@ -255,7 +166,6 @@ func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst 
 	agendasResponse, err := l.WL.MultiWallet.Consensus.GetAllAgendasForWallet(selectedWallet.ID, newestFirst)
 >>>>>>> remove notifcation listemers implementations
 
-	fmt.Println("[][][] LOAD AGENDAS IS CALLED")
 	if err == nil {
 		for i := 0; i < len(agendasResponse.Agendas); i++ {
 			item := &ConsensusItem{

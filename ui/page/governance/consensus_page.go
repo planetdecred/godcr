@@ -13,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -92,6 +93,7 @@ func (pg *ConsensusPage) ID() string {
 func (pg *ConsensusPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.FetchAgendas()
+	pg.FetchLiveTickets()
 }
 
 func (pg *ConsensusPage) OnNavigatedFrom() {
