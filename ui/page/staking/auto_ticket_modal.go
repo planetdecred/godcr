@@ -49,7 +49,7 @@ func newTicketBuyerModal(l *load.Load) *ticketBuyerModal {
 
 	tb.saveSettingsBtn.SetEnabled(false)
 
-	tb.vspIsFetched = len((*l.WL.VspInfo).List) > 0
+	tb.vspIsFetched = len((*l.WL.MultiWallet.VspList).List) > 0
 
 	return tb
 }
@@ -64,26 +64,38 @@ func (tb *ticketBuyerModal) CancelSave(cancel func()) *ticketBuyerModal {
 	return tb
 }
 
+func (tb *ticketBuyerModal) setFirstWalletAccount() {
+	err := tb.accountSelector.SelectFirstWalletValidAccount()
+	if err != nil {
+		tb.Toast.NotifyError(err.Error())
+	}
+}
+
 func (tb *ticketBuyerModal) OnResume() {
+
 	tb.initializeAccountSelector()
 
-	host, walID, accNumber, b2m := tb.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+	if !tb.vspIsFetched {
+		go tb.WL.MultiWallet.GetVSPList(tb.WL.Wallet.Net)
+	}
 
+	host, walID, accNumber, b2m := tb.WL.MultiWallet.GetAutoTicketsBuyerConfig()
 	if walID == -1 {
-		err := tb.accountSelector.SelectFirstWalletValidAccount()
-		if err != nil {
-			tb.Toast.NotifyError(err.Error())
-		}
+		tb.setFirstWalletAccount()
 	} else {
 		wal := tb.WL.MultiWallet.WalletWithID(walID)
-		accountsResult, err := wal.GetAccountsRaw()
-		if err != nil {
-			tb.Toast.NotifyError(err.Error())
-		}
-
-		for _, account := range accountsResult.Acc {
-			if account.Number == accNumber {
-				tb.accountSelector.SetupSelectedAccount(account)
+		if wal == nil {
+			tb.setFirstWalletAccount()
+		} else {
+			accountsResult, err := wal.GetAccountsRaw()
+			if err != nil {
+				tb.setFirstWalletAccount()
+			} else {
+				for _, account := range accountsResult.Acc {
+					if account.Number == accNumber {
+						tb.accountSelector.SetupSelectedAccount(account)
+					}
+				}
 			}
 		}
 	}

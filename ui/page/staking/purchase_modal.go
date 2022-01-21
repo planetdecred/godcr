@@ -78,7 +78,7 @@ func newStakingModal(l *load.Load) *stakingModal {
 
 	tp.stakeBtn.SetEnabled(false)
 
-	tp.vspIsFetched = len((*l.WL.VspInfo).List) > 0
+	tp.vspIsFetched = len((*l.WL.MultiWallet.VspList).List) > 0
 
 	return tp
 }
@@ -89,6 +89,7 @@ func (tp *stakingModal) TicketPurchased(ticketsPurchased func()) *stakingModal {
 }
 
 func (tp *stakingModal) OnResume() {
+
 	tp.initializeAccountSelector()
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
@@ -96,7 +97,10 @@ func (tp *stakingModal) OnResume() {
 	}
 
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
-	// tp.ticketPrice = dcrutil.Amount(tp.WL.TicketPrice())
+
+	if !tp.vspIsFetched {
+		go tp.WL.MultiWallet.GetVSPList(tp.WL.Wallet.Net)
+	}
 
 	if tp.vspIsFetched && components.StringNotEmpty(tp.WL.MultiWallet.GetRememberVSP()) {
 		tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
@@ -354,7 +358,7 @@ func (tp *stakingModal) Handle() {
 	}
 
 	// reselect vsp if there's a delay in fetching the VSP List
-	if !tp.vspIsFetched && len((*tp.WL.VspInfo).List) > 0 {
+	if !tp.vspIsFetched && len((*tp.WL.MultiWallet.VspList).List) > 0 {
 		if tp.WL.MultiWallet.GetRememberVSP() != "" {
 			tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
 			tp.vspIsFetched = true

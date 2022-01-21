@@ -78,7 +78,6 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 		walletTransactions:    new(wallet.Transactions),
 		walletUnspentOutputs:  new(wallet.UnspentOutputs),
 		walletAcctMixerStatus: make(chan *wallet.AccountMixer),
-		vspInfo:               new(dcrlibwallet.VSPList),
 		proposals:             new(wallet.Proposals),
 		keyEvents:             make(map[string]chan *key.Event),
 	}
@@ -104,7 +103,6 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		Account:         win.walletAccount,
 		Transactions:    win.walletTransactions,
 		UnspentOutputs:  win.walletUnspentOutputs,
-		VspInfo:         win.vspInfo,
 		BroadcastResult: win.broadcastResult,
 		Proposals:       win.proposals,
 

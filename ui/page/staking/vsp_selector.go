@@ -44,7 +44,7 @@ func (v *vspSelector) Changed() bool {
 }
 
 func (v *vspSelector) selectVSP(vspHost string) {
-	for _, vsp := range v.WL.VspInfo.List {
+	for _, vsp := range v.WL.MultiWallet.VspList.List {
 		if vsp.Host == vspHost {
 			v.changed = true
 			v.selectedVSP = vsp
@@ -151,7 +151,9 @@ func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 }
 
 func (v *vspSelectorModal) OnResume() {
-
+	if len((*v.WL.MultiWallet.VspList).List) == 0 {
+		go v.WL.MultiWallet.GetVSPList(v.WL.Wallet.Net)
+	}
 }
 
 func (v *vspSelectorModal) ModalID() string {
@@ -185,8 +187,8 @@ func (v *vspSelectorModal) Handle() {
 	}
 
 	if clicked, selectedItem := v.vspList.ItemClicked(); clicked {
-		v.selectedVSP = v.WL.VspInfo.List[selectedItem]
-		v.vspSelectedCallback(v.WL.VspInfo.List[selectedItem])
+		v.selectedVSP = v.WL.MultiWallet.VspList.List[selectedItem]
+		v.vspSelectedCallback(v.WL.MultiWallet.VspList.List[selectedItem])
 		v.Dismiss()
 	}
 }
@@ -221,7 +223,14 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 					return components.EndToEndRow(gtx, txt.Layout, txtFee.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					listVSP := v.WL.VspInfo.List
+					// if no vsp loaded, display a no vsp text
+					if len((*v.WL.MultiWallet.VspList).List) == 0 {
+						noVsp := v.Theme.Label(values.TextSize14, "No vsp loaded. Check internet connection and try again.")
+						noVsp.Color = v.Theme.Color.GrayText2
+						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, noVsp.Layout)
+					}
+
+					listVSP := v.WL.MultiWallet.VspList.List
 					return v.vspList.Layout(gtx, len(listVSP), func(gtx C, i int) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Flexed(0.8, func(gtx C) D {

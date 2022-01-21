@@ -3,6 +3,7 @@ package staking
 import (
 	"fmt"
 	"image/color"
+	"time"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -88,45 +89,33 @@ func (pg *Page) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
-
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
-
-	go func() {
-		list, err := pg.WL.MultiWallet.GetVSPList(pg.WL.Wallet.Net)
-		if err != nil {
-			pg.Toast.NotifyError(err.Error())
-		}
-		pg.WL.VspInfo = list
-	}()
 
 	pg.updateTBToggle()
 }
 
 func (pg *Page) updateTBToggle() {
-	wal := pg.getTBWalletInfo()
-	if wal != nil {
-		pg.autoPurchase.SetChecked(wal.IsAutoTicketsPurchaseActive())
+	if pg.WL.MultiWallet.TicketBuyerConfigIsSet() {
+		_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+		pg.autoPurchase.SetChecked(pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(walID))
 	} else {
 		pg.autoPurchase.SetChecked(false)
 	}
 }
 
-func (pg *Page) getTBWalletInfo() *dcrlibwallet.Wallet {
-	if pg.WL.MultiWallet.TicketBuyerConfigIsSet() {
-		_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
-		wal := pg.WL.MultiWallet.WalletWithID(walID)
-		if wal != nil {
-			return wal
-		}
-
-		return nil
-	}
-
-	return nil
-}
-
 func (pg *Page) loadPageData() {
-	pg.ticketPrice = dcrutil.Amount(pg.WL.TicketPrice()).String()
+	go func() {
+		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
+		if err != nil {
+			pg.ticketPrice = "0"
+		} else {
+			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
+		}
+	}()
+
+	if len((*pg.WL.MultiWallet.VspList).List) == 0 {
+		go pg.WL.MultiWallet.GetVSPList(pg.WL.Wallet.Net)
+	}
 
 	go func() {
 		totalRewards, err := pg.WL.MultiWallet.TotalStakingRewards()
@@ -501,6 +490,7 @@ func (pg *Page) HandleUserInteractions() {
 		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
 	}
 
+	_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
 	if pg.autoPurchase.Changed() {
 		if pg.autoPurchase.IsChecked() {
 			if pg.WL.MultiWallet.TicketBuyerConfigIsSet() {
@@ -517,23 +507,17 @@ func (pg *Page) HandleUserInteractions() {
 					Show()
 			}
 		} else {
-			_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
 			pg.autoPurchase.SetChecked(false)
 			go pg.WL.MultiWallet.StopAutoTicketsPurchase(walID)
 		}
 	}
 
 	if pg.autoPurchaseSettings.Button.Clicked() {
-		wal := pg.getTBWalletInfo()
-		if wal != nil {
-			if wal.IsAutoTicketsPurchaseActive() {
-				return
-			}
-
-			pg.ticketBuyerSettingsModal()
-		} else {
-			pg.ticketBuyerSettingsModal()
+		if pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(walID) {
+			return
 		}
+
+		pg.ticketBuyerSettingsModal()
 	}
 }
 
@@ -590,6 +574,13 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			pg.autoPurchase.SetChecked(false)
 		}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+			if !pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+				pg.Toast.NotifyError(values.String(values.StrNotConnected))
+				pm.SetLoading(false)
+				pg.updateTBToggle()
+				return false
+			}
+
 			go func() {
 				vsp, err := pg.WL.MultiWallet.NewVSPClient(host, walID, uint32(acctNum))
 				if err != nil {
@@ -598,7 +589,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 					return
 				}
 
-				err = vsp.AutoTicketsPurchase(b2m, []byte(password))
+				err = vsp.StartTicketBuyer(b2m, []byte(password))
 				if err != nil {
 					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 						pm.SetError("Invalid password")
@@ -608,8 +599,9 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 					}
 					return
 				}
-
-				pg.updateTBToggle()
+				time.AfterFunc(time.Second*3, func() {
+					pg.updateTBToggle()
+				})
 			}()
 			pm.Dismiss()
 
