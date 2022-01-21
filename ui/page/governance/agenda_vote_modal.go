@@ -28,12 +28,15 @@ type agendaVoteModal struct {
 
 	detailsMu     sync.Mutex
 	detailsCancel context.CancelFunc
+	LiveTickets   []*dcrlibwallet.Transaction
 	// voteDetails    *dcrlibwallet.Agenda.Choices
 	voteDetailsErr error
 
-	agenda       *dcrlibwallet.Agenda
-	vspIsFetched bool
-	isVoting     bool
+	agenda               *dcrlibwallet.Agenda
+	vspIsFetched         bool
+	liveTicketsIsFetched bool
+	isVoting             bool
+	loadCount            int
 
 	consensusPage *ConsensusPage
 
@@ -77,7 +80,7 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 	avm.walletSelector = NewWalletSelector(l).
 		Title("Voting wallet").
 		WalletSelected(func(w *dcrlibwallet.Wallet) {
-
+			avm.loadCount = 0
 			avm.detailsMu.Lock()
 			// avm.yesVote.reset()
 			// avm.noVote.reset()
@@ -93,8 +96,9 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 			avm.voteDetailsErr = nil
 
 			avm.detailsMu.Unlock()
-
+			avm.FetchLiveTickets(w.ID)
 			avm.RefreshWindow()
+			avm.loadCount++
 
 			// go func() {
 			// 	// voteDetails, err := avm.WL.MultiWallet.Politeia.ProposalVoteDetailsRaw(w.ID, avm.proposal.Token)
@@ -128,6 +132,45 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 	return avm
 }
 
+func (avm *agendaVoteModal) FetchLiveTickets(walletID int) {
+	go func() {
+		avm.liveTicketsIsFetched = false
+
+		wallet := avm.WL.MultiWallet.WalletWithID(walletID)
+		tickets, err := staking.WalletLiveTickets(wallet)
+		if err != nil {
+			avm.Toast.NotifyError(err.Error())
+			return
+		}
+
+		liveTickets := make([]*dcrlibwallet.Transaction, 0)
+		txItems, err := staking.StakeToTransactionItems(avm.Load, tickets, true, func(filter int32) bool {
+			switch filter {
+			case dcrlibwallet.TxFilterUnmined:
+				fallthrough
+			case dcrlibwallet.TxFilterImmature:
+				fallthrough
+			case dcrlibwallet.TxFilterLive:
+				return true
+			}
+
+			return false
+		})
+		if err != nil {
+			avm.Toast.NotifyError(err.Error())
+			return
+		}
+
+		for _, liveTicket := range txItems {
+			liveTickets = append(liveTickets, liveTicket.Transaction)
+		}
+
+		avm.LiveTickets = liveTickets
+		avm.liveTicketsIsFetched = true
+		avm.RefreshWindow()
+	}()
+}
+
 func (avm *agendaVoteModal) ModalID() string {
 	return ModalInputVote
 }
@@ -139,9 +182,7 @@ func (avm *agendaVoteModal) OnResume() {
 	if avm.vspIsFetched && components.StringNotEmpty(avm.WL.GetRememberVSP()) {
 		avm.vspSelector.SelectVSP(avm.WL.GetRememberVSP())
 	}
-
-	avm.ticketSelector = newTicketSelector(avm.Load, avm.consensusPage.LiveTickets).Title("Select a ticket")
-
+	
 	initialValue := avm.agenda.VotingPreference
 	if initialValue == "" {
 		initialValue = avm.defaultValue
@@ -236,8 +277,14 @@ func (avm *agendaVoteModal) Handle() {
 
 	for avm.optionsRadioGroup.Changed() {
 		avm.currentValue = avm.optionsRadioGroup.Value
-		// avm.wallet.SaveConfigValueForKey(avm.preferenceKey, avm.optionsRadioGroup.Value)
-		// avm.updateButtonClicked()
+	}
+
+	if avm.liveTicketsIsFetched {
+		if avm.loadCount == 1 {
+			avm.loadCount++
+			avm.ticketSelector = newTicketSelector(avm.Load, avm.LiveTickets).Title("Select a ticket")
+		}
+
 	}
 
 	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue && avm.vspSelector.SelectedVSP() != nil && avm.ticketSelector.SelectedTicket() != nil
@@ -286,10 +333,18 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 			return avm.vspSelector.Layout(gtx)
 		},
 		func(gtx C) D {
+			if !avm.liveTicketsIsFetched {
+				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
+				return avm.materialLoader.Layout(gtx)
+			}
 			return avm.ticketSelector.Layout(gtx)
 		},
 		func(gtx C) D {
-			text := fmt.Sprintf("You have %d live tickets", len(avm.consensusPage.LiveTickets))
+			if !avm.liveTicketsIsFetched {
+				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
+				return avm.materialLoader.Layout(gtx)
+			}
+			text := fmt.Sprintf("You have %d live tickets", len(avm.LiveTickets))
 			return avm.Theme.Label(values.TextSize16, text).Layout(gtx)
 		},
 		func(gtx C) D {
