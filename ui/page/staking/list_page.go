@@ -2,6 +2,7 @@ package staking
 
 import (
 	"context"
+	"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -248,8 +249,26 @@ func (pg *ListPage) HandleUserInteractions() {
 		pg.fetchTickets()
 	}
 
-	if clicked, selectedItem := pg.ticketsList.ItemClicked(); clicked {
-		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.tickets[selectedItem].transaction))
+	if clicked, selectedItem := pg.ticketsList.ItemClicked(); clicked { // request wallet password to display ticket info
+		ticketTx := pg.tickets[selectedItem].transaction
+		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, ticketTx))
+
+		// Check if this ticket is fully registered with a VSP
+		// and log any discrepancies.
+		// TODO: Use log.Errorf and log.Warnf instead of fmt.Printf.
+		ticketInfo, err := pg.WL.MultiWallet.VSPTicketInfo(ticketTx.WalletID, ticketTx.Hash)
+		if err != nil {
+			fmt.Printf("VSPTicketInfo error: %v\n", err)
+		} else {
+			if ticketInfo.FeeTxStatus != dcrlibwallet.VSPFeeProcessConfirmed {
+				fmt.Printf("[WARN] Ticket %s has unconfirmed fee tx %s with status %s, vsp %s \n",
+					ticketTx.Hash, ticketInfo.FeeTxHash, ticketInfo.FeeTxStatus.String(), ticketInfo.VSP)
+			}
+			if ticketInfo.ConfirmedByVSP == nil || !*ticketInfo.ConfirmedByVSP {
+				fmt.Printf("[WARN] Ticket %s is not confirmed by VSP %s. Fee tx %s, status %s \n",
+					ticketTx.Hash, ticketInfo.VSP, ticketInfo.FeeTxHash, ticketInfo.FeeTxStatus.String())
+			}
+		}
 	}
 
 	decredmaterial.DisplayOneDropdown(pg.ticketTypeDropDown, pg.orderDropDown, pg.walletDropDown)
