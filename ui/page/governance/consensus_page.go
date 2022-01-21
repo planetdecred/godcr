@@ -11,6 +11,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -40,6 +41,7 @@ type ConsensusPage struct {
 
 	consensusItems []*components.ConsensusItem
 	wallets        []*dcrlibwallet.Wallet
+	LiveTickets    []*dcrlibwallet.Transaction
 
 	syncCompleted bool
 	isSyncing     bool
@@ -95,6 +97,7 @@ func (pg *ConsensusPage) ID() string {
 func (pg *ConsensusPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.FetchAgendas()
+	pg.FetchLiveTickets()
 }
 
 func (pg *ConsensusPage) OnNavigatedFrom() {
@@ -121,6 +124,43 @@ func (pg *ConsensusPage) FetchAgendas() {
 	pg.consensusItems = listItems
 	pg.agendaMu.Unlock()
 	pg.RefreshWindow()
+}
+
+func (pg *ConsensusPage) FetchLiveTickets() {
+	go func() {
+		mw := pg.WL.MultiWallet
+		tickets, err := staking.AllLiveTickets(mw)
+		if err != nil {
+			pg.Toast.NotifyError(err.Error())
+			return
+		}
+
+		liveTickets := make([]*dcrlibwallet.Transaction, 0)
+		txItems, err := staking.StakeToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
+			switch filter {
+			case dcrlibwallet.TxFilterUnmined:
+				fallthrough
+			case dcrlibwallet.TxFilterImmature:
+				fallthrough
+			case dcrlibwallet.TxFilterLive:
+				return true
+			}
+
+			return false
+		})
+		if err != nil {
+			pg.Toast.NotifyError(err.Error())
+			return
+		}
+
+		for _, liveTicket := range txItems {
+			liveTickets = append(liveTickets, liveTicket.Transaction)
+		}
+
+		pg.LiveTickets = liveTickets
+
+		pg.RefreshWindow()
+	}()
 }
 
 func (pg *ConsensusPage) Layout(gtx C) D {

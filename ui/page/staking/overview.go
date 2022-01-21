@@ -160,13 +160,13 @@ func (pg *Page) loadPageData() {
 
 	go func() {
 		mw := pg.WL.MultiWallet
-		tickets, err := allLiveTickets(mw)
+		tickets, err := AllLiveTickets(mw)
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
 			return
 		}
 
-		txItems, err := stakeToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
+		txItems, err := StakeToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
 			switch filter {
 			case dcrlibwallet.TxFilterUnmined:
 				fallthrough
@@ -514,7 +514,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if clicked, selectedItem := pg.ticketsLive.ItemClicked(); clicked {
-		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
+		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].Transaction))
 	}
 
 	if pg.autoPurchase.Changed() {

@@ -20,7 +20,7 @@ import (
 )
 
 type transactionItem struct {
-	transaction   *dcrlibwallet.Transaction
+	Transaction   *dcrlibwallet.Transaction
 	ticketSpender *dcrlibwallet.Transaction
 	status        *components.TxStatus
 	confirmations int32
@@ -56,7 +56,7 @@ const (
 	StakingExpired  = "EXPIRED"
 )
 
-func stakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newestFirst bool, hasFilter func(int32) bool) ([]*transactionItem, error) {
+func StakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newestFirst bool, hasFilter func(int32) bool) ([]*transactionItem, error) {
 	tickets := make([]*transactionItem, 0)
 	multiWallet := l.WL.MultiWallet
 	for _, tx := range txs {
@@ -120,7 +120,7 @@ func stakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newes
 		}
 
 		tickets = append(tickets, &transactionItem{
-			transaction:   &ticketCopy,
+			Transaction:   &ticketCopy,
 			ticketSpender: ticketSpender,
 			status:        txStatus,
 			confirmations: tx.Confirmations(w.GetBestBlock()),
@@ -140,8 +140,8 @@ func stakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newes
 
 	// bring vote and revoke tx forward
 	sort.Slice(tickets[:], func(i, j int) bool {
-		var timeStampI = tickets[i].transaction.Timestamp
-		var timeStampJ = tickets[j].transaction.Timestamp
+		var timeStampI = tickets[i].Transaction.Timestamp
+		var timeStampJ = tickets[j].Transaction.Timestamp
 
 		if tickets[i].ticketSpender != nil {
 			timeStampI = tickets[i].ticketSpender.Timestamp
@@ -160,7 +160,7 @@ func stakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newes
 	return tickets, nil
 }
 
-func allLiveTickets(mw *dcrlibwallet.MultiWallet) ([]dcrlibwallet.Transaction, error) {
+func AllLiveTickets(mw *dcrlibwallet.MultiWallet) ([]dcrlibwallet.Transaction, error) {
 	var tickets []dcrlibwallet.Transaction
 	liveTicketFilters := []int32{dcrlibwallet.TxFilterUnmined, dcrlibwallet.TxFilterImmature, dcrlibwallet.TxFilterLive}
 	for _, filter := range liveTicketFilters {
@@ -283,7 +283,7 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 
 // ticketCard layouts out Stake info with the shadow box, use for list horizontal or list grid
 func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalletName bool) layout.Dimensions {
-	wal := l.WL.MultiWallet.WalletWithID(tx.transaction.WalletID)
+	wal := l.WL.MultiWallet.WalletWithID(tx.Transaction.WalletID)
 	txStatus := tx.status
 
 	// add this data to transactionItem so it can be shared with list
@@ -385,7 +385,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 				Padding:     layout.UniformInset(values.MarginPadding16),
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return components.LayoutBalance(gtx, l, dcrutil.Amount(tx.transaction.Amount).String())
+					return components.LayoutBalance(gtx, l, dcrutil.Amount(tx.Transaction.Amount).String())
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
@@ -435,13 +435,13 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					txt := l.Theme.Label(values.TextSize14, time.Unix(tx.transaction.Timestamp, 0).Format("Jan 2"))
+					txt := l.Theme.Label(values.TextSize14, time.Unix(tx.Transaction.Timestamp, 0).Format("Jan 2"))
 					txt.Color = l.Theme.Color.GrayText3
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							txtLayout := txt.Layout(gtx)
 							ticketCardTooltip(gtx, txtLayout, tx.dateTooltip, values.MarginPaddingMinus10, func(gtx C) D {
-								dateTime := time.Unix(tx.transaction.Timestamp, 0).Format("Jan 2, 2006 at 03:04:05 PM")
+								dateTime := time.Unix(tx.Transaction.Timestamp, 0).Format("Jan 2, 2006 at 03:04:05 PM")
 								return titleDescTooltip(gtx, l, "Purchased", dateTime)
 							})
 							return txtLayout
@@ -490,7 +490,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 }
 
 func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showWalletName bool) layout.Dimensions {
-	wal := l.WL.MultiWallet.WalletWithID(ticket.transaction.WalletID)
+	wal := l.WL.MultiWallet.WalletWithID(ticket.Transaction.WalletID)
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
@@ -543,7 +543,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 								dtime.Color = l.Theme.Color.GrayText3
 
 								return components.EndToEndRow(gtx, func(gtx C) D {
-									return components.LayoutBalance(gtx, l, dcrutil.Amount(ticket.transaction.Amount).String())
+									return components.LayoutBalance(gtx, l, dcrutil.Amount(ticket.Transaction.Amount).String())
 								}, func(gtx C) D {
 									txtLayout := dtime.Layout(gtx)
 									ticketCardTooltip(gtx, txtLayout, ticket.dateTooltip, values.MarginPaddingMinus10, func(gtx C) D {

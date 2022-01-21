@@ -15,7 +15,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-type vspSelector struct {
+type VSPSelector struct {
 	*load.Load
 
 	dialogTitle string
@@ -25,26 +25,26 @@ type vspSelector struct {
 	selectedVSP  *dcrlibwallet.VSP
 }
 
-func newVSPSelector(l *load.Load) *vspSelector {
-	v := &vspSelector{
+func NewVSPSelector(l *load.Load) *VSPSelector {
+	v := &VSPSelector{
 		Load:         l,
 		showVSPModal: l.Theme.NewClickable(true),
 	}
 	return v
 }
 
-func (v *vspSelector) title(title string) *vspSelector {
+func (v *VSPSelector) Title(title string) *VSPSelector {
 	v.dialogTitle = title
 	return v
 }
 
-func (v *vspSelector) Changed() bool {
+func (v *VSPSelector) Changed() bool {
 	changed := v.changed
 	v.changed = false
 	return changed
 }
 
-func (v *vspSelector) selectVSP(vspHost string) {
+func (v *vspSelector) SelectVSP(vspHost string) {
 	for _, vsp := range v.WL.MultiWallet.KnownVSPs() {
 		if vsp.Host == vspHost {
 			v.changed = true
@@ -58,7 +58,7 @@ func (v *vspSelector) SelectedVSP() *dcrlibwallet.VSP {
 	return v.selectedVSP
 }
 
-func (v *vspSelector) handle() {
+func (v *VSPSelector) handle() {
 	if v.showVSPModal.Clicked() {
 		newVSPSelectorModal(v.Load).
 			title("Voting service provider").
@@ -69,7 +69,7 @@ func (v *vspSelector) handle() {
 	}
 }
 
-func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
+func (v *VSPSelector) Layout(gtx layout.Context) layout.Dimensions {
 	v.handle()
 
 	border := widget.Border{

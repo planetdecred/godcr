@@ -2,7 +2,7 @@ package governance
 
 import (
 	"context"
-	// "fmt"
+	"fmt"
 	"sync"
 
 	"gioui.org/font/gofont"
@@ -14,7 +14,8 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
-	// "github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -22,7 +23,7 @@ import (
 
 type agendaVoteModal struct {
 	*load.Load
-	modal decredmaterial.Modal
+	modal          decredmaterial.Modal
 	voteSuccessful func()
 
 	detailsMu     sync.Mutex
@@ -30,17 +31,19 @@ type agendaVoteModal struct {
 	// voteDetails    *dcrlibwallet.Agenda.Choices
 	voteDetailsErr error
 
-	agenda   *dcrlibwallet.Agenda
-	isVoting bool
+	agenda       *dcrlibwallet.Agenda
+	vspIsFetched bool
+	isVoting     bool
 
 	consensusPage *ConsensusPage
 
-	walletSelector *WalletSelector
-	materialLoader material.LoaderStyle
-	abstainVote    decredmaterial.CheckBoxStyle
-	yesVote        decredmaterial.CheckBoxStyle
-	noVote         decredmaterial.CheckBoxStyle
-	// agendaVoteOptions         []decredmaterial.CheckBoxStyle
+	walletSelector    *WalletSelector
+	vspSelector       *staking.VSPSelector
+	ticketSelector    *ticketSelector
+	materialLoader    material.LoaderStyle
+	abstainVote       decredmaterial.CheckBoxStyle
+	yesVote           decredmaterial.CheckBoxStyle
+	noVote            decredmaterial.CheckBoxStyle
 	items             map[string]string //[key]str-key
 	itemKeys          []string
 	defaultValue      string // str-key
@@ -119,6 +122,9 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 	}
 	avm.itemKeys = sortedKeys
 	avm.items = ArrVoteOptions
+
+	avm.vspIsFetched = len((*l.WL.VspInfo).List) > 0
+
 	return avm
 }
 
@@ -128,6 +134,13 @@ func (avm *agendaVoteModal) ModalID() string {
 
 func (avm *agendaVoteModal) OnResume() {
 	avm.walletSelector.SelectFirstValidWallet()
+
+	avm.vspSelector = staking.NewVSPSelector(avm.Load).Title("Select a vsp")
+	if avm.vspIsFetched && components.StringNotEmpty(avm.WL.GetRememberVSP()) {
+		avm.vspSelector.SelectVSP(avm.WL.GetRememberVSP())
+	}
+
+	avm.ticketSelector = newTicketSelector(avm.Load, avm.consensusPage.LiveTickets).Title("Select a ticket")
 
 	initialValue := avm.agenda.VotingPreference
 	if initialValue == "" {
@@ -181,7 +194,7 @@ func (avm *agendaVoteModal) sendVotes() {
 		}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-				err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, "", avm.agenda.AgendaID, avm.optionsRadioGroup.Value, "", password)
+				err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Host, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, "", password)
 				if err != nil {
 					pm.SetError(err.Error())
 					pm.SetLoading(false)
@@ -189,7 +202,7 @@ func (avm *agendaVoteModal) sendVotes() {
 				}
 				pm.Dismiss()
 				avm.Toast.Notify("Vote updated successfully, refreshing agendas!")
-				
+
 				avm.Dismiss()
 				go avm.consensusPage.FetchAgendas()
 				// if avm.voteSuccessful != nil {
@@ -202,6 +215,18 @@ func (avm *agendaVoteModal) sendVotes() {
 }
 
 func (avm *agendaVoteModal) Handle() {
+	if avm.vspSelector.Changed() {
+		avm.WL.RememberVSP(avm.vspSelector.SelectedVSP().Host)
+	}
+
+	// reselect vsp if there's a delay in fetching the VSP List
+	if !avm.vspIsFetched && len((*avm.WL.VspInfo).List) > 0 {
+		if avm.WL.GetRememberVSP() != "" {
+			avm.vspSelector.SelectVSP(avm.WL.GetRememberVSP())
+			avm.vspIsFetched = true
+		}
+	}
+
 	for avm.cancelBtn.Clicked() {
 		if avm.isVoting {
 			continue
@@ -215,7 +240,7 @@ func (avm *agendaVoteModal) Handle() {
 		// avm.updateButtonClicked()
 	}
 
-	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue
+	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue && avm.vspSelector.SelectedVSP() != nil && avm.ticketSelector.SelectedTicket() != nil
 	avm.voteBtn.SetEnabled(validToVote)
 	if avm.voteBtn.Enabled() {
 		avm.voteBtn.Background = avm.Theme.Color.Primary
@@ -258,10 +283,16 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 			return avm.walletSelector.Layout(gtx)
 		},
 		func(gtx C) D {
-			// if voteDetails == nil {
-			// 	return D{}
-			// }
-
+			return avm.vspSelector.Layout(gtx)
+		},
+		func(gtx C) D {
+			return avm.ticketSelector.Layout(gtx)
+		},
+		func(gtx C) D {
+			text := fmt.Sprintf("You have %d live tickets", len(avm.consensusPage.LiveTickets))
+			return avm.Theme.Label(values.TextSize16, text).Layout(gtx)
+		},
+		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx, avm.layoutItems()...)

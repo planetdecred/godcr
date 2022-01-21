@@ -159,6 +159,8 @@ type WalletSelectorModal struct {
 	*load.Load
 	dialogTitle string
 
+	isCancelable bool
+
 	walletIsValid func(*dcrlibwallet.Wallet) bool
 	callback      func(*dcrlibwallet.Wallet)
 
@@ -178,6 +180,7 @@ func newWalletSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.W
 
 		currentSelectedWallet: currentSelectedAccount,
 		wallets:               wallets,
+		isCancelable:          true,
 	}
 
 	return asm
@@ -210,6 +213,10 @@ func (asm *WalletSelectorModal) Dismiss() {
 func (asm *WalletSelectorModal) Handle() {
 	if clicked, index := asm.walletsList.ItemClicked(); clicked {
 		asm.callback(asm.filteredWallets[index])
+		asm.Dismiss()
+	}
+
+	if asm.modal.BackdropClicked(asm.isCancelable) {
 		asm.Dismiss()
 	}
 }
