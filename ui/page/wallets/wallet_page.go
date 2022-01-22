@@ -277,11 +277,6 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 	return []menuItem{
 		{
-			text:   values.String(values.StrSettings),
-			button: pg.Theme.NewClickable(true),
-			id:     WalletSettingsPageID,
-		},
-		{
 			text:   values.String(values.StrRename),
 			button: pg.Theme.NewClickable(true),
 			action: func(l *load.Load) {
@@ -303,6 +298,11 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 					NegativeButton(values.String(values.StrCancel), func() {})
 				textModal.Show()
 			},
+		},
+		{
+			text:   values.String(values.StrSettings),
+			button: pg.Theme.NewClickable(true),
+			id:     WalletSettingsPageID,
 		},
 	}
 }
@@ -338,7 +338,7 @@ func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
 					m.SetError(err.Error())
 					m.SetLoading(false)
 				} else {
-					// pg.wallet.GetMultiWalletInfo() TODO
+					pg.loadWalletAndAccounts()
 					pg.Toast.Notify(values.String(values.StrWatchOnlyWalletImported))
 					m.Dismiss()
 				}
@@ -366,11 +366,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 			layout.Expanded(func(gtx C) D {
 				return pg.Theme.List(pg.container).Layout(gtx, 2, func(gtx C, i int) D {
 					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-						dims := pageContent[i](gtx)
-						if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
-							dims.Size.Y += 60
-						}
-						return dims
+						return pageContent[i](gtx)
 					})
 				})
 			}),
@@ -574,9 +570,8 @@ func (pg *WalletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensio
 					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.Theme.Separator().Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.layoutWatchOnlyWallets(gtx)
-					})
+					mp10 := values.MarginPadding10
+					return layout.Inset{Right: mp10, Bottom: mp10}.Layout(gtx, pg.layoutWatchOnlyWallets)
 				}),
 			)
 		})
@@ -597,12 +592,13 @@ func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 		}
 
 		m := values.MarginPadding10
-		return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							inset := layout.Inset{
+								Left:  values.MarginPadding10,
 								Right: values.MarginPadding10,
 							}
 							return inset.Layout(gtx, pg.watchOnlyWalletIcon.Layout24dp)
@@ -612,7 +608,8 @@ func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										return pg.Theme.Body2(listItem.totalBalance).Layout(gtx)
+										balanceLabel := pg.Theme.Body2(listItem.totalBalance)
+										return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
 									}),
 									layout.Rigid(func(gtx C) D {
 										pg.layoutOptionsMenu(gtx, i, listItem)

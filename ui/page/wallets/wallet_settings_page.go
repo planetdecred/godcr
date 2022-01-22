@@ -243,12 +243,36 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	}
 
 	for pg.deleteWallet.Clicked() {
+		warningMsg := "Make sure to have the seed word backed up before removing the wallet"
+		if pg.wallet.IsWatchingOnlyWallet() {
+			warningMsg = "The watch-only wallet will be removed from your app"
+		}
 		modal.NewInfoModal(pg.Load).
 			Title(values.String(values.StrRemoveWallet)).
-			Body("Make sure to have the seed word backed up before removing the wallet").
+			Body(warningMsg).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
 			PositiveButton(values.String(values.StrRemove), func() {
+				walletDeleted := func() {
+					if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
+						pg.Toast.Notify("Wallet removed")
+						pg.PopFragment()
+					} else {
+						pg.Load.ReloadApp()
+					}
+				}
+
+				if pg.wallet.IsWatchingOnlyWallet() {
+					// no password is required for watching only wallets.
+					err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, nil)
+					if err != nil {
+						pg.Toast.NotifyError(err.Error())
+					} else {
+						walletDeleted()
+					}
+					return
+				}
+
 				modal.NewPasswordModal(pg.Load).
 					Title(values.String(values.StrConfirmToRemove)).
 					NegativeButton(values.String(values.StrCancel), func() {}).
@@ -261,12 +285,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 								return
 							}
 
-							if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
-								pg.Toast.Notify("Wallet removed")
-								pg.PopFragment()
-							} else {
-								pg.Load.ReloadApp()
-							}
+							walletDeleted()
 							pm.Dismiss() // calls RefreshWindow.
 						}()
 						return false
