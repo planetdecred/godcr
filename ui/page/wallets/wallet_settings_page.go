@@ -292,7 +292,6 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 					}).Show()
 
 			}).Show()
-		break
 	}
 
 	if pg.infoButton.Button.Clicked() {
