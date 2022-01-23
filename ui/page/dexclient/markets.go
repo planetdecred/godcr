@@ -259,7 +259,9 @@ func (pg *Page) OnNavigatedTo() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *Page) OnNavigatedFrom() {}
+func (pg *Page) OnNavigatedFrom() {
+	pg.ctxCancel()
+}
 
 func (pg *Page) startDexClient() {
 	_, err := pg.WL.MultiWallet.StartDexClient()
