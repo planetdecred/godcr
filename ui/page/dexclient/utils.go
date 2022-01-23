@@ -3,6 +3,7 @@ package dexclient
 import (
 	"errors"
 	"fmt"
+	"image/color"
 	"math"
 	"sort"
 	"strconv"
@@ -13,8 +14,12 @@ import (
 	"decred.org/dcrdex/client/asset/btc"
 	"decred.org/dcrdex/client/asset/dcr"
 	"decred.org/dcrdex/client/core"
+	"decred.org/dcrdex/client/db"
 	"decred.org/dcrdex/dex"
 	"decred.org/dcrdex/dex/order"
+	"gioui.org/text"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -95,6 +100,7 @@ const (
 	strConfirmNewPassword           = "Confirm new password"
 	strErrRequireCertFile           = "Please choose a cert file"
 	strNoteConfirmTradeMessage      = "IMPORTANT: Trades take time to settle, and you cannot turn off the DEX client software, or the BTC or DCR blockchain and/or wallet software, until settlement is complete. Settlement can complete as quickly as a few minutes or take as long as a few hours."
+	strRecentActivity               = "Recent Activity"
 
 	nStrNoWalletFound         = "no wallet found for %s"
 	nStrCreateAWallet         = "Create a %s Wallet"
@@ -411,4 +417,113 @@ func walletSyncPercentage(wall *core.WalletState) string {
 		percentage = wall.SyncProgress * 100
 	}
 	return fmt.Sprintf("%.2f%% %s", percentage, values.String(values.StrSynced))
+}
+
+type notification struct {
+	Acked     bool
+	Details   string
+	ID        string
+	Severity  db.Severity
+	TimeStamp uint64
+	Subject   string
+}
+
+// saveNotification save one notifications to local db
+func saveNotification(mw *dcrlibwallet.MultiWallet, n *core.Notification) {
+	notifications := make(map[string]*notification)
+	err := mw.ReadUserConfigValue(dexNotificationConfigKey, &notifications)
+	if err == nil {
+		notifications[(*n).ID().String()] = &notification{
+			Acked:     (*n).Acked(),
+			Details:   (*n).Details(),
+			ID:        (*n).ID().String(),
+			Severity:  (*n).Severity(),
+			TimeStamp: (*n).Time(),
+			Subject:   (*n).Subject(),
+		}
+		mw.SaveUserConfigValue(dexNotificationConfigKey, &notifications)
+	}
+}
+
+// saveNotifications save all notifications to local db
+func saveNotifications(mw *dcrlibwallet.MultiWallet, notifications []*db.Notification) {
+	mapNotifications := make(map[string]*notification, len(notifications))
+	for _, n := range notifications {
+		mapNotifications[n.Id.String()] = &notification{
+			Acked:     n.Acked(),
+			Details:   n.Details(),
+			ID:        n.ID().String(),
+			Severity:  n.Severity(),
+			TimeStamp: n.Time(),
+			Subject:   n.Subject(),
+		}
+	}
+	mw.SaveUserConfigValue(dexNotificationConfigKey, &mapNotifications)
+}
+
+// getNotifications get all notifications from local db with given parameters
+func getNotifications(mw *dcrlibwallet.MultiWallet, onlyUnAcked bool) []*notification {
+	mapNotifications := make(map[string]*notification)
+
+	err := mw.ReadUserConfigValue(dexNotificationConfigKey, &mapNotifications)
+	if err != nil {
+		return nil
+	}
+
+	notifications := make([]*notification, 0)
+	for _, ntfn := range mapNotifications {
+		if onlyUnAcked {
+			if !ntfn.Acked {
+				notifications = append(notifications, ntfn)
+			}
+			continue
+		}
+		ntfn.Acked = true
+		mapNotifications[ntfn.ID] = ntfn
+		notifications = append(notifications, ntfn)
+	}
+
+	if !onlyUnAcked {
+		mw.SaveUserConfigValue(dexNotificationConfigKey, &mapNotifications)
+	}
+
+	sort.Slice(notifications, func(i, j int) bool {
+		return notifications[i].TimeStamp > notifications[j].TimeStamp
+	})
+
+	return notifications
+}
+
+func severityColor(severity db.Severity, colors *values.Color) color.NRGBA {
+	switch severity {
+	case db.Success:
+		return colors.Success
+	case db.WarningLevel:
+		return colors.Yellow
+	case db.ErrorLevel:
+		return colors.Danger
+	default:
+		return colors.Background
+	}
+}
+
+func severityIndicatorLabel(mw *dcrlibwallet.MultiWallet, theme *decredmaterial.Theme) (lb decredmaterial.Label) {
+	notifications := getNotifications(mw, true)
+	var severity db.Severity = 0
+	if len(notifications) > 0 {
+		severity = notifications[0].Severity
+	}
+	lb = theme.Label(values.TextSize12, "")
+	lb.Font.Weight = text.Bold
+	lb.Color = severityColor(severity, theme.Color)
+
+	if len(notifications) > 0 {
+		lb.Text = fmt.Sprintf("%d", len(notifications))
+		return
+	}
+
+	if len(notifications) > 99 {
+		lb.Text = "99+"
+	}
+	return
 }

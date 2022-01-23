@@ -47,6 +47,7 @@ type Page struct {
 	dexSettingsBtn    *decredmaterial.Clickable
 	dexSelectBtn      *decredmaterial.Clickable
 	notificationBtn   *decredmaterial.Clickable
+	recentActivity    []*notification
 }
 
 func NewMarketPage(l *load.Load) *Page {
@@ -138,7 +139,8 @@ func (pg *Page) Layout(gtx C) D {
 
 func (pg *Page) headerLayout() layout.Widget {
 	return func(gtx C) D {
-		btn := func(btn *decredmaterial.Clickable, textBtn string, ic *decredmaterial.Image) layout.Widget {
+		btn := func(btn *decredmaterial.Clickable, textBtn string, ic *decredmaterial.Image,
+			indicator *decredmaterial.Label) layout.Widget {
 			return func(gtx C) D {
 				return widget.Border{
 					Color:        pg.Theme.Color.Gray2,
@@ -155,7 +157,18 @@ func (pg *Page) headerLayout() layout.Widget {
 							return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 								layout.Rigid(pg.Theme.Label(values.MarginPadding12, textBtn).Layout),
 								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, ic.Layout)
+									return layout.Inset{
+										Left: values.MarginPadding5,
+									}.Layout(gtx, ic.Layout)
+								}),
+								layout.Rigid(func(gtx C) D {
+									if indicator == nil {
+										return D{}
+									}
+									indicator := severityIndicatorLabel(pg.WL.MultiWallet, pg.Theme)
+									return layout.Inset{
+										Top: values.MarginPaddingMinus9,
+									}.Layout(gtx, indicator.Layout)
 								}),
 							)
 						})
@@ -164,37 +177,45 @@ func (pg *Page) headerLayout() layout.Widget {
 			}
 		}
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{
+			Bottom: values.MarginPadding15,
+		}.Layout(gtx, func(gtx C) D {
 			dexIc := pg.Icons.DexIcon
 			orderHistoryIc := pg.Icons.TimerIcon
 			walletIc := pg.Icons.WalletIcon
 			dexSettingIc := pg.Icons.SettingsIcon
-			dexIc.Scale, orderHistoryIc.Scale, walletIc.Scale, dexSettingIc.Scale = .1, .5, .3, .3
+			dexNtfnIc := pg.Icons.NotificationIcon
+			dexIc.Scale, orderHistoryIc.Scale, walletIc.Scale, dexSettingIc.Scale, dexNtfnIc.Scale = .1, .5, .3, .3, .2
 
 			return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					if pg.dexServer == nil {
 						return D{}
 					}
-					return layout.W.Layout(gtx, btn(pg.dexSelectBtn, pg.dexServer.Host, dexIc))
+					return layout.W.Layout(gtx, btn(pg.dexSelectBtn, pg.dexServer.Host, dexIc, nil))
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
+								indicator := severityIndicatorLabel(pg.WL.MultiWallet, pg.Theme)
 								return layout.Inset{
 									Right: values.MarginPadding5,
-								}.Layout(gtx, btn(pg.notificationBtn, values.String(values.StrNotifications), orderHistoryIc))
+								}.Layout(gtx, btn(pg.notificationBtn, values.String(values.StrNotifications), dexNtfnIc, &indicator))
 							}),
 							layout.Rigid(func(gtx C) D {
 								if pg.dexServer == nil {
 									return D{}
 								}
-								return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, btn(pg.ordersHistoryBtn, strOrderHistory, orderHistoryIc))
+								return layout.Inset{
+									Right: values.MarginPadding5,
+								}.Layout(gtx, btn(pg.ordersHistoryBtn, strOrderHistory, orderHistoryIc, nil))
 							}),
-							layout.Rigid(btn(pg.walletSettingsBtn, values.String(values.StrWallets), walletIc)),
+							layout.Rigid(btn(pg.walletSettingsBtn, values.String(values.StrWallets), walletIc, nil)),
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, btn(pg.dexSettingsBtn, strDexSetting, dexSettingIc))
+								return layout.Inset{
+									Left: values.MarginPadding5,
+								}.Layout(gtx, btn(pg.dexSettingsBtn, strDexSetting, dexSettingIc, nil))
 							}),
 						)
 					})
@@ -314,7 +335,7 @@ func (pg *Page) HandleUserInteractions() {
 						pm.SetLoading(false)
 						return
 					}
-					pg.WL.MultiWallet.SaveUserConfigValue(dexNotificationConfigKey, &results.Notifications)
+					saveNotifications(pg.WL.MultiWallet, results.Notifications)
 
 					// Check if there is no dexServer registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
@@ -395,7 +416,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.notificationBtn.Clicked() {
-		newNotificationModal(pg.Load).Show()
+		newNotificationModal(pg.Load, &pg.recentActivity).Show()
 	}
 }
 
@@ -410,8 +431,19 @@ func (pg *Page) readNotifications() {
 				pg.RefreshWindow()
 			}
 
-			if n.Severity() > db.Success {
-				pg.Toast.NotifyError(n.Details())
+			if n.Severity() >= db.Success {
+				saveNotification(pg.WL.MultiWallet, &n)
+			}
+
+			if n.Severity() == db.Poke {
+				pg.recentActivity = append([]*notification{{
+					Acked:     n.Acked(),
+					Details:   n.Details(),
+					ID:        n.ID().String(),
+					Severity:  n.Severity(),
+					TimeStamp: n.Time(),
+					Subject:   n.Subject(),
+				}}, pg.recentActivity...)
 			}
 
 		case <-pg.ctx.Done():
