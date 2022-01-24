@@ -29,8 +29,6 @@ type agendaVoteModal struct {
 	detailsMu     sync.Mutex
 	detailsCancel context.CancelFunc
 	LiveTickets   []*dcrlibwallet.Transaction
-	// voteDetails    *dcrlibwallet.Agenda.Choices
-	voteDetailsErr error
 
 	agenda               *dcrlibwallet.Agenda
 	vspIsFetched         bool
@@ -44,9 +42,6 @@ type agendaVoteModal struct {
 	vspSelector       *staking.VSPSelector
 	ticketSelector    *ticketSelector
 	materialLoader    material.LoaderStyle
-	abstainVote       decredmaterial.CheckBoxStyle
-	yesVote           decredmaterial.CheckBoxStyle
-	noVote            decredmaterial.CheckBoxStyle
 	items             map[string]string //[key]str-key
 	itemKeys          []string
 	defaultValue      string // str-key
@@ -64,11 +59,7 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 		agenda:        agenda,
 		consensusPage: consensusPage,
 		// voteSuccessful: onVoteSuccessful,
-		// defaultValue: agenda.VotingPreference,
 		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
-		abstainVote:       l.Theme.CheckBox(new(widget.Bool), "Abstain"),
-		yesVote:           l.Theme.CheckBox(&widget.Bool{}, "Yes"),
-		noVote:            l.Theme.CheckBox(&widget.Bool{}, "No"),
 		optionsRadioGroup: new(widget.Enum),
 		voteBtn:           l.Theme.Button("Vote"),
 		cancelBtn:         l.Theme.OutlineButton("Cancel"),
@@ -82,33 +73,15 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 		WalletSelected(func(w *dcrlibwallet.Wallet) {
 			avm.loadCount = 0
 			avm.detailsMu.Lock()
-			// avm.yesVote.reset()
-			// avm.noVote.reset()
 			// cancel current loading thread if any.
 			if avm.detailsCancel != nil {
 				avm.detailsCancel()
 			}
 
-			// ctx, cancel := context.WithCancel(context.Background())
-			// avm.detailsCancel = cancel
-
-			// avm.voteDetails = nil
-			avm.voteDetailsErr = nil
-
 			avm.detailsMu.Unlock()
 			avm.FetchLiveTickets(w.ID)
 			avm.RefreshWindow()
 			avm.loadCount++
-
-			// go func() {
-			// 	// voteDetails, err := avm.WL.MultiWallet.Politeia.ProposalVoteDetailsRaw(w.ID, avm.proposal.Token)
-			// 	avm.detailsMu.Lock()
-			// 	if !components.ContextDone(ctx) {
-			// 		// avm.voteDetails = voteDetails
-			// 		avm.voteDetailsErr = err
-			// 	}
-			// 	avm.detailsMu.Unlock()
-			// }()
 		}).
 		WalletValidator(func(w *dcrlibwallet.Wallet) bool {
 			return !w.IsWatchingOnlyWallet()
@@ -182,7 +155,7 @@ func (avm *agendaVoteModal) OnResume() {
 	if avm.vspIsFetched && components.StringNotEmpty(avm.WL.GetRememberVSP()) {
 		avm.vspSelector.SelectVSP(avm.WL.GetRememberVSP())
 	}
-	
+
 	initialValue := avm.agenda.VotingPreference
 	if initialValue == "" {
 		initialValue = avm.defaultValue
@@ -208,25 +181,7 @@ func (avm *agendaVoteModal) Dismiss() {
 
 func (avm *agendaVoteModal) sendVotes() {
 	avm.detailsMu.Lock()
-	// tickets := avm.voteDetails.EligibleTickets
 	avm.detailsMu.Unlock()
-
-	// votes := make([]*dcrlibwallet.ProposalVote, 0)
-	// addVotes := func(bit string, count int) {
-	// 	for i := 0; i < count; i++ {
-
-	// 		// get and pop
-	// 		var eligibleTicket *dcrlibwallet.EligibleTicket
-	// 		eligibleTicket, tickets = tickets[0], tickets[1:]
-
-	// 		vote := &dcrlibwallet.ProposalVote{
-	// 			Ticket: eligibleTicket,
-	// 			Bit:    bit,
-	// 		}
-
-	// 		votes = append(votes, vote)
-	// 	}
-	// }
 
 	modal.NewPasswordModal(avm.Load).
 		Title("Confirm to vote").
@@ -235,7 +190,8 @@ func (avm *agendaVoteModal) sendVotes() {
 		}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-				err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Host, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, "", password)
+				err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Info.PubKey, avm.vspSelector.SelectedVSP().Host, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, "", password)
+				// err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Info.PubKey, avm.vspSelector.SelectedVSP().Host, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, avm.ticketSelector.SelectedTicket().Hash, password)
 				if err != nil {
 					pm.SetError(err.Error())
 					pm.SetLoading(false)
@@ -246,9 +202,6 @@ func (avm *agendaVoteModal) sendVotes() {
 
 				avm.Dismiss()
 				go avm.consensusPage.FetchAgendas()
-				// if avm.voteSuccessful != nil {
-				// 	avm.voteSuccessful()
-				// }
 			}()
 
 			return false
@@ -330,12 +283,18 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 			return avm.walletSelector.Layout(gtx)
 		},
 		func(gtx C) D {
+			if len(avm.LiveTickets) < 1 {
+				return D {}
+			}
 			return avm.vspSelector.Layout(gtx)
 		},
 		func(gtx C) D {
 			if !avm.liveTicketsIsFetched {
 				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
 				return avm.materialLoader.Layout(gtx)
+			}
+			if len(avm.LiveTickets) < 1 {
+				return D {}
 			}
 			return avm.ticketSelector.Layout(gtx)
 		},
@@ -344,7 +303,7 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
 				return avm.materialLoader.Layout(gtx)
 			}
-			text := fmt.Sprintf("You have %d live tickets", len(avm.LiveTickets))
+			text := fmt.Sprintf("You have %d live tickets for the selected wallet [%s]", len(avm.LiveTickets), avm.walletSelector.SelectedWallet().Name)
 			return avm.Theme.Label(values.TextSize16, text).Layout(gtx)
 		},
 		func(gtx C) D {

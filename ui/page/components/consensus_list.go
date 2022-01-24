@@ -2,10 +2,6 @@ package components
 
 import (
 	"image/color"
-	"time"
-	// "context"
-
-	// "fmt"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -29,7 +25,7 @@ func AgendasList(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
 		agenda := consensusItem.Agenda
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layoutAgendaTitle(gtx, l, consensusItem.Agenda)
+				return layoutAgendaStatus(gtx, l, consensusItem.Agenda)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layoutAgendaDescription(gtx, l, agenda)
@@ -47,37 +43,36 @@ func AgendasList(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
 	})
 }
 
-func layoutAgendaTitle(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
+func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	lbl := l.Theme.H5(agenda.AgendaID)
 	lbl.Font.Weight = text.SemiBold
 
-	var categoryLabel decredmaterial.Label
-	var categoryLabelColor color.NRGBA
-	var categoryIcon *decredmaterial.Icon
+	var statusLabel decredmaterial.Label
+	var statusLabelColor color.NRGBA
+	var statusIcon *decredmaterial.Icon
 
-	currentTime := time.Now().Unix()
-	// println("[][][][]", agenda.StartTime, currentTime, agenda.EndTime)
-	if currentTime > agenda.ExpireTime {
-		categoryLabel = l.Theme.Label(values.MarginPadding14, "Finished")
-		categoryLabelColor = l.Theme.Color.Success
-		categoryIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
-		categoryIcon.Color = categoryLabelColor
+	switch agenda.Status {
+	case "Finished":
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
+		statusLabelColor = l.Theme.Color.Success
+		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
+		statusIcon.Color = statusLabelColor
 		canVote = false
-	} else if currentTime > agenda.StartTime && currentTime < agenda.ExpireTime {
-		categoryLabel = l.Theme.Label(values.MarginPadding14, "In progress")
-		categoryLabelColor = l.Theme.Color.Primary
-		categoryIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
-		categoryIcon.Color = categoryLabelColor
+	case "In progress":
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
+		statusLabelColor = l.Theme.Color.Primary
+		statusIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
+		statusIcon.Color = statusLabelColor
 		canVote = true
-	} else if currentTime > agenda.StartTime {
-		categoryLabel = l.Theme.Label(values.MarginPadding14, "Upcoming")
-		categoryLabelColor = l.Theme.Color.Black
-		categoryIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
-		categoryIcon.Color = categoryLabelColor
+	case "Upcoming":
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
+		statusLabelColor = l.Theme.Color.Black
+		statusIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
+		statusIcon.Color = statusLabelColor
 		canVote = false
 	}
 
-	categoryLabel.Color = categoryLabelColor
+	statusLabel.Color = statusLabelColor
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
@@ -85,25 +80,22 @@ func layoutAgendaTitle(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			// return layout.Flex{}.Layout(gtx,
-			// 	layout.Rigid(categoryLabel.Layout),
-			// )
 			return decredmaterial.LinearLayout{
 				Width:     decredmaterial.WrapContent,
 				Height:    decredmaterial.WrapContent,
 				Direction: layout.Center,
 				Alignment: layout.Middle,
-				Border:    decredmaterial.Border{Color: categoryLabelColor, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+				Border:    decredmaterial.Border{Color: statusLabelColor, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
 				Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
 				Margin:    layout.Inset{Left: values.MarginPadding10},
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-						return categoryIcon.Layout(gtx, values.MarginPadding16)
+						return statusIcon.Layout(gtx, values.MarginPadding16)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return categoryLabel.Layout(gtx)
+					return statusLabel.Layout(gtx)
 				}))
 		}),
 	)
@@ -144,9 +136,7 @@ func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	text := l.Theme.Body1("No agendas yet")
-	if syncing {
-		text = l.Theme.Body1("Fetching agendas...")
-	}
+
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
 			Top:    values.MarginPadding10,
