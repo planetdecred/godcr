@@ -113,7 +113,7 @@ func (wl *WalletLoad) GetVSPList() {
 			v, err = getVSPInfo(fmt.Sprintf("https://%s", h))
 			if err != nil {
 				log.Error(err.Error())
-				return 
+				return
 			}
 			loadedVSP = append(loadedVSP, &wallet.VSPInfo{
 				Host: fmt.Sprintf("https://%s", h),

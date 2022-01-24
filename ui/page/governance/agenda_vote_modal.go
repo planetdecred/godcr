@@ -19,8 +19,6 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-// const ModalInputVote = "input_vote_modal"
-
 type agendaVoteModal struct {
 	*load.Load
 	modal          decredmaterial.Modal
@@ -82,23 +80,39 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 			avm.FetchLiveTickets(w.ID)
 			avm.RefreshWindow()
 			avm.loadCount++
+
+			// update agenda options prefrence to that of the selected wallet
+			consensusItems := components.LoadAgendas(avm.Load, w, false)
+			for _, consensusItem := range consensusItems {
+				if consensusItem.Agenda.ID == agenda.ID {
+					ArrVoteOptions := make(map[string]string)
+					for i := range consensusItem.Agenda.Choices {
+						ArrVoteOptions[agenda.Choices[i].Id] = consensusItem.Agenda.Choices[i].Id
+					}
+
+					// sort keys to keep order when refreshed
+					sortedKeys := make([]string, 0)
+					for k := range ArrVoteOptions {
+						sortedKeys = append(sortedKeys, k)
+					}
+					avm.itemKeys = sortedKeys
+					avm.items = ArrVoteOptions
+
+					initialValue := consensusItem.Agenda.VotingPreference
+					if initialValue == "" {
+						initialValue = avm.defaultValue
+					}
+
+					avm.initialValue = initialValue
+					avm.currentValue = initialValue
+
+					avm.optionsRadioGroup.Value = avm.currentValue
+				}
+			}
 		}).
 		WalletValidator(func(w *dcrlibwallet.Wallet) bool {
 			return !w.IsWatchingOnlyWallet()
 		})
-
-	ArrVoteOptions := make(map[string]string)
-	for i := range agenda.Choices {
-		ArrVoteOptions[agenda.Choices[i].Id] = agenda.Choices[i].Id
-	}
-
-	// sort keys to keep order when refreshed
-	sortedKeys := make([]string, 0)
-	for k := range ArrVoteOptions {
-		sortedKeys = append(sortedKeys, k)
-	}
-	avm.itemKeys = sortedKeys
-	avm.items = ArrVoteOptions
 
 	avm.vspIsFetched = len((*l.WL.VspInfo).List) > 0
 
@@ -284,7 +298,7 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 		},
 		func(gtx C) D {
 			if len(avm.LiveTickets) < 1 {
-				return D {}
+				return D{}
 			}
 			return avm.vspSelector.Layout(gtx)
 		},
@@ -294,7 +308,7 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 				return avm.materialLoader.Layout(gtx)
 			}
 			if len(avm.LiveTickets) < 1 {
-				return D {}
+				return D{}
 			}
 			return avm.ticketSelector.Layout(gtx)
 		},

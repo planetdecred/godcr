@@ -195,9 +195,6 @@ func (pg *GovernancePage) HandleUserInteractions() {
 
 	for i := range pg.consensusPage.consensusItems {
 		if pg.consensusPage.consensusItems[i].VoteButton.Clicked() {
-			// aftervoting := func() {
-			// 	pg.ChangeWindowPage(NewGovernancePage(pg.Load), false)
-			// }
 			newAgendaVoteModal(pg.Load, &pg.consensusPage.consensusItems[i].Agenda, pg.consensusPage).Show()
 		}
 	}
