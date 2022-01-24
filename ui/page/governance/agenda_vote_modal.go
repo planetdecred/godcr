@@ -205,7 +205,6 @@ func (avm *agendaVoteModal) sendVotes() {
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 			go func() {
 				err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Info.PubKey, avm.vspSelector.SelectedVSP().Host, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, "", password)
-				// err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Info.PubKey, avm.vspSelector.SelectedVSP().Host, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, avm.ticketSelector.SelectedTicket().Hash, password)
 				if err != nil {
 					pm.SetError(err.Error())
 					pm.SetLoading(false)
