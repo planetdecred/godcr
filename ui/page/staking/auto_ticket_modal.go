@@ -49,7 +49,7 @@ func newTicketBuyerModal(l *load.Load) *ticketBuyerModal {
 
 	tb.saveSettingsBtn.SetEnabled(false)
 
-	tb.vspIsFetched = len((*l.WL.MultiWallet.VspList).List) > 0
+	tb.vspIsFetched = len(l.WL.MultiWallet.VspList) > 0
 
 	return tb
 }

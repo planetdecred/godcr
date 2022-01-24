@@ -28,7 +28,6 @@ type Window struct {
 	walletTransactions   *wallet.Transactions
 	walletTransaction    *wallet.Transaction
 	walletAccount        *wallet.Account
-	vspInfo              *dcrlibwallet.VSPList
 	proposals            *wallet.Proposals
 	selectedProposal     *dcrlibwallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs

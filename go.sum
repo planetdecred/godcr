@@ -97,8 +97,8 @@ github.com/Sereal/Sereal v0.0.0-20181211220259-509a78ddbda3 h1:Xu7z47ZiE/J+sKXHZ
 github.com/Sereal/Sereal v0.0.0-20181211220259-509a78ddbda3/go.mod h1:D0JMgToj/WdxCgd30Kc1UcA9E+WdZoJqeVOuYW7iTBM=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
-github.com/Sirmorrison/dcrlibwallet v1.5.1-0.20220121130447-04c9628f4aa9 h1:lmUTLIMrFSS7oVCy8E5ltYcpmHIkag45l7RpOdiAZMk=
-github.com/Sirmorrison/dcrlibwallet v1.5.1-0.20220121130447-04c9628f4aa9/go.mod h1:OvxygYRxdmd5RpDiD9E7m2rSPZzHI1eQ0D7LAsN2/4M=
+github.com/Sirmorrison/dcrlibwallet v1.5.1-0.20220124155126-966c4dbfe638 h1:nrftgX9M0wu49zmrNn2RJso900Vmn9ZbnDZdA6QF+yI=
+github.com/Sirmorrison/dcrlibwallet v1.5.1-0.20220124155126-966c4dbfe638/go.mod h1:OvxygYRxdmd5RpDiD9E7m2rSPZzHI1eQ0D7LAsN2/4M=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
 github.com/VictoriaMetrics/fastcache v1.6.0/go.mod h1:0qHz5QP0GMX4pfmMA/zt5RgfNuXJrTP0zS7DqpHGGTw=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=

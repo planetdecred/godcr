@@ -113,7 +113,7 @@ func (pg *Page) loadPageData() {
 		}
 	}()
 
-	if len((*pg.WL.MultiWallet.VspList).List) == 0 {
+	if len(pg.WL.MultiWallet.VspList) == 0 {
 		go pg.WL.MultiWallet.GetVSPList(pg.WL.Wallet.Net)
 	}
 

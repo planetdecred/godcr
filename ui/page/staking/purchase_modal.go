@@ -78,7 +78,7 @@ func newStakingModal(l *load.Load) *stakingModal {
 
 	tp.stakeBtn.SetEnabled(false)
 
-	tp.vspIsFetched = len((*l.WL.MultiWallet.VspList).List) > 0
+	tp.vspIsFetched = len(l.WL.MultiWallet.VspList) > 0
 
 	return tp
 }
@@ -358,7 +358,7 @@ func (tp *stakingModal) Handle() {
 	}
 
 	// reselect vsp if there's a delay in fetching the VSP List
-	if !tp.vspIsFetched && len((*tp.WL.MultiWallet.VspList).List) > 0 {
+	if !tp.vspIsFetched && len(tp.WL.MultiWallet.VspList) > 0 {
 		if tp.WL.MultiWallet.GetRememberVSP() != "" {
 			tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
 			tp.vspIsFetched = true
