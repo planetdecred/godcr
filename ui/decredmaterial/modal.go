@@ -16,6 +16,7 @@ type Modal struct {
 	card         Card
 	scroll       ListStyle
 	isFloatTitle bool
+	scrollbar    bool
 	padding      unit.Value
 }
 
@@ -37,7 +38,7 @@ func (t *Theme) Modal() *Modal {
 		},
 		button:  new(widget.Clickable),
 		card:    t.Card(),
-		padding: unit.Dp(16),
+		padding: unit.Dp(24),
 	}
 
 	m.scroll = t.List(m.list)
@@ -90,14 +91,37 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget) layout.Dimen
 							if m.padding == unit.Dp(0) {
 								return layout.UniformInset(m.padding).Layout(gtx, title)
 							}
-							return layout.UniformInset(unit.Dp(10)).Layout(gtx, title)
+
+							inset := layout.Inset{
+								Top:    unit.Dp(10),
+								Bottom: unit.Dp(10),
+							}
+							return inset.Layout(gtx, title)
 						}
 						return D{}
 					}),
 					layout.Rigid(func(gtx C) D {
-						return m.scroll.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return layout.UniformInset(unit.Dp(10)).Layout(gtx, widgetFuncs[i])
+						mTB := unit.Dp(10)
+						mLR := unit.Dp(0)
+						if m.padding == unit.Dp(0) {
+							mLR = mTB
+						}
+						inset := layout.Inset{
+							Top:    mTB,
+							Bottom: mTB,
+							Left:   mLR,
+							Right:  mLR,
+						}
+						if m.scrollbar {
+							return m.scroll.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								return inset.Layout(gtx, widgetFuncs[i])
+							})
+						}
+						list := &layout.List{Axis: layout.Vertical}
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return list.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
+							return inset.Layout(gtx, widgetFuncs[i])
 						})
 					}),
 				)
@@ -118,4 +142,8 @@ func (m *Modal) BackdropClicked(minimizable bool) bool {
 
 func (m *Modal) SetPadding(padding unit.Value) {
 	m.padding = padding
+}
+
+func (m *Modal) ShowScrollbar(scrollbar bool) {
+	m.scrollbar = scrollbar
 }

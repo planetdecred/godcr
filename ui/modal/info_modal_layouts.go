@@ -1,6 +1,8 @@
 package modal
 
 import (
+	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 
@@ -18,6 +20,7 @@ const (
 	TransactionDetailsInfoTemplate = "TransactionDetailsInfoInfo"
 	WalletBackupInfoTemplate       = "WalletBackupInfo"
 	AllowUnmixedSpendingTemplate   = "AllowUnmixedSpending"
+	TicketPriceErrorTemplate       = "TicketPriceError"
 )
 
 func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
@@ -144,6 +147,29 @@ func allowUnspendUnmixedAcct(l *load.Load) []layout.Widget {
 					" to allow spending from unmixed accounts.
 			</span>`
 			return renderers.RenderHTML(text, l.Theme).Layout(gtx)
+		},
+	}
+}
+
+func ticketPriceErrorInfo(l *load.Load) []layout.Widget {
+	col := l.Theme.Color.GrayText2
+	return []layout.Widget{
+		func(gtx C) D {
+			text := l.Theme.Body1("Your wallet(s) needs to be synced before some of the staking functionality will available.")
+			text.Color = col
+			return text.Layout(gtx)
+		},
+		func(gtx C) D {
+			bestBlock := l.WL.MultiWallet.GetBestBlock()
+			activationHeight := l.WL.MultiWallet.GetActivationBlockHeight()
+			txt := l.Theme.Body1(fmt.Sprintf("The current sync progress is %v blocks, and the required is %v blocks", bestBlock.Height, activationHeight))
+			txt.Font.Weight = text.SemiBold
+			return txt.Layout(gtx)
+		},
+		func(gtx C) D {
+			text := l.Theme.Body1("Check in the Overview page for more details on sync progress.")
+			text.Color = col
+			return text.Layout(gtx)
 		},
 	}
 }
