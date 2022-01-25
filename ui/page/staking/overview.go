@@ -28,35 +28,35 @@ const OverviewPageID = "staking"
 
 type Page struct {
 	*load.Load
+	list *widget.List
 
-	ticketBuyerWallet   *dcrlibwallet.Wallet
 	ticketPageContainer *layout.List
+	ticketBuyerWallet   *dcrlibwallet.Wallet
 	ticketsLive         *decredmaterial.ClickableList
 
-	stakeBtn decredmaterial.Button
-
-	ticketPrice  string
-	totalRewards string
-
+	autoPurchaseSettings *decredmaterial.Clickable
 	autoPurchase         *decredmaterial.Switch
-	toTickets            decredmaterial.TextAndIconButton
-	autoPurchaseSettings decredmaterial.IconButton
+
+	stakeBtn  decredmaterial.Button
+	toTickets decredmaterial.TextAndIconButton
 
 	ticketOverview *dcrlibwallet.StakingOverview
 	liveTickets    []*transactionItem
-	list           *widget.List
+
+	ticketPrice  string
+	totalRewards string
 }
 
 func NewStakingPage(l *load.Load) *Page {
 	pg := &Page{
 		Load: l,
 
-		ticketsLive:         l.Theme.NewClickableList(layout.Vertical),
-		ticketPageContainer: &layout.List{Axis: layout.Vertical},
-		stakeBtn:            l.Theme.Button("Stake"),
-
-		autoPurchase: l.Theme.Switch(),
-		toTickets:    l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
+		ticketsLive:          l.Theme.NewClickableList(layout.Vertical),
+		ticketPageContainer:  &layout.List{Axis: layout.Vertical},
+		stakeBtn:             l.Theme.Button("Stake"),
+		autoPurchaseSettings: l.Theme.NewClickable(false),
+		autoPurchase:         l.Theme.Switch(),
+		toTickets:            l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
 	}
 
 	pg.list = &widget.List{
@@ -67,13 +67,8 @@ func NewStakingPage(l *load.Load) *Page {
 	pg.toTickets.Color = l.Theme.Color.Primary
 	pg.toTickets.BackgroundColor = color.NRGBA{}
 
-	pg.autoPurchaseSettings = l.Theme.IconButton(l.Icons.GearIcon)
-	pg.autoPurchaseSettings.ChangeColorStyle(&values.ColorStyle{Foreground: l.Theme.Color.Primary})
-	pg.autoPurchaseSettings.Size = values.MarginPadding24
-	pg.autoPurchaseSettings.Inset = layout.UniformInset(values.MarginPadding0)
-
 	pg.ticketOverview = new(dcrlibwallet.StakingOverview)
-
+	pg.loadPageData()
 	return pg
 }
 
@@ -96,8 +91,8 @@ func (pg *Page) OnNavigatedTo() {
 
 func (pg *Page) updateTBToggle() {
 	if pg.WL.MultiWallet.TicketBuyerConfigIsSet() {
-		_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
-		pg.autoPurchase.SetChecked(pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(walID))
+		tbConfig := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+		pg.autoPurchase.SetChecked(pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(tbConfig.WalletID))
 	} else {
 		pg.autoPurchase.SetChecked(false)
 	}
@@ -111,13 +106,11 @@ func (pg *Page) loadPageData() {
 		} else {
 			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
 		}
-	}()
 
-	if len(pg.WL.MultiWallet.VspList) == 0 {
-		go pg.WL.MultiWallet.GetVSPList(pg.WL.Wallet.Net)
-	}
+		if len(pg.WL.MultiWallet.VspList) == 0 {
+			pg.WL.MultiWallet.GetVSPList(pg.WL.Wallet.Net)
+		}
 
-	go func() {
 		totalRewards, err := pg.WL.MultiWallet.TotalStakingRewards()
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
@@ -125,9 +118,7 @@ func (pg *Page) loadPageData() {
 			pg.totalRewards = dcrutil.Amount(totalRewards).String()
 			pg.RefreshWindow()
 		}
-	}()
 
-	go func() {
 		overview, err := pg.WL.MultiWallet.StakingOverview()
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
@@ -252,7 +243,14 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 					rightWg := func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return pg.autoPurchaseSettings.Layout(gtx)
+								icon := pg.Icons.SettingsActiveIcon
+								tbConfig := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+								if pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(tbConfig.WalletID) {
+									icon = pg.Icons.SettingsInactiveIcon
+								}
+								return pg.autoPurchaseSettings.Layout(gtx, func(gtx C) D {
+									return icon.Layout24dp(gtx)
+								})
 							}),
 							layout.Rigid(func(gtx C) D {
 								title := pg.Theme.Label(values.TextSize14, "Auto Purchase")
@@ -490,30 +488,30 @@ func (pg *Page) HandleUserInteractions() {
 		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
 	}
 
-	_, walID, _, _ := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+	tbConfig := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
 	if pg.autoPurchase.Changed() {
 		if pg.autoPurchase.IsChecked() {
 			if pg.WL.MultiWallet.TicketBuyerConfigIsSet() {
 				pg.startTicketBuyerPasswordModal()
 			} else {
 				newTicketBuyerModal(pg.Load).
-					CancelSave(func() {
+					OnCancel(func() {
 						pg.autoPurchase.SetChecked(false)
 					}).
-					SettingsSaved(func() {
+					OnSettingsSaved(func() {
 						pg.startTicketBuyerPasswordModal()
-						pg.Toast.Notify("Auto ticket purchase setting saved successfully")
+						pg.Toast.Notify("Auto ticket purchase setting saved successfully.")
 					}).
 					Show()
 			}
 		} else {
-			pg.autoPurchase.SetChecked(false)
-			go pg.WL.MultiWallet.StopAutoTicketsPurchase(walID)
+			go pg.WL.MultiWallet.StopAutoTicketsPurchase(tbConfig.WalletID)
 		}
 	}
 
-	if pg.autoPurchaseSettings.Button.Clicked() {
-		if pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(walID) {
+	if pg.autoPurchaseSettings.Clicked() {
+		if pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(tbConfig.WalletID) {
+			pg.Toast.NotifyError("Settings can not be modified when ticket buyer is running.")
 			return
 		}
 
@@ -523,27 +521,27 @@ func (pg *Page) HandleUserInteractions() {
 
 func (pg *Page) ticketBuyerSettingsModal() {
 	newTicketBuyerModal(pg.Load).
-		SettingsSaved(func() {
-			pg.Toast.Notify("Auto ticket purchase setting saved successfully")
+		OnSettingsSaved(func() {
+			pg.Toast.Notify("Auto ticket purchase setting saved successfully.")
 		}).
-		CancelSave(func() {
+		OnCancel(func() {
 			pg.autoPurchase.SetChecked(false)
 		}).
 		Show()
 }
 
 func (pg *Page) startTicketBuyerPasswordModal() {
-	host, walID, acctNum, b2m := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
-	balToMaintain := dcrlibwallet.AmountCoin(b2m)
+	tbConfig := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+	balToMaintain := dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain)
 
 	modal.NewPasswordModal(pg.Load).
 		Title("Confirm Automatic Ticket Purchase").
 		SetCancelable(false).
-		ExtraLayout(func(gtx C) D {
+		UseCustomWidget(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %2.f", balToMaintain)).Layout),
 				layout.Rigid(func(gtx C) D {
-					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", host))
+					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", tbConfig.VspHost))
 					return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, label.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -582,14 +580,14 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			}
 
 			go func() {
-				vsp, err := pg.WL.MultiWallet.NewVSPClient(host, walID, uint32(acctNum))
+				vsp, err := pg.WL.MultiWallet.NewVSPClient(tbConfig.VspHost, tbConfig.WalletID, uint32(tbConfig.PurchaseAccount))
 				if err != nil {
 					pg.Toast.NotifyError(err.Error())
 					pm.SetLoading(false)
 					return
 				}
 
-				err = vsp.StartTicketBuyer(b2m, []byte(password))
+				err = vsp.StartTicketBuyer(tbConfig.BalanceToMaintain, []byte(password))
 				if err != nil {
 					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 						pm.SetError("Invalid password")
@@ -599,6 +597,8 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 					}
 					return
 				}
+
+				// wait for 3secs before updating the toggle button state
 				time.AfterFunc(time.Second*3, func() {
 					pg.updateTBToggle()
 				})

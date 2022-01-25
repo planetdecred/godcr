@@ -74,7 +74,7 @@ func (as *AccountSelector) Handle() {
 				if as.selectedAccount.Number != account.Number {
 					as.changed = true
 				}
-				as.SetupSelectedAccount(account)
+				as.SetSelectedAccount(account)
 				as.callback(account)
 			}).Show()
 	}
@@ -95,7 +95,7 @@ func (as *AccountSelector) SelectFirstWalletValidAccount() error {
 		accounts := accountsResult.Acc
 		for _, account := range accounts {
 			if as.accountIsValid(account) {
-				as.SetupSelectedAccount(account)
+				as.SetSelectedAccount(account)
 				as.callback(account)
 				return nil
 			}
@@ -105,7 +105,7 @@ func (as *AccountSelector) SelectFirstWalletValidAccount() error {
 	return errors.New("no valid account found")
 }
 
-func (as *AccountSelector) SetupSelectedAccount(account *dcrlibwallet.Account) {
+func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
 	wal := as.multiWallet.WalletWithID(account.WalletID)
 
 	as.selectedAccount = account

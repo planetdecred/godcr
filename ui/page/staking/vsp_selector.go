@@ -172,7 +172,6 @@ func (v *vspSelectorModal) Handle() {
 	v.addVSP.SetEnabled(v.editorsNotEmpty(v.inputVSP.Editor))
 	if v.addVSP.Clicked() {
 		go func() {
-			//Todo: dcrlibwallet AddVSP code update
 			err := v.WL.MultiWallet.AddVSP(v.WL.Wallet.Net, v.inputVSP.Editor.Text())
 			if err != nil {
 				v.Toast.NotifyError(err.Error())
@@ -203,8 +202,6 @@ func (v *vspSelectorModal) vspSelected(callback func(*dcrlibwallet.VSPInfo)) *vs
 	v.Dismiss()
 	return v
 }
-
-func (v *vspSelectorModal) OnDismiss() {}
 
 func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	return v.modal.Layout(gtx, []layout.Widget{
@@ -270,3 +267,5 @@ func (v *vspSelectorModal) editorsNotEmpty(editors ...*widget.Editor) bool {
 
 	return true
 }
+
+func (v *vspSelectorModal) OnDismiss() {}

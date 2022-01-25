@@ -23,13 +23,7 @@ const stakingModalID = "staking_modal"
 type stakingModal struct {
 	*load.Load
 
-	balanceError     string
-	ticketPrice      dcrutil.Amount
-	totalCost        int64
-	balanceLessCost  int64
-	vspIsFetched     bool
-	isLoading        bool
-	ticketsPurchased func()
+	ticketPrice dcrutil.Amount
 
 	modal          decredmaterial.Modal
 	cancelPurchase decredmaterial.Button
@@ -40,12 +34,16 @@ type stakingModal struct {
 
 	spendingPassword decredmaterial.Editor
 	tickets          decredmaterial.Editor
+
+	accountSelector  *components.AccountSelector
+	vspSelector      *vspSelector
 	materialLoader   material.LoaderStyle
+	ticketsPurchased func()
 
-	balToMaintainEditor decredmaterial.Editor
-
-	accountSelector *components.AccountSelector
-	vspSelector     *vspSelector
+	balanceError    string
+	totalCost       int64
+	balanceLessCost int64
+	isLoading       bool
 }
 
 func newStakingModal(l *load.Load) *stakingModal {
@@ -62,10 +60,6 @@ func newStakingModal(l *load.Load) *stakingModal {
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 	}
 
-	tp.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), "Balance to maintain (DCR)")
-	tp.balToMaintainEditor.Editor.SetText("")
-	tp.balToMaintainEditor.Editor.SingleLine = true
-
 	tp.tickets.Bordered = false
 	tp.tickets.Editor.Alignment = text.Middle
 	tp.tickets.Editor.SetText("1")
@@ -77,8 +71,6 @@ func newStakingModal(l *load.Load) *stakingModal {
 	tp.modal.SetPadding(values.MarginPadding0)
 
 	tp.stakeBtn.SetEnabled(false)
-
-	tp.vspIsFetched = len(l.WL.MultiWallet.VspList) > 0
 
 	return tp
 }
@@ -98,11 +90,11 @@ func (tp *stakingModal) OnResume() {
 
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
 
-	if !tp.vspIsFetched {
+	if !(len(tp.WL.MultiWallet.VspList) > 0) {
 		go tp.WL.MultiWallet.GetVSPList(tp.WL.Wallet.Net)
 	}
 
-	if tp.vspIsFetched && components.StringNotEmpty(tp.WL.MultiWallet.GetRememberVSP()) {
+	if len(tp.WL.MultiWallet.VspList) > 0 && components.StringNotEmpty(tp.WL.MultiWallet.GetRememberVSP()) {
 		tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
 	}
 
@@ -358,10 +350,9 @@ func (tp *stakingModal) Handle() {
 	}
 
 	// reselect vsp if there's a delay in fetching the VSP List
-	if !tp.vspIsFetched && len(tp.WL.MultiWallet.VspList) > 0 {
+	if len(tp.WL.MultiWallet.VspList) > 0 {
 		if tp.WL.MultiWallet.GetRememberVSP() != "" {
 			tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
-			tp.vspIsFetched = true
 		}
 	}
 

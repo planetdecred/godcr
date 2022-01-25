@@ -19,10 +19,8 @@ const ticketBuyerModalID = "staking_modal"
 type ticketBuyerModal struct {
 	*load.Load
 
-	vspIsFetched bool
-
 	settingsSaved func()
-	cancelFunc    func()
+	onCancel      func()
 
 	modal           decredmaterial.Modal
 	cancel          decredmaterial.Button
@@ -41,30 +39,28 @@ func newTicketBuyerModal(l *load.Load) *ticketBuyerModal {
 		cancel:          l.Theme.OutlineButton("Cancel"),
 		saveSettingsBtn: l.Theme.Button("Save"),
 		modal:           *l.Theme.ModalFloatTitle(),
+		vspSelector:     newVSPSelector(l).title("Select a vsp"),
 	}
 
 	tb.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), "Balance to maintain (DCR)")
-	tb.balToMaintainEditor.Editor.SetText("")
 	tb.balToMaintainEditor.Editor.SingleLine = true
 
 	tb.saveSettingsBtn.SetEnabled(false)
 
-	tb.vspIsFetched = len(l.WL.MultiWallet.VspList) > 0
-
 	return tb
 }
 
-func (tb *ticketBuyerModal) SettingsSaved(settingsSaved func()) *ticketBuyerModal {
+func (tb *ticketBuyerModal) OnSettingsSaved(settingsSaved func()) *ticketBuyerModal {
 	tb.settingsSaved = settingsSaved
 	return tb
 }
 
-func (tb *ticketBuyerModal) CancelSave(cancel func()) *ticketBuyerModal {
-	tb.cancelFunc = cancel
+func (tb *ticketBuyerModal) OnCancel(cancel func()) *ticketBuyerModal {
+	tb.onCancel = cancel
 	return tb
 }
 
-func (tb *ticketBuyerModal) setFirstWalletAccount() {
+func (tb *ticketBuyerModal) selectFirstWalletAccount() {
 	err := tb.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
 		tb.Toast.NotifyError(err.Error())
@@ -75,39 +71,37 @@ func (tb *ticketBuyerModal) OnResume() {
 
 	tb.initializeAccountSelector()
 
-	if !tb.vspIsFetched {
+	if !(len(tb.WL.MultiWallet.VspList) > 0) {
 		go tb.WL.MultiWallet.GetVSPList(tb.WL.Wallet.Net)
 	}
 
-	host, walID, accNumber, b2m := tb.WL.MultiWallet.GetAutoTicketsBuyerConfig()
-	if walID == -1 {
-		tb.setFirstWalletAccount()
+	tbConfig := tb.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+	if tbConfig.WalletID == -1 {
+		tb.selectFirstWalletAccount()
 	} else {
-		wal := tb.WL.MultiWallet.WalletWithID(walID)
+		wal := tb.WL.MultiWallet.WalletWithID(tbConfig.WalletID)
 		if wal == nil {
-			tb.setFirstWalletAccount()
+			tb.selectFirstWalletAccount()
 		} else {
 			accountsResult, err := wal.GetAccountsRaw()
 			if err != nil {
-				tb.setFirstWalletAccount()
+				tb.selectFirstWalletAccount()
 			} else {
 				for _, account := range accountsResult.Acc {
-					if account.Number == accNumber {
-						tb.accountSelector.SetupSelectedAccount(account)
+					if account.Number == tbConfig.PurchaseAccount {
+						tb.accountSelector.SetSelectedAccount(account)
 					}
 				}
 			}
 		}
 	}
 
-	tb.vspSelector = newVSPSelector(tb.Load).title("Select a vsp")
-
-	if tb.vspIsFetched && components.StringNotEmpty(host) {
-		tb.vspSelector.selectVSP(host)
+	if len(tb.WL.MultiWallet.VspList) > 0 && components.StringNotEmpty(tbConfig.VspHost) {
+		tb.vspSelector.selectVSP(tbConfig.VspHost)
 	}
 
-	if b2m != -1 {
-		tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(b2m), 'f', 0, 64))
+	if tbConfig.BalanceToMaintain != -1 {
+		tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain), 'f', 0, 64))
 	}
 }
 
@@ -194,7 +188,6 @@ func (tb *ticketBuyerModal) initializeAccountSelector() {
 
 			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) {
 				// privacy is enabled for selected wallet
-
 				accountIsValid = account.Number == wal.MixedAccountNumber()
 			}
 			return accountIsValid
@@ -206,22 +199,18 @@ func (tb *ticketBuyerModal) OnDismiss() {}
 func (tb *ticketBuyerModal) Handle() {
 	tb.saveSettingsBtn.SetEnabled(tb.canSave())
 
-	if tb.cancel.Clicked() {
-		tb.cancelFunc()
+	if tb.cancel.Clicked() || tb.modal.BackdropClicked(true) {
+		tb.onCancel()
 		tb.Dismiss()
 	}
 
-	if tb.modal.BackdropClicked(true) {
-		tb.cancelFunc()
-		tb.Dismiss()
-	}
-
-	if tb.canSave() && tb.saveSettingsBtn.Clicked() {
+	if tb.saveSettingsBtn.Clicked() {
 		host := tb.vspSelector.selectedVSP.Host
 
 		amount, err := strconv.ParseFloat(tb.balToMaintainEditor.Editor.Text(), 64)
 		if err != nil {
-			return //to do error handling
+			tb.Toast.NotifyError(err.Error())
+			return
 		}
 
 		atm := dcrlibwallet.AmountAtom(amount)

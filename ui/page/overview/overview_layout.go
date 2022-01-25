@@ -178,6 +178,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 			})
 		},
 		func(gtx C) D {
+			// allow the recentTransactionsSection to extend the entire width of the display area.
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return pg.recentTransactionsSection(gtx)
 		},
