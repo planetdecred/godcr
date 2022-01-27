@@ -359,8 +359,10 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 				case wallet.SyncStarted:
 					fallthrough
 				case wallet.SyncCanceled:
-					fallthrough
+					pg.loadTransactions()
+					pg.RefreshWindow()
 				case wallet.SyncCompleted:
+					pg.UpdateBalance()
 					pg.loadTransactions()
 					pg.RefreshWindow()
 				case wallet.BlockAttached:

@@ -94,6 +94,8 @@ func NewMainPage(l *load.Load) *MainPage {
 	l.ChangeFragment = mp.changeFragment
 	l.PopFragment = mp.popFragment
 	l.PopToFragment = mp.popToFragment
+	l.DesktopNotifier = mp.desktopNotifier
+	l.UpdateBalance = mp.UpdateBalance
 
 	mp.initNavItems()
 
