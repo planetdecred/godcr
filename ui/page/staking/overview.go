@@ -98,7 +98,7 @@ func (pg *Page) OnNavigatedTo() {
 	if err != nil {
 		pg.ticketPrice = "0 DCR"
 		bestBlock := pg.WL.MultiWallet.GetBestBlock()
-		activationHeight := pg.WL.MultiWallet.GetActivationBlockHeight()
+		activationHeight := pg.WL.MultiWallet.DCP0001ActivationBlockHeight()
 		if bestBlock.Height < activationHeight {
 			modal.NewInfoModal(pg.Load).
 				Title("Staking notification").

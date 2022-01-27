@@ -161,8 +161,8 @@ func ticketPriceErrorInfo(l *load.Load) []layout.Widget {
 		},
 		func(gtx C) D {
 			bestBlock := l.WL.MultiWallet.GetBestBlock()
-			activationHeight := l.WL.MultiWallet.GetActivationBlockHeight()
-			txt := l.Theme.Body1(fmt.Sprintf("The current sync progress is %v blocks, and the required is %v blocks", bestBlock.Height, activationHeight))
+			activationHeight := l.WL.MultiWallet.DCP0001ActivationBlockHeight()
+			txt := l.Theme.Body1(fmt.Sprintf("The current sync progress is %v blocks, and the minimum required blocks is %v blocks", bestBlock.Height, activationHeight))
 			txt.Font.Weight = text.SemiBold
 			return txt.Layout(gtx)
 		},
