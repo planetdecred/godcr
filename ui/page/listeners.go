@@ -99,69 +99,6 @@ func (mp *MainPage) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {
 	mp.desktopNotifier(update)
 }
 
-// Sync notifications
-
-func (mp *MainPage) OnSyncStarted(wasRestarted bool) {
-	mp.UpdateNotification(wallet.SyncStatusUpdate{
-		Stage: wallet.SyncStarted,
-	})
-}
-
-func (mp *MainPage) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
-	mp.UpdateNotification(wallet.SyncStatusUpdate{
-		Stage:          wallet.PeersConnected,
-		ConnectedPeers: numberOfConnectedPeers,
-	})
-}
-
-func (mp *MainPage) OnCFiltersFetchProgress(cfiltersFetchProgress *dcrlibwallet.CFiltersFetchProgressReport) {
-	mp.UpdateNotification(wallet.SyncStatusUpdate{
-		Stage:          wallet.CfiltersFetchProgress,
-		ProgressReport: cfiltersFetchProgress,
-	})
-}
-
-func (mp *MainPage) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.HeadersFetchProgressReport) {
-	mp.UpdateNotification(wallet.SyncStatusUpdate{
-		Stage: wallet.HeadersFetchProgress,
-		ProgressReport: wallet.SyncHeadersFetchProgress{
-			Progress: headersFetchProgress,
-		},
-	})
-}
-
-func (mp *MainPage) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibwallet.AddressDiscoveryProgressReport) {
-	mp.UpdateNotification(wallet.SyncStatusUpdate{
-		Stage: wallet.AddressDiscoveryProgress,
-		ProgressReport: wallet.SyncAddressDiscoveryProgress{
-			Progress: addressDiscoveryProgress,
-		},
-	})
-}
-
-func (mp *MainPage) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.HeadersRescanProgressReport) {
-	mp.UpdateNotification(wallet.SyncStatusUpdate{
-		Stage: wallet.HeadersRescanProgress,
-		ProgressReport: wallet.SyncHeadersRescanProgress{
-			Progress: headersRescanProgress,
-		},
-	})
-}
-func (mp *MainPage) OnSyncCompleted() {
-	mp.UpdateBalance()
-	mp.UpdateNotification(wallet.SyncStatusUpdate{
-		Stage: wallet.SyncCompleted,
-	})
-}
-
-func (mp *MainPage) OnSyncCanceled(willRestart bool) {
-	mp.UpdateNotification(wallet.SyncStatusUpdate{
-		Stage: wallet.SyncCanceled,
-	})
-}
-func (mp *MainPage) OnSyncEndedWithError(err error)          {}
-func (mp *MainPage) Debug(debugInfo *dcrlibwallet.DebugInfo) {}
-
 // Block Rescan
 
 func (mp *MainPage) OnBlocksRescanStarted(walletID int) {

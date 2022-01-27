@@ -12,6 +12,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -41,6 +42,7 @@ type walletSyncDetails struct {
 
 type AppOverviewPage struct {
 	*load.Load
+	*listeners.SyncProgress
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -124,6 +126,13 @@ func (pg *AppOverviewPage) ID() string {
 // Part of the load.Page interface.
 func (pg *AppOverviewPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
+	if pg.SyncProgress == nil {
+		pg.SyncProgress = listeners.NewSyncProgress(make(chan wallet.SyncStatusUpdate, 8))
+	} else {
+		pg.SyncStatus = make(chan wallet.SyncStatusUpdate, 8)
+	}
+	pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgress, OverviewPageID)
 
 	pg.getMixerWallets()
 	pg.loadTransactions()
@@ -323,6 +332,41 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 			var notification interface{}
 
 			select {
+			case n := <-pg.SyncStatus:
+				// Update sync progress fields which will be displayed
+				// when the next UI invalidation occurs.
+				switch t := n.ProgressReport.(type) {
+				case wallet.SyncHeadersFetchProgress:
+					pg.headerFetchProgress = t.Progress.HeadersFetchProgress
+					pg.headersToFetchOrScan = t.Progress.TotalHeadersToFetch
+					pg.syncProgress = int(t.Progress.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
+					pg.syncStep = wallet.FetchHeadersSteps
+				case wallet.SyncAddressDiscoveryProgress:
+					pg.syncProgress = int(t.Progress.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
+					pg.syncStep = wallet.AddressDiscoveryStep
+				case wallet.SyncHeadersRescanProgress:
+					pg.headersToFetchOrScan = t.Progress.TotalHeadersToScan
+					pg.syncProgress = int(t.Progress.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
+					pg.syncStep = wallet.RescanHeadersStep
+				}
+
+				// We only care about sync state changes here, to
+				// refresh the window display.
+				switch n.Stage {
+				case wallet.SyncStarted:
+					fallthrough
+				case wallet.SyncCanceled:
+					fallthrough
+				case wallet.SyncCompleted:
+					pg.loadTransactions()
+					pg.RefreshWindow()
+				case wallet.BlockAttached:
+					pg.RefreshWindow()
+				}
+
 			case notification = <-pg.Receiver.NotificationsUpdate:
 			case <-pg.ctx.Done():
 				return
@@ -405,4 +449,6 @@ func (pg *AppOverviewPage) getMixerWallets() {
 // Part of the load.Page interface.
 func (pg *AppOverviewPage) OnNavigatedFrom() {
 	pg.ctxCancel()
+	pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
+	close(pg.SyncStatus)
 }
