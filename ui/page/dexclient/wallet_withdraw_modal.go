@@ -29,7 +29,7 @@ type withdrawModal struct {
 	qrImage                      *image.Image
 	cancelBtn                    decredmaterial.Button
 	submitBtn                    decredmaterial.Button
-	isLoading                    bool
+	isSending                    bool
 	materialLoader               material.LoaderStyle
 }
 
@@ -82,13 +82,15 @@ func (md *withdrawModal) Handle() {
 	}
 
 	if md.submitBtn.Button.Clicked() {
-		if md.isLoading {
+		if md.isSending {
 			return
 		}
 
-		md.isLoading = true
+		md.isSending = true
+		md.modal.SetDisabled(true)
 		if ok := md.doWithdraw(); !ok {
-			md.isLoading = false
+			md.isSending = false
+			md.modal.SetDisabled(false)
 			return
 		}
 
@@ -152,7 +154,7 @@ func (md *withdrawModal) Layout(gtx layout.Context) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						if md.isLoading {
+						if md.isSending {
 							return D{}
 						}
 						return layout.Inset{
@@ -161,7 +163,7 @@ func (md *withdrawModal) Layout(gtx layout.Context) D {
 						}.Layout(gtx, md.cancelBtn.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
-						if md.isLoading {
+						if md.isSending {
 							return layout.Inset{
 								Top:    values.MarginPadding10,
 								Bottom: values.MarginPadding15,

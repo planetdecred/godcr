@@ -11,6 +11,7 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/widget"
+	"gioui.org/x/explorer"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/assets"
@@ -83,6 +84,8 @@ type Load struct {
 	SubscribeKeyEvent   func(eventChan chan *key.Event, pageID string) // Widgets call this function to recieve key events.
 	UnsubscribeKeyEvent func(pageID string) error
 	ReloadApp           func()
+
+	Expl *explorer.Explorer
 }
 
 func (l *Load) RefreshTheme() {

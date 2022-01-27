@@ -416,7 +416,9 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Expanded(func(gtx C) D {
 			if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
-				return pg.backdrop.Layout(gtx)
+				return pg.backdrop.Layout(gtx, func(gtx C) D {
+					return D{Size: gtx.Constraints.Max}
+				})
 			}
 			return D{}
 		}),

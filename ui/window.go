@@ -9,6 +9,7 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/x/explorer"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 
@@ -52,6 +53,7 @@ type Window struct {
 
 	keyEvents             map[string]chan *key.Event
 	walletAcctMixerStatus chan *wallet.AccountMixer
+	explorer              *explorer.Explorer
 }
 
 type (
@@ -75,14 +77,16 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 		netType = wal.Net
 	}
 
+	w := app.NewWindow(app.MinSize(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType)))
 	win := &Window{
-		Window:                app.NewWindow(app.MinSize(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType))),
+		Window:                w,
 		wallet:                wal,
 		walletTransactions:    new(wallet.Transactions),
 		walletUnspentOutputs:  new(wallet.UnspentOutputs),
 		walletAcctMixerStatus: make(chan *wallet.AccountMixer),
 		proposals:             new(wallet.Proposals),
 		keyEvents:             make(map[string]chan *key.Event),
+		explorer:              explorer.NewExplorer(w),
 	}
 
 	l, err := win.NewLoad()
@@ -145,6 +149,8 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		}
 	}
 
+	l.Expl = win.explorer
+
 	return l, nil
 }
 
@@ -167,6 +173,8 @@ func (win *Window) UnsubscribeKeyEvent(pageID string) error {
 func (win *Window) HandleEvents() {
 	for {
 		e := <-win.Events()
+		win.explorer.ListenEvents(e)
+
 		switch evt := e.(type) {
 
 		case system.DestroyEvent:

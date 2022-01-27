@@ -165,7 +165,6 @@ func (md *createWalletModal) doCreateWallet(appPass, walletPass []byte) {
 
 	md.isSending = true
 	md.modal.SetDisabled(true)
-
 	go func() {
 		defer func() {
 			md.isSending = false
@@ -181,12 +180,6 @@ func (md *createWalletModal) doCreateWallet(appPass, walletPass []byte) {
 
 		settings := make(map[string]string)
 		var walletType string
-		appPass := md.appPass
-		if appPass == "" {
-			appPass = md.appPassword.Editor.Text()
-		}
-		walletPass := []byte(md.walletPassword.Editor.Text())
-
 		switch coinID {
 		case dcr.BipID:
 			selectedAccount := md.sourceAccountSelector.SelectedAccount()

@@ -57,9 +57,10 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget) layout.Dimen
 	}
 	dims := layout.Stack{Alignment: layout.Center}.Layout(mGtx,
 		layout.Expanded(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			fillMax(gtx, m.overlayColor, CornerRadius{})
-			return m.button.Layout(gtx)
+			return m.button.Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return fillMax(gtx, m.overlayColor, CornerRadius{})
+			})
 		}),
 		layout.Stacked(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y

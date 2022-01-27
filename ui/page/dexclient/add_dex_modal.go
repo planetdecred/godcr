@@ -2,7 +2,7 @@ package dexclient
 
 import (
 	"fmt"
-	"path/filepath"
+	"io/ioutil"
 	"strings"
 
 	"decred.org/dcrdex/client/core"
@@ -10,7 +10,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/ncruces/zenity"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -28,7 +27,7 @@ type addDexModal struct {
 	isSending        bool
 	cancelBtn        decredmaterial.Button
 	materialLoader   material.LoaderStyle
-	certFilePath     string
+	certContent      []byte
 	fileSelectBtn    *decredmaterial.Clickable
 
 	// defaultAppPass is the password value after login or initialize to continue processing add new DEX
@@ -184,20 +183,28 @@ func (md *addDexModal) Handle() {
 	}
 
 	if md.fileSelectBtn.Clicked() {
-		filePath, err := zenity.SelectFile(
-			zenity.Title("Select Cert File"),
-			zenity.FileFilter{
-				Name:     "Cert file",
-				Patterns: []string{"*.cert"},
-			},
-		)
+		go func() {
+			file, err := md.Load.Expl.ChooseFile("cert")
+			if err != nil {
+				md.Toast.NotifyError(err.Error())
+				return
+			}
 
-		if err != nil {
-			md.Toast.NotifyError(err.Error())
-			return
-		}
+			defer func() {
+				err := file.Close()
+				if err != nil {
+					return
+				}
+			}()
 
-		md.certFilePath = filePath
+			b, err := ioutil.ReadAll(file)
+			if err != nil {
+				md.Toast.NotifyError(err.Error())
+				return
+			}
+
+			md.certContent = b
+		}()
 	}
 
 	for host, cl := range md.listServerClickable {
@@ -227,12 +234,7 @@ func (md *addDexModal) doAddDexServer(serverAddr, appPass string) {
 
 		var cert []byte
 		if md.isUseCustomServer {
-			c, err := getCertFromFile(md.certFilePath)
-			if err != nil {
-				md.Toast.NotifyError(err.Error())
-				return
-			}
-			cert = c
+			cert = md.certContent
 		}
 
 		dexServer, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(appPass), cert)
@@ -251,7 +253,7 @@ func (md *addDexModal) doAddDexServer(serverAddr, appPass string) {
 			OnAssetSelected(func(asset *core.SupportedAsset) {
 				cfReg := &confirmRegistration{
 					Load:      md.Load,
-					Exchange:  dexServer,
+					ex:        dexServer,
 					isSending: &md.isSending,
 					Show:      md.Show,
 					completed: md.onDexAdded,
@@ -378,44 +380,39 @@ func (md *addDexModal) customServerLayout(gtx C) D {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(md.dexServerAddress.Layout),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, md.Theme.Label(values.MarginPadding16, strTLSCert).Layout)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					fileName := strNoneFileSelect
-					if md.certFilePath != "" {
-						fileName = filepath.Base(md.certFilePath)
-					}
-					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, md.Theme.Label(values.MarginPadding16, fileName).Layout)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return widget.Border{
-						Color:        md.Theme.Color.Gray2,
-						CornerRadius: values.MarginPadding4,
-						Width:        values.MarginPadding1,
-					}.Layout(gtx, func(gtx C) D {
-						labelBtn := strAddAFile
-						if md.certFilePath != "" {
-							labelBtn = strChooseOtherFile
-						}
-						return md.fileSelectBtn.Layout(gtx, func(gtx C) D {
-							return layout.Inset{
-								Top:    values.MarginPadding4,
-								Bottom: values.MarginPadding4,
-								Left:   values.MarginPadding10,
-								Right:  values.MarginPadding10,
-							}.Layout(gtx, md.Theme.Label(values.MarginPadding14, labelBtn).Layout)
+			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(md.Theme.Label(values.MarginPadding16, strTLSCert).Layout),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Left: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+							return widget.Border{
+								Color:        md.Theme.Color.Gray2,
+								CornerRadius: values.MarginPadding4,
+								Width:        values.MarginPadding1,
+							}.Layout(gtx, func(gtx C) D {
+								return md.fileSelectBtn.Layout(gtx, func(gtx C) D {
+									labelBtn := strAddAFile
+									if md.certContent != nil {
+										labelBtn = strChooseOtherFile
+									}
+									return layout.Inset{
+										Top:    values.MarginPadding4,
+										Bottom: values.MarginPadding4,
+										Left:   values.MarginPadding10,
+										Right:  values.MarginPadding10,
+									}.Layout(gtx, md.Theme.Label(values.MarginPadding14, labelBtn).Layout)
+								})
+							})
 						})
-					})
-				}),
-			)
+					}),
+				)
+			})
 		}),
 	)
 }
 
 type confirmRegistration struct {
-	*core.Exchange
+	ex *core.Exchange
 	*load.Load
 	isSending *bool
 	Show      func()
@@ -426,7 +423,7 @@ type confirmRegistration struct {
 func (cfReg *confirmRegistration) confirm(feeAssetName string, password string, cert []byte) {
 	modal.NewInfoModal(cfReg.Load).
 		Title(strConfirmReg).
-		Body(confirmRegisterModalDesc(cfReg.Exchange, feeAssetName)).
+		Body(confirmRegisterModalDesc(cfReg.ex, feeAssetName)).
 		SetCancelable(false).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton(strRegister, func() {
@@ -434,17 +431,17 @@ func (cfReg *confirmRegistration) confirm(feeAssetName string, password string, 
 				// Show previous modal and display loading status or error messages
 				cfReg.Show()
 				*cfReg.isSending = true
-				_, err := cfReg.Dexc().RegisterWithDEXServer(cfReg.Host,
+				_, err := cfReg.Dexc().RegisterWithDEXServer(cfReg.ex.Host,
 					cert,
-					int64(cfReg.Fee.Amt),
-					int32(cfReg.Fee.ID),
+					int64(cfReg.ex.Fee.Amt),
+					int32(cfReg.ex.Fee.ID),
 					[]byte(password))
 				if err != nil {
 					*cfReg.isSending = false
 					cfReg.Toast.NotifyError(err.Error())
 					return
 				}
-				cfReg.completed(cfReg.Exchange)
+				cfReg.completed(cfReg.ex)
 				cfReg.Dismiss()
 			}()
 		}).Show()

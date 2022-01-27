@@ -209,8 +209,22 @@ func (pg *Page) welcomeLayout(button *decredmaterial.Button) layout.Widget {
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					description := "Trade crypto peer-to-peer"
-					return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
+					description := "Trade crypto peer-to-peer."
+					return layout.Inset{Bottom: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+						return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					if pg.shouldStartDex {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							gtx.Constraints.Min.X = 50
+							return pg.materialLoader.Layout(gtx)
+						})
+					}
+					if button == nil {
+						return D{}
+					}
+					return button.Layout(gtx)
 				}),
 			)
 		})
@@ -224,13 +238,9 @@ func (pg *Page) registrationStatusLayout() layout.Widget {
 		}
 		reqConfirms, currentConfs := pg.dexServer.Fee.Confs, pg.dexServer.PendingFee.Confs
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(pg.Theme.Label(values.TextSize14, strWaitingConfirms).Layout),
-			layout.Rigid(func(gtx C) D {
-				description := "Trade crypto peer-to-peer."
-				return layout.Inset{Bottom: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-					return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
-				})
-			}),
+			layout.Rigid(txtLabel(strWaitingConfirms)),
+			layout.Rigid(txtLabel(fmt.Sprintf(nStrConfirmationsStatus, pg.dexServer.Host, reqConfirms))),
+			layout.Rigid(txtLabel(fmt.Sprintf("%d/%d", currentConfs, reqConfirms))),
 		)
 	}
 }

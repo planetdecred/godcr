@@ -224,8 +224,9 @@ func (d *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 		if d.isOpen {
 			return layout.Stack{Alignment: alig}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					gtx.Constraints.Min = gtx.Constraints.Max
-					return d.backdrop.Layout(gtx)
+					return d.backdrop.Layout(gtx, func(gtx C) D {
+						return D{Size: gtx.Constraints.Max}
+					})
 				}),
 				layout.Stacked(func(gtx C) D {
 					return d.openedLayout(gtx, iLeft, iRight)
@@ -235,8 +236,9 @@ func (d *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 
 		return layout.Stack{Alignment: alig}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				gtx.Constraints.Min = gtx.Constraints.Max
-				return d.backdrop.Layout(gtx)
+				return d.backdrop.Layout(gtx, func(gtx C) D {
+					return D{Size: gtx.Constraints.Max}
+				})
 			}),
 			layout.Stacked(func(gtx C) D {
 				return d.closedLayout(gtx, iLeft, iRight)

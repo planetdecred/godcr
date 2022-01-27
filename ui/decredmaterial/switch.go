@@ -7,7 +7,6 @@ import (
 	"image/color"
 
 	"gioui.org/f32"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -93,7 +92,7 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	trackColor := col
-	t := op.Offset(f32.Point{Y: trackOff}).Push(gtx.Ops)
+	t := op.Offset(f32.Point{Y: trackOff, X: float32(gtx.Px(unit.Dp(-1)))}).Push(gtx.Ops)
 	cl := clip.UniformRRect(trackRect, trackCorner).Push(gtx.Ops)
 	paint.ColorOp{Color: trackColor}.Add(gtx.Ops)
 	paint.PaintOp{}.Add(gtx.Ops)
@@ -103,41 +102,31 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	// Compute thumb offset and color.
 	if s.IsChecked() {
 		xoff := float32(trackWidth - thumbSize)
-		defer op.Offset(f32.Point{X: xoff}).Push(gtx.Ops).Pop()
+		defer op.Offset(f32.Point{X: xoff - float32(gtx.Px(unit.Dp(1)))}).Push(gtx.Ops).Pop()
 	}
 
 	thumbRadius := float32(thumbSize) / 2
 
-	// Draw thumb shadow, a translucent disc slightly larger than the
-	// thumb itself.
-	// Center shadow horizontally and slightly adjust its Y.
-	paint.FillShape(gtx.Ops, col,
-		clip.Circle{
-			Center: f32.Point{X: thumbRadius, Y: thumbRadius + .25},
-			Radius: thumbRadius + 1,
-		}.Op(gtx.Ops))
-
-	// Draw thumb.
-	paint.FillShape(gtx.Ops, thumbColor,
-		clip.Circle{
-			Center: f32.Point{X: thumbRadius, Y: thumbRadius},
-			Radius: thumbRadius,
-		}.Op(gtx.Ops))
-
-	// Set up click area.
-	clickSize := gtx.Px(unit.Dp(40))
-	clickOff := f32.Point{
-		X: (float32(trackWidth) - float32(clickSize)) * .5,
-		Y: (float32(trackHeight)-float32(clickSize))*.5 + trackOff,
+	circle := func(x, y, r float32) clip.Op {
+		b := f32.Rectangle{
+			Min: f32.Pt(x-r, y-r),
+			Max: f32.Pt(x+r, y+r),
+		}
+		return clip.Ellipse(b).Op(gtx.Ops)
 	}
-	defer op.Offset(clickOff).Push(gtx.Ops).Pop()
-	sz := image.Pt(clickSize, clickSize)
-	defer pointer.Ellipse(image.Rectangle{Max: sz}).Push(gtx.Ops).Pop()
-	gtx.Constraints.Min = sz
-	s.clk.Layout(gtx)
 
-	dims := image.Point{X: trackWidth, Y: thumbSize}
-	return layout.Dimensions{Size: dims}
+	return s.clk.Layout(gtx, func(gtx C) D {
+		// Draw thumb shadow, a translucent disc slightly larger than the
+		// thumb itself.
+		// Center shadow horizontally and slightly adjust its Y.
+		paint.FillShape(gtx.Ops, col, circle(thumbRadius, thumbRadius+.25, thumbRadius+1))
+
+		// Draw thumb.
+		paint.FillShape(gtx.Ops, thumbColor, circle(thumbRadius, thumbRadius, thumbRadius))
+
+		dims := image.Point{X: trackWidth, Y: thumbSize}
+		return layout.Dimensions{Size: dims}
+	})
 }
 
 func (s *Switch) Changed() bool {

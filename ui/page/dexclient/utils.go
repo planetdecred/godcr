@@ -3,9 +3,7 @@ package dexclient
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -55,7 +53,6 @@ const (
 	strDexAddr                      = "DEX Address"
 	strPickAServer                  = "Pick a Server"
 	strCustomServer                 = "Custom Server"
-	strNoneFileSelect               = "None file selected"
 	strAddAFile                     = "Add a file"
 	strChooseOtherFile              = "Choose other file"
 	strNoWallet                     = "No wallet"
@@ -378,33 +375,6 @@ func sliceSever(mapCert map[string][]byte) []string {
 		return servers[i] < servers[j]
 	})
 	return servers
-}
-
-func getCertFromFile(certFilePath string) ([]byte, error) {
-	var cert []byte
-
-	if certFilePath == "" {
-		return cert, errors.New(strErrRequireCertFile)
-	}
-
-	certFile, err := os.Open(certFilePath)
-	defer func() {
-		err := certFile.Close()
-		if err != nil {
-			return
-		}
-	}()
-
-	if err != nil {
-		return cert, err
-	}
-
-	cert, err = ioutil.ReadAll(certFile)
-	if err != nil {
-		return cert, err
-	}
-
-	return cert, nil
 }
 
 // supportedMarket check supported market for app depend on dcrlibwallet.
