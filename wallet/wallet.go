@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sort"
 	"time"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -75,37 +74,6 @@ func (wal *Wallet) InitMultiWallet() error {
 
 	wal.multi = multiWal
 	return nil
-}
-
-// wallets returns an up-to-date map of all opened wallets
-func (wal *Wallet) wallets() ([]dcrlibwallet.Wallet, error) {
-	if wal.multi == nil {
-		return nil, MultiWalletError{
-			Message: "No MultiWallet loaded",
-		}
-	}
-
-	wallets := []dcrlibwallet.Wallet{}
-	for _, j := range wal.multi.OpenedWalletIDsRaw() {
-		w := wal.multi.WalletWithID(j)
-		if w == nil {
-			return nil, InternalWalletError{
-				Message:  "Invalid Wallet ID",
-				Err:      ErrIDNotExist,
-				Affected: []int{j},
-			}
-		}
-		wallets = append(wallets, *w)
-	}
-
-	// sort wallet by ids
-	if len(wallets) > 0 {
-		sort.SliceStable(wallets, func(i, j int) bool {
-			return wallets[i].ID < wallets[j].ID
-		})
-	}
-
-	return wallets, nil
 }
 
 func (wal *Wallet) hdPrefix() string {

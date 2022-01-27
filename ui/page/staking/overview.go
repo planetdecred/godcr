@@ -84,14 +84,13 @@ func (pg *Page) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
-	pg.getTBWallet()
+	pg.setTBWallet()
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
-	pg.updateTBToggle()
 
 	pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
 }
 
-func (pg *Page) getTBWallet() {
+func (pg *Page) setTBWallet() {
 	for _, wal := range pg.WL.SortedWalletList() {
 		if wal.TicketBuyerConfigIsSet() {
 			pg.ticketBuyerWallet = wal
@@ -102,10 +101,6 @@ func (pg *Page) getTBWallet() {
 	if pg.ticketBuyerWallet == nil {
 		pg.ticketBuyerWallet = pg.WL.SortedWalletList()[0]
 	}
-}
-
-func (pg *Page) updateTBToggle() {
-
 }
 
 func (pg *Page) loadPageData() {
@@ -119,7 +114,6 @@ func (pg *Page) loadPageData() {
 
 		if len(pg.WL.MultiWallet.VspList) == 0 {
 			pg.WL.MultiWallet.GetVSPList(pg.WL.Wallet.Net)
-			pg.RefreshWindow()
 		}
 
 		totalRewards, err := pg.WL.MultiWallet.TotalStakingRewards()
@@ -127,7 +121,6 @@ func (pg *Page) loadPageData() {
 			pg.Toast.NotifyError(err.Error())
 		} else {
 			pg.totalRewards = dcrutil.Amount(totalRewards).String()
-			pg.RefreshWindow()
 		}
 
 		overview, err := pg.WL.MultiWallet.StakingOverview()
@@ -135,8 +128,9 @@ func (pg *Page) loadPageData() {
 			pg.Toast.NotifyError(err.Error())
 		} else {
 			pg.ticketOverview = overview
-			pg.RefreshWindow()
 		}
+
+		pg.RefreshWindow()
 	}()
 
 	go func() {
@@ -500,7 +494,6 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.autoPurchase.Changed() {
 		if pg.autoPurchase.IsChecked() {
-			pg.getTBWallet()
 			if pg.ticketBuyerWallet.TicketBuyerConfigIsSet() {
 				pg.startTicketBuyerPasswordModal()
 			} else {
@@ -515,12 +508,11 @@ func (pg *Page) HandleUserInteractions() {
 					Show()
 			}
 		} else {
-			go pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
+			pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
 		}
 	}
 
 	if pg.autoPurchaseSettings.Clicked() {
-		pg.getTBWallet()
 		if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
 			pg.Toast.NotifyError("Settings can not be modified when ticket buyer is running.")
 			return
@@ -534,6 +526,7 @@ func (pg *Page) ticketBuyerSettingsModal() {
 	newTicketBuyerModal(pg.Load).
 		OnSettingsSaved(func() {
 			pg.Toast.Notify("Auto ticket purchase setting saved successfully.")
+			pg.setTBWallet()
 		}).
 		OnCancel(func() {
 			pg.autoPurchase.SetChecked(false)
@@ -542,11 +535,12 @@ func (pg *Page) ticketBuyerSettingsModal() {
 }
 
 func (pg *Page) startTicketBuyerPasswordModal() {
-	tbConfig := pg.ticketBuyerWallet.GetAutoTicketsBuyerConfig()
+	tbConfig := pg.ticketBuyerWallet.AutoTicketsBuyerConfig()
 	balToMaintain := dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain)
 	name, err := pg.ticketBuyerWallet.AccountNameRaw(uint32(tbConfig.PurchaseAccount))
 	if err != nil {
-		pg.Toast.NotifyError(err.Error())
+		pg.Toast.NotifyError("Ticket buyer acount error: " + err.Error())
+		return
 	}
 
 	modal.NewPasswordModal(pg.Load).
@@ -554,7 +548,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 		SetCancelable(false).
 		UseCustomWidget(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Wallet to Purchase from: %s", pg.ticketBuyerWallet.Name)).Layout),
+				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Wallet to purchase from: %s", pg.ticketBuyerWallet.Name)).Layout),
 				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Selected account: %s", name)).Layout),
 				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %2.f", balToMaintain)).Layout), layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", tbConfig.VspHost))
@@ -608,17 +602,13 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 
 				err = vsp.StartTicketBuyer(tbConfig.BalanceToMaintain, []byte(password))
 				if err != nil {
-					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-						pm.SetError("Invalid password")
-						pm.SetLoading(false)
-					} else {
-						pg.Toast.NotifyError(err.Error())
-					}
+					pg.Toast.NotifyError(err.Error())
+					pm.SetLoading(false)
 					return
 				}
 
-				pg.RefreshWindow()
 				pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+				pg.RefreshWindow()
 			}()
 			pm.Dismiss()
 

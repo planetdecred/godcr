@@ -75,11 +75,12 @@ func (tb *ticketBuyerModal) OnResume() {
 	}
 
 	// loop through all available wallets and select the one with ticket buyer config.
-	// if non, set the selected wallet to the first
-	//TODO: extend functionality to allow for multiwallet config
+	// if non, set the selected wallet to the first.
+	// temporary work around for only one wallet.
+	// TODO: extend functionality to allow for multiwallet config
 	for _, wal := range tb.WL.SortedWalletList() {
 		if wal.TicketBuyerConfigIsSet() {
-			tbConfig := wal.GetAutoTicketsBuyerConfig()
+			tbConfig := wal.AutoTicketsBuyerConfig()
 			acct, err := wal.GetAccount(tbConfig.PurchaseAccount)
 			if err != nil {
 				tb.Toast.NotifyError(err.Error())
@@ -88,6 +89,7 @@ func (tb *ticketBuyerModal) OnResume() {
 			tb.vspSelector.selectVSP(tbConfig.VspHost)
 			tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain), 'f', 0, 64))
 			tb.accountSelector.SetSelectedAccount(acct)
+			break
 		}
 	}
 
@@ -96,8 +98,6 @@ func (tb *ticketBuyerModal) OnResume() {
 		if err != nil {
 			tb.Toast.NotifyError(err.Error())
 		}
-
-		tb.vspSelector = newVSPSelector(tb.Load).title("Select a vsp")
 	}
 }
 
@@ -201,13 +201,6 @@ func (tb *ticketBuyerModal) Handle() {
 	}
 
 	if tb.saveSettingsBtn.Clicked() {
-		// clear all wallet config when a new on is selected.
-		// temporary work around for only on wallet.
-		// TODO: extend functionality to allow for multiwallet config
-		for _, wal := range tb.WL.SortedWalletList() {
-			tb.WL.MultiWallet.ClearTicketBuyerConfig(wal.ID)
-		}
-
 		vspHost := tb.vspSelector.selectedVSP.Host
 		amount, err := strconv.ParseFloat(tb.balToMaintainEditor.Editor.Text(), 64)
 		if err != nil {
@@ -219,8 +212,15 @@ func (tb *ticketBuyerModal) Handle() {
 		account := tb.accountSelector.SelectedAccount()
 		wal := tb.WL.MultiWallet.WalletWithID(account.WalletID)
 		if wal == nil {
-			tb.Toast.NotifyError(fmt.Sprintf("wallet with ID: %v does not exist", wal.Name))
+			tb.Toast.NotifyError(fmt.Sprintf("wallet with ID: %v does not exist", wal.ID))
 			return
+		}
+
+		// clear all wallets config when a new wallet is selected.
+		// temporary work around for only one wallet.
+		// TODO: extend functionality to allow for multiwallet config
+		for _, wal := range tb.WL.SortedWalletList() {
+			tb.WL.MultiWallet.ClearTicketBuyerConfig(wal.ID)
 		}
 
 		wal.SetAutoTicketsBuyerConfig(vspHost, account.Number, balToMaintain)
