@@ -90,7 +90,7 @@ func (tp *stakingModal) OnResume() {
 
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
 
-	if !(len(tp.WL.MultiWallet.VspList) > 0) {
+	if len(tp.WL.MultiWallet.VspList) == 0 {
 		go tp.WL.MultiWallet.GetVSPList(tp.WL.Wallet.Net)
 	}
 
@@ -350,10 +350,8 @@ func (tp *stakingModal) Handle() {
 	}
 
 	// reselect vsp if there's a delay in fetching the VSP List
-	if len(tp.WL.MultiWallet.VspList) > 0 {
-		if tp.WL.MultiWallet.GetRememberVSP() != "" {
-			tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
-		}
+	if len(tp.WL.MultiWallet.VspList) > 0 && tp.WL.MultiWallet.GetRememberVSP() != "" {
+		tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
 	}
 
 	if tp.cancelPurchase.Clicked() {

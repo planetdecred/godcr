@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"fmt"
 	"strconv"
 
 	"gioui.org/layout"
@@ -68,40 +69,35 @@ func (tb *ticketBuyerModal) selectFirstWalletAccount() {
 }
 
 func (tb *ticketBuyerModal) OnResume() {
-
 	tb.initializeAccountSelector()
-
-	if !(len(tb.WL.MultiWallet.VspList) > 0) {
+	if len(tb.WL.MultiWallet.VspList) == 0 {
 		go tb.WL.MultiWallet.GetVSPList(tb.WL.Wallet.Net)
 	}
 
-	tbConfig := tb.WL.MultiWallet.GetAutoTicketsBuyerConfig()
-	if tbConfig.WalletID == -1 {
-		tb.selectFirstWalletAccount()
-	} else {
-		wal := tb.WL.MultiWallet.WalletWithID(tbConfig.WalletID)
-		if wal == nil {
-			tb.selectFirstWalletAccount()
-		} else {
-			accountsResult, err := wal.GetAccountsRaw()
+	// loop through all available wallets and select the one with ticket buyer config.
+	// if non, set the selected wallet to the first
+	//TODO: extend functionality to allow for multiwallet config
+	for _, wal := range tb.WL.SortedWalletList() {
+		if wal.TicketBuyerConfigIsSet() {
+			tbConfig := wal.GetAutoTicketsBuyerConfig()
+			acct, err := wal.GetAccount(tbConfig.PurchaseAccount)
 			if err != nil {
-				tb.selectFirstWalletAccount()
-			} else {
-				for _, account := range accountsResult.Acc {
-					if account.Number == tbConfig.PurchaseAccount {
-						tb.accountSelector.SetSelectedAccount(account)
-					}
-				}
+				tb.Toast.NotifyError(err.Error())
 			}
+
+			tb.vspSelector.selectVSP(tbConfig.VspHost)
+			tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain), 'f', 0, 64))
+			tb.accountSelector.SetSelectedAccount(acct)
 		}
 	}
 
-	if len(tb.WL.MultiWallet.VspList) > 0 && components.StringNotEmpty(tbConfig.VspHost) {
-		tb.vspSelector.selectVSP(tbConfig.VspHost)
-	}
+	if tb.accountSelector.SelectedAccount() == nil {
+		err := tb.accountSelector.SelectFirstWalletValidAccount()
+		if err != nil {
+			tb.Toast.NotifyError(err.Error())
+		}
 
-	if tbConfig.BalanceToMaintain != -1 {
-		tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain), 'f', 0, 64))
+		tb.vspSelector = newVSPSelector(tb.Load).title("Select a vsp")
 	}
 }
 
@@ -205,18 +201,29 @@ func (tb *ticketBuyerModal) Handle() {
 	}
 
 	if tb.saveSettingsBtn.Clicked() {
-		host := tb.vspSelector.selectedVSP.Host
+		// clear all wallet config when a new on is selected.
+		// temporary work around for only on wallet.
+		// TODO: extend functionality to allow for multiwallet config
+		for _, wal := range tb.WL.SortedWalletList() {
+			tb.WL.MultiWallet.ClearTicketBuyerConfig(wal.ID)
+		}
 
+		vspHost := tb.vspSelector.selectedVSP.Host
 		amount, err := strconv.ParseFloat(tb.balToMaintainEditor.Editor.Text(), 64)
 		if err != nil {
 			tb.Toast.NotifyError(err.Error())
 			return
 		}
 
-		atm := dcrlibwallet.AmountAtom(amount)
+		balToMaintain := dcrlibwallet.AmountAtom(amount)
 		account := tb.accountSelector.SelectedAccount()
+		wal := tb.WL.MultiWallet.WalletWithID(account.WalletID)
+		if wal == nil {
+			tb.Toast.NotifyError(fmt.Sprintf("wallet with ID: %v does not exist", wal.Name))
+			return
+		}
 
-		tb.WL.MultiWallet.SetAutoTicketsBuyerConfig(host, account.WalletID, account.Number, atm)
+		wal.SetAutoTicketsBuyerConfig(vspHost, account.Number, balToMaintain)
 		tb.settingsSaved()
 		tb.Dismiss()
 	}

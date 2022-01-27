@@ -3,7 +3,6 @@ package staking
 import (
 	"fmt"
 	"image/color"
-	"time"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -69,6 +68,7 @@ func NewStakingPage(l *load.Load) *Page {
 
 	pg.ticketOverview = new(dcrlibwallet.StakingOverview)
 	pg.loadPageData()
+
 	return pg
 }
 
@@ -84,18 +84,28 @@ func (pg *Page) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
+	pg.getTBWallet()
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
-
 	pg.updateTBToggle()
+
+	pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+}
+
+func (pg *Page) getTBWallet() {
+	for _, wal := range pg.WL.SortedWalletList() {
+		if wal.TicketBuyerConfigIsSet() {
+			pg.ticketBuyerWallet = wal
+		}
+	}
+
+	// if there are no tickets with config set, select the first wallet.
+	if pg.ticketBuyerWallet == nil {
+		pg.ticketBuyerWallet = pg.WL.SortedWalletList()[0]
+	}
 }
 
 func (pg *Page) updateTBToggle() {
-	if pg.WL.MultiWallet.TicketBuyerConfigIsSet() {
-		tbConfig := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
-		pg.autoPurchase.SetChecked(pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(tbConfig.WalletID))
-	} else {
-		pg.autoPurchase.SetChecked(false)
-	}
+
 }
 
 func (pg *Page) loadPageData() {
@@ -109,6 +119,7 @@ func (pg *Page) loadPageData() {
 
 		if len(pg.WL.MultiWallet.VspList) == 0 {
 			pg.WL.MultiWallet.GetVSPList(pg.WL.Wallet.Net)
+			pg.RefreshWindow()
 		}
 
 		totalRewards, err := pg.WL.MultiWallet.TotalStakingRewards()
@@ -244,8 +255,7 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								icon := pg.Icons.SettingsActiveIcon
-								tbConfig := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
-								if pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(tbConfig.WalletID) {
+								if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
 									icon = pg.Icons.SettingsInactiveIcon
 								}
 								return pg.autoPurchaseSettings.Layout(gtx, func(gtx C) D {
@@ -488,10 +498,10 @@ func (pg *Page) HandleUserInteractions() {
 		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
 	}
 
-	tbConfig := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
 	if pg.autoPurchase.Changed() {
 		if pg.autoPurchase.IsChecked() {
-			if pg.WL.MultiWallet.TicketBuyerConfigIsSet() {
+			pg.getTBWallet()
+			if pg.ticketBuyerWallet.TicketBuyerConfigIsSet() {
 				pg.startTicketBuyerPasswordModal()
 			} else {
 				newTicketBuyerModal(pg.Load).
@@ -505,12 +515,13 @@ func (pg *Page) HandleUserInteractions() {
 					Show()
 			}
 		} else {
-			go pg.WL.MultiWallet.StopAutoTicketsPurchase(tbConfig.WalletID)
+			go pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
 		}
 	}
 
 	if pg.autoPurchaseSettings.Clicked() {
-		if pg.WL.MultiWallet.IsAutoTicketsPurchaseActive(tbConfig.WalletID) {
+		pg.getTBWallet()
+		if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
 			pg.Toast.NotifyError("Settings can not be modified when ticket buyer is running.")
 			return
 		}
@@ -531,16 +542,21 @@ func (pg *Page) ticketBuyerSettingsModal() {
 }
 
 func (pg *Page) startTicketBuyerPasswordModal() {
-	tbConfig := pg.WL.MultiWallet.GetAutoTicketsBuyerConfig()
+	tbConfig := pg.ticketBuyerWallet.GetAutoTicketsBuyerConfig()
 	balToMaintain := dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain)
+	name, err := pg.ticketBuyerWallet.AccountNameRaw(uint32(tbConfig.PurchaseAccount))
+	if err != nil {
+		pg.Toast.NotifyError(err.Error())
+	}
 
 	modal.NewPasswordModal(pg.Load).
 		Title("Confirm Automatic Ticket Purchase").
 		SetCancelable(false).
 		UseCustomWidget(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %2.f", balToMaintain)).Layout),
-				layout.Rigid(func(gtx C) D {
+				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Wallet to Purchase from: %s", pg.ticketBuyerWallet.Name)).Layout),
+				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Selected account: %s", name)).Layout),
+				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %2.f", balToMaintain)).Layout), layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", tbConfig.VspHost))
 					return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, label.Layout)
 				}),
@@ -562,6 +578,9 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 							txt := pg.Theme.Label(values.TextSize14, msg)
 							txt.Alignment = text.Middle
 							txt.Color = pg.Theme.Color.GrayText3
+							if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+								txt.Color = pg.Theme.Color.Gray3
+							}
 							return txt.Layout(gtx)
 						})
 					})
@@ -575,12 +594,12 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			if !pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
 				pg.Toast.NotifyError(values.String(values.StrNotConnected))
 				pm.SetLoading(false)
-				pg.updateTBToggle()
+				pg.autoPurchase.SetChecked(false)
 				return false
 			}
 
 			go func() {
-				vsp, err := pg.WL.MultiWallet.NewVSPClient(tbConfig.VspHost, tbConfig.WalletID, uint32(tbConfig.PurchaseAccount))
+				vsp, err := pg.WL.MultiWallet.NewVSPClient(tbConfig.VspHost, pg.ticketBuyerWallet.ID, uint32(tbConfig.PurchaseAccount))
 				if err != nil {
 					pg.Toast.NotifyError(err.Error())
 					pm.SetLoading(false)
@@ -598,10 +617,8 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 					return
 				}
 
-				// wait for 3secs before updating the toggle button state
-				time.AfterFunc(time.Second*3, func() {
-					pg.updateTBToggle()
-				})
+				pg.RefreshWindow()
+				pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
 			}()
 			pm.Dismiss()
 
