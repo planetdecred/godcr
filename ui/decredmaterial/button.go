@@ -161,7 +161,7 @@ func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 
 func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 	min := gtx.Constraints.Min
-	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
+	dims := layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 			rr := float32(gtx.Px(b.CornerRadius))
 			defer clip.UniformRRect(f32.Rectangle{Max: f32.Point{
@@ -187,14 +187,13 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 			gtx.Constraints.Min = min
 			return layout.Center.Layout(gtx, w)
 		}),
-		layout.Expanded(func(gtx C) D {
-			if !b.Enabled() {
-				return D{}
-			}
-
-			return b.clickable.Layout(gtx)
-		}),
 	)
+
+	if !b.Enabled() {
+		return dims
+	}
+
+	return b.clickable.Layout(gtx, func(gtx C) D { return dims })
 }
 
 func (bl ButtonLayout) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {

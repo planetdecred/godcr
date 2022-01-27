@@ -241,10 +241,10 @@ func (pg *ReceivePage) pageSections(gtx layout.Context, body layout.Widget) layo
 // click outside of the generate new address button to hide the button
 func (pg *ReceivePage) pageBackdropLayout(gtx layout.Context) {
 	if pg.isNewAddr {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 		m := op.Record(gtx.Ops)
-		pg.backdrop.Layout(gtx)
+		pg.backdrop.Layout(gtx, func(_ C) D {
+			return D{Size: gtx.Constraints.Max}
+		})
 		op.Defer(gtx.Ops, m.Stop())
 	}
 }

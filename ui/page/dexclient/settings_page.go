@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"github.com/ncruces/zenity"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -265,42 +263,40 @@ func (pg *DexSettingsPage) HandleUserInteractions() {
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(strAuthorizeExport, func(password string, pm *modal.PasswordModal) bool {
 					go func() {
-						account, err := pg.Dexc().Core().AccountExport([]byte(password), dexHost)
-						if err != nil {
+						errHandler := func(err error) {
 							pm.SetError(err.Error())
 							pm.SetLoading(false)
+						}
+
+						account, err := pg.Dexc().Core().AccountExport([]byte(password), dexHost)
+						if err != nil {
+							errHandler(err)
 							return
 						}
 
-						file, err := json.Marshal(account)
+						b, err := json.Marshal(account)
 						if err != nil {
-							pm.SetError(err.Error())
-							pm.SetLoading(false)
+							errHandler(err)
 							return
 						}
 
 						fileName := fmt.Sprintf("dcrAccount-%s.json", dexHost)
-						filePath, err := zenity.SelectFileSave(
-							zenity.Title("Save Your Account"),
-							zenity.ConfirmOverwrite(),
-							zenity.Filename(fileName),
-							zenity.FileFilters{
-								zenity.FileFilter{
-									Name:     "JSON files",
-									Patterns: []string{"*.json"},
-								},
-							})
-
+						file, err := pg.Load.Expl.CreateFile(fileName)
 						if err != nil {
-							pm.SetError(err.Error())
-							pm.SetLoading(false)
+							errHandler(err)
 							return
 						}
+						defer func() {
+							err := file.Close()
+							if err != nil {
+								errHandler(err)
+								return
+							}
+						}()
 
-						err = ioutil.WriteFile(filePath, file, 0644)
+						_, err = file.Write(b)
 						if err != nil {
-							pm.SetError(err.Error())
-							pm.SetLoading(false)
+							errHandler(err)
 							return
 						}
 
@@ -321,28 +317,20 @@ func (pg *DexSettingsPage) HandleUserInteractions() {
 
 	if pg.importAccountBtn.Button.Clicked() {
 		go func() {
-			filePath, err := zenity.SelectFile(
-				zenity.Title("Select Your Account"),
-			)
+			file, err := pg.Load.Expl.ChooseFile("json")
 			if err != nil {
 				pg.Toast.NotifyError(err.Error())
 				return
 			}
 
-			jsonFile, err := os.Open(filePath)
 			defer func() {
-				err := jsonFile.Close()
+				err := file.Close()
 				if err != nil {
 					return
 				}
 			}()
 
-			if err != nil {
-				pg.Toast.NotifyError(err.Error())
-				return
-			}
-
-			byteValue, err := ioutil.ReadAll(jsonFile)
+			byteValue, err := ioutil.ReadAll(file)
 			if err != nil {
 				pg.Toast.NotifyError(err.Error())
 				return
