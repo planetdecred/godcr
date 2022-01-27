@@ -88,6 +88,9 @@ type WalletPage struct {
 	backupAcctIcon           *decredmaterial.Icon
 
 	listLock sync.Mutex
+
+	ctx       context.Context
+	ctxCancel context.CancelFunc
 }
 
 func NewWalletPage(l *load.Load) *WalletPage {
@@ -151,6 +154,7 @@ func (pg *WalletPage) ID() string {
 func (pg *WalletPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForTxNotifications()
+	pg.listenForSyncNotifications()
 	pg.loadWalletAndAccounts()
 }
 
@@ -1146,4 +1150,32 @@ func (pg *WalletPage) updateAccountBalance() {
 func (pg *WalletPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 	pg.closePopups()
+	pg.ctxCancel()
+}
+
+// listenForsyncNotifications spuns a go-routine that listens for
+// Wallet notifications. Currently we are interested in reading from
+// NotificationsUpdate channel, to prevent the channel from getting
+// filled thereby blocking Wallet create/delete actions.
+// TODO: update UI wallet create/delete status after notication is recieved
+func (pg *WalletPage) listenForSyncNotifications() {
+	go func() {
+		for {
+			select {
+			case notification := <-pg.Receiver.NotificationsUpdate:
+				switch n := notification.(type) {
+				case wallet.SyncStatusUpdate:
+					switch n.Stage {
+					case wallet.SyncCanceled:
+						fallthrough
+					case wallet.SyncCompleted:
+						continue
+					}
+				}
+			case <-pg.ctx.Done():
+				return
+
+			}
+		}
+	}()
 }
