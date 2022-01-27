@@ -240,11 +240,11 @@ func (pg *AppOverviewPage) showBackupInfo() {
 // Part of the load.Page interface.
 func (pg *AppOverviewPage) HandleUserInteractions() {
 	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey)
-	if pg.WL.MultiWallet.NumWalletsNeedingSeedBackup() > 0 {
-		if !backupLater && !pg.isBackupModalOpened {
-			pg.showBackupInfo()
-			pg.isBackupModalOpened = true
-		}
+	needBackup := pg.WL.MultiWallet.NumWalletsNeedingSeedBackup() > 0
+	if needBackup && !backupLater && !pg.isBackupModalOpened {
+		pg.showBackupInfo()
+		pg.isBackupModalOpened = true
+		// }
 	}
 
 	if pg.toMixer.Button.Clicked() {

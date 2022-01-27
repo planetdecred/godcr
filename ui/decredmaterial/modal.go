@@ -9,15 +9,15 @@ import (
 )
 
 type Modal struct {
-	overlayColor color.NRGBA
-	background   color.NRGBA
-	list         *widget.List
-	button       *widget.Clickable
-	card         Card
-	scroll       ListStyle
-	isFloatTitle bool
-	scrollbar    bool
-	padding      unit.Value
+	overlayColor  color.NRGBA
+	background    color.NRGBA
+	list          *widget.List
+	button        *widget.Clickable
+	card          Card
+	scroll        ListStyle
+	isFloatTitle  bool
+	showScrollBar bool
+	padding       unit.Value
 }
 
 func (t *Theme) ModalFloatTitle() *Modal {
@@ -112,7 +112,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget) layout.Dimen
 							Left:   mLR,
 							Right:  mLR,
 						}
-						if m.scrollbar {
+						if m.showScrollBar {
 							return m.scroll.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
 								gtx.Constraints.Min.X = gtx.Constraints.Max.X
 								return inset.Layout(gtx, widgetFuncs[i])
@@ -144,6 +144,6 @@ func (m *Modal) SetPadding(padding unit.Value) {
 	m.padding = padding
 }
 
-func (m *Modal) ShowScrollbar(scrollbar bool) {
-	m.scrollbar = scrollbar
+func (m *Modal) ShowScrollbar(showScrollBar bool) {
+	m.showScrollBar = showScrollBar
 }

@@ -110,7 +110,7 @@ func (pg *Page) OnNavigatedTo() {
 				}).
 				Show()
 		} else {
-			pg.Toast.NotifyError(err.Error())
+			pg.Toast.NotifyError("Unable to fetch ticket price: " + err.Error())
 		}
 	} else {
 		pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
