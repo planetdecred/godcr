@@ -26,6 +26,11 @@ type (
 	D = layout.Dimensions
 )
 
+type badWalletListItem struct {
+	*dcrlibwallet.Wallet
+	deleteBtn decredmaterial.Button
+}
+
 type walletListItem struct {
 	wal      *dcrlibwallet.Wallet
 	accounts []*dcrlibwallet.Account
@@ -54,8 +59,9 @@ type menuItem struct {
 type WalletPage struct {
 	*load.Load
 
-	multiWallet *dcrlibwallet.MultiWallet
-	listItems   []*walletListItem
+	multiWallet    *dcrlibwallet.MultiWallet
+	listItems      []*walletListItem
+	badWalletsList []*badWalletListItem
 
 	walletIcon               *decredmaterial.Image
 	walletAlertIcon          *decredmaterial.Image
@@ -196,6 +202,22 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 	pg.listLock.Lock()
 	pg.listItems = listItems
 	pg.listLock.Unlock()
+
+	pg.loadBadWallets()
+}
+
+func (pg *WalletPage) loadBadWallets() {
+	badWallets := pg.WL.MultiWallet.BadWallets()
+	pg.badWalletsList = make([]*badWalletListItem, 0, len(badWallets))
+	for _, badWallet := range badWallets {
+		listItem := &badWalletListItem{
+			Wallet:    badWallet,
+			deleteBtn: pg.Theme.OutlineButton("Delete"),
+		}
+		listItem.deleteBtn.Color = pg.Theme.Color.Danger
+		listItem.deleteBtn.Inset = layout.Inset{}
+		pg.badWalletsList = append(pg.badWalletsList, listItem)
+	}
 }
 
 func (pg *WalletPage) initializeFloatingMenu() {
@@ -359,12 +381,18 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 		func(gtx C) D {
 			return pg.watchOnlyWalletSection(gtx)
 		},
+		func(gtx C) D {
+			if len(pg.badWalletsList) == 0 {
+				return D{}
+			}
+			return pg.badWalletsSection(gtx)
+		},
 	}
 
 	body := func(gtx C) D {
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				return pg.Theme.List(pg.container).Layout(gtx, 2, func(gtx C, i int) D {
+				return pg.Theme.List(pg.container).Layout(gtx, 3, func(gtx C, i int) D {
 					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 						return pageContent[i](gtx)
 					})
@@ -619,6 +647,61 @@ func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 							return D{}
 						}
 						return pg.Theme.Separator().Layout(gtx)
+					})
+				}),
+			)
+		})
+	})
+}
+
+func (pg *WalletPage) badWalletsSection(gtx layout.Context) layout.Dimensions {
+	m20 := values.MarginPadding20
+	m10 := values.MarginPadding10
+
+	layoutBadWallet := func(gtx C, badWallet *badWalletListItem, lastItem bool) D {
+		return layout.Inset{Top: m10, Bottom: m10}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(pg.Theme.Body2(badWallet.Name).Layout),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, badWallet.deleteBtn.Layout)
+							})
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if lastItem {
+						return D{}
+					}
+					return layout.Inset{Top: values.MarginPadding10, Left: values.MarginPadding38, Right: values.MarginPaddingMinus10}.Layout(gtx, func(gtx C) D {
+						return pg.Theme.Separator().Layout(gtx)
+					})
+				}),
+			)
+		})
+	}
+
+	card := pg.card
+	card.Color = pg.Theme.Color.Surface
+	card.Radius = decredmaterial.Radius(10)
+
+	sectionTitleLabel := pg.Theme.Body1("Bad Wallets") // TODO: localize string
+	sectionTitleLabel.Color = pg.Theme.Color.GrayText2
+
+	return card.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Top: m20, Left: m20}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(sectionTitleLabel.Layout),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: m10, Bottom: m10}.Layout(gtx, pg.Theme.Separator().Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return pg.Theme.NewClickableList(layout.Vertical).Layout(gtx, len(pg.badWalletsList), func(gtx C, i int) D {
+							return layoutBadWallet(gtx, pg.badWalletsList[i], i == len(pg.badWalletsList)-1)
+						})
 					})
 				}),
 			)
@@ -958,6 +1041,12 @@ func (pg *WalletPage) HandleUserInteractions() {
 		}
 	}
 
+	for _, badWallet := range pg.badWalletsList {
+		if badWallet.deleteBtn.Clicked() {
+			pg.deleteBadWallet(badWallet.ID)
+		}
+	}
+
 	for index := range pg.addWalletMenu {
 		for pg.addWalletMenu[index].button.Clicked() {
 			pg.isAddWalletMenuOpen = false
@@ -968,6 +1057,26 @@ func (pg *WalletPage) HandleUserInteractions() {
 	for pg.openAddWalletPopupButton.Clicked() {
 		pg.isAddWalletMenuOpen = !pg.isAddWalletMenuOpen
 	}
+}
+
+func (pg *WalletPage) deleteBadWallet(badWalletID int) {
+	modal.NewInfoModal(pg.Load).
+		Title(values.String(values.StrRemoveWallet)).
+		Body("You can restore this wallet from seed word after it is deleted.").
+		NegativeButton(values.String(values.StrCancel), func() {}).
+		PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
+		PositiveButton(values.String(values.StrRemove), func() {
+			go func() {
+				err := pg.WL.MultiWallet.DeleteBadWallet(badWalletID)
+				if err != nil {
+					pg.Toast.NotifyError(err.Error())
+					return
+				}
+				pg.Toast.Notify("Wallet removed")
+				pg.loadBadWallets() // refresh bad wallets list
+				pg.RefreshWindow()
+			}()
+		}).Show()
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
