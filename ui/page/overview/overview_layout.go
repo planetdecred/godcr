@@ -11,6 +11,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v4"
+	"github.com/gen2brain/beeep"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -43,6 +44,7 @@ type walletSyncDetails struct {
 type AppOverviewPage struct {
 	*load.Load
 	*listeners.SyncProgress
+	*listeners.TxAndBlockNotification
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -127,17 +129,27 @@ func (pg *AppOverviewPage) ID() string {
 func (pg *AppOverviewPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	if pg.SyncProgress == nil {
-		pg.SyncProgress = listeners.NewSyncProgress(make(chan wallet.SyncStatusUpdate, 8))
-	} else {
-		pg.SyncStatus = make(chan wallet.SyncStatusUpdate, 8)
-	}
-	pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgress, OverviewPageID)
-
+	pg.setupListeners()
 	pg.getMixerWallets()
 	pg.loadTransactions()
 	pg.listenForSyncNotifications()
 	pg.loadRecentProposals()
+}
+
+func (pg *AppOverviewPage) setupListeners() {
+	if pg.SyncProgress == nil {
+		pg.SyncProgress = listeners.NewSyncProgress(make(chan wallet.SyncStatusUpdate, 4))
+	} else {
+		pg.SyncStatus = make(chan wallet.SyncStatusUpdate, 4)
+	}
+	pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgress, OverviewPageID)
+
+	if pg.TxAndBlockNotification == nil {
+		pg.TxAndBlockNotification = listeners.NewTxAndBlockNotification(make(chan listeners.TxNotification, 4))
+	} else {
+		pg.TxAndBlockNotifCh = make(chan listeners.TxNotification, 4)
+	}
+	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotification, true, OverviewPageID)
 }
 
 // Layout draws the overview page UI components into the provided layout
@@ -365,8 +377,31 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 					pg.UpdateBalance()
 					pg.loadTransactions()
 					pg.RefreshWindow()
-				case wallet.BlockAttached:
+				}
+
+			case n := <-pg.TxAndBlockNotifCh:
+				switch n.NotificationType {
+				case listeners.BlkAttached:
+					beep := pg.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+					if beep {
+						_ = beeep.Beep(5, 1)
+					}
+
+					pg.UpdateBalance()
 					pg.RefreshWindow()
+				case listeners.Tx:
+					pg.UpdateBalance()
+					pg.loadTransactions()
+					pg.RefreshWindow()
+					transactionNotification := pg.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
+					update := wallet.NewTransaction{
+						Transaction: n.Transaction,
+					}
+					if transactionNotification {
+						pg.DesktopNotifier(update)
+					}
+				case listeners.TxConfirmed:
+					pg.UpdateBalance()
 				}
 
 			case notification = <-pg.Receiver.NotificationsUpdate:
@@ -451,6 +486,17 @@ func (pg *AppOverviewPage) getMixerWallets() {
 // Part of the load.Page interface.
 func (pg *AppOverviewPage) OnNavigatedFrom() {
 	pg.ctxCancel()
+	pg.removeListeners()
+}
+
+func (pg *AppOverviewPage) removeListeners() {
+	if pg.SyncStatus != nil {
+		close(pg.SyncStatus)
+	}
+
+	if pg.TxAndBlockNotifCh != nil {
+		close(pg.TxAndBlockNotifCh)
+	}
 	pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
-	close(pg.SyncStatus)
+	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
 }

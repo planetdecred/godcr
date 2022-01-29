@@ -456,7 +456,6 @@ func (mp *MainPage) OnNavigatedFrom() {
 
 	mp.WL.MultiWallet.RemoveAccountMixerNotificationListener(MainPageID)
 	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
-	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
 }
 
