@@ -2,6 +2,7 @@ package page
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil/v4"
+	"github.com/gen2brain/beeep"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -24,6 +26,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -201,10 +204,6 @@ func (mp *MainPage) initNavItems() {
 // Part of the load.Page interface.
 func (mp *MainPage) OnNavigatedTo() {
 	// register for notifications, unregister when the page disappears
-	// mp.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
-	//mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
-	//mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, true, MainPageID) // notification methods will be invoked asynchronously to prevent potential deadlocks
-	//mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
 	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 	mp.setLanguageSetting()
 
@@ -454,9 +453,7 @@ func (mp *MainPage) OnNavigatedFrom() {
 		mp.receivePage.OnNavigatedFrom()
 	}
 
-	mp.WL.MultiWallet.RemoveAccountMixerNotificationListener(MainPageID)
-	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
-	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
+	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 }
 
 func (mp *MainPage) currentPageID() string {
@@ -727,4 +724,66 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 			return mp.Theme.Separator().Layout(gtx)
 		}),
 	)
+}
+
+func (mp *MainPage) desktopNotifier(notifier interface{}) {
+	proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
+	var notification string
+	switch t := notifier.(type) {
+	case wallet.NewTransaction:
+
+		switch t.Transaction.Type {
+		case dcrlibwallet.TxTypeRegular:
+			if t.Transaction.Direction != dcrlibwallet.TxDirectionReceived {
+				return
+			}
+			// remove trailing zeros from amount and convert to string
+			amount := strconv.FormatFloat(dcrlibwallet.AmountCoin(t.Transaction.Amount), 'f', -1, 64)
+			notification = fmt.Sprintf("You have received %s DCR", amount)
+		case dcrlibwallet.TxTypeVote:
+			reward := strconv.FormatFloat(dcrlibwallet.AmountCoin(t.Transaction.VoteReward), 'f', -1, 64)
+			notification = fmt.Sprintf("A ticket just voted\nVote reward: %s DCR", reward)
+		case dcrlibwallet.TxTypeRevocation:
+			notification = "A ticket was revoked"
+		default:
+			return
+		}
+
+		if mp.WL.MultiWallet.OpenedWalletsCount() > 1 {
+			wallet := mp.WL.MultiWallet.WalletWithID(t.Transaction.WalletID)
+			if wallet == nil {
+				return
+			}
+
+			notification = fmt.Sprintf("[%s] %s", wallet.Name, notification)
+		}
+
+		initializeBeepNotification(notification)
+	case wallet.Proposal:
+		switch {
+		case t.ProposalStatus == wallet.NewProposalFound:
+			notification = fmt.Sprintf("A new proposal has been added Token: %s", t.Proposal.Token)
+		case t.ProposalStatus == wallet.VoteStarted:
+			notification = fmt.Sprintf("Voting has started for proposal with Token: %s", t.Proposal.Token)
+		case t.ProposalStatus == wallet.VoteFinished:
+			notification = fmt.Sprintf("Voting has ended for proposal with Token: %s", t.Proposal.Token)
+		default:
+			notification = fmt.Sprintf("New update for proposal with Token: %s", t.Proposal.Token)
+		}
+		if proposalNotification {
+			initializeBeepNotification(notification)
+		}
+	}
+}
+
+func initializeBeepNotification(n string) {
+	absoluteWdPath, err := GetAbsolutePath()
+	if err != nil {
+		log.Error(err.Error())
+	}
+
+	err = beeep.Notify("Decred Godcr Wallet", n, filepath.Join(absoluteWdPath, "ui/assets/decredicons/qrcodeSymbol.png"))
+	if err != nil {
+		log.Info("could not initiate desktop notification, reason:", err.Error())
+	}
 }

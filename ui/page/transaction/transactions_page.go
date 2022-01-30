@@ -7,11 +7,11 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const TransactionsPageID = "Transactions"
@@ -23,6 +23,7 @@ type (
 
 type TransactionsPage struct {
 	*load.Load
+	*listeners.TxAndBlockNotification
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 	separator decredmaterial.Line
@@ -88,6 +89,14 @@ func (pg *TransactionsPage) ID() string {
 // Part of the load.Page interface.
 func (pg *TransactionsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
+	if pg.TxAndBlockNotification == nil {
+		pg.TxAndBlockNotification = listeners.NewTxAndBlockNotification(make(chan listeners.TxNotification, 4))
+	} else {
+		pg.TxAndBlockNotifCh = make(chan listeners.TxNotification, 4)
+	}
+	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotification, true, TransactionsPageID)
+
 	pg.listenForTxNotifications()
 	pg.loadTransactions()
 }
@@ -218,21 +227,19 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 func (pg *TransactionsPage) listenForTxNotifications() {
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
+			case n := <-pg.TxAndBlockNotifCh:
+				if n.NotificationType == listeners.NewTx {
+					pg.UpdateBalance()
+
+					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+					if selectedWallet.ID == n.Transaction.WalletID {
+						pg.loadTransactions()
+						pg.RefreshWindow()
+					}
+				}
 			case <-pg.ctx.Done():
 				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-				if selectedWallet.ID == n.Transaction.WalletID {
-					pg.loadTransactions()
-					pg.RefreshWindow()
-				}
 			}
 		}
 	}()
@@ -247,4 +254,9 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 // Part of the load.Page interface.
 func (pg *TransactionsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
+
+	if pg.TxAndBlockNotifCh != nil {
+		close(pg.TxAndBlockNotifCh)
+	}
+	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(TransactionsPageID)
 }

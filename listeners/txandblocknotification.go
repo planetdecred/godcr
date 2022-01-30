@@ -20,7 +20,7 @@ func (txAndBlk *TxAndBlockNotification) OnTransaction(transaction string) {
 	err := json.Unmarshal([]byte(transaction), &tx)
 	if err == nil {
 		update := TxNotification{
-			NotificationType: Tx,
+			NotificationType: NewTx,
 			Transaction:      &tx,
 		}
 		txAndBlk.UpdateNotification(update)

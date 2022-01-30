@@ -16,6 +16,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
+	"github.com/planetdecred/godcr/listeners"
 )
 
 const ProposalsPageID = "Proposals"
@@ -28,6 +29,7 @@ type (
 type ProposalsPage struct {
 	*load.Load
 
+	*listeners.PoliteiaNotification
 	ctx        context.Context // page context
 	ctxCancel  context.CancelFunc
 	proposalMu sync.Mutex
@@ -107,6 +109,13 @@ func (pg *ProposalsPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedTo() {
+	if pg.PoliteiaNotification == nil {
+		pg.PoliteiaNotification = listeners.NewPoliteiaNotification(make(chan wallet.Proposal, 4))
+	} else {
+		pg.PoliteiaNotifCh = make(chan wallet.Proposal, 4)
+	}
+	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.PoliteiaNotification, ProposalsPageID)
+
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
 	pg.fetchProposals()
@@ -211,6 +220,11 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
+
+	if pg.PoliteiaNotifCh != nil {
+		close(pg.PoliteiaNotifCh)
+	}
+	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalsPageID)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -384,16 +398,8 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.Proposal:
+			case n := <-pg.PoliteiaNotifCh:
 				if n.ProposalStatus == wallet.Synced {
 					pg.syncCompleted = true
 					pg.isSyncing = false
@@ -401,6 +407,8 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 					pg.fetchProposals()
 					pg.RefreshWindow()
 				}
+			case <-pg.ctx.Done():
+				return
 			}
 		}
 	}()

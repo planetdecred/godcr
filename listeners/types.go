@@ -4,16 +4,16 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 )
 
-type NotifType int
+type TxNotifType int
 
 const (
-	Tx NotifType = iota
+	NewTx TxNotifType = iota
 	BlkAttached
 	TxConfirmed
 )
 
 type TxNotification struct {
-	NotificationType NotifType
+	NotificationType TxNotifType
 	Transaction      *dcrlibwallet.Transaction
 	WalletID         int
 	BlockHeight      int32

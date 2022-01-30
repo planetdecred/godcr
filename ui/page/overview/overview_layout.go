@@ -357,8 +357,6 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 func (pg *AppOverviewPage) listenForSyncNotifications() {
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
 			case n := <-pg.SyncStatus:
 				// Update sync progress fields which will be displayed
@@ -405,7 +403,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 
 					pg.UpdateBalance()
 					pg.RefreshWindow()
-				case listeners.Tx:
+				case listeners.NewTx:
 					pg.UpdateBalance()
 					pg.loadTransactions()
 					pg.RefreshWindow()
@@ -419,7 +417,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 				case listeners.TxConfirmed:
 					pg.UpdateBalance()
 				}
-			case n := <- pg.PoliteiaNotifCh:
+			case n := <-pg.PoliteiaNotifCh:
 				switch n.ProposalStatus {
 				case wallet.Synced:
 					pg.loadRecentProposals()
@@ -429,68 +427,12 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 
 				}
 
-			case n := <- pg.BlockRescanCh:
+			case n := <-pg.BlockRescanCh:
 				if n.Stage == wallet.RescanEnded {
 					pg.RefreshWindow()
 				}
-
-
-			case notification = <-pg.Receiver.NotificationsUpdate:
 			case <-pg.ctx.Done():
 				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				pg.loadTransactions()
-				pg.RefreshWindow()
-
-			case wallet.Proposal:
-				if n.ProposalStatus == wallet.Synced {
-					pg.loadRecentProposals()
-					pg.RefreshWindow()
-				}
-
-			case wallet.RescanUpdate:
-				pg.rescanUpdate = &n
-				if n.Stage == wallet.RescanEnded {
-					pg.RefreshWindow()
-				}
-
-			case wallet.SyncStatusUpdate:
-				// Update sync progress fields which will be displayed
-				// when the next UI invalidation occurs.
-				switch t := n.ProgressReport.(type) {
-				case wallet.SyncHeadersFetchProgress:
-					pg.headerFetchProgress = t.Progress.HeadersFetchProgress
-					pg.headersToFetchOrScan = t.Progress.TotalHeadersToFetch
-					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
-					pg.syncStep = wallet.FetchHeadersSteps
-				case wallet.SyncAddressDiscoveryProgress:
-					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
-					pg.syncStep = wallet.AddressDiscoveryStep
-				case wallet.SyncHeadersRescanProgress:
-					pg.headersToFetchOrScan = t.Progress.TotalHeadersToScan
-					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
-					pg.syncStep = wallet.RescanHeadersStep
-				}
-
-				// We only care about sync state changes here, to
-				// refresh the window display.
-				switch n.Stage {
-				case wallet.SyncStarted:
-					fallthrough
-				case wallet.SyncCanceled:
-					fallthrough
-				case wallet.SyncCompleted:
-					pg.loadTransactions()
-					pg.RefreshWindow()
-				case wallet.BlockAttached:
-					pg.RefreshWindow()
-				}
 			}
 		}
 	}()

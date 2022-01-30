@@ -24,7 +24,6 @@ type DCRUSDTBittrex struct {
 }
 
 type Receiver struct {
-	NotificationsUpdate chan interface{}
 	KeyEvents           map[string]chan *key.Event
 }
 
