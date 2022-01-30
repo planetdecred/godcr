@@ -18,6 +18,7 @@ import (
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
+	"github.com/planetdecred/godcr/listeners"
 )
 
 const ProposalDetailsPageID = "proposal_details"
@@ -29,6 +30,7 @@ type proposalItemWidgets struct {
 
 type ProposalDetails struct {
 	*load.Load
+	*listeners.PoliteiaNotification
 	ctx                context.Context // page context
 	ctxCancel          context.CancelFunc
 	voteBar            *components.VoteBar
@@ -97,6 +99,13 @@ func (pg *ProposalDetails) ID() string {
 func (pg *ProposalDetails) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
+
+	if pg.PoliteiaNotification == nil {
+		pg.PoliteiaNotification = listeners.NewPoliteiaNotification(make(chan wallet.Proposal, 4))
+	} else {
+		pg.PoliteiaNotifCh = make(chan wallet.Proposal, 4)
+	}
+	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.PoliteiaNotification, ProposalDetailsPageID)
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -131,23 +140,20 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.Proposal:
-				if n.ProposalStatus == wallet.Synced {
+			case notification := <-pg.PoliteiaNotifCh:
+				switch notification.ProposalStatus {
+				case wallet.Synced: 
 					proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
 					if err == nil {
 						pg.proposal = proposal
 						pg.RefreshWindow()
 					}
+				default:
+					pg.DesktopNotifier(notification)
 				}
+			case <-pg.ctx.Done():
+				return
 			}
 		}
 	}()
@@ -162,6 +168,7 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 // Part of the load.Page interface.
 func (pg *ProposalDetails) OnNavigatedFrom() {
 	pg.ctxCancel()
+	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
 }
 
 // - Layout

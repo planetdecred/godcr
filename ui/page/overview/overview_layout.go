@@ -45,6 +45,7 @@ type AppOverviewPage struct {
 	*load.Load
 	*listeners.SyncProgress
 	*listeners.TxAndBlockNotification
+	*listeners.PoliteiaNotification
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -150,6 +151,13 @@ func (pg *AppOverviewPage) setupListeners() {
 		pg.TxAndBlockNotifCh = make(chan listeners.TxNotification, 4)
 	}
 	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotification, true, OverviewPageID)
+
+	if pg.PoliteiaNotification == nil {
+		pg.PoliteiaNotification = listeners.NewPoliteiaNotification(make(chan wallet.Proposal, 4))
+	} else {
+		pg.PoliteiaNotifCh = make(chan wallet.Proposal, 4)
+	}
+	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.PoliteiaNotification, OverviewPageID)
 }
 
 // Layout draws the overview page UI components into the provided layout
@@ -403,6 +411,16 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 				case listeners.TxConfirmed:
 					pg.UpdateBalance()
 				}
+			case n := <- pg.PoliteiaNotifCh:
+				switch n.ProposalStatus {
+				case wallet.Synced:
+					pg.loadRecentProposals()
+					pg.RefreshWindow()
+				default:
+					pg.DesktopNotifier(n)
+
+				}
+
 
 			case notification = <-pg.Receiver.NotificationsUpdate:
 			case <-pg.ctx.Done():
@@ -499,4 +517,5 @@ func (pg *AppOverviewPage) removeListeners() {
 	}
 	pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
 	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
+	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(OverviewPageID)
 }
