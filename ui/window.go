@@ -128,7 +128,7 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	}
 
 	l.Receiver = &load.Receiver{
-		KeyEvents:           win.keyEvents,
+		KeyEvents: win.keyEvents,
 	}
 
 	l.RefreshWindow = win.Invalidate

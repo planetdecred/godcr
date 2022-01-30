@@ -11,12 +11,12 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
-	"github.com/planetdecred/godcr/listeners"
 )
 
 const ProposalsPageID = "Proposals"

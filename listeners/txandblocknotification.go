@@ -2,6 +2,7 @@ package listeners
 
 import (
 	"encoding/json"
+
 	"github.com/planetdecred/dcrlibwallet"
 )
 

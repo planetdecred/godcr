@@ -24,7 +24,7 @@ type DCRUSDTBittrex struct {
 }
 
 type Receiver struct {
-	KeyEvents           map[string]chan *key.Event
+	KeyEvents map[string]chan *key.Event
 }
 
 type Icons struct {
