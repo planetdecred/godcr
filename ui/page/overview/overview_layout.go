@@ -515,6 +515,10 @@ func (pg *AppOverviewPage) removeListeners() {
 	if pg.TxAndBlockNotifCh != nil {
 		close(pg.TxAndBlockNotifCh)
 	}
+
+	if pg.PoliteiaNotifCh != nil {
+		close(pg.PoliteiaNotifCh)
+	}
 	pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
 	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
 	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(OverviewPageID)

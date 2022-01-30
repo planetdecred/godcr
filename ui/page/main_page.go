@@ -201,9 +201,9 @@ func (mp *MainPage) initNavItems() {
 // Part of the load.Page interface.
 func (mp *MainPage) OnNavigatedTo() {
 	// register for notifications, unregister when the page disappears
-	mp.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
-	mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
-	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, true, MainPageID) // notification methods will be invoked asynchronously to prevent potential deadlocks
+	// mp.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
+	//mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
+	//mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, true, MainPageID) // notification methods will be invoked asynchronously to prevent potential deadlocks
 	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
 
 	mp.setLanguageSetting()

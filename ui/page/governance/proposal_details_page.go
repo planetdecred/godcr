@@ -12,13 +12,13 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
-	"github.com/planetdecred/godcr/listeners"
 )
 
 const ProposalDetailsPageID = "proposal_details"
@@ -143,7 +143,7 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 			select {
 			case notification := <-pg.PoliteiaNotifCh:
 				switch notification.ProposalStatus {
-				case wallet.Synced: 
+				case wallet.Synced:
 					proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
 					if err == nil {
 						pg.proposal = proposal
@@ -168,6 +168,10 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 // Part of the load.Page interface.
 func (pg *ProposalDetails) OnNavigatedFrom() {
 	pg.ctxCancel()
+
+	if pg.PoliteiaNotifCh != nil {
+		close(pg.PoliteiaNotifCh)
+	}
 	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
 }
 

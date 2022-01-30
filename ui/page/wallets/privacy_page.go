@@ -17,12 +17,15 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
+	"github.com/planetdecred/godcr/listeners"
 )
 
 const PrivacyPageID = "Privacy"
 
 type PrivacyPage struct {
 	*load.Load
+
+	*listeners.AccountMixerNotif
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -77,6 +80,13 @@ func (pg *PrivacyPage) OnNavigatedTo() {
 	} else {
 		pg.allowUnspendUnmixedAcct.SetChecked(true)
 	}
+
+	if pg.AccountMixerNotif == nil {
+		pg.AccountMixerNotif = listeners.NewAccountMixerNotif(make(chan wallet.AccountMixer, 4))
+	} else {
+		pg.MixerCh = make(chan wallet.AccountMixer, 4)
+	}
+	pg.WL.MultiWallet.AddAccountMixerNotificationListener(pg, PrivacyPageID)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -414,16 +424,8 @@ func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 func (pg *PrivacyPage) listenForMixerNotifications() {
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.AccountMixer:
+			case n := <-pg.MixerCh:
 				if n.RunStatus == wallet.MixerStarted {
 					pg.Toast.Notify("Mixer start Successfully")
 					pg.RefreshWindow()
@@ -433,6 +435,9 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 					pg.mixerCompleted = true
 					pg.RefreshWindow()
 				}
+
+			case <-pg.ctx.Done():
+				return
 			}
 		}
 	}()
@@ -446,5 +451,8 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *PrivacyPage) OnNavigatedFrom() {
-	pg.ctxCancel()
+	if pg.MixerCh != nil {
+		close(pg.MixerCh)
+	}
+	pg.WL.MultiWallet.RemoveAccountMixerNotificationListener(PrivacyPageID)
 }
