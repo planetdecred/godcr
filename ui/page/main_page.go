@@ -204,8 +204,8 @@ func (mp *MainPage) OnNavigatedTo() {
 	// mp.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
 	//mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
 	//mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, true, MainPageID) // notification methods will be invoked asynchronously to prevent potential deadlocks
-	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
-
+	//mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
+	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 	mp.setLanguageSetting()
 
 	if mp.currentPage == nil {
