@@ -253,7 +253,7 @@ func (avm *agendaVoteModal) Handle() {
 
 	}
 
-	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue && avm.vspSelector.SelectedVSP() != nil && avm.ticketSelector.SelectedTicket() != nil
+	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue && avm.vspSelector.SelectedVSP() != nil
 	avm.voteBtn.SetEnabled(validToVote)
 	if avm.voteBtn.Enabled() {
 		avm.voteBtn.Background = avm.Theme.Color.Primary
@@ -300,16 +300,6 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 				return D{}
 			}
 			return avm.vspSelector.Layout(gtx)
-		},
-		func(gtx C) D {
-			if !avm.liveTicketsIsFetched {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
-				return avm.materialLoader.Layout(gtx)
-			}
-			if len(avm.LiveTickets) < 1 {
-				return D{}
-			}
-			return avm.ticketSelector.Layout(gtx)
 		},
 		func(gtx C) D {
 			if !avm.liveTicketsIsFetched {
