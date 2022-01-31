@@ -23,13 +23,7 @@ const stakingModalID = "staking_modal"
 type stakingModal struct {
 	*load.Load
 
-	balanceError     string
-	ticketPrice      dcrutil.Amount
-	totalCost        int64
-	balanceLessCost  int64
-	vspIsFetched     bool
-	isLoading        bool
-	ticketsPurchased func()
+	ticketPrice dcrutil.Amount
 
 	modal          decredmaterial.Modal
 	cancelPurchase decredmaterial.Button
@@ -40,10 +34,16 @@ type stakingModal struct {
 
 	spendingPassword decredmaterial.Editor
 	tickets          decredmaterial.Editor
-	materialLoader   material.LoaderStyle
 
-	accountSelector *components.AccountSelector
-	vspSelector     *vspSelector
+	accountSelector  *components.AccountSelector
+	vspSelector      *vspSelector
+	materialLoader   material.LoaderStyle
+	ticketsPurchased func()
+
+	balanceError    string
+	totalCost       int64
+	balanceLessCost int64
+	isLoading       bool
 }
 
 func newStakingModal(l *load.Load) *stakingModal {
@@ -72,8 +72,6 @@ func newStakingModal(l *load.Load) *stakingModal {
 
 	tp.stakeBtn.SetEnabled(false)
 
-	tp.vspIsFetched = len((*l.WL.VspInfo).List) > 0
-
 	return tp
 }
 
@@ -83,6 +81,7 @@ func (tp *stakingModal) TicketPurchased(ticketsPurchased func()) *stakingModal {
 }
 
 func (tp *stakingModal) OnResume() {
+
 	tp.initializeAccountSelector()
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
@@ -90,11 +89,24 @@ func (tp *stakingModal) OnResume() {
 	}
 
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
-	tp.ticketPrice = dcrutil.Amount(tp.WL.TicketPrice())
 
-	if tp.vspIsFetched && components.StringNotEmpty(tp.WL.GetRememberVSP()) {
-		tp.vspSelector.selectVSP(tp.WL.GetRememberVSP())
+	if len(tp.WL.MultiWallet.VspList) == 0 {
+		go tp.WL.MultiWallet.GetVSPList(tp.WL.Wallet.Net)
 	}
+
+	if len(tp.WL.MultiWallet.VspList) > 0 && components.StringNotEmpty(tp.WL.MultiWallet.GetRememberVSP()) {
+		tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
+	}
+
+	go func() {
+		ticketPrice, err := tp.WL.MultiWallet.TicketPrice()
+		if err != nil {
+			tp.Toast.NotifyError(err.Error())
+		} else {
+			tp.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice)
+			tp.RefreshWindow()
+		}
+	}()
 }
 
 func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
@@ -104,7 +116,12 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 				Orientation: layout.Vertical,
 				Width:       decredmaterial.MatchParent,
 				Height:      decredmaterial.WrapContent,
-				Padding:     layout.UniformInset(values.MarginPadding16),
+				Padding: layout.Inset{
+					Top:    values.MarginPadding24,
+					Right:  values.MarginPadding24,
+					Left:   values.MarginPadding24,
+					Bottom: values.MarginPadding12,
+				},
 				Border: decredmaterial.Border{
 					Radius: decredmaterial.TopRadius(14),
 				},
@@ -175,27 +192,36 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 			)
 		},
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(tp.accountSelector.Layout),
-				layout.Rigid(func(gtx C) D {
-					if tp.balanceError == "" {
-						return D{}
-					}
+			return layout.Inset{
+				Top:    values.MarginPadding2,
+				Right:  values.MarginPadding14,
+				Left:   values.MarginPadding14,
+				Bottom: values.MarginPadding14,
+			}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(tp.accountSelector.Layout),
+					layout.Rigid(func(gtx C) D {
+						if tp.balanceError == "" {
+							return D{}
+						}
 
-					label := tp.Theme.Caption(tp.balanceError)
-					label.Color = tp.Theme.Color.Danger
-					return label.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Top:    values.MarginPadding16,
-						Bottom: values.MarginPadding16,
-					}.Layout(gtx, func(gtx C) D {
-						return tp.vspSelector.Layout(gtx)
-					})
-				}),
-				layout.Rigid(tp.spendingPassword.Layout),
-			)
+						label := tp.Theme.Caption(tp.balanceError)
+						label.Color = tp.Theme.Color.Danger
+						return label.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Top:    values.MarginPadding16,
+							Bottom: values.MarginPadding16,
+						}.Layout(gtx, func(gtx C) D {
+							return tp.vspSelector.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return tp.spendingPassword.Layout(gtx)
+					}),
+				)
+			})
 		},
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
@@ -315,7 +341,7 @@ func (tp *stakingModal) Handle() {
 	tp.stakeBtn.SetEnabled(tp.canPurchase())
 
 	if tp.vspSelector.Changed() {
-		tp.WL.RememberVSP(tp.vspSelector.selectedVSP.Host)
+		tp.WL.MultiWallet.RememberVSP(tp.vspSelector.selectedVSP.Host)
 	}
 
 	_, isChanged := decredmaterial.HandleEditorEvents(tp.spendingPassword.Editor)
@@ -324,11 +350,8 @@ func (tp *stakingModal) Handle() {
 	}
 
 	// reselect vsp if there's a delay in fetching the VSP List
-	if !tp.vspIsFetched && len((*tp.WL.VspInfo).List) > 0 {
-		if tp.WL.GetRememberVSP() != "" {
-			tp.vspSelector.selectVSP(tp.WL.GetRememberVSP())
-			tp.vspIsFetched = true
-		}
+	if len(tp.WL.MultiWallet.VspList) > 0 && tp.WL.MultiWallet.GetRememberVSP() != "" {
+		tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
 	}
 
 	if tp.cancelPurchase.Clicked() {

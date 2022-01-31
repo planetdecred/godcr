@@ -7,11 +7,11 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 type vspSelector struct {
@@ -21,7 +21,7 @@ type vspSelector struct {
 
 	changed      bool
 	showVSPModal *decredmaterial.Clickable
-	selectedVSP  *wallet.VSPInfo
+	selectedVSP  *dcrlibwallet.VSPInfo
 }
 
 func newVSPSelector(l *load.Load) *vspSelector {
@@ -44,7 +44,7 @@ func (v *vspSelector) Changed() bool {
 }
 
 func (v *vspSelector) selectVSP(vspHost string) {
-	for _, vsp := range v.WL.VspInfo.List {
+	for _, vsp := range v.WL.MultiWallet.VspList {
 		if vsp.Host == vspHost {
 			v.changed = true
 			v.selectedVSP = vsp
@@ -53,7 +53,7 @@ func (v *vspSelector) selectVSP(vspHost string) {
 	}
 }
 
-func (v *vspSelector) SelectedVSP() *wallet.VSPInfo {
+func (v *vspSelector) SelectedVSP() *dcrlibwallet.VSPInfo {
 	return v.selectedVSP
 }
 
@@ -61,7 +61,7 @@ func (v *vspSelector) handle() {
 	if v.showVSPModal.Clicked() {
 		newVSPSelectorModal(v.Load).
 			title("Voting service provider").
-			vspSelected(func(info *wallet.VSPInfo) {
+			vspSelected(func(info *dcrlibwallet.VSPInfo) {
 				v.selectVSP(info.Host)
 			}).
 			Show()
@@ -129,10 +129,10 @@ type vspSelectorModal struct {
 	inputVSP decredmaterial.Editor
 	addVSP   decredmaterial.Button
 
-	selectedVSP *wallet.VSPInfo
+	selectedVSP *dcrlibwallet.VSPInfo
 	vspList     *decredmaterial.ClickableList
 
-	vspSelectedCallback func(*wallet.VSPInfo)
+	vspSelectedCallback func(*dcrlibwallet.VSPInfo)
 }
 
 func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
@@ -151,7 +151,9 @@ func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 }
 
 func (v *vspSelectorModal) OnResume() {
-
+	if len(v.WL.MultiWallet.VspList) == 0 {
+		go v.WL.MultiWallet.GetVSPList(v.WL.Wallet.Net)
+	}
 }
 
 func (v *vspSelectorModal) ModalID() string {
@@ -170,7 +172,7 @@ func (v *vspSelectorModal) Handle() {
 	v.addVSP.SetEnabled(v.editorsNotEmpty(v.inputVSP.Editor))
 	if v.addVSP.Clicked() {
 		go func() {
-			err := v.WL.AddVSP(v.inputVSP.Editor.Text())
+			err := v.WL.MultiWallet.AddVSP(v.WL.Wallet.Net, v.inputVSP.Editor.Text())
 			if err != nil {
 				v.Toast.NotifyError(err.Error())
 			} else {
@@ -184,8 +186,8 @@ func (v *vspSelectorModal) Handle() {
 	}
 
 	if clicked, selectedItem := v.vspList.ItemClicked(); clicked {
-		v.selectedVSP = v.WL.VspInfo.List[selectedItem]
-		v.vspSelectedCallback(v.WL.VspInfo.List[selectedItem])
+		v.selectedVSP = v.WL.MultiWallet.VspList[selectedItem]
+		v.vspSelectedCallback(v.WL.MultiWallet.VspList[selectedItem])
 		v.Dismiss()
 	}
 }
@@ -195,13 +197,11 @@ func (v *vspSelectorModal) title(title string) *vspSelectorModal {
 	return v
 }
 
-func (v *vspSelectorModal) vspSelected(callback func(*wallet.VSPInfo)) *vspSelectorModal {
+func (v *vspSelectorModal) vspSelected(callback func(*dcrlibwallet.VSPInfo)) *vspSelectorModal {
 	v.vspSelectedCallback = callback
 	v.Dismiss()
 	return v
 }
-
-func (v *vspSelectorModal) OnDismiss() {}
 
 func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	return v.modal.Layout(gtx, []layout.Widget{
@@ -220,7 +220,14 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 					return components.EndToEndRow(gtx, txt.Layout, txtFee.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					listVSP := v.WL.VspInfo.List
+					// if no vsp loaded, display a no vsp text
+					if len(v.WL.MultiWallet.VspList) == 0 {
+						noVsp := v.Theme.Label(values.TextSize14, "No vsp loaded. Check internet connection and try again.")
+						noVsp.Color = v.Theme.Color.GrayText2
+						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, noVsp.Layout)
+					}
+
+					listVSP := v.WL.MultiWallet.VspList
 					return v.vspList.Layout(gtx, len(listVSP), func(gtx C, i int) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Flexed(0.8, func(gtx C) D {
@@ -260,3 +267,5 @@ func (v *vspSelectorModal) editorsNotEmpty(editors ...*widget.Editor) bool {
 
 	return true
 }
+
+func (v *vspSelectorModal) OnDismiss() {}

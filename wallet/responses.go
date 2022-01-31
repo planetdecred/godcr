@@ -163,17 +163,6 @@ type Balance struct {
 	UnConfirmed             int64
 }
 
-// CreateVSP is sent when the Wallet is done creating a new VSP
-type VSPInfo struct {
-	Host string
-	Info *dcrlibwallet.VspInfoResponse
-}
-
-// VSP is sent when the Wallet is done getting all VSP info
-type VSP struct {
-	List []*VSPInfo
-}
-
 // Proposals is sent when all proposals has been fetched
 type Proposals struct {
 	Proposals []dcrlibwallet.Proposal
