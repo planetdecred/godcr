@@ -208,10 +208,10 @@ func (e Editor) editorLayout(gtx C) D {
 		border := widget.Border{Color: e.LineColor, CornerRadius: unit.Dp(8), Width: unit.Dp(2)}
 		return border.Layout(gtx, func(gtx C) D {
 			inset := layout.Inset{
-				Top:    e.m5,
-				Bottom: e.m5,
-				Left:   values.MarginPadding10,
-				Right:  e.m5,
+				Top:    values.MarginPadding7,
+				Bottom: values.MarginPadding7,
+				Left:   values.MarginPadding12,
+				Right:  values.MarginPadding12,
 			}
 			return inset.Layout(gtx, func(gtx C) D {
 				return e.editor(gtx)

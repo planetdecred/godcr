@@ -46,7 +46,7 @@ type Icons struct {
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon,
 	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon,
-	LogoDarkMode, TimerDarkMode, Rebroadcast *decredmaterial.Image
+	LogoDarkMode, TimerDarkMode, Rebroadcast, SettingsActiveIcon, SettingsInactiveIcon *decredmaterial.Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -95,7 +95,6 @@ func NewLoad() (*Load, error) {
 		Account:        new(wallet.Account),
 		Transactions:   new(wallet.Transactions),
 		UnspentOutputs: new(wallet.UnspentOutputs),
-		VspInfo:        new(wallet.VSP),
 		Proposals:      new(wallet.Proposals),
 
 		SelectedProposal: new(dcrlibwallet.Proposal),
@@ -218,6 +217,8 @@ func loadIcons() Icons {
 		LogoDarkMode:             decredmaterial.NewImage(decredIcons["logo_darkmode"]),
 		TimerDarkMode:            decredmaterial.NewImage(decredIcons["timer_dm"]),
 		Rebroadcast:              decredmaterial.NewImage(decredIcons["rebroadcast"]),
+		SettingsActiveIcon:       decredmaterial.NewImage(decredIcons["settings_active"]),
+		SettingsInactiveIcon:     decredmaterial.NewImage(decredIcons["settings_inactive"]),
 
 		DexIcon:         decredmaterial.NewImage(decredIcons["dex_icon"]),
 		DexIconInactive: decredmaterial.NewImage(decredIcons["dex_icon_inactive"]),

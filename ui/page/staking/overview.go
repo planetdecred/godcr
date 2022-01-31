@@ -5,6 +5,7 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v4"
@@ -26,33 +27,35 @@ const OverviewPageID = "staking"
 
 type Page struct {
 	*load.Load
+	list *widget.List
 
 	ticketPageContainer *layout.List
+	ticketBuyerWallet   *dcrlibwallet.Wallet
 	ticketsLive         *decredmaterial.ClickableList
 
-	stakeBtn decredmaterial.Button
+	autoPurchaseSettings *decredmaterial.Clickable
+	autoPurchase         *decredmaterial.Switch
 
-	ticketPrice  string
-	totalRewards string
-
-	autoPurchaseEnabled *decredmaterial.Switch
-	toTickets           decredmaterial.TextAndIconButton
+	stakeBtn  decredmaterial.Button
+	toTickets decredmaterial.TextAndIconButton
 
 	ticketOverview *dcrlibwallet.StakingOverview
 	liveTickets    []*transactionItem
-	list           *widget.List
+
+	ticketPrice  string
+	totalRewards string
 }
 
 func NewStakingPage(l *load.Load) *Page {
 	pg := &Page{
 		Load: l,
 
-		ticketsLive:         l.Theme.NewClickableList(layout.Vertical),
-		ticketPageContainer: &layout.List{Axis: layout.Vertical},
-		stakeBtn:            l.Theme.Button("Stake"),
-
-		autoPurchaseEnabled: l.Theme.Switch(),
-		toTickets:           l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
+		ticketsLive:          l.Theme.NewClickableList(layout.Vertical),
+		ticketPageContainer:  &layout.List{Axis: layout.Vertical},
+		stakeBtn:             l.Theme.Button("Stake"),
+		autoPurchaseSettings: l.Theme.NewClickable(false),
+		autoPurchase:         l.Theme.Switch(),
+		toTickets:            l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
 	}
 
 	pg.list = &widget.List{
@@ -64,6 +67,8 @@ func NewStakingPage(l *load.Load) *Page {
 	pg.toTickets.BackgroundColor = color.NRGBA{}
 
 	pg.ticketOverview = new(dcrlibwallet.StakingOverview)
+	pg.loadPageData()
+
 	return pg
 }
 
@@ -79,35 +84,53 @@ func (pg *Page) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
-
+	pg.setTBWallet()
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
 
-	go pg.WL.GetVSPList()
-	// TODO: automatic ticket purchase functionality
-	pg.autoPurchaseEnabled.SetEnabled(false)
+	pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+}
+
+func (pg *Page) setTBWallet() {
+	for _, wal := range pg.WL.SortedWalletList() {
+		if wal.TicketBuyerConfigIsSet() {
+			pg.ticketBuyerWallet = wal
+		}
+	}
+
+	// if there are no tickets with config set, select the first wallet.
+	if pg.ticketBuyerWallet == nil {
+		pg.ticketBuyerWallet = pg.WL.SortedWalletList()[0]
+	}
 }
 
 func (pg *Page) loadPageData() {
-	pg.ticketPrice = dcrutil.Amount(pg.WL.TicketPrice()).String()
-
 	go func() {
+		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
+		if err != nil {
+			pg.ticketPrice = "0"
+		} else {
+			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
+		}
+
+		if len(pg.WL.MultiWallet.VspList) == 0 {
+			pg.WL.MultiWallet.GetVSPList(pg.WL.Wallet.Net)
+		}
+
 		totalRewards, err := pg.WL.MultiWallet.TotalStakingRewards()
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
 		} else {
 			pg.totalRewards = dcrutil.Amount(totalRewards).String()
-			pg.RefreshWindow()
 		}
-	}()
 
-	go func() {
 		overview, err := pg.WL.MultiWallet.StakingOverview()
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
 		} else {
 			pg.ticketOverview = overview
-			pg.RefreshWindow()
 		}
+
+		pg.RefreshWindow()
 	}()
 
 	go func() {
@@ -194,35 +217,57 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{
 					Bottom: values.MarginPadding11,
 				}.Layout(gtx, func(gtx C) D {
-					// leftWg := func(gtx C) D {
-					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							title := pg.Theme.Label(values.TextSize14, "Ticket Price")
-							title.Color = pg.Theme.Color.GrayText2
-							return title.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{
-								Left:  values.MarginPadding8,
-								Right: values.MarginPadding4,
-							}.Layout(gtx, func(gtx C) D {
-								ic := pg.Icons.TimerIcon
-								if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
-									ic = pg.Icons.TimerDarkMode
+					leftWg := func(gtx C) D {
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								title := pg.Theme.Label(values.TextSize14, "Ticket Price")
+								title.Color = pg.Theme.Color.GrayText2
+								return title.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Left:  values.MarginPadding8,
+									Right: values.MarginPadding4,
+								}.Layout(gtx, func(gtx C) D {
+									ic := pg.Icons.TimerIcon
+									if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+										ic = pg.Icons.TimerDarkMode
+									}
+									return ic.Layout12dp(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
+								txt := pg.Theme.Label(values.TextSize14, nextTicketRemaining(int(secs)))
+								txt.Color = pg.Theme.Color.GrayText2
+								return txt.Layout(gtx)
+							}),
+						)
+					}
+
+					rightWg := func(gtx C) D {
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								icon := pg.Icons.SettingsActiveIcon
+								if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
+									icon = pg.Icons.SettingsInactiveIcon
 								}
-								return ic.Layout12dp(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
-							txt := pg.Theme.Label(values.TextSize14, nextTicketRemaining(int(secs)))
-							txt.Color = pg.Theme.Color.GrayText2
-							return txt.Layout(gtx)
-						}),
-					)
-					// }
-					//TODO: auto ticket purchase.
-					// return pg.titleRow(gtx, leftWg, pg.autoPurchaseEnabled.Layout)-
+								return pg.autoPurchaseSettings.Layout(gtx, func(gtx C) D {
+									return icon.Layout24dp(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								title := pg.Theme.Label(values.TextSize14, "Auto Purchase")
+								title.Color = pg.Theme.Color.GrayText2
+								return layout.Inset{
+									Left:  values.MarginPadding4,
+									Right: values.MarginPadding4,
+								}.Layout(gtx, title.Layout)
+							}),
+							layout.Rigid(pg.autoPurchase.Layout),
+						)
+					}
+					return pg.titleRow(gtx, leftWg, rightWg)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -446,6 +491,129 @@ func (pg *Page) HandleUserInteractions() {
 	if clicked, selectedItem := pg.ticketsLive.ItemClicked(); clicked {
 		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
 	}
+
+	if pg.autoPurchase.Changed() {
+		if pg.autoPurchase.IsChecked() {
+			if pg.ticketBuyerWallet.TicketBuyerConfigIsSet() {
+				pg.startTicketBuyerPasswordModal()
+			} else {
+				newTicketBuyerModal(pg.Load).
+					OnCancel(func() {
+						pg.autoPurchase.SetChecked(false)
+					}).
+					OnSettingsSaved(func() {
+						pg.startTicketBuyerPasswordModal()
+						pg.Toast.Notify("Auto ticket purchase setting saved successfully.")
+					}).
+					Show()
+			}
+		} else {
+			pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
+		}
+	}
+
+	if pg.autoPurchaseSettings.Clicked() {
+		if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
+			pg.Toast.NotifyError("Settings can not be modified when ticket buyer is running.")
+			return
+		}
+
+		pg.ticketBuyerSettingsModal()
+	}
+}
+
+func (pg *Page) ticketBuyerSettingsModal() {
+	newTicketBuyerModal(pg.Load).
+		OnSettingsSaved(func() {
+			pg.Toast.Notify("Auto ticket purchase setting saved successfully.")
+			pg.setTBWallet()
+		}).
+		OnCancel(func() {
+			pg.autoPurchase.SetChecked(false)
+		}).
+		Show()
+}
+
+func (pg *Page) startTicketBuyerPasswordModal() {
+	tbConfig := pg.ticketBuyerWallet.AutoTicketsBuyerConfig()
+	balToMaintain := dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain)
+	name, err := pg.ticketBuyerWallet.AccountNameRaw(uint32(tbConfig.PurchaseAccount))
+	if err != nil {
+		pg.Toast.NotifyError("Ticket buyer acount error: " + err.Error())
+		return
+	}
+
+	modal.NewPasswordModal(pg.Load).
+		Title("Confirm Automatic Ticket Purchase").
+		SetCancelable(false).
+		UseCustomWidget(func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Wallet to purchase from: %s", pg.ticketBuyerWallet.Name)).Layout),
+				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Selected account: %s", name)).Layout),
+				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %2.f", balToMaintain)).Layout), layout.Rigid(func(gtx C) D {
+					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", tbConfig.VspHost))
+					return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, label.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return decredmaterial.LinearLayout{
+						Width:      decredmaterial.MatchParent,
+						Height:     decredmaterial.WrapContent,
+						Background: pg.Theme.Color.LightBlue,
+						Padding: layout.Inset{
+							Top:    values.MarginPadding12,
+							Bottom: values.MarginPadding12,
+						},
+						Border:    decredmaterial.Border{Radius: decredmaterial.Radius(8)},
+						Direction: layout.Center,
+						Alignment: layout.Middle,
+					}.Layout2(gtx, func(gtx C) D {
+						return layout.Inset{Bottom: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+							msg := "Godcr must remain running, for tickets to be automatically purchased"
+							txt := pg.Theme.Label(values.TextSize14, msg)
+							txt.Alignment = text.Middle
+							txt.Color = pg.Theme.Color.GrayText3
+							if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+								txt.Color = pg.Theme.Color.Gray3
+							}
+							return txt.Layout(gtx)
+						})
+					})
+				}),
+			)
+		}).
+		NegativeButton("Cancel", func() {
+			pg.autoPurchase.SetChecked(false)
+		}).
+		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+			if !pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+				pg.Toast.NotifyError(values.String(values.StrNotConnected))
+				pm.SetLoading(false)
+				pg.autoPurchase.SetChecked(false)
+				return false
+			}
+
+			go func() {
+				vsp, err := pg.WL.MultiWallet.NewVSPClient(tbConfig.VspHost, pg.ticketBuyerWallet.ID, uint32(tbConfig.PurchaseAccount))
+				if err != nil {
+					pg.Toast.NotifyError(err.Error())
+					pm.SetLoading(false)
+					return
+				}
+
+				err = vsp.StartTicketBuyer(tbConfig.BalanceToMaintain, []byte(password))
+				if err != nil {
+					pg.Toast.NotifyError(err.Error())
+					pm.SetLoading(false)
+					return
+				}
+
+				pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+				pg.RefreshWindow()
+			}()
+			pm.Dismiss()
+
+			return false
+		}).Show()
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
