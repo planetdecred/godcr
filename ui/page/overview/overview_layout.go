@@ -244,7 +244,6 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 	if needBackup && !backupLater && !pg.isBackupModalOpened {
 		pg.showBackupInfo()
 		pg.isBackupModalOpened = true
-		// }
 	}
 
 	if pg.toMixer.Button.Clicked() {

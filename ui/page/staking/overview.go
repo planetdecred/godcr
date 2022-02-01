@@ -136,13 +136,6 @@ func (pg *Page) setTBWallet() {
 
 func (pg *Page) loadPageData() {
 	go func() {
-		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
-		if err != nil {
-			pg.ticketPrice = "0"
-		} else {
-			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
-		}
-
 		if len(pg.WL.MultiWallet.KnownVSPs()) == 0 {
 			// TODO: Does this page need this list?
 			pg.WL.MultiWallet.ReloadVSPList(pg.ctx)

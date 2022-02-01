@@ -92,6 +92,9 @@ func NewMainPage(l *load.Load) *MainPage {
 
 	mp.initNavItems()
 
+	// Show a seed backup prompt if necessary.
+	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+
 	mp.drawerNav.DrawerToggled(false)
 
 	return mp
@@ -194,7 +197,6 @@ func (mp *MainPage) OnNavigatedTo() {
 	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, true, MainPageID) // notification methods will be invoked asynchronously to prevent potential deadlocks
 	mp.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
 	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
-	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 
 	mp.setLanguageSetting()
 	mp.UpdateBalance()
@@ -413,7 +415,6 @@ func (mp *MainPage) OnNavigatedFrom() {
 	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
-	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 }
 
 func (mp *MainPage) currentPageID() string {

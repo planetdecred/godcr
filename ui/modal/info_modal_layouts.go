@@ -160,14 +160,14 @@ func ticketPriceErrorInfo(l *load.Load) []layout.Widget {
 				txt = "wallets need"
 			}
 
-			text := l.Theme.Body1(fmt.Sprintf("Your %s to be synced before some of the staking functionality will available.", txt))
+			text := l.Theme.Body1(fmt.Sprintf("Your %s to be synced before some of the staking functionality will be available.", txt))
 			text.Color = col
 			return text.Layout(gtx)
 		},
 		func(gtx C) D {
 			bestBlock := l.WL.MultiWallet.GetBestBlock()
 			activationHeight := l.WL.MultiWallet.DCP0001ActivationBlockHeight()
-			txt := l.Theme.Body1(fmt.Sprintf("The current sync progress is %v blocks, and the minimum required blocks is %v blocks.", bestBlock.Height, activationHeight))
+			txt := l.Theme.Body1(fmt.Sprintf("The current sync progress is %v blocks, and the minimum required is %v blocks.", bestBlock.Height, activationHeight))
 			txt.Font.Weight = text.SemiBold
 			return txt.Layout(gtx)
 		},
