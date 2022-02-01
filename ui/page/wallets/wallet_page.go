@@ -2,7 +2,6 @@ package wallets
 
 import (
 	"context"
-	// "fmt"
 	"image/color"
 	"sync"
 

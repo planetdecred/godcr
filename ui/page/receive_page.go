@@ -2,6 +2,7 @@ package page
 
 import (
 	"bytes"
+	"context"
 	"image"
 	"image/color"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 	qrcode "github.com/yeqown/go-qrcode"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -27,6 +29,9 @@ const ReceivePageID = "Receive"
 
 type ReceivePage struct {
 	*load.Load
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+
 	multiWallet       *dcrlibwallet.MultiWallet
 	pageContainer     layout.List
 	scrollContainer   *widget.List
@@ -129,6 +134,8 @@ func (pg *ReceivePage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *ReceivePage) OnNavigatedTo() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.listenForTxNotifications()
 	pg.selector.SelectFirstWalletValidAccount() // Want to reset the user's selection everytime this page appears?
 	// might be better to track the last selection in a variable and reselect it.
 }
@@ -397,6 +404,34 @@ func (pg *ReceivePage) handleCopyEvent(gtx layout.Context) {
 	}
 }
 
+func (pg *ReceivePage) listenForTxNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			case <-pg.ctx.Done():
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.NewTransaction:
+				// refresh wallets when new transaction is received
+				pg.selector.UpdateSelectedAccountBalance()
+				pg.RefreshWindow()
+			case wallet.SyncStatusUpdate:
+				// refresh wallet account and balance on every new block
+				// only if sync is completed.
+				if n.Stage == wallet.BlockAttached && pg.WL.MultiWallet.IsSynced() {
+					pg.selector.UpdateSelectedAccountBalance()
+					pg.RefreshWindow()
+				}
+			}
+		}
+	}()
+}
+
 // OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable
 // features that are irrelevant when the page is NOT displayed.
@@ -404,4 +439,6 @@ func (pg *ReceivePage) handleCopyEvent(gtx layout.Context) {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *ReceivePage) OnNavigatedFrom() {}
+func (pg *ReceivePage) OnNavigatedFrom() {
+	pg.ctxCancel()
+}
