@@ -40,16 +40,6 @@ func (wl *WalletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
 	return wallets
 }
 
-// TicketPrice returns the current ticket price.
-func (wl *WalletLoad) TicketPrice() int64 {
-	pr, err := wl.MultiWallet.WalletsIterator().Next().TicketPrice()
-	if err != nil {
-		log.Error(err)
-		return 0
-	}
-	return pr.TicketPrice
-}
-
 func (wl *WalletLoad) TotalWalletsBalance() (dcrutil.Amount, error) {
 	totalBalance := int64(0)
 	for _, w := range wl.MultiWallet.AllWallets() {

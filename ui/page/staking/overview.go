@@ -602,7 +602,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			}
 
 			go func() {
-				err := pg.ticketBuyerWallet.StartTicketBuyer(tbConfig.VspHost, nil, tbConfig.PurchaseAccount, tbConfig.BalanceToMaintain, []byte(password))
+				err := pg.ticketBuyerWallet.StartTicketBuyer([]byte(password))
 				if err != nil {
 					pg.Toast.NotifyError(err.Error())
 					pm.SetLoading(false)
