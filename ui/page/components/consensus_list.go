@@ -50,6 +50,7 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	var statusLabel decredmaterial.Label
 	var statusLabelColor color.NRGBA
 	var statusIcon *decredmaterial.Icon
+	var backgroundColor color.NRGBA
 
 	switch agenda.Status {
 	case "Finished":
@@ -57,18 +58,21 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 		statusLabelColor = l.Theme.Color.Success
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
 		statusIcon.Color = statusLabelColor
+		backgroundColor = l.Theme.Color.Green50
 		canVote = false
 	case "In progress":
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabelColor = l.Theme.Color.Primary
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
 		statusIcon.Color = statusLabelColor
+		backgroundColor = l.Theme.Color.LightBlue
 		canVote = true
 	case "Upcoming":
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
-		statusLabelColor = l.Theme.Color.Black
+		statusLabelColor = l.Theme.Color.DeepBlue
 		statusIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
 		statusIcon.Color = statusLabelColor
+		backgroundColor = l.Theme.Color.Gray2
 		canVote = false
 	}
 
@@ -81,11 +85,12 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 		}),
 		layout.Rigid(func(gtx C) D {
 			return decredmaterial.LinearLayout{
+				Background: backgroundColor,
 				Width:     decredmaterial.WrapContent,
 				Height:    decredmaterial.WrapContent,
 				Direction: layout.Center,
 				Alignment: layout.Middle,
-				Border:    decredmaterial.Border{Color: statusLabelColor, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+				Border:    decredmaterial.Border{Color: backgroundColor, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
 				Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
 				Margin:    layout.Inset{Left: values.MarginPadding10},
 			}.Layout(gtx,
