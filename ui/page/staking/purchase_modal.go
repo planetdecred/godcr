@@ -353,9 +353,6 @@ func (tp *stakingModal) Handle() {
 	// reselect vsp if there's a delay in fetching the VSP List
 	lastUsedVSP := tp.WL.MultiWallet.LastUsedVSP()
 	if len(tp.WL.MultiWallet.KnownVSPs()) > 0 && lastUsedVSP != "" {
-		// TODO: Handle is called anytime there's a UI change. Won't this
-		// cause the selection to always change? Although, technically no
-		// because the last used vsp is always updated.
 		tp.vspSelector.selectVSP(lastUsedVSP)
 	}
 

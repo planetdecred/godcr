@@ -45,8 +45,7 @@ func (v *vspSelector) Changed() bool {
 }
 
 func (v *vspSelector) selectVSP(vspHost string) {
-	vsps := v.WL.MultiWallet.KnownVSPs()
-	for _, vsp := range vsps {
+	for _, vsp := range v.WL.MultiWallet.KnownVSPs() {
 		if vsp.Host == vspHost {
 			v.changed = true
 			v.selectedVSP = vsp
