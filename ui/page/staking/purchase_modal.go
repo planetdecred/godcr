@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -90,12 +91,12 @@ func (tp *stakingModal) OnResume() {
 
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
 
-	if len(tp.WL.MultiWallet.VspList) == 0 {
-		go tp.WL.MultiWallet.GetVSPList(tp.WL.Wallet.Net)
-	}
-
-	if len(tp.WL.MultiWallet.VspList) > 0 && components.StringNotEmpty(tp.WL.MultiWallet.GetRememberVSP()) {
-		tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
+	lastUsedVSP := tp.WL.MultiWallet.LastUsedVSP()
+	if len(tp.WL.MultiWallet.KnownVSPs()) == 0 {
+		// TODO: Does this modal need this list?
+		go tp.WL.MultiWallet.ReloadVSPList(context.TODO())
+	} else if components.StringNotEmpty(lastUsedVSP) {
+		tp.vspSelector.selectVSP(lastUsedVSP)
 	}
 
 	go func() {
@@ -329,7 +330,7 @@ func (tp *stakingModal) calculateTotals() {
 		return
 	}
 
-	feePercentage := tp.vspSelector.selectedVSP.Info.FeePercentage
+	feePercentage := tp.vspSelector.selectedVSP.FeePercentage
 	total := ticketPrice.TicketPrice * tp.ticketCount()
 	fee := int64((float64(total) / 100) * feePercentage)
 
@@ -341,7 +342,7 @@ func (tp *stakingModal) Handle() {
 	tp.stakeBtn.SetEnabled(tp.canPurchase())
 
 	if tp.vspSelector.Changed() {
-		tp.WL.MultiWallet.RememberVSP(tp.vspSelector.selectedVSP.Host)
+		tp.WL.MultiWallet.SaveLastUsedVSP(tp.vspSelector.selectedVSP.Host)
 	}
 
 	_, isChanged := decredmaterial.HandleEditorEvents(tp.spendingPassword.Editor)
@@ -350,8 +351,9 @@ func (tp *stakingModal) Handle() {
 	}
 
 	// reselect vsp if there's a delay in fetching the VSP List
-	if len(tp.WL.MultiWallet.VspList) > 0 && tp.WL.MultiWallet.GetRememberVSP() != "" {
-		tp.vspSelector.selectVSP(tp.WL.MultiWallet.GetRememberVSP())
+	lastUsedVSP := tp.WL.MultiWallet.LastUsedVSP()
+	if len(tp.WL.MultiWallet.KnownVSPs()) > 0 && lastUsedVSP != "" {
+		tp.vspSelector.selectVSP(lastUsedVSP)
 	}
 
 	if tp.cancelPurchase.Clicked() {
@@ -418,13 +420,8 @@ func (tp *stakingModal) purchaseTickets() {
 			tp.isLoading = false
 		}()
 
-		vsp, err := tp.WL.MultiWallet.NewVSPClient(selectedVSP.Host, account.WalletID, uint32(account.Number))
-		if err != nil {
-			tp.Toast.NotifyError(err.Error())
-			return
-		}
-
-		err = vsp.PurchaseTickets(int32(tp.ticketCount()), wal.GetBestBlock()+256, password)
+		vspHost, vspPubKey := selectedVSP.Host, selectedVSP.PubKey
+		_, err := wal.PurchaseTickets(account.Number, int32(tp.ticketCount()), vspHost, vspPubKey, password)
 		if err != nil {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 				tp.spendingPassword.SetError("Invalid password")

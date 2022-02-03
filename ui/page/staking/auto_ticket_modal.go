@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -70,8 +71,9 @@ func (tb *ticketBuyerModal) selectFirstWalletAccount() {
 
 func (tb *ticketBuyerModal) OnResume() {
 	tb.initializeAccountSelector()
-	if len(tb.WL.MultiWallet.VspList) == 0 {
-		go tb.WL.MultiWallet.GetVSPList(tb.WL.Wallet.Net)
+	if len(tb.WL.MultiWallet.KnownVSPs()) == 0 {
+		// TODO: Does this modal need this list?
+		go tb.WL.MultiWallet.ReloadVSPList(context.TODO())
 	}
 
 	// loop through all available wallets and select the one with ticket buyer config.
