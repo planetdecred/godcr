@@ -15,6 +15,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/overview"
 	tpage "github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -93,6 +94,28 @@ func (pg *Page) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
 	pg.setTBWallet()
+	ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
+	if err != nil {
+		pg.ticketPrice = "0 DCR"
+		bestBlock := pg.WL.MultiWallet.GetBestBlock()
+		activationHeight := pg.WL.MultiWallet.DCP0001ActivationBlockHeight()
+		if bestBlock.Height < activationHeight {
+			modal.NewInfoModal(pg.Load).
+				Title("Staking notification").
+				SetupWithTemplate(modal.TicketPriceErrorTemplate).
+				SetContentAlignment(layout.Center, layout.Center).
+				NegativeButton(values.String(values.StrCancel), func() {}).
+				PositiveButton("Go to Overview", func() {
+					pg.ChangeFragment(overview.NewOverviewPage(pg.Load))
+				}).
+				Show()
+		} else {
+			pg.Toast.NotifyError("Unable to fetch ticket price: " + err.Error())
+		}
+	} else {
+		pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
+	}
+
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
 
 	pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
@@ -113,13 +136,6 @@ func (pg *Page) setTBWallet() {
 
 func (pg *Page) loadPageData() {
 	go func() {
-		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
-		if err != nil {
-			pg.ticketPrice = "0"
-		} else {
-			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
-		}
-
 		if len(pg.WL.MultiWallet.KnownVSPs()) == 0 {
 			// TODO: Does this page need this list?
 			pg.WL.MultiWallet.ReloadVSPList(pg.ctx)
