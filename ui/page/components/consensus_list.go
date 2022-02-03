@@ -147,34 +147,17 @@ func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 
 func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst bool) []*ConsensusItem {
 	consensusItems := make([]*ConsensusItem, 0)
-<<<<<<< HEAD
-<<<<<<< HEAD
 	agendasResponse, err := l.WL.MultiWallet.GetAllAgendasForWallet(selectedWallet.ID, newestFirst)
 
 	if err == nil {
 		for i := 0; i < len(agendasResponse.Agendas); i++ {
 			item := &ConsensusItem{
 				Agenda:     *agendasResponse.Agendas[i],
-=======
-	// agendasResponse, err := selectedWallet.GetAllAgendas()
-	// l.WL.MultiWallet.Consensus.ClearSavedVoteChoices()
-	// l.WL.MultiWallet.Consensus.ClearSavedAgendas()
-	// _, err := l.WL.MultiWallet.Consensus.GetAllAgendas(selectedWallet.ID)
-	
-	agendas, err := l.WL.MultiWallet.Consensus.GetAgendasByWalletIDRaw(selectedWallet.ID, 0, 0, newestFirst)
-=======
-	agendasResponse, err := l.WL.MultiWallet.Consensus.GetAllAgendasForWallet(selectedWallet.ID, newestFirst)
->>>>>>> remove notifcation listemers implementations
 
 	if err == nil {
 		for i := 0; i < len(agendasResponse.Agendas); i++ {
 			item := &ConsensusItem{
-<<<<<<< HEAD
 				Agenda:     agendas[i],
->>>>>>> - add consensus listeners
-=======
-				Agenda:     *agendasResponse.Agendas[i],
->>>>>>> remove notifcation listemers implementations
 				VoteButton: l.Theme.Button("Change Vote"),
 			}
 			consensusItems = append(consensusItems, item)
