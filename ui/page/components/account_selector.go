@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"gioui.org/io/event"
 	"gioui.org/layout"
@@ -18,6 +19,10 @@ import (
 
 type AccountSelector struct {
 	*load.Load
+
+	ctx       context.Context // modal context
+	ctxCancel context.CancelFunc
+
 	multiWallet     *dcrlibwallet.MultiWallet
 	selectedAccount *dcrlibwallet.Account
 
@@ -25,6 +30,7 @@ type AccountSelector struct {
 	callback       func(*dcrlibwallet.Account)
 
 	openSelectorDialog *decredmaterial.Clickable
+	selectorModal      *AccountSelectorModal
 
 	dialogTitle        string
 	selectedWalletName string
@@ -33,7 +39,6 @@ type AccountSelector struct {
 }
 
 func NewAccountSelector(l *load.Load) *AccountSelector {
-
 	return &AccountSelector{
 		Load:               l,
 		multiWallet:        l.WL.MultiWallet,
@@ -65,7 +70,7 @@ func (as *AccountSelector) Changed() bool {
 
 func (as *AccountSelector) Handle() {
 	for as.openSelectorDialog.Clicked() {
-		newAccountSelectorModal(as.Load, as.selectedAccount).
+		as.selectorModal = newAccountSelectorModal(as.Load, as.selectedAccount).
 			title(as.dialogTitle).
 			accountValidator(as.accountIsValid).
 			accountSelected(func(account *dcrlibwallet.Account) {
@@ -74,11 +79,19 @@ func (as *AccountSelector) Handle() {
 				}
 				as.SetSelectedAccount(account)
 				as.callback(account)
-			}).Show()
+			}).
+			onModalExit(func() {
+				as.selectorModal = nil
+				as.ctxCancel()
+			})
+		as.ShowModal(as.selectorModal)
 	}
 }
 
 func (as *AccountSelector) SelectFirstWalletValidAccount() error {
+	as.ctx, as.ctxCancel = context.WithCancel(context.TODO())
+	as.listenForTxNotifications()
+
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
 		as.UpdateSelectedAccountBalance()
 		// no need to select account
@@ -193,15 +206,48 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
+func (as *AccountSelector) listenForTxNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-as.Receiver.NotificationsUpdate:
+			case <-as.ctx.Done():
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.NewTransaction:
+				// refresh accounts list when new transaction is received
+				as.UpdateSelectedAccountBalance()
+				if as.selectorModal != nil {
+					as.selectorModal.setupWalletAccounts()
+				}
+				as.RefreshWindow()
+			case wallet.SyncStatusUpdate:
+				// refresh wallet account and balance on every new block
+				// only if sync is completed.
+				if n.Stage == wallet.BlockAttached && as.WL.MultiWallet.IsSynced() {
+					as.UpdateSelectedAccountBalance()
+					if as.selectorModal != nil {
+						as.selectorModal.setupWalletAccounts()
+					}
+					as.RefreshWindow()
+				}
+			}
+		}
+	}()
+}
+
 const ModalAccountSelector = "AccountSelectorModal"
 
 type AccountSelectorModal struct {
 	*load.Load
-	ctx       context.Context // page context
-	ctxCancel context.CancelFunc
 
 	accountIsValid func(*dcrlibwallet.Account) bool
 	callback       func(*dcrlibwallet.Account)
+	onExit         func()
 
 	modal            decredmaterial.Modal
 	walletInfoButton decredmaterial.IconButton
@@ -242,16 +288,15 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 }
 
 func (asm *AccountSelectorModal) OnResume() {
-	asm.ctx, asm.ctxCancel = context.WithCancel(context.TODO())
-	asm.setupAccountBalance()
-	asm.listenForTxNotifications()
+	asm.setupWalletAccounts()
 }
 
-func (asm *AccountSelectorModal) setupAccountBalance() {
+func (asm *AccountSelectorModal) setupWalletAccounts() {
 	walletAccounts := make(map[int][]*selectorAccount)
 	for _, wal := range asm.WL.SortedWalletList() {
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
+			fmt.Println("Error getting accounts:", err)
 			continue
 		}
 
@@ -265,8 +310,8 @@ func (asm *AccountSelectorModal) setupAccountBalance() {
 				})
 			}
 		}
-		asm.accounts = walletAccounts
 	}
+	asm.accounts = walletAccounts
 }
 
 func (asm *AccountSelectorModal) ModalID() string {
@@ -299,6 +344,7 @@ func (asm *AccountSelectorModal) Handle() {
 	}
 
 	if asm.modal.BackdropClicked(asm.isCancelable) {
+		asm.onExit()
 		asm.Dismiss()
 	}
 }
@@ -491,34 +537,9 @@ func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dime
 	})
 }
 
-func (asm *AccountSelectorModal) listenForTxNotifications() {
-	go func() {
-		for {
-			var notification interface{}
-
-			select {
-			case notification = <-asm.Receiver.NotificationsUpdate:
-			case <-asm.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				// refresh wallets when new transaction is received
-				asm.setupAccountBalance()
-				asm.RefreshWindow()
-			case wallet.SyncStatusUpdate:
-				// refresh wallet account and balance on every new block
-				// only if sync is completed.
-				if n.Stage == wallet.BlockAttached && asm.WL.MultiWallet.IsSynced() {
-					asm.setupAccountBalance()
-					asm.RefreshWindow()
-				}
-			}
-		}
-	}()
+func (asm *AccountSelectorModal) onModalExit(exit func()) *AccountSelectorModal {
+	asm.onExit = exit
+	return asm
 }
 
-func (asm *AccountSelectorModal) OnDismiss() {
-	asm.ctxCancel()
-}
+func (asm *AccountSelectorModal) OnDismiss() {}

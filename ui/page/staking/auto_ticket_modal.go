@@ -1,7 +1,6 @@
 package staking
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -14,15 +13,12 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const ticketBuyerModalID = "staking_modal"
 
 type ticketBuyerModal struct {
 	*load.Load
-	ctx       context.Context // page context
-	ctxCancel context.CancelFunc
 
 	settingsSaved func()
 	onCancel      func()
@@ -65,16 +61,7 @@ func (tb *ticketBuyerModal) OnCancel(cancel func()) *ticketBuyerModal {
 	return tb
 }
 
-func (tb *ticketBuyerModal) selectFirstWalletAccount() {
-	err := tb.accountSelector.SelectFirstWalletValidAccount()
-	if err != nil {
-		tb.Toast.NotifyError(err.Error())
-	}
-}
-
 func (tb *ticketBuyerModal) OnResume() {
-	tb.ctx, tb.ctxCancel = context.WithCancel(context.TODO())
-	tb.listenForTxNotifications()
 	tb.initializeAccountSelector()
 	if len(tb.WL.MultiWallet.KnownVSPs()) == 0 {
 		// TODO: Does this modal need this list?
@@ -197,37 +184,7 @@ func (tb *ticketBuyerModal) initializeAccountSelector() {
 		})
 }
 
-func (tb *ticketBuyerModal) listenForTxNotifications() {
-	go func() {
-		for {
-			var notification interface{}
-
-			select {
-			case notification = <-tb.Receiver.NotificationsUpdate:
-			case <-tb.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				// refresh wallets when new transaction is received
-				tb.accountSelector.UpdateSelectedAccountBalance()
-				tb.RefreshWindow()
-			case wallet.SyncStatusUpdate:
-				// refresh wallet account and balance on every new block
-				// only if sync is completed.
-				if n.Stage == wallet.BlockAttached && tb.WL.MultiWallet.IsSynced() {
-					tb.accountSelector.UpdateSelectedAccountBalance()
-					tb.RefreshWindow()
-				}
-			}
-		}
-	}()
-}
-
-func (tb *ticketBuyerModal) OnDismiss() {
-	tb.ctxCancel()
-}
+func (tb *ticketBuyerModal) OnDismiss() {}
 
 func (tb *ticketBuyerModal) Handle() {
 	tb.saveSettingsBtn.SetEnabled(tb.canSave())

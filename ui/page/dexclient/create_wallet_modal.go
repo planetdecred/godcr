@@ -67,10 +67,6 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreate
 			}
 			return true
 		})
-	err := md.sourceAccountSelector.SelectFirstWalletValidAccount()
-	if err != nil {
-		md.Toast.NotifyError(err.Error())
-	}
 
 	return md
 }
@@ -91,6 +87,10 @@ func (md *createWalletModal) OnDismiss() {
 }
 
 func (md *createWalletModal) OnResume() {
+	err := md.sourceAccountSelector.SelectFirstWalletValidAccount()
+	if err != nil {
+		md.Toast.NotifyError(err.Error())
+	}
 }
 
 func (md *createWalletModal) Handle() {

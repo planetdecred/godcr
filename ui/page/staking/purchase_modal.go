@@ -1,7 +1,6 @@
 package staking
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -17,15 +16,12 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const stakingModalID = "staking_modal"
 
 type stakingModal struct {
 	*load.Load
-	ctx       context.Context // page context
-	ctxCancel context.CancelFunc
 
 	ticketPrice dcrutil.Amount
 
@@ -85,9 +81,7 @@ func (tp *stakingModal) TicketPurchased(ticketsPurchased func()) *stakingModal {
 }
 
 func (tp *stakingModal) OnResume() {
-	tp.ctx, tp.ctxCancel = context.WithCancel(context.TODO())
 	tp.initializeAccountSelector()
-	tp.listenForTxNotifications()
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
 		tp.Toast.NotifyError(err.Error())
@@ -433,34 +427,6 @@ func (tp *stakingModal) purchaseTickets() {
 
 		tp.ticketsPurchased()
 		tp.Dismiss()
-	}()
-}
-
-func (tp *stakingModal) listenForTxNotifications() {
-	go func() {
-		for {
-			var notification interface{}
-
-			select {
-			case notification = <-tp.Receiver.NotificationsUpdate:
-			case <-tp.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				// refresh wallets when new transaction is received
-				tp.accountSelector.UpdateSelectedAccountBalance()
-				tp.RefreshWindow()
-			case wallet.SyncStatusUpdate:
-				// refresh wallet account and balance on every new block
-				// only if sync is completed.
-				if n.Stage == wallet.BlockAttached && tp.WL.MultiWallet.IsSynced() {
-					tp.accountSelector.UpdateSelectedAccountBalance()
-					tp.RefreshWindow()
-				}
-			}
-		}
 	}()
 }
 

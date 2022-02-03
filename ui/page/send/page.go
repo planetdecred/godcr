@@ -1,7 +1,6 @@
 package send
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -16,7 +15,6 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -33,9 +31,6 @@ type moreItem struct {
 
 type Page struct {
 	*load.Load
-	ctx       context.Context // page context
-	ctxCancel context.CancelFunc
-
 	pageContainer *widget.List
 
 	sourceAccountSelector *components.AccountSelector
@@ -154,9 +149,6 @@ func (pg *Page) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
-	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	pg.listenForTxNotifications()
-
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()
@@ -465,34 +457,6 @@ func (pg *Page) HandleUserInteractions() {
 		pg.amount.dcrAmountEditor.Editor.SetText("")
 		pg.amount.SendMax = false
 	}
-}
-
-func (pg *Page) listenForTxNotifications() {
-	go func() {
-		for {
-			var notification interface{}
-
-			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				// refresh wallets when new transaction is received
-				pg.sourceAccountSelector.UpdateSelectedAccountBalance()
-				pg.RefreshWindow()
-			case wallet.SyncStatusUpdate:
-				// refresh wallet account and balance on every new block
-				// only if sync is completed.
-				if n.Stage == wallet.BlockAttached && pg.WL.MultiWallet.IsSynced() {
-					pg.sourceAccountSelector.UpdateSelectedAccountBalance()
-					pg.RefreshWindow()
-				}
-			}
-		}
-	}()
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
