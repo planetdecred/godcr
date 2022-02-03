@@ -99,6 +99,8 @@ func (tm *TextInputModal) SetTextWithTemplate(template string) *TextInputModal {
 }
 
 func (tm *TextInputModal) Handle() {
+	tm.textInput.Disabled = tm.isEnabled
+
 	if editorsNotEmpty(tm.textInput.Editor) {
 		tm.btnPositve.Background = tm.positiveButtonColor
 		tm.isEnabled = true

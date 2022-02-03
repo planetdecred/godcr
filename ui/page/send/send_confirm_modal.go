@@ -115,6 +115,8 @@ func (scm *sendConfirmModal) broadcastTransaction() {
 }
 
 func (scm *sendConfirmModal) Handle() {
+	scm.passwordEditor.Disabled = scm.isSending
+
 	for _, evt := range scm.passwordEditor.Editor.Events() {
 		if scm.passwordEditor.Editor.Focused() {
 			switch evt.(type) {

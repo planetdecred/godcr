@@ -48,6 +48,9 @@ type Editor struct {
 	// isEditorButtonClickable passes a clickable icon button if true and regular icon if false
 	isEditorButtonClickable bool
 
+	// disabled sets the state of the editor to either enabled state or disbled state
+	Disabled bool
+
 	requiredErrorText string
 
 	editorIcon       *Icon
@@ -232,7 +235,12 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 						Bottom: e.m5,
 					}
 					return inset.Layout(gtx, func(gtx C) D {
-						return e.EditorStyle.Layout(gtx)
+						editorGtx := gtx
+						if e.Disabled {
+							editorGtx = gtx.Disabled()
+						}
+
+						return e.EditorStyle.Layout(editorGtx)
 					})
 				}),
 			)
