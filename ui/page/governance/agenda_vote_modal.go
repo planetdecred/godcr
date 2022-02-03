@@ -3,6 +3,7 @@ package governance
 import (
 	"context"
 	"fmt"
+	// "image/color"
 	"sync"
 
 	"gioui.org/font/gofont"
@@ -13,7 +14,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/values"
@@ -39,6 +39,7 @@ type agendaVoteModal struct {
 	walletSelector    *WalletSelector
 	vspSelector       *staking.VSPSelector
 	ticketSelector    *ticketSelector
+	spendingPassword  decredmaterial.Editor
 	materialLoader    material.LoaderStyle
 	items             map[string]string //[key]str-key
 	itemKeys          []string
@@ -59,6 +60,7 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 		// voteSuccessful: onVoteSuccessful,
 		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
 		optionsRadioGroup: new(widget.Enum),
+		spendingPassword:  l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
 		voteBtn:           l.Theme.Button("Vote"),
 		cancelBtn:         l.Theme.OutlineButton("Cancel"),
 	}
@@ -193,34 +195,6 @@ func (avm *agendaVoteModal) Dismiss() {
 	avm.DismissModal(avm)
 }
 
-func (avm *agendaVoteModal) sendVotes() {
-	avm.detailsMu.Lock()
-	avm.detailsMu.Unlock()
-
-	modal.NewPasswordModal(avm.Load).
-		Title("Confirm to vote").
-		NegativeButton("Cancel", func() {
-			avm.isVoting = false
-		}).
-		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
-			go func() {
-				err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Info.PubKey, avm.vspSelector.SelectedVSP().Host, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, "", password)
-				if err != nil {
-					pm.SetError(err.Error())
-					pm.SetLoading(false)
-					return
-				}
-				pm.Dismiss()
-				avm.Toast.Notify("Vote updated successfully, refreshing agendas!")
-
-				avm.Dismiss()
-				go avm.consensusPage.FetchAgendas()
-			}()
-
-			return false
-		}).Show()
-}
-
 func (avm *agendaVoteModal) Handle() {
 	if avm.vspSelector.Changed() {
 		avm.WL.RememberVSP(avm.vspSelector.SelectedVSP().Host)
@@ -241,6 +215,11 @@ func (avm *agendaVoteModal) Handle() {
 		avm.Dismiss()
 	}
 
+	_, isChanged := decredmaterial.HandleEditorEvents(avm.spendingPassword.Editor)
+	if isChanged {
+		avm.spendingPassword.SetError("")
+	}
+
 	for avm.optionsRadioGroup.Changed() {
 		avm.currentValue = avm.optionsRadioGroup.Value
 	}
@@ -253,7 +232,7 @@ func (avm *agendaVoteModal) Handle() {
 
 	}
 
-	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue && avm.vspSelector.SelectedVSP() != nil
+	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue && avm.vspSelector.SelectedVSP() != nil && avm.spendingPassword.Editor.Text() != ""
 	avm.voteBtn.SetEnabled(validToVote)
 	if avm.voteBtn.Enabled() {
 		avm.voteBtn.Background = avm.Theme.Color.Primary
@@ -296,23 +275,45 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 			return avm.walletSelector.Layout(gtx)
 		},
 		func(gtx C) D {
-			if len(avm.LiveTickets) < 1 {
-				return D{}
-			}
-			return avm.vspSelector.Layout(gtx)
-		},
-		func(gtx C) D {
-			if !avm.liveTicketsIsFetched {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
-				return avm.materialLoader.Layout(gtx)
-			}
-			text := fmt.Sprintf("You have %d live tickets for the selected wallet [%s]", len(avm.LiveTickets), avm.walletSelector.SelectedWallet().Name)
-			return avm.Theme.Label(values.TextSize16, text).Layout(gtx)
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					if len(avm.LiveTickets) < 1 {
+						return D{}
+					}
+					return avm.vspSelector.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if !avm.liveTicketsIsFetched {
+						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
+						return avm.materialLoader.Layout(gtx)
+					}
+					var ticketCountLabel decredmaterial.Label
+					text := fmt.Sprintf("You have %d live tickets for the selected wallet [%s]", len(avm.LiveTickets), avm.walletSelector.SelectedWallet().Name)
+					ticketCountLabel = avm.Theme.Label(values.MarginPadding14, text)
+					if len(avm.LiveTickets) < 1 {
+						ticketCountLabel.Color = avm.Theme.Color.Danger
+					}
+					return ticketCountLabel.Layout(gtx)
+				}),
+			)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx, avm.layoutItems()...)
+					if len(avm.LiveTickets) < 1 {
+						return D{}
+					}
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, avm.layoutItems()...)
+				}),
+			)
+		},
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					if len(avm.LiveTickets) < 1 {
+						return D{}
+					}
+					return avm.spendingPassword.Layout(gtx)
 				}),
 			)
 		},
@@ -346,4 +347,29 @@ func (avm *agendaVoteModal) layoutItems() []layout.FlexChild {
 	}
 
 	return items
+}
+
+func (avm *agendaVoteModal) sendVotes() {
+	go func() {
+		password := avm.spendingPassword.Editor.Text()
+
+		defer func() {
+			avm.isVoting = false
+		}()
+
+		err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Info.PubKey, avm.vspSelector.SelectedVSP().Host, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, "", password)
+		if err != nil {
+			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+				avm.spendingPassword.SetError("Invalid password")
+			} else {
+				avm.Toast.NotifyError(err.Error())
+			}
+			return
+		}
+		avm.Dismiss()
+		avm.Toast.Notify("Vote updated successfully, refreshing agendas!")
+
+		avm.Dismiss()
+		go avm.consensusPage.FetchAgendas()
+	}()
 }
