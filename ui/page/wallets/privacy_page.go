@@ -445,4 +445,6 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *PrivacyPage) OnNavigatedFrom() {}
+func (pg *PrivacyPage) OnNavigatedFrom() {
+	pg.ctxCancel()
+}

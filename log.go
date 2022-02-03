@@ -13,6 +13,7 @@ import (
 	"github.com/jrick/logrotate/rotator"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -59,6 +60,7 @@ func init() {
 	ui.UseLogger(winLog)
 	dcrlibwallet.UseLogger(dlwlLog)
 	page.UseLogger(pageLog)
+	load.UseLogger(log)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.

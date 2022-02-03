@@ -2,6 +2,7 @@ package staking
 
 import (
 	"context"
+	"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -249,7 +250,31 @@ func (pg *ListPage) HandleUserInteractions() {
 	}
 
 	if clicked, selectedItem := pg.ticketsList.ItemClicked(); clicked {
-		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.tickets[selectedItem].transaction))
+		ticketTx := pg.tickets[selectedItem].transaction
+		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, ticketTx))
+
+		// Check if this ticket is fully registered with a VSP
+		// and log any discrepancies.
+		// NOTE: Wallet needs to be unlocked to get the ticket status
+		// from the vsp. Otherwise, only the wallet-stored info will
+		// be retrieved. This is fine because we're only just logging
+		// but where it is necessary to display vsp-stored info, the
+		// wallet passphrase should be requested and used to unlock
+		// the wallet before calling this method.
+		// TODO: Use log.Errorf and log.Warnf instead of fmt.Printf.
+		ticketInfo, err := pg.WL.MultiWallet.VSPTicketInfo(ticketTx.WalletID, ticketTx.Hash)
+		if err != nil {
+			fmt.Printf("VSPTicketInfo error: %v\n", err)
+		} else {
+			if ticketInfo.FeeTxStatus != dcrlibwallet.VSPFeeProcessConfirmed {
+				fmt.Printf("[WARN] Ticket %s has unconfirmed fee tx %s with status %q, vsp %s \n",
+					ticketTx.Hash, ticketInfo.FeeTxHash, ticketInfo.FeeTxStatus.String(), ticketInfo.VSP)
+			}
+			if ticketInfo.ConfirmedByVSP == nil || !*ticketInfo.ConfirmedByVSP {
+				fmt.Printf("[WARN] Ticket %s is not confirmed by VSP %s. Fee tx %s, status %q \n",
+					ticketTx.Hash, ticketInfo.VSP, ticketInfo.FeeTxHash, ticketInfo.FeeTxStatus.String())
+			}
+		}
 	}
 
 	decredmaterial.DisplayOneDropdown(pg.ticketTypeDropDown, pg.orderDropDown, pg.walletDropDown)
