@@ -296,7 +296,7 @@ func (pg *AcctDetailsPage) HandleUserInteractions() {
 				err := pg.wallet.RenameAccount(pg.account.Number, newName)
 				if err != nil {
 					tim.SetError(err.Error())
-					tim.IsLoading = false
+					tim.SetLoading(false)
 					return false
 				}
 				pg.account.Name = newName

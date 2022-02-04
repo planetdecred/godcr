@@ -94,8 +94,6 @@ func (md *createWalletModal) OnResume() {
 }
 
 func (md *createWalletModal) Handle() {
-	md.modal.SetDisabled(md.isSending)
-
 	if md.cancel.Button.Clicked() && !md.isSending {
 		md.Dismiss()
 	}
@@ -106,9 +104,12 @@ func (md *createWalletModal) Handle() {
 		}
 
 		md.isSending = true
+		md.modal.SetDisabled(true)
+
 		go func() {
 			defer func() {
 				md.isSending = false
+				md.modal.SetDisabled(false)
 			}()
 
 			coinID := md.walletInfoWidget.coinID

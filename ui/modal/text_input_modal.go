@@ -18,7 +18,7 @@ const TextInput = "text_input_modal"
 type TextInputModal struct {
 	*InfoModal
 
-	IsLoading           bool
+	isLoading           bool
 	showAccountWarnInfo bool
 	isCancelable        bool
 	isEnabled           bool
@@ -61,6 +61,11 @@ func (tm *TextInputModal) Hint(hint string) *TextInputModal {
 	return tm
 }
 
+func (tm *TextInputModal) SetLoading(loading bool) {
+	tm.isLoading = loading
+	tm.modal.SetDisabled(loading)
+}
+
 func (tm *TextInputModal) ShowAccountInfoTip(show bool) *TextInputModal {
 	tm.showAccountWarnInfo = show
 	return tm
@@ -99,7 +104,6 @@ func (tm *TextInputModal) SetTextWithTemplate(template string) *TextInputModal {
 }
 
 func (tm *TextInputModal) Handle() {
-	tm.modal.SetDisabled(tm.IsLoading)
 
 	if editorsNotEmpty(tm.textInput.Editor) {
 		tm.btnPositve.Background = tm.positiveButtonColor
@@ -115,11 +119,11 @@ func (tm *TextInputModal) Handle() {
 	}
 
 	if (tm.btnPositve.Clicked() || isSubmit) && tm.isEnabled {
-		if tm.IsLoading {
+		if tm.isLoading {
 			return
 		}
 
-		tm.IsLoading = true
+		tm.SetLoading(true)
 		tm.SetError("")
 		if tm.callback(tm.textInput.Editor.Text(), tm) {
 			tm.Dismiss()
@@ -127,14 +131,14 @@ func (tm *TextInputModal) Handle() {
 	}
 
 	for tm.btnNegative.Clicked() {
-		if !tm.IsLoading {
+		if !tm.isLoading {
 			tm.Dismiss()
 			tm.negativeButtonClicked()
 		}
 	}
 
 	if tm.modal.BackdropClicked(tm.isCancelable) {
-		if !tm.IsLoading {
+		if !tm.isLoading {
 			tm.Dismiss()
 		}
 	}

@@ -119,6 +119,7 @@ func (pm *PasswordModal) NegativeButton(text string, clicked func()) *PasswordMo
 
 func (pm *PasswordModal) SetLoading(loading bool) {
 	pm.isLoading = loading
+	pm.modal.SetDisabled(loading)
 }
 
 func (pm *PasswordModal) SetCancelable(min bool) *PasswordModal {
@@ -135,8 +136,6 @@ func (pm *PasswordModal) SetError(err string) {
 }
 
 func (pm *PasswordModal) Handle() {
-	pm.modal.SetDisabled(pm.isLoading)
-
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pm.password.Editor)
 	if isChanged {
 		pm.password.SetError("")

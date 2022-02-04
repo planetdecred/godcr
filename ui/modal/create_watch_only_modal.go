@@ -90,6 +90,7 @@ func (cm *CreateWatchOnlyModal) Dismiss() {
 
 func (cm *CreateWatchOnlyModal) SetLoading(loading bool) {
 	cm.isLoading = loading
+	cm.modal.SetDisabled(loading)
 }
 
 func (cm *CreateWatchOnlyModal) SetCancelable(min bool) *CreateWatchOnlyModal {
@@ -107,8 +108,6 @@ func (cm *CreateWatchOnlyModal) WatchOnlyCreated(callback func(walletName, extPu
 }
 
 func (cm *CreateWatchOnlyModal) Handle() {
-	cm.modal.SetDisabled(cm.isLoading)
-
 	if editorsNotEmpty(cm.walletName.Editor) ||
 		editorsNotEmpty(cm.extendedPubKey.Editor) {
 		cm.btnPositve.Background = cm.Theme.Color.Primary

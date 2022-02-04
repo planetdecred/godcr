@@ -140,6 +140,7 @@ func (cm *CreatePasswordModal) PasswordCreated(callback func(walletName, passwor
 
 func (cm *CreatePasswordModal) SetLoading(loading bool) {
 	cm.isLoading = loading
+	cm.modal.SetDisabled(loading)
 }
 
 func (cm *CreatePasswordModal) SetCancelable(min bool) *CreatePasswordModal {
@@ -228,8 +229,6 @@ func (cm *CreatePasswordModal) Handle() {
 			cm.Dismiss()
 		}
 	}
-
-	cm.modal.SetDisabled(cm.isLoading)
 
 	if cm.modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {

@@ -113,7 +113,9 @@ func (pg *Page) welcomeLayout(gtx C, button decredmaterial.Button) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				description := "Trade crypto peer-to-peer."
-				return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
+				return layout.Inset{Bottom: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+					return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
+				})
 			}),
 			layout.Rigid(button.Layout),
 		)
