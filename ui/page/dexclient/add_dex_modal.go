@@ -74,6 +74,8 @@ func (md *addDexModal) OnResume() {
 }
 
 func (md *addDexModal) Handle() {
+	md.modal.SetDisabled(md.isSending)
+
 	if md.cancel.Button.Clicked() && !md.isSending {
 		md.Dismiss()
 	}

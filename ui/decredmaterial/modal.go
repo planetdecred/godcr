@@ -9,15 +9,17 @@ import (
 )
 
 type Modal struct {
-	overlayColor  color.NRGBA
-	background    color.NRGBA
-	list          *widget.List
-	button        *widget.Clickable
-	card          Card
-	scroll        ListStyle
+	overlayColor color.NRGBA
+	background   color.NRGBA
+	list         *widget.List
+	button       *widget.Clickable
+	card         Card
+	scroll       ListStyle
+	padding      unit.Value
+
 	isFloatTitle  bool
+	isDisabled    bool
 	showScrollBar bool
-	padding       unit.Value
 }
 
 func (t *Theme) ModalFloatTitle() *Modal {
@@ -49,7 +51,11 @@ func (t *Theme) Modal() *Modal {
 // Layout renders the modal widget to screen. The modal assumes the size of
 // its content plus padding.
 func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget) layout.Dimensions {
-	dims := layout.Stack{Alignment: layout.Center}.Layout(gtx,
+	mGtx := gtx
+	if m.isDisabled {
+		mGtx = gtx.Disabled()
+	}
+	dims := layout.Stack{Alignment: layout.Center}.Layout(mGtx,
 		layout.Expanded(func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			fillMax(gtx, m.overlayColor, CornerRadius{})
@@ -146,4 +152,8 @@ func (m *Modal) SetPadding(padding unit.Value) {
 
 func (m *Modal) ShowScrollbar(showScrollBar bool) {
 	m.showScrollBar = showScrollBar
+}
+
+func (m *Modal) SetDisabled(disabled bool) {
+	m.isDisabled = disabled
 }

@@ -94,6 +94,8 @@ func (md *createWalletModal) OnResume() {
 }
 
 func (md *createWalletModal) Handle() {
+	md.modal.SetDisabled(md.isSending)
+
 	if md.cancel.Button.Clicked() && !md.isSending {
 		md.Dismiss()
 	}

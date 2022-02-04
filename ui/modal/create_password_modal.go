@@ -173,8 +173,6 @@ func (cm *CreatePasswordModal) SetParent(parent load.Page) *CreatePasswordModal 
 }
 
 func (cm *CreatePasswordModal) Handle() {
-	cm.disableEditors()
-
 	if editorsNotEmpty(cm.passwordEditor.Editor) || editorsNotEmpty(cm.walletName.Editor) ||
 		editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
 		cm.btnPositve.Background = cm.Theme.Color.Primary
@@ -219,7 +217,6 @@ func (cm *CreatePasswordModal) Handle() {
 				cm.Dismiss()
 			}
 		}
-
 	}
 
 	cm.btnNegative.SetEnabled(!cm.isLoading)
@@ -231,6 +228,8 @@ func (cm *CreatePasswordModal) Handle() {
 			cm.Dismiss()
 		}
 	}
+
+	cm.modal.SetDisabled(cm.isLoading)
 
 	if cm.modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {
@@ -261,12 +260,6 @@ func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
 
 	cm.confirmPasswordEditor.SetError("")
 	return true
-}
-
-func (cm *CreatePasswordModal) disableEditors() {
-	cm.walletName.Disabled = cm.isLoading
-	cm.confirmPasswordEditor.Disabled = cm.isLoading
-	cm.passwordEditor.Disabled = cm.isLoading
 }
 
 func (cm *CreatePasswordModal) titleLayout() layout.Widget {

@@ -107,7 +107,8 @@ func (cm *CreateWatchOnlyModal) WatchOnlyCreated(callback func(walletName, extPu
 }
 
 func (cm *CreateWatchOnlyModal) Handle() {
-	cm.disableEditors()
+	cm.modal.SetDisabled(cm.isLoading)
+
 	if editorsNotEmpty(cm.walletName.Editor) ||
 		editorsNotEmpty(cm.extendedPubKey.Editor) {
 		cm.btnPositve.Background = cm.Theme.Color.Primary
@@ -191,9 +192,4 @@ func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
 	}
 
 	return cm.modal.Layout(gtx, w)
-}
-
-func (cm *CreateWatchOnlyModal) disableEditors() {
-	cm.walletName.Disabled = cm.isLoading
-	cm.extendedPubKey.Disabled = cm.isLoading
 }

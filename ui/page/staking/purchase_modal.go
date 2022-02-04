@@ -339,6 +339,8 @@ func (tp *stakingModal) calculateTotals() {
 }
 
 func (tp *stakingModal) Handle() {
+	tp.modal.SetDisabled(tp.isLoading)
+
 	tp.stakeBtn.SetEnabled(tp.canPurchase())
 
 	if tp.vspSelector.Changed() {

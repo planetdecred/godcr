@@ -49,7 +49,7 @@ type Editor struct {
 	isEditorButtonClickable bool
 
 	// disabled sets the state of the editor to either enabled state or disbled state
-	Disabled bool
+	IsDisabled bool
 
 	requiredErrorText string
 
@@ -236,7 +236,7 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						editorGtx := gtx
-						if e.Disabled {
+						if e.IsDisabled {
 							editorGtx = gtx.Disabled()
 						}
 

@@ -135,7 +135,7 @@ func (pm *PasswordModal) SetError(err string) {
 }
 
 func (pm *PasswordModal) Handle() {
-	pm.password.Disabled = pm.isLoading
+	pm.modal.SetDisabled(pm.isLoading)
 
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pm.password.Editor)
 	if isChanged {
