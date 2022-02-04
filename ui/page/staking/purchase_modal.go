@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -22,6 +23,9 @@ const stakingModalID = "staking_modal"
 
 type stakingModal struct {
 	*load.Load
+
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
 
 	ticketPrice dcrutil.Amount
 
@@ -82,6 +86,10 @@ func (tp *stakingModal) TicketPurchased(ticketsPurchased func()) *stakingModal {
 
 func (tp *stakingModal) OnResume() {
 	tp.initializeAccountSelector()
+
+	tp.ctx, tp.ctxCancel = context.WithCancel(context.TODO())
+	tp.accountSelector.ListenForTxNotifications(tp.ctx)
+
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
 		tp.Toast.NotifyError(err.Error())
@@ -431,5 +439,6 @@ func (tp *stakingModal) purchaseTickets() {
 }
 
 func (tp *stakingModal) Dismiss() {
+	tp.ctxCancel()
 	tp.DismissModal(tp)
 }

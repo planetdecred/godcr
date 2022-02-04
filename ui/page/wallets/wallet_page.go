@@ -1010,7 +1010,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 											pg.Toast.Notify("Account created")
 											tim.Dismiss()
 										}
-										pg.UpdateAccountBalance()
+										pg.updateAccountBalance()
 										pm.Dismiss()
 									}()
 									return false
@@ -1099,13 +1099,13 @@ func (pg *WalletPage) listenForTxNotifications() {
 			switch n := notification.(type) {
 			case wallet.NewTransaction:
 				// refresh wallets when new transaction is received
-				pg.UpdateAccountBalance()
+				pg.updateAccountBalance()
 				pg.RefreshWindow()
 			case wallet.SyncStatusUpdate:
 				// refresh wallet account and balance on every new block
 				// only if sync is completed.
 				if n.Stage == wallet.BlockAttached && pg.WL.MultiWallet.IsSynced() {
-					pg.UpdateAccountBalance()
+					pg.updateAccountBalance()
 					pg.RefreshWindow()
 				}
 			}
@@ -1113,29 +1113,25 @@ func (pg *WalletPage) listenForTxNotifications() {
 	}()
 }
 
-func (pg *WalletPage) UpdateAccountBalance() {
-	wallets := pg.WL.SortedWalletList()
-
+func (pg *WalletPage) updateAccountBalance() {
 	pg.listLock.Lock()
-	listItems := pg.listItems
-	pg.listLock.Unlock()
+	defer pg.listLock.Unlock()
 
-	for _, wal := range wallets {
-		accountsResult, err := wal.GetAccountsRaw()
-		if err != nil {
-			continue
-		}
-
-		var totalBalance int64
-		for _, acc := range accountsResult.Acc {
-			totalBalance += acc.TotalBalance
-		}
-
-		for _, item := range listItems {
-			if item.wal.ID == wal.ID {
-				item.totalBalance = dcrutil.Amount(totalBalance).String()
-				item.accounts = accountsResult.Acc
+	for _, item := range pg.listItems {
+		wal := pg.WL.MultiWallet.WalletWithID(item.wal.ID)
+		if wal != nil {
+			accountsResult, err := wal.GetAccountsRaw()
+			if err != nil {
+				continue
 			}
+
+			var totalBalance int64
+			for _, acc := range accountsResult.Acc {
+				totalBalance += acc.TotalBalance
+			}
+
+			item.totalBalance = dcrutil.Amount(totalBalance).String()
+			item.accounts = accountsResult.Acc
 		}
 	}
 }

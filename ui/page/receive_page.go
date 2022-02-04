@@ -2,6 +2,7 @@ package page
 
 import (
 	"bytes"
+	"context"
 	"image"
 	"image/color"
 	"time"
@@ -27,6 +28,9 @@ const ReceivePageID = "Receive"
 
 type ReceivePage struct {
 	*load.Load
+
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
 
 	multiWallet       *dcrlibwallet.MultiWallet
 	pageContainer     layout.List
@@ -130,6 +134,8 @@ func (pg *ReceivePage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *ReceivePage) OnNavigatedTo() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.selector.ListenForTxNotifications(pg.ctx)
 	pg.selector.SelectFirstWalletValidAccount() // Want to reset the user's selection everytime this page appears?
 	// might be better to track the last selection in a variable and reselect it.
 }
@@ -405,4 +411,6 @@ func (pg *ReceivePage) handleCopyEvent(gtx layout.Context) {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *ReceivePage) OnNavigatedFrom() {}
+func (pg *ReceivePage) OnNavigatedFrom() {
+	pg.ctxCancel()
+}

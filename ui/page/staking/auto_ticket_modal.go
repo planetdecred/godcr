@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -19,6 +20,9 @@ const ticketBuyerModalID = "staking_modal"
 
 type ticketBuyerModal struct {
 	*load.Load
+
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
 
 	settingsSaved func()
 	onCancel      func()
@@ -63,6 +67,9 @@ func (tb *ticketBuyerModal) OnCancel(cancel func()) *ticketBuyerModal {
 
 func (tb *ticketBuyerModal) OnResume() {
 	tb.initializeAccountSelector()
+	tb.ctx, tb.ctxCancel = context.WithCancel(context.TODO())
+	tb.accountSelector.ListenForTxNotifications(tb.ctx)
+
 	if len(tb.WL.MultiWallet.KnownVSPs()) == 0 {
 		// TODO: Does this modal need this list?
 		go tb.WL.MultiWallet.ReloadVSPList(context.TODO())
@@ -163,6 +170,7 @@ func (tb *ticketBuyerModal) Show() {
 }
 
 func (tb *ticketBuyerModal) Dismiss() {
+	tb.ctxCancel()
 	tb.DismissModal(tb)
 }
 

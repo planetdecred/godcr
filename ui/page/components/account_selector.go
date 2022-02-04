@@ -20,9 +20,6 @@ import (
 type AccountSelector struct {
 	*load.Load
 
-	ctx       context.Context // modal context
-	ctxCancel context.CancelFunc
-
 	multiWallet     *dcrlibwallet.MultiWallet
 	selectedAccount *dcrlibwallet.Account
 
@@ -82,16 +79,12 @@ func (as *AccountSelector) Handle() {
 			}).
 			onModalExit(func() {
 				as.selectorModal = nil
-				as.ctxCancel()
 			})
 		as.ShowModal(as.selectorModal)
 	}
 }
 
 func (as *AccountSelector) SelectFirstWalletValidAccount() error {
-	as.ctx, as.ctxCancel = context.WithCancel(context.TODO())
-	as.listenForTxNotifications()
-
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
 		as.UpdateSelectedAccountBalance()
 		// no need to select account
@@ -206,14 +199,14 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (as *AccountSelector) listenForTxNotifications() {
+func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 	go func() {
 		for {
 			var notification interface{}
 
 			select {
 			case notification = <-as.Receiver.NotificationsUpdate:
-			case <-as.ctx.Done():
+			case <-ctx.Done():
 				return
 			}
 
@@ -279,11 +272,11 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 		isCancelable:           true,
 	}
 
-	asm.modal.ShowScrollbar(true)
 	asm.walletInfoButton = l.Theme.IconButton(asm.Icons.ActionInfo)
 	asm.walletInfoButton.Size = values.MarginPadding15
 	asm.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
+	asm.modal.ShowScrollbar(true)
 	return asm
 }
 
@@ -337,6 +330,7 @@ func (asm *AccountSelectorModal) Handle() {
 			for _, account := range accounts {
 				for account.clickable.Clicked() {
 					asm.callback(account.Account)
+					asm.onExit()
 					asm.Dismiss()
 				}
 			}

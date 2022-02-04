@@ -1,6 +1,7 @@
 package send
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -31,6 +32,9 @@ type moreItem struct {
 
 type Page struct {
 	*load.Load
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+
 	pageContainer *widget.List
 
 	sourceAccountSelector *components.AccountSelector
@@ -149,6 +153,9 @@ func (pg *Page) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.sourceAccountSelector.ListenForTxNotifications(pg.ctx)
+
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()
@@ -468,4 +475,5 @@ func (pg *Page) HandleUserInteractions() {
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedFrom() {
 	pg.Load.UnsubscribeKeyEvent(pg.ID())
+	pg.ctxCancel()
 }
