@@ -105,9 +105,6 @@ func (pg *GovernancePage) OnNavigatedTo() {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *GovernancePage) OnNavigatedFrom() {
-	// pg.ctxCancel()
-	// pg.proposalsPage.ctxCancel()
-	// pg.consensusPage.ctxCancel()
 }
 
 func (pg *GovernancePage) initTabWidgets() {
@@ -142,7 +139,6 @@ func (pg *GovernancePage) HandleUserInteractions() {
 	/** begin proposal page handles */
 
 	for pg.proposalsPage.infoButton.Button.Clicked() {
-		// pg.proposalsPage.showInfoModal()
 	}
 
 	for pg.proposalsPage.categoryDropDown.Changed() {

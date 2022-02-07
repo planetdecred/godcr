@@ -119,8 +119,6 @@ type ticketSelectorModal struct {
 	dialogTitle string
 
 	modal    decredmaterial.Modal
-	inputVSP decredmaterial.Editor
-	addVSP   decredmaterial.Button
 
 	liveTickets    []*dcrlibwallet.Transaction
 	selectedTicket *dcrlibwallet.Transaction

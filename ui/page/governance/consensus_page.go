@@ -73,30 +73,17 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
 	pg.orderDropDown = components.CreateOrderDropDown(l, values.ConsensusDropdownGroup, 0)
 
-	pg.initLayoutWidgets()
-
 	return pg
-}
-
-func (pg *ConsensusPage) initLayoutWidgets() {
-	//categoryList to be removed with new update to UI.
-	// pg.consensusList = pg.Theme.NewClickableList(layout.Horizontal)
-	// pg.itemCard = pg.Theme.Card()
-
 }
 
 func (pg *ConsensusPage) ID() string {
 	return ConsensusPageID
 }
 
-// func (pg *ConsensusPage) OnResume() {
-
-// }
 
 func (pg *ConsensusPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.FetchAgendas()
-	// pg.FetchLiveTickets()
 }
 
 func (pg *ConsensusPage) OnNavigatedFrom() {
@@ -113,7 +100,6 @@ func (pg *ConsensusPage) FetchAgendas() {
 	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 	consensusItems := components.LoadAgendas(pg.Load, selectedWallet, newestFirst)
 
-	// group 'In discussion' and 'Active' proposals into under review
 	listItems := make([]*components.ConsensusItem, 0)
 	for _, item := range consensusItems {
 		listItems = append(listItems, item)
