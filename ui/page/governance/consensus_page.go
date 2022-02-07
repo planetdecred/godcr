@@ -92,7 +92,6 @@ func (pg *ConsensusPage) ID() string {
 func (pg *ConsensusPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.FetchAgendas()
-	// pg.FetchLiveTickets()
 }
 
 func (pg *ConsensusPage) OnNavigatedFrom() {
@@ -107,11 +106,10 @@ func (pg *ConsensusPage) FetchAgendas() {
 	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 	consensusItems := components.LoadAgendas(pg.Load, selectedWallet, newestFirst)
 
-	pg.consensusItems = consensusItems
-	time.AfterFunc(time.Second*1, func() {
-		pg.isSyncing = false
-		pg.syncCompleted = true
-	})
+	listItems := make([]*components.ConsensusItem, 0)
+	for _, item := range consensusItems {
+		listItems = append(listItems, item)
+	}
 
 	pg.RefreshWindow()
 }
