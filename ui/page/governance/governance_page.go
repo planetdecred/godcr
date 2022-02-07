@@ -2,7 +2,6 @@ package governance
 
 import (
 	"context"
-	// "fmt"
 	"image"
 	"time"
 
@@ -117,6 +116,7 @@ func (pg *GovernancePage) initTabWidgets() {
 
 	radius := decredmaterial.Radius(0)
 	pg.tabCard = pg.Theme.Card()
+	pg.tabCard.Color = pg.Theme.Color.Gray4
 	pg.tabCard.Radius = radius
 }
 
@@ -225,24 +225,6 @@ func (pg *GovernancePage) Layout(gtx C) D {
 						layout.Rigid(pg.backButton.Layout),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-								body := func(gtx C) D {
-									return layout.Flex{Axis: layout.Horizontal, Alignment: layout.End}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													txt := pg.Theme.Label(values.TextSize14, "Available Treasury Balance: ")
-													txt.Font.Weight = text.SemiBold
-													return txt.Layout(gtx)
-												}),
-												layout.Rigid(func(gtx C) D {
-													// Todo get available treasury balance
-													return components.LayoutBalanceSize(gtx, pg.Load, "678,678.687654 DCR", values.TextSize14)
-												}),
-											)
-										}),
-									)
-								}
-
 								return layout.Flex{}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -252,9 +234,6 @@ func (pg *GovernancePage) Layout(gtx C) D {
 												return txt.Layout(gtx)
 											}),
 										)
-									}),
-									layout.Flexed(1, func(gtx C) D {
-										return layout.E.Layout(gtx, body)
 									}),
 								)
 							})
@@ -267,6 +246,9 @@ func (pg *GovernancePage) Layout(gtx C) D {
 							return pg.layoutTabs(gtx)
 						}),
 					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.Theme.Separator().Layout(gtx)
 				}),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
@@ -292,10 +274,8 @@ func (pg *GovernancePage) switchTab(gtx C, selectedCategoryIndex int) D {
 }
 
 func (pg *GovernancePage) layoutTabs(gtx C) D {
-	width := float32(gtx.Constraints.Max.X-20) / float32(len(governanceTabTitles))
-	// pg.proposalMu.Lock()
+	width := float32(gtx.Constraints.Max.X-20) / float32(8)
 	selectedCategory := pg.selectedCategoryIndex
-	// pg.proposalMu.Unlock()
 
 	return pg.tabCard.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
@@ -311,7 +291,7 @@ func (pg *GovernancePage) layoutTabs(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										lbl := pg.Theme.Body1(governanceTabTitles[i])
-										lbl.Color = pg.Theme.Color.Gray3
+										lbl.Color = pg.Theme.Color.Gray1
 										if selectedCategory == i {
 											lbl.Color = pg.Theme.Color.Primary
 										}

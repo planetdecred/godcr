@@ -3,7 +3,6 @@ package governance
 import (
 	"context"
 	"fmt"
-	// "image/color"
 	"sync"
 
 	"gioui.org/font/gofont"
