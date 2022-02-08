@@ -1,6 +1,7 @@
 package wallets
 
 import (
+	"context"
 	"image/color"
 	"sync"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const WalletPageID = components.WalletsPageID
@@ -58,6 +60,8 @@ type menuItem struct {
 
 type WalletPage struct {
 	*load.Load
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
 
 	multiWallet    *dcrlibwallet.MultiWallet
 	listItems      []*walletListItem
@@ -145,6 +149,8 @@ func (pg *WalletPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *WalletPage) OnNavigatedTo() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.listenForTxNotifications()
 	pg.loadWalletAndAccounts()
 }
 
@@ -1004,7 +1010,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 											pg.Toast.Notify("Account created")
 											tim.Dismiss()
 										}
-										pg.loadWalletAndAccounts()
+										pg.updateAccountBalance()
 										pm.Dismiss()
 									}()
 									return false
@@ -1079,6 +1085,57 @@ func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 		}).Show()
 }
 
+func (pg *WalletPage) listenForTxNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			case <-pg.ctx.Done():
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.NewTransaction:
+				// refresh wallets when new transaction is received
+				pg.updateAccountBalance()
+				pg.RefreshWindow()
+			case wallet.SyncStatusUpdate:
+				// refresh wallet account and balance on every new block
+				// only if sync is completed.
+				if n.Stage == wallet.BlockAttached && pg.WL.MultiWallet.IsSynced() {
+					pg.updateAccountBalance()
+					pg.RefreshWindow()
+				}
+			}
+		}
+	}()
+}
+
+func (pg *WalletPage) updateAccountBalance() {
+	pg.listLock.Lock()
+	defer pg.listLock.Unlock()
+
+	for _, item := range pg.listItems {
+		wal := pg.WL.MultiWallet.WalletWithID(item.wal.ID)
+		if wal != nil {
+			accountsResult, err := wal.GetAccountsRaw()
+			if err != nil {
+				continue
+			}
+
+			var totalBalance int64
+			for _, acc := range accountsResult.Acc {
+				totalBalance += acc.TotalBalance
+			}
+
+			item.totalBalance = dcrutil.Amount(totalBalance).String()
+			item.accounts = accountsResult.Acc
+		}
+	}
+}
+
 // OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable
 // features that are irrelevant when the page is NOT displayed.
@@ -1087,5 +1144,6 @@ func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *WalletPage) OnNavigatedFrom() {
+	pg.ctxCancel()
 	pg.closePopups()
 }

@@ -24,6 +24,9 @@ const stakingModalID = "staking_modal"
 type stakingModal struct {
 	*load.Load
 
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+
 	ticketPrice dcrutil.Amount
 
 	modal          decredmaterial.Modal
@@ -82,8 +85,11 @@ func (tp *stakingModal) TicketPurchased(ticketsPurchased func()) *stakingModal {
 }
 
 func (tp *stakingModal) OnResume() {
-
 	tp.initializeAccountSelector()
+
+	tp.ctx, tp.ctxCancel = context.WithCancel(context.TODO())
+	tp.accountSelector.ListenForTxNotifications(tp.ctx)
+
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
 		tp.Toast.NotifyError(err.Error())
@@ -295,10 +301,6 @@ func (tp *stakingModal) Show() {
 	tp.ShowModal(tp)
 }
 
-func (tp *stakingModal) Dismiss() {
-	tp.DismissModal(tp)
-}
-
 func (tp *stakingModal) initializeAccountSelector() {
 	tp.accountSelector = components.NewAccountSelector(tp.Load).
 		Title("Purchasing account").
@@ -434,4 +436,9 @@ func (tp *stakingModal) purchaseTickets() {
 		tp.ticketsPurchased()
 		tp.Dismiss()
 	}()
+}
+
+func (tp *stakingModal) Dismiss() {
+	tp.ctxCancel()
+	tp.DismissModal(tp)
 }
