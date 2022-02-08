@@ -428,29 +428,17 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		return
 	}
 
-	inset := layout.Inset{
-		Top:  unit.Dp(30),
-		Left: unit.Dp(-120),
-	}
+	var inset layout.Inset
 
-	var leftInset float32
-	if listItem.wal.IsWatchingOnlyWallet() {
-		leftInset = -35
-	} else {
-		leftInset = -120
-	}
-
-	listItems := pg.listItems
-
-	if optionsMenuIndex == len(listItems)-1 || optionsMenuIndex == 3 {
+	if optionsMenuIndex == 0 {
 		inset = layout.Inset{
-			Top:  unit.Dp(-90),
-			Left: unit.Dp(-130),
+			Top: unit.Dp(-30),
+			Left: unit.Dp(-150),
 		}
 	} else {
 		inset = layout.Inset{
-			Top:  unit.Dp(30),
-			Left: unit.Dp(leftInset),
+			Top:  unit.Dp(-95),
+			Left: unit.Dp(-150),
 		}
 	}
 
@@ -469,7 +457,7 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 							card.Radius = decredmaterial.Radius(0)
 							return card.HoverableLayout(gtx, menu[i].button, func(gtx C) D {
 								return menu[i].button.Layout(gtx, func(gtx C) D {
-									m10 := values.MarginPadding10
+									m10 := values.MarginPadding7
 									return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
 										gtx.Constraints.Min.X = gtx.Constraints.Max.X
 										return pg.Theme.Body1(menu[i].text).Layout(gtx)
