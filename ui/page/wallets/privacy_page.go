@@ -84,7 +84,7 @@ func (pg *PrivacyPage) OnNavigatedTo() {
 	if pg.AccountMixerNotif == nil {
 		pg.AccountMixerNotif = listeners.NewAccountMixerNotif(make(chan wallet.AccountMixer, 4))
 	} else {
-		pg.MixerCh = make(chan wallet.AccountMixer, 4)
+		pg.MixerChan = make(chan wallet.AccountMixer, 4)
 	}
 	pg.WL.MultiWallet.AddAccountMixerNotificationListener(pg, PrivacyPageID)
 }
@@ -425,7 +425,7 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 	go func() {
 		for {
 			select {
-			case n := <-pg.MixerCh:
+			case n := <-pg.MixerChan:
 				if n.RunStatus == wallet.MixerStarted {
 					pg.Toast.Notify("Mixer start Successfully")
 					pg.RefreshWindow()
@@ -451,8 +451,8 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *PrivacyPage) OnNavigatedFrom() {
-	if pg.MixerCh != nil {
-		close(pg.MixerCh)
+	if pg.MixerChan != nil {
+		close(pg.MixerChan)
 	}
 	pg.WL.MultiWallet.RemoveAccountMixerNotificationListener(PrivacyPageID)
 }

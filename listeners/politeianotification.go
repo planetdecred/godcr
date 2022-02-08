@@ -6,12 +6,12 @@ import (
 )
 
 type PoliteiaNotification struct {
-	PoliteiaNotifCh chan wallet.Proposal
+	PoliteiaNotifChan chan wallet.Proposal
 }
 
 func NewPoliteiaNotification(notifCh chan wallet.Proposal) *PoliteiaNotification {
 	return &PoliteiaNotification{
-		PoliteiaNotifCh: notifCh,
+		PoliteiaNotifChan: notifCh,
 	}
 }
 
@@ -45,5 +45,5 @@ func (pn *PoliteiaNotification) OnProposalVoteFinished(proposal *dcrlibwallet.Pr
 }
 
 func (pn *PoliteiaNotification) sendNotification(signal wallet.Proposal) {
-	pn.PoliteiaNotifCh <- signal
+	pn.PoliteiaNotifChan <- signal
 }

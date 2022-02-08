@@ -5,37 +5,37 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-type SyncProgress struct {
-	SyncStatus chan wallet.SyncStatusUpdate
+type SyncProgressListener struct {
+	SyncStatusChan chan wallet.SyncStatusUpdate
 }
 
-func NewSyncProgress(syncStatus chan wallet.SyncStatusUpdate) *SyncProgress {
-	return &SyncProgress{
-		SyncStatus: syncStatus,
+func NewSyncProgress(syncStatus chan wallet.SyncStatusUpdate) *SyncProgressListener {
+	return &SyncProgressListener{
+		SyncStatusChan: syncStatus,
 	}
 }
 
-func (sp *SyncProgress) OnSyncStarted(wasRestarted bool) {
+func (sp *SyncProgressListener) OnSyncStarted(wasRestarted bool) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.SyncStarted,
 	})
 }
 
-func (sp *SyncProgress) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
+func (sp *SyncProgressListener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
 		Stage:          wallet.PeersConnected,
 		ConnectedPeers: numberOfConnectedPeers,
 	})
 }
 
-func (sp *SyncProgress) OnCFiltersFetchProgress(cfiltersFetchProgress *dcrlibwallet.CFiltersFetchProgressReport) {
+func (sp *SyncProgressListener) OnCFiltersFetchProgress(cfiltersFetchProgress *dcrlibwallet.CFiltersFetchProgressReport) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
 		Stage:          wallet.CfiltersFetchProgress,
 		ProgressReport: cfiltersFetchProgress,
 	})
 }
 
-func (sp *SyncProgress) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.HeadersFetchProgressReport) {
+func (sp *SyncProgressListener) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.HeadersFetchProgressReport) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.HeadersFetchProgress,
 		ProgressReport: wallet.SyncHeadersFetchProgress{
@@ -44,7 +44,7 @@ func (sp *SyncProgress) OnHeadersFetchProgress(headersFetchProgress *dcrlibwalle
 	})
 }
 
-func (sp *SyncProgress) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibwallet.AddressDiscoveryProgressReport) {
+func (sp *SyncProgressListener) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibwallet.AddressDiscoveryProgressReport) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.AddressDiscoveryProgress,
 		ProgressReport: wallet.SyncAddressDiscoveryProgress{
@@ -53,7 +53,7 @@ func (sp *SyncProgress) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcr
 	})
 }
 
-func (sp *SyncProgress) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.HeadersRescanProgressReport) {
+func (sp *SyncProgressListener) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.HeadersRescanProgressReport) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.HeadersRescanProgress,
 		ProgressReport: wallet.SyncHeadersRescanProgress{
@@ -61,20 +61,20 @@ func (sp *SyncProgress) OnHeadersRescanProgress(headersRescanProgress *dcrlibwal
 		},
 	})
 }
-func (sp *SyncProgress) OnSyncCompleted() {
+func (sp *SyncProgressListener) OnSyncCompleted() {
 	sp.sendNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.SyncCompleted,
 	})
 }
 
-func (sp *SyncProgress) OnSyncCanceled(willRestart bool) {
+func (sp *SyncProgressListener) OnSyncCanceled(willRestart bool) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.SyncCanceled,
 	})
 }
-func (sp *SyncProgress) OnSyncEndedWithError(err error)          {}
-func (sp *SyncProgress) Debug(debugInfo *dcrlibwallet.DebugInfo) {}
+func (sp *SyncProgressListener) OnSyncEndedWithError(err error)          {}
+func (sp *SyncProgressListener) Debug(debugInfo *dcrlibwallet.DebugInfo) {}
 
-func (sp *SyncProgress) sendNotification(signal wallet.SyncStatusUpdate) {
-	sp.SyncStatus <- signal
+func (sp *SyncProgressListener) sendNotification(signal wallet.SyncStatusUpdate) {
+	sp.SyncStatusChan <- signal
 }

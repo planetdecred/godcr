@@ -112,7 +112,7 @@ func (pg *ProposalsPage) OnNavigatedTo() {
 	if pg.PoliteiaNotification == nil {
 		pg.PoliteiaNotification = listeners.NewPoliteiaNotification(make(chan wallet.Proposal, 4))
 	} else {
-		pg.PoliteiaNotifCh = make(chan wallet.Proposal, 4)
+		pg.PoliteiaNotifChan = make(chan wallet.Proposal, 4)
 	}
 	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.PoliteiaNotification, ProposalsPageID)
 
@@ -221,8 +221,8 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 func (pg *ProposalsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 
-	if pg.PoliteiaNotifCh != nil {
-		close(pg.PoliteiaNotifCh)
+	if pg.PoliteiaNotifChan != nil {
+		close(pg.PoliteiaNotifChan)
 	}
 	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalsPageID)
 }
@@ -399,7 +399,7 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 	go func() {
 		for {
 			select {
-			case n := <-pg.PoliteiaNotifCh:
+			case n := <-pg.PoliteiaNotifChan:
 				if n.ProposalStatus == wallet.Synced {
 					pg.syncCompleted = true
 					pg.isSyncing = false

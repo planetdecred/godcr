@@ -43,7 +43,7 @@ type walletSyncDetails struct {
 
 type AppOverviewPage struct {
 	*load.Load
-	*listeners.SyncProgress
+	*listeners.SyncProgressListener
 	*listeners.TxAndBlockNotification
 	*listeners.PoliteiaNotification
 	*listeners.BlockRescanUpdate
@@ -139,31 +139,31 @@ func (pg *AppOverviewPage) OnNavigatedTo() {
 }
 
 func (pg *AppOverviewPage) setupListeners() {
-	if pg.SyncProgress == nil {
-		pg.SyncProgress = listeners.NewSyncProgress(make(chan wallet.SyncStatusUpdate, 4))
+	if pg.SyncProgressListener == nil {
+		pg.SyncProgressListener = listeners.NewSyncProgress(make(chan wallet.SyncStatusUpdate, 4))
 	} else {
-		pg.SyncStatus = make(chan wallet.SyncStatusUpdate, 4)
+		pg.SyncStatusChan = make(chan wallet.SyncStatusUpdate, 4)
 	}
-	pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgress, OverviewPageID)
+	pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
 
 	if pg.TxAndBlockNotification == nil {
 		pg.TxAndBlockNotification = listeners.NewTxAndBlockNotification(make(chan listeners.TxNotification, 4))
 	} else {
-		pg.TxAndBlockNotifCh = make(chan listeners.TxNotification, 4)
+		pg.TxAndBlockNotifChan = make(chan listeners.TxNotification, 4)
 	}
 	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotification, true, OverviewPageID)
 
 	if pg.PoliteiaNotification == nil {
 		pg.PoliteiaNotification = listeners.NewPoliteiaNotification(make(chan wallet.Proposal, 4))
 	} else {
-		pg.PoliteiaNotifCh = make(chan wallet.Proposal, 4)
+		pg.PoliteiaNotifChan = make(chan wallet.Proposal, 4)
 	}
 	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.PoliteiaNotification, OverviewPageID)
 
 	if pg.BlockRescanUpdate == nil {
 		pg.BlockRescanUpdate = listeners.NewBlockRescanUpdate(make(chan wallet.RescanUpdate, 4))
 	} else {
-		pg.BlockRescanCh = make(chan wallet.RescanUpdate, 4)
+		pg.BlockRescanChan = make(chan wallet.RescanUpdate, 4)
 	}
 	pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlockRescanUpdate)
 }
@@ -358,7 +358,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 	go func() {
 		for {
 			select {
-			case n := <-pg.SyncStatus:
+			case n := <-pg.SyncStatusChan:
 				// Update sync progress fields which will be displayed
 				// when the next UI invalidation occurs.
 				switch t := n.ProgressReport.(type) {
@@ -393,7 +393,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 					pg.RefreshWindow()
 				}
 
-			case n := <-pg.TxAndBlockNotifCh:
+			case n := <-pg.TxAndBlockNotifChan:
 				switch n.NotificationType {
 				case listeners.BlkAttached:
 					beep := pg.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
@@ -417,7 +417,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 				case listeners.TxConfirmed:
 					pg.UpdateBalance()
 				}
-			case n := <-pg.PoliteiaNotifCh:
+			case n := <-pg.PoliteiaNotifChan:
 				switch n.ProposalStatus {
 				case wallet.Synced:
 					pg.loadRecentProposals()
@@ -427,7 +427,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 
 				}
 
-			case n := <-pg.BlockRescanCh:
+			case n := <-pg.BlockRescanChan:
 				if n.Stage == wallet.RescanEnded {
 					pg.RefreshWindow()
 				}
@@ -463,20 +463,20 @@ func (pg *AppOverviewPage) OnNavigatedFrom() {
 }
 
 func (pg *AppOverviewPage) removeListeners() {
-	if pg.SyncStatus != nil {
-		close(pg.SyncStatus)
+	if pg.SyncStatusChan != nil {
+		close(pg.SyncStatusChan)
 	}
 
-	if pg.TxAndBlockNotifCh != nil {
-		close(pg.TxAndBlockNotifCh)
+	if pg.TxAndBlockNotifChan != nil {
+		close(pg.TxAndBlockNotifChan)
 	}
 
-	if pg.PoliteiaNotifCh != nil {
-		close(pg.PoliteiaNotifCh)
+	if pg.PoliteiaNotifChan != nil {
+		close(pg.PoliteiaNotifChan)
 	}
 
-	if pg.BlockRescanCh != nil {
-		close(pg.BlockRescanCh)
+	if pg.BlockRescanChan != nil {
+		close(pg.BlockRescanChan)
 	}
 	pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
 	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)

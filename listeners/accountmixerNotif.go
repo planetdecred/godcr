@@ -5,12 +5,12 @@ import (
 )
 
 type AccountMixerNotif struct {
-	MixerCh chan wallet.AccountMixer
+	MixerChan chan wallet.AccountMixer
 }
 
 func NewAccountMixerNotif(mixerCh chan wallet.AccountMixer) *AccountMixerNotif {
 	return &AccountMixerNotif{
-		MixerCh: mixerCh,
+		MixerChan: mixerCh,
 	}
 }
 
@@ -29,5 +29,5 @@ func (am *AccountMixerNotif) OnAccountMixerEnded(walletID int) {
 }
 
 func (am *AccountMixerNotif) UpdateNotification(signal wallet.AccountMixer) {
-	am.MixerCh <- signal
+	am.MixerChan <- signal
 }

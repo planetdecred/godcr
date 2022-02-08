@@ -6,12 +6,12 @@ import (
 )
 
 type BlockRescanUpdate struct {
-	BlockRescanCh chan wallet.RescanUpdate
+	BlockRescanChan chan wallet.RescanUpdate
 }
 
 func NewBlockRescanUpdate(blockRescanCh chan wallet.RescanUpdate) *BlockRescanUpdate {
 	return &BlockRescanUpdate{
-		BlockRescanCh: blockRescanCh,
+		BlockRescanChan: blockRescanCh,
 	}
 }
 
@@ -38,5 +38,5 @@ func (br *BlockRescanUpdate) OnBlocksRescanEnded(walletID int, err error) {
 }
 
 func (br *BlockRescanUpdate) UpdateNotification(signal wallet.RescanUpdate) {
-	br.BlockRescanCh <- signal
+	br.BlockRescanChan <- signal
 }

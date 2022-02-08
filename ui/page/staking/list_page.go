@@ -90,7 +90,7 @@ func (pg *ListPage) OnNavigatedTo() {
 	if pg.TxAndBlockNotification == nil {
 		pg.TxAndBlockNotification = listeners.NewTxAndBlockNotification(make(chan listeners.TxNotification, 4))
 	} else {
-		pg.TxAndBlockNotifCh = make(chan listeners.TxNotification, 4)
+		pg.TxAndBlockNotifChan = make(chan listeners.TxNotification, 4)
 	}
 	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotification, true, listPageID)
 
@@ -104,7 +104,7 @@ func (pg *ListPage) listenForTxNotifications() {
 		for {
 
 			select {
-			case n := <-pg.TxAndBlockNotifCh:
+			case n := <-pg.TxAndBlockNotifChan:
 				if n.NotificationType == listeners.BlkAttached {
 					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 					if selectedWallet.ID == n.WalletID {
@@ -294,8 +294,8 @@ func (pg *ListPage) HandleUserInteractions() {
 // Part of the load.Page interface.
 func (pg *ListPage) OnNavigatedFrom() {
 	pg.ctxCancel()
-	if pg.TxAndBlockNotifCh != nil {
-		close(pg.TxAndBlockNotifCh)
+	if pg.TxAndBlockNotifChan != nil {
+		close(pg.TxAndBlockNotifChan)
 	}
 	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(listPageID)
 }

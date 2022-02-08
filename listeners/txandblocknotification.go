@@ -7,12 +7,12 @@ import (
 )
 
 type TxAndBlockNotification struct {
-	TxAndBlockNotifCh chan TxNotification
+	TxAndBlockNotifChan chan TxNotification
 }
 
 func NewTxAndBlockNotification(txAndBlockNotif chan TxNotification) *TxAndBlockNotification {
 	return &TxAndBlockNotification{
-		TxAndBlockNotifCh: txAndBlockNotif,
+		TxAndBlockNotifChan: txAndBlockNotif,
 	}
 }
 
@@ -46,5 +46,5 @@ func (txAndBlk *TxAndBlockNotification) OnTransactionConfirmed(walletID int, has
 }
 
 func (txAndBlk *TxAndBlockNotification) UpdateNotification(signal TxNotification) {
-	txAndBlk.TxAndBlockNotifCh <- signal
+	txAndBlk.TxAndBlockNotifChan <- signal
 }

@@ -93,7 +93,7 @@ func (pg *TransactionsPage) OnNavigatedTo() {
 	if pg.TxAndBlockNotification == nil {
 		pg.TxAndBlockNotification = listeners.NewTxAndBlockNotification(make(chan listeners.TxNotification, 4))
 	} else {
-		pg.TxAndBlockNotifCh = make(chan listeners.TxNotification, 4)
+		pg.TxAndBlockNotifChan = make(chan listeners.TxNotification, 4)
 	}
 	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotification, true, TransactionsPageID)
 
@@ -228,7 +228,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 	go func() {
 		for {
 			select {
-			case n := <-pg.TxAndBlockNotifCh:
+			case n := <-pg.TxAndBlockNotifChan:
 				if n.NotificationType == listeners.NewTx {
 					pg.UpdateBalance()
 
@@ -255,8 +255,8 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 func (pg *TransactionsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 
-	if pg.TxAndBlockNotifCh != nil {
-		close(pg.TxAndBlockNotifCh)
+	if pg.TxAndBlockNotifChan != nil {
+		close(pg.TxAndBlockNotifChan)
 	}
 	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(TransactionsPageID)
 }
