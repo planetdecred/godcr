@@ -76,7 +76,5 @@ func (sp *SyncProgress) OnSyncEndedWithError(err error)          {}
 func (sp *SyncProgress) Debug(debugInfo *dcrlibwallet.DebugInfo) {}
 
 func (sp *SyncProgress) sendNotification(signal wallet.SyncStatusUpdate) {
-	if sp.SyncStatus != nil {
-		sp.SyncStatus <- signal
-	}
+	sp.SyncStatus <- signal
 }

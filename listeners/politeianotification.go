@@ -45,7 +45,5 @@ func (pn *PoliteiaNotification) OnProposalVoteFinished(proposal *dcrlibwallet.Pr
 }
 
 func (pn *PoliteiaNotification) sendNotification(signal wallet.Proposal) {
-	if pn.PoliteiaNotifCh != nil {
-		pn.PoliteiaNotifCh <- signal
-	}
+	pn.PoliteiaNotifCh <- signal
 }
