@@ -432,7 +432,7 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 
 	if optionsMenuIndex == 0 {
 		inset = layout.Inset{
-			Top: unit.Dp(-30),
+			Top:  unit.Dp(-30),
 			Left: unit.Dp(-150),
 		}
 	} else {
