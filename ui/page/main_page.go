@@ -199,7 +199,6 @@ func (mp *MainPage) OnNavigatedTo() {
 	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
 
 	mp.setLanguageSetting()
-	mp.UpdateBalance()
 
 	if mp.currentPage == nil {
 		mp.currentPage = overview.NewOverviewPage(mp.Load)
@@ -553,6 +552,7 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
+	mp.UpdateBalance()
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" {
