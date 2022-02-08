@@ -462,23 +462,16 @@ func (pg *AppOverviewPage) OnNavigatedFrom() {
 	pg.removeListeners()
 }
 
+
+// removeListeners removes sync, tx and politeia notification listeners
+// and Close corresponding channels.
 func (pg *AppOverviewPage) removeListeners() {
-	if pg.SyncStatusChan != nil {
-		close(pg.SyncStatusChan)
-	}
-
-	if pg.TxAndBlockNotifChan != nil {
-		close(pg.TxAndBlockNotifChan)
-	}
-
-	if pg.PoliteiaNotifChan != nil {
-		close(pg.PoliteiaNotifChan)
-	}
-
-	if pg.BlockRescanChan != nil {
-		close(pg.BlockRescanChan)
-	}
 	pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
 	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
 	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(OverviewPageID)
+
+	close(pg.SyncStatusChan)
+	close(pg.TxAndBlockNotifChan)
+	close(pg.PoliteiaNotifChan)
+	close(pg.BlockRescanChan)
 }

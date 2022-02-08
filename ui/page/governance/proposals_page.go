@@ -221,10 +221,8 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 func (pg *ProposalsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 
-	if pg.PoliteiaNotifChan != nil {
-		close(pg.PoliteiaNotifChan)
-	}
 	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalsPageID)
+	close(pg.PoliteiaNotifChan)
 }
 
 // Layout draws the page UI components into the provided layout context

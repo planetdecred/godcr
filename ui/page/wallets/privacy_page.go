@@ -451,8 +451,6 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *PrivacyPage) OnNavigatedFrom() {
-	if pg.MixerChan != nil {
-		close(pg.MixerChan)
-	}
 	pg.WL.MultiWallet.RemoveAccountMixerNotificationListener(PrivacyPageID)
+	close(pg.MixerChan)
 }

@@ -169,10 +169,8 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 func (pg *ProposalDetails) OnNavigatedFrom() {
 	pg.ctxCancel()
 
-	if pg.PoliteiaNotifChan != nil {
-		close(pg.PoliteiaNotifChan)
-	}
 	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
+	close(pg.PoliteiaNotifChan)
 }
 
 // - Layout

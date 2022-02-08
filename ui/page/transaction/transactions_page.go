@@ -255,8 +255,6 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 func (pg *TransactionsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 
-	if pg.TxAndBlockNotifChan != nil {
-		close(pg.TxAndBlockNotifChan)
-	}
 	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(TransactionsPageID)
+	close(pg.TxAndBlockNotifChan)
 }
