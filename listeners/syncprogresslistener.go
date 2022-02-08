@@ -37,28 +37,22 @@ func (sp *SyncProgressListener) OnCFiltersFetchProgress(cfiltersFetchProgress *d
 
 func (sp *SyncProgressListener) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.HeadersFetchProgressReport) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
-		Stage: wallet.HeadersFetchProgress,
-		ProgressReport: wallet.SyncHeadersFetchProgress{
-			Progress: headersFetchProgress,
-		},
+		Stage:          wallet.HeadersFetchProgress,
+		ProgressReport: headersFetchProgress,
 	})
 }
 
 func (sp *SyncProgressListener) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibwallet.AddressDiscoveryProgressReport) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
-		Stage: wallet.AddressDiscoveryProgress,
-		ProgressReport: wallet.SyncAddressDiscoveryProgress{
-			Progress: addressDiscoveryProgress,
-		},
+		Stage:          wallet.AddressDiscoveryProgress,
+		ProgressReport: addressDiscoveryProgress,
 	})
 }
 
 func (sp *SyncProgressListener) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.HeadersRescanProgressReport) {
 	sp.sendNotification(wallet.SyncStatusUpdate{
-		Stage: wallet.HeadersRescanProgress,
-		ProgressReport: wallet.SyncHeadersRescanProgress{
-			Progress: headersRescanProgress,
-		},
+		Stage:          wallet.HeadersRescanProgress,
+		ProgressReport: headersRescanProgress,
 	})
 }
 func (sp *SyncProgressListener) OnSyncCompleted() {

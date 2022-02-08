@@ -362,20 +362,20 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 				// Update sync progress fields which will be displayed
 				// when the next UI invalidation occurs.
 				switch t := n.ProgressReport.(type) {
-				case wallet.SyncHeadersFetchProgress:
-					pg.headerFetchProgress = t.Progress.HeadersFetchProgress
-					pg.headersToFetchOrScan = t.Progress.TotalHeadersToFetch
-					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
+				case *dcrlibwallet.HeadersFetchProgressReport:
+					pg.headerFetchProgress = t.HeadersFetchProgress
+					pg.headersToFetchOrScan = t.TotalHeadersToFetch
+					pg.syncProgress = int(t.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.FetchHeadersSteps
-				case wallet.SyncAddressDiscoveryProgress:
-					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
+				case *dcrlibwallet.AddressDiscoveryProgressReport:
+					pg.syncProgress = int(t.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.AddressDiscoveryStep
-				case wallet.SyncHeadersRescanProgress:
-					pg.headersToFetchOrScan = t.Progress.TotalHeadersToScan
-					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
+				case *dcrlibwallet.HeadersRescanProgressReport:
+					pg.headersToFetchOrScan = t.TotalHeadersToScan
+					pg.syncProgress = int(t.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.RescanHeadersStep
 				}
 
@@ -461,7 +461,6 @@ func (pg *AppOverviewPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 	pg.removeListeners()
 }
-
 
 // removeListeners removes sync, tx and politeia notification listeners
 // and Close corresponding channels.

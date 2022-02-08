@@ -103,18 +103,3 @@ type (
 		ProgressReport *dcrlibwallet.HeadersRescanProgressReport
 	}
 )
-
-// SyncHeadersFetchProgress is sent whenever syncing makes any progress in fetching headers
-type SyncHeadersFetchProgress struct {
-	Progress *dcrlibwallet.HeadersFetchProgressReport
-}
-
-// SyncAddressDiscoveryProgress is sent whenever syncing makes any progress in discovering addresses
-type SyncAddressDiscoveryProgress struct {
-	Progress *dcrlibwallet.AddressDiscoveryProgressReport
-}
-
-// SyncHeadersRescanProgress is sent whenever syncing makes any progress in rescanning headers
-type SyncHeadersRescanProgress struct {
-	Progress *dcrlibwallet.HeadersRescanProgressReport
-}
