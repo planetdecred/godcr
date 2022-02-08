@@ -1,6 +1,7 @@
 package dexclient
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -21,6 +22,10 @@ const dexCreateWalletModalID = "dex_create_wallet_modal"
 
 type createWalletModal struct {
 	*load.Load
+
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+
 	sourceAccountSelector *components.AccountSelector
 	modal                 *decredmaterial.Modal
 	submit                decredmaterial.Button
@@ -67,10 +72,6 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreate
 			}
 			return true
 		})
-	err := md.sourceAccountSelector.SelectFirstWalletValidAccount()
-	if err != nil {
-		md.Toast.NotifyError(err.Error())
-	}
 
 	return md
 }
@@ -88,9 +89,17 @@ func (md *createWalletModal) Dismiss() {
 }
 
 func (md *createWalletModal) OnDismiss() {
+	md.ctxCancel()
 }
 
 func (md *createWalletModal) OnResume() {
+	md.ctx, md.ctxCancel = context.WithCancel(context.TODO())
+	md.sourceAccountSelector.ListenForTxNotifications(md.ctx)
+
+	err := md.sourceAccountSelector.SelectFirstWalletValidAccount()
+	if err != nil {
+		md.Toast.NotifyError(err.Error())
+	}
 }
 
 func (md *createWalletModal) Handle() {

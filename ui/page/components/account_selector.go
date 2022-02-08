@@ -1,6 +1,7 @@
 package components
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -13,34 +14,33 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 type AccountSelector struct {
 	*load.Load
-	multiWallet *dcrlibwallet.MultiWallet
-	dialogTitle string
+
+	multiWallet     *dcrlibwallet.MultiWallet
+	selectedAccount *dcrlibwallet.Account
 
 	accountIsValid func(*dcrlibwallet.Account) bool
 	callback       func(*dcrlibwallet.Account)
 
 	openSelectorDialog *decredmaterial.Clickable
+	selectorModal      *AccountSelectorModal
 
-	wallets            []*dcrlibwallet.Wallet
-	selectedAccount    *dcrlibwallet.Account
+	dialogTitle        string
 	selectedWalletName string
 	totalBalance       string
 	changed            bool
 }
 
 func NewAccountSelector(l *load.Load) *AccountSelector {
-
 	return &AccountSelector{
 		Load:               l,
 		multiWallet:        l.WL.MultiWallet,
 		accountIsValid:     func(*dcrlibwallet.Account) bool { return true },
 		openSelectorDialog: l.Theme.NewClickable(true),
-
-		wallets: l.WL.SortedWalletList(),
 	}
 }
 
@@ -67,7 +67,7 @@ func (as *AccountSelector) Changed() bool {
 
 func (as *AccountSelector) Handle() {
 	for as.openSelectorDialog.Clicked() {
-		newAccountSelectorModal(as.Load, as.selectedAccount, as.wallets).
+		as.selectorModal = newAccountSelectorModal(as.Load, as.selectedAccount).
 			title(as.dialogTitle).
 			accountValidator(as.accountIsValid).
 			accountSelected(func(account *dcrlibwallet.Account) {
@@ -76,17 +76,22 @@ func (as *AccountSelector) Handle() {
 				}
 				as.SetSelectedAccount(account)
 				as.callback(account)
-			}).Show()
+			}).
+			onModalExit(func() {
+				as.selectorModal = nil
+			})
+		as.ShowModal(as.selectorModal)
 	}
 }
 
 func (as *AccountSelector) SelectFirstWalletValidAccount() error {
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
+		as.UpdateSelectedAccountBalance()
 		// no need to select account
 		return nil
 	}
 
-	for _, wal := range as.wallets {
+	for _, wal := range as.WL.SortedWalletList() {
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
 			return err
@@ -111,6 +116,14 @@ func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
 	as.selectedAccount = account
 	as.selectedWalletName = wal.Name
 	as.totalBalance = dcrutil.Amount(account.TotalBalance).String()
+}
+
+func (as *AccountSelector) UpdateSelectedAccountBalance() {
+	wal := as.multiWallet.WalletWithID(as.SelectedAccount().WalletID)
+	bal, err := wal.GetAccountBalance(as.SelectedAccount().Number)
+	if err == nil {
+		as.totalBalance = dcrutil.Amount(bal.Total).String()
+	}
 }
 
 func (as *AccountSelector) SelectedAccount() *dcrlibwallet.Account {
@@ -186,16 +199,48 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
+func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-as.Receiver.NotificationsUpdate:
+			case <-ctx.Done():
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.NewTransaction:
+				// refresh accounts list when new transaction is received
+				as.UpdateSelectedAccountBalance()
+				if as.selectorModal != nil {
+					as.selectorModal.setupWalletAccounts()
+				}
+				as.RefreshWindow()
+			case wallet.SyncStatusUpdate:
+				// refresh wallet account and balance on every new block
+				// only if sync is completed.
+				if n.Stage == wallet.BlockAttached && as.WL.MultiWallet.IsSynced() {
+					as.UpdateSelectedAccountBalance()
+					if as.selectorModal != nil {
+						as.selectorModal.setupWalletAccounts()
+					}
+					as.RefreshWindow()
+				}
+			}
+		}
+	}()
+}
+
 const ModalAccountSelector = "AccountSelectorModal"
 
 type AccountSelectorModal struct {
 	*load.Load
-	dialogTitle string
-
-	isCancelable bool
 
 	accountIsValid func(*dcrlibwallet.Account) bool
 	callback       func(*dcrlibwallet.Account)
+	onExit         func()
 
 	modal            decredmaterial.Modal
 	walletInfoButton decredmaterial.IconButton
@@ -203,10 +248,12 @@ type AccountSelectorModal struct {
 	accountsList     layout.List
 
 	currentSelectedAccount *dcrlibwallet.Account
-	wallets                []*dcrlibwallet.Wallet // TODO sort array instead
-	filteredWallets        []*dcrlibwallet.Wallet
 	accounts               map[int][]*selectorAccount // key = wallet id
 	eventQueue             event.Queue
+
+	dialogTitle string
+
+	isCancelable bool
 }
 
 type selectorAccount struct {
@@ -214,7 +261,7 @@ type selectorAccount struct {
 	clickable *decredmaterial.Clickable
 }
 
-func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Account, wallets []*dcrlibwallet.Wallet) *AccountSelectorModal {
+func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Account) *AccountSelectorModal {
 	asm := &AccountSelectorModal{
 		Load:         l,
 		modal:        *l.Theme.ModalFloatTitle(),
@@ -222,29 +269,28 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 		accountsList: layout.List{Axis: layout.Vertical},
 
 		currentSelectedAccount: currentSelectedAccount,
-		wallets:                wallets,
 		isCancelable:           true,
 	}
 
-	asm.modal.ShowScrollbar(true)
 	asm.walletInfoButton = l.Theme.IconButton(asm.Icons.ActionInfo)
 	asm.walletInfoButton.Size = values.MarginPadding15
 	asm.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
+	asm.modal.ShowScrollbar(true)
 	return asm
 }
 
 func (asm *AccountSelectorModal) OnResume() {
-	wallets := make([]*dcrlibwallet.Wallet, 0)
-	walletAccounts := make(map[int][]*selectorAccount)
+	asm.setupWalletAccounts()
+}
 
-	// TODO use a sorted wallet list
-	for _, wal := range asm.wallets {
-		// filter all accounts
+func (asm *AccountSelectorModal) setupWalletAccounts() {
+	walletAccounts := make(map[int][]*selectorAccount)
+	for _, wal := range asm.WL.SortedWalletList() {
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
 			fmt.Println("Error getting accounts:", err)
-			return
+			continue
 		}
 
 		accounts := accountsResult.Acc
@@ -257,14 +303,7 @@ func (asm *AccountSelectorModal) OnResume() {
 				})
 			}
 		}
-
-		// add wallet only if it has valid accounts
-		if len(walletAccounts[wal.ID]) > 0 {
-			wallets = append(wallets, wal)
-		}
 	}
-
-	asm.filteredWallets = wallets
 	asm.accounts = walletAccounts
 }
 
@@ -291,6 +330,7 @@ func (asm *AccountSelectorModal) Handle() {
 			for _, account := range accounts {
 				for account.clickable.Clicked() {
 					asm.callback(account.Account)
+					asm.onExit()
 					asm.Dismiss()
 				}
 			}
@@ -298,6 +338,7 @@ func (asm *AccountSelectorModal) Handle() {
 	}
 
 	if asm.modal.BackdropClicked(asm.isCancelable) {
+		asm.onExit()
 		asm.Dismiss()
 	}
 }
@@ -315,10 +356,6 @@ func (asm *AccountSelectorModal) accountValidator(accountIsValid func(*dcrlibwal
 func (asm *AccountSelectorModal) accountSelected(callback func(*dcrlibwallet.Account)) *AccountSelectorModal {
 	asm.callback = callback
 	return asm
-}
-
-func (asm *AccountSelectorModal) OnDismiss() {
-
 }
 
 func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
@@ -368,8 +405,9 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 		func(gtx C) D {
 			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					return asm.walletsList.Layout(gtx, len(asm.filteredWallets), func(gtx C, windex int) D {
-						wal := asm.filteredWallets[windex]
+					wallets := asm.WL.SortedWalletList()
+					return asm.walletsList.Layout(gtx, len(wallets), func(gtx C, windex int) D {
+						wal := wallets[windex]
 						return wallAcctGroup(gtx, wal.Name, func(gtx C) D {
 							accounts := asm.accounts[wal.ID]
 							return asm.accountsList.Layout(gtx, len(accounts), func(gtx C, aindex int) D {
@@ -492,3 +530,10 @@ func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dime
 		})
 	})
 }
+
+func (asm *AccountSelectorModal) onModalExit(exit func()) *AccountSelectorModal {
+	asm.onExit = exit
+	return asm
+}
+
+func (asm *AccountSelectorModal) OnDismiss() {}
