@@ -91,10 +91,12 @@ func (md *createWalletModal) Dismiss() {
 
 func (md *createWalletModal) OnDismiss() {
 	md.ctxCancel()
+	md.sourceAccountSelector.UnsubscribeTxNotifications()
 }
 
 func (md *createWalletModal) OnResume() {
 	md.ctx, md.ctxCancel = context.WithCancel(context.TODO())
+	md.sourceAccountSelector.SubscribeTxNotifications()
 	md.sourceAccountSelector.ListenForTxNotifications(md.ctx)
 
 	err := md.sourceAccountSelector.SelectFirstWalletValidAccount()

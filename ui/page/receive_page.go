@@ -135,6 +135,7 @@ func (pg *ReceivePage) ID() string {
 // Part of the load.Page interface.
 func (pg *ReceivePage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.selector.SubscribeTxNotifications()
 	pg.selector.ListenForTxNotifications(pg.ctx)
 	pg.selector.SelectFirstWalletValidAccount() // Want to reset the user's selection everytime this page appears?
 	// might be better to track the last selection in a variable and reselect it.
@@ -413,4 +414,5 @@ func (pg *ReceivePage) handleCopyEvent(gtx layout.Context) {
 // Part of the load.Page interface.
 func (pg *ReceivePage) OnNavigatedFrom() {
 	pg.ctxCancel()
+	pg.selector.UnsubscribeTxNotifications()
 }

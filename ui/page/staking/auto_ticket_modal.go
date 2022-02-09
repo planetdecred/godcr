@@ -68,6 +68,7 @@ func (tb *ticketBuyerModal) OnCancel(cancel func()) *ticketBuyerModal {
 func (tb *ticketBuyerModal) OnResume() {
 	tb.initializeAccountSelector()
 	tb.ctx, tb.ctxCancel = context.WithCancel(context.TODO())
+	tb.accountSelector.SubscribeTxNotifications()
 	tb.accountSelector.ListenForTxNotifications(tb.ctx)
 
 	if len(tb.WL.MultiWallet.KnownVSPs()) == 0 {
@@ -192,7 +193,9 @@ func (tb *ticketBuyerModal) initializeAccountSelector() {
 		})
 }
 
-func (tb *ticketBuyerModal) OnDismiss() {}
+func (tb *ticketBuyerModal) OnDismiss() {
+	tb.accountSelector.UnsubscribeTxNotifications()
+}
 
 func (tb *ticketBuyerModal) Handle() {
 	tb.saveSettingsBtn.SetEnabled(tb.canSave())

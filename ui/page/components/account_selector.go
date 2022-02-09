@@ -11,14 +11,17 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
+
+const AccoutSelectorID = "AccountSelector"
 
 type AccountSelector struct {
 	*load.Load
+	*listeners.TxAndBlockNotificationListener
 
 	multiWallet     *dcrlibwallet.MultiWallet
 	selectedAccount *dcrlibwallet.Account
@@ -33,14 +36,16 @@ type AccountSelector struct {
 	selectedWalletName string
 	totalBalance       string
 	changed            bool
+	subbedTxNotif      bool
 }
 
 func NewAccountSelector(l *load.Load) *AccountSelector {
 	return &AccountSelector{
-		Load:               l,
-		multiWallet:        l.WL.MultiWallet,
-		accountIsValid:     func(*dcrlibwallet.Account) bool { return true },
-		openSelectorDialog: l.Theme.NewClickable(true),
+		Load:                           l,
+		multiWallet:                    l.WL.MultiWallet,
+		accountIsValid:                 func(*dcrlibwallet.Account) bool { return true },
+		openSelectorDialog:             l.Theme.NewClickable(true),
+		TxAndBlockNotificationListener: listeners.NewTxAndBlockNotificationListener(make(chan listeners.TxNotification, 4)),
 	}
 }
 
@@ -200,37 +205,57 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
+	// Complain if it try to listen for TX Notifications
+	// When not subscribed.
+	if !as.subbedTxNotif {
+		log.Warn("Account Selector not subscribed for Tx notifications but listening")
+	}
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-as.Receiver.NotificationsUpdate:
-			case <-ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				// refresh accounts list when new transaction is received
-				as.UpdateSelectedAccountBalance()
-				if as.selectorModal != nil {
-					as.selectorModal.setupWalletAccounts()
-				}
-				as.RefreshWindow()
-			case wallet.SyncStatusUpdate:
-				// refresh wallet account and balance on every new block
-				// only if sync is completed.
-				if n.Stage == wallet.BlockAttached && as.WL.MultiWallet.IsSynced() {
+			case n := <-as.TxAndBlockNotifChan:
+				switch n.NotificationType {
+				case listeners.BlkAttached:
+					// refresh wallet account and balance on every new block
+					// only if sync is completed.
+					if as.WL.MultiWallet.IsSynced() {
+						as.UpdateSelectedAccountBalance()
+						if as.selectorModal != nil {
+							as.selectorModal.setupWalletAccounts()
+						}
+						as.RefreshWindow()
+					}
+				case listeners.NewTx:
+					// refresh accounts list when new transaction is received
 					as.UpdateSelectedAccountBalance()
 					if as.selectorModal != nil {
 						as.selectorModal.setupWalletAccounts()
 					}
 					as.RefreshWindow()
 				}
+			case <-ctx.Done():
+				return
 			}
 		}
 	}()
+}
+
+// SubscribeTxNotifications registers AccountSelector for tx and
+// Notifications from dcrlibwallet.
+func (as *AccountSelector) SubscribeTxNotifications() {
+	log.Info("Account selector subbed")
+	as.WL.MultiWallet.AddTxAndBlockNotificationListener(as.TxAndBlockNotificationListener, true, AccoutSelectorID)
+	as.subbedTxNotif = true
+}
+
+// UnsubscribeTxNotifications removes AccountSelector from tx and
+// Notifications from dcrlibwallet.
+func (as *AccountSelector) UnsubscribeTxNotifications() {
+	log.Info("Account selector unsubscribed!!!")
+	as.WL.MultiWallet.RemoveTxAndBlockNotificationListener(AccoutSelectorID)
+	// Close notification channel.
+	close(as.TxAndBlockNotifChan)
+	as.subbedTxNotif = false
 }
 
 const ModalAccountSelector = "AccountSelectorModal"

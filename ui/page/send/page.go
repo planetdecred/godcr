@@ -157,6 +157,7 @@ func (pg *Page) ID() string {
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.sourceAccountSelector.SubscribeTxNotifications()
 	pg.sourceAccountSelector.ListenForTxNotifications(pg.ctx)
 
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
@@ -492,4 +493,5 @@ func (pg *Page) HandleUserInteractions() {
 func (pg *Page) OnNavigatedFrom() {
 	pg.Load.UnsubscribeKeyEvent(pg.ID())
 	pg.ctxCancel()
+	pg.sourceAccountSelector.UnsubscribeTxNotifications()
 }

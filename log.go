@@ -16,6 +16,7 @@ import (
 	"github.com/planetdecred/godcr/ui"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -54,6 +55,7 @@ var (
 	dlwlLog    = backendLog.Logger("DLWL")
 	pageLog    = backendLog.Logger("PAGE")
 	lstnersLog = backendLog.Logger("LSTNER")
+	cmpntLog   = backendLog.Logger("CMPNT")
 )
 
 // Initialize package-global logger variables.
@@ -64,6 +66,7 @@ func init() {
 	page.UseLogger(pageLog)
 	load.UseLogger(log)
 	listeners.UseLogger(lstnersLog)
+	components.UseLogger(cmpntLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -74,6 +77,7 @@ var subsystemLoggers = map[string]slog.Logger{
 	"GDCR":   log,
 	"PAGE":   pageLog,
 	"LSTNER": lstnersLog,
+	"CMPNT":  cmpntLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and
