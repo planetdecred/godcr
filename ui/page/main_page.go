@@ -97,8 +97,8 @@ func NewMainPage(l *load.Load) *MainPage {
 	l.ChangeFragment = mp.changeFragment
 	l.PopFragment = mp.popFragment
 	l.PopToFragment = mp.popToFragment
-	l.DesktopNotifier = mp.desktopNotifier
-	l.UpdateBalance = mp.UpdateBalance
+	l.DesktopNotifier = mp.desktopNotifier // Assign to load for use by other widgets to post desktop notifications.
+	l.UpdateBalance = mp.UpdateBalance     // Assign to load for use by other widgets to update the shown total balance.
 
 	mp.initNavItems()
 
@@ -726,6 +726,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 	)
 }
 
+// desktopNotifier posts desktop notifications.
 func (mp *MainPage) desktopNotifier(notifier interface{}) {
 	proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
 	var notification string

@@ -5,6 +5,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
+// BlocksRescanProgressListener satisfies dcrlibwallet BlocksRescanProgressListener interface contract.
 type BlocksRescanProgressListener struct {
 	BlockRescanChan chan wallet.RescanUpdate
 }
@@ -15,6 +16,7 @@ func NewBlocksRescanProgressListener(blockRescanCh chan wallet.RescanUpdate) *Bl
 	}
 }
 
+// OnBlocksRescanStarted is a callback func called when block rescan is started.
 func (br *BlocksRescanProgressListener) OnBlocksRescanStarted(walletID int) {
 	br.UpdateNotification(wallet.RescanUpdate{
 		Stage:    wallet.RescanStarted,
@@ -22,6 +24,7 @@ func (br *BlocksRescanProgressListener) OnBlocksRescanStarted(walletID int) {
 	})
 }
 
+// OnBlocksRescanProgress is a callback func for block rescan progress report.
 func (br *BlocksRescanProgressListener) OnBlocksRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
 	br.UpdateNotification(wallet.RescanUpdate{
 		Stage:          wallet.RescanProgress,
@@ -30,6 +33,7 @@ func (br *BlocksRescanProgressListener) OnBlocksRescanProgress(progress *dcrlibw
 	})
 }
 
+// OnBlocksRescanEnded is a callback func to notify the end of block rescan.
 func (br *BlocksRescanProgressListener) OnBlocksRescanEnded(walletID int, err error) {
 	br.UpdateNotification(wallet.RescanUpdate{
 		Stage:    wallet.RescanEnded,

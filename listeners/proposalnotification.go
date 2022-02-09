@@ -5,6 +5,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
+// ProposalNotificationListener satisfies dcrlibwallet ProposalNotificationListener interface contract.
 type ProposalNotificationListener struct {
 	ProposalNotifChan chan wallet.Proposal
 }
