@@ -1,7 +1,6 @@
 package governance
 
 import (
-	"context"
 	"fmt"
 
 	"gioui.org/font/gofont"
@@ -19,8 +18,7 @@ import (
 
 type agendaVoteModal struct {
 	*load.Load
-	modal          decredmaterial.Modal
-	voteSuccessful func()
+	modal decredmaterial.Modal
 
 	LiveTickets []*dcrlibwallet.Transaction
 

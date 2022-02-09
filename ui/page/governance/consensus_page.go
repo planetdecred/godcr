@@ -5,9 +5,11 @@ import (
 	"image"
 	"time"
 
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -106,10 +108,11 @@ func (pg *ConsensusPage) FetchAgendas() {
 	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 	consensusItems := components.LoadAgendas(pg.Load, selectedWallet, newestFirst)
 
-	listItems := make([]*components.ConsensusItem, 0)
-	for _, item := range consensusItems {
-		listItems = append(listItems, item)
-	}
+	pg.consensusItems = consensusItems
+	time.AfterFunc(time.Second*1, func() {
+		pg.isSyncing = false
+		pg.syncCompleted = true
+	})
 
 	pg.RefreshWindow()
 }
@@ -249,6 +252,18 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 									Top:    values.MarginPadding2,
 									Bottom: values.MarginPadding2,
 								}.Layout(gtx, pg.searchEditor.Layout)
+							})
+						}),
+						layout.Expanded(func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return layout.E.Layout(gtx, func(gtx C) D {
+								card := pg.Theme.Card()
+								card.Radius = decredmaterial.Radius(8)
+								return card.Layout(gtx, func(gtx C) D {
+									return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
+										return pg.layoutSyncSection(gtx)
+									})
+								})
 							})
 						}),
 						layout.Expanded(func(gtx C) D {

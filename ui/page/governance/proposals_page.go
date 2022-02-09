@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gioui.org/layout"
-	// "gioui.org/text"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
