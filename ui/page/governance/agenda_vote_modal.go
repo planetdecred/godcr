@@ -1,9 +1,7 @@
 package governance
 
 import (
-	"context"
 	"fmt"
-	"sync"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -14,18 +12,14 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
-	// "github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 type agendaVoteModal struct {
 	*load.Load
-	modal          decredmaterial.Modal
-	voteSuccessful func()
+	modal decredmaterial.Modal
 
-	detailsMu     sync.Mutex
-	detailsCancel context.CancelFunc
-	LiveTickets   []*dcrlibwallet.Transaction
+	LiveTickets []*dcrlibwallet.Transaction
 
 	agenda               *dcrlibwallet.Agenda
 	vspIsFetched         bool
@@ -52,11 +46,10 @@ type agendaVoteModal struct {
 
 func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage *ConsensusPage) *agendaVoteModal {
 	avm := &agendaVoteModal{
-		Load:          l,
-		modal:         *l.Theme.ModalFloatTitle(),
-		agenda:        agenda,
-		consensusPage: consensusPage,
-		// voteSuccessful: onVoteSuccessful,
+		Load:              l,
+		modal:             *l.Theme.ModalFloatTitle(),
+		agenda:            agenda,
+		consensusPage:     consensusPage,
 		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
 		optionsRadioGroup: new(widget.Enum),
 		spendingPassword:  l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
@@ -71,13 +64,7 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 		Title("Voting wallet").
 		WalletSelected(func(w *dcrlibwallet.Wallet) {
 			avm.loadCount = 0
-			avm.detailsMu.Lock()
-			// cancel current loading thread if any.
-			if avm.detailsCancel != nil {
-				avm.detailsCancel()
-			}
 
-			avm.detailsMu.Unlock()
 			avm.FetchLiveTickets(w.ID)
 			avm.RefreshWindow()
 			avm.loadCount++
@@ -258,8 +245,6 @@ func (avm *agendaVoteModal) Handle() {
 // - Layout
 
 func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
-	avm.detailsMu.Lock()
-	avm.detailsMu.Unlock()
 	w := []layout.Widget{
 		func(gtx C) D {
 			t := avm.Theme.H6("Change Vote")

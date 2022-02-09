@@ -274,7 +274,7 @@ func (tp *stakingModal) canPurchase() bool {
 		return false
 	}
 
-	if tp.vspSelector.SelectedVSP == nil {
+	if tp.vspSelector.SelectedVSP() == nil {
 		return false
 	}
 

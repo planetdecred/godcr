@@ -11,12 +11,12 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-func (pg *GovernancePage) initializeWidget() {
+func (pg *Page) initializeWidget() {
 	_, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.enableGovernanceBtn = pg.Theme.Button("Fetch proposals")
 }
 
-func (pg *GovernancePage) splashScreenLayout(gtx layout.Context) layout.Dimensions {
+func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 	return decredmaterial.LinearLayout{
 		Orientation: layout.Vertical,
 		Width:       decredmaterial.MatchParent,
@@ -71,7 +71,7 @@ func (pg *GovernancePage) splashScreenLayout(gtx layout.Context) layout.Dimensio
 	)
 }
 
-func (pg *GovernancePage) showInfoModal() {
+func (pg *Page) showInfoModal() {
 	info := modal.NewInfoModal(pg.Load).
 		Title("Governance").
 		Body("Proposals and politeia notifications can be enabled or disabled from the settings page.").

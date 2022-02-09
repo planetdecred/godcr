@@ -21,7 +21,7 @@ import (
 
 const GovernancePageID = "Governance"
 
-type GovernancePage struct {
+type Page struct {
 	*load.Load
 
 	ctx       context.Context // page context
@@ -49,8 +49,8 @@ var (
 	governanceTabTitles = []string{"Proposals", "Consensus Changes"}
 )
 
-func NewGovernancePage(l *load.Load) *GovernancePage {
-	pg := &GovernancePage{
+func NewGovernancePage(l *load.Load) *Page {
+	pg := &Page{
 		Load:                  l,
 		multiWallet:           l.WL.MultiWallet,
 		selectedCategoryIndex: -1,
@@ -73,7 +73,7 @@ func NewGovernancePage(l *load.Load) *GovernancePage {
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *GovernancePage) OnNavigatedTo() {
+func (pg *Page) OnNavigatedTo() {
 	selectedCategory := pg.selectedCategoryIndex
 
 	if selectedCategory == -1 {
@@ -92,7 +92,7 @@ func (pg *GovernancePage) OnNavigatedTo() {
 	/** begin consensus page OnNavigatedTo method */
 
 	pg.consensusPage.FetchAgendas()
-	// go pg.WL.GetVSPList()
+	pg.consensusPage.isSyncing = true
 
 	/** end consensus page OnNavigatedTo method */
 }
@@ -104,10 +104,10 @@ func (pg *GovernancePage) OnNavigatedTo() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *GovernancePage) OnNavigatedFrom() {
+func (pg *Page) OnNavigatedFrom() {
 }
 
-func (pg *GovernancePage) initTabWidgets() {
+func (pg *Page) initTabWidgets() {
 	pg.tabCategoryList = pg.Theme.NewClickableList(layout.Horizontal)
 	pg.itemCard = pg.Theme.Card()
 
@@ -117,11 +117,11 @@ func (pg *GovernancePage) initTabWidgets() {
 	pg.tabCard.Radius = radius
 }
 
-func (pg *GovernancePage) ID() string {
+func (pg *Page) ID() string {
 	return GovernancePageID
 }
 
-func (pg *GovernancePage) HandleUserInteractions() {
+func (pg *Page) HandleUserInteractions() {
 	for pg.enableGovernanceBtn.Clicked() {
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.proposalsPage.isSyncing = pg.proposalsPage.multiWallet.Politeia.IsSyncing()
@@ -196,13 +196,12 @@ func (pg *GovernancePage) HandleUserInteractions() {
 	}
 
 	for pg.consensusPage.syncButton.Clicked() {
+		go pg.consensusPage.FetchAgendas()
 		pg.consensusPage.isSyncing = true
-
-		//Todo: check after 1min if sync does not start, set isSyncing to false and cancel sync
 	}
 
 	if pg.consensusPage.syncCompleted {
-		time.AfterFunc(time.Second*3, func() {
+		time.AfterFunc(time.Second*1, func() {
 			pg.consensusPage.syncCompleted = false
 			pg.RefreshWindow()
 		})
@@ -212,7 +211,7 @@ func (pg *GovernancePage) HandleUserInteractions() {
 
 }
 
-func (pg *GovernancePage) Layout(gtx C) D {
+func (pg *Page) Layout(gtx C) D {
 	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 		return components.UniformPadding(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -261,7 +260,7 @@ func (pg *GovernancePage) Layout(gtx C) D {
 	return components.UniformPadding(gtx, pg.splashScreenLayout)
 }
 
-func (pg *GovernancePage) switchTab(gtx C, selectedCategoryIndex int) D {
+func (pg *Page) switchTab(gtx C, selectedCategoryIndex int) D {
 	if selectedCategoryIndex == 0 {
 		return pg.proposalsPage.Layout(gtx)
 	}
@@ -269,7 +268,7 @@ func (pg *GovernancePage) switchTab(gtx C, selectedCategoryIndex int) D {
 	return pg.consensusPage.Layout(gtx)
 }
 
-func (pg *GovernancePage) layoutTabs(gtx C) D {
+func (pg *Page) layoutTabs(gtx C) D {
 	width := float32(gtx.Constraints.Max.X-20) / float32(8)
 	selectedCategory := pg.selectedCategoryIndex
 
