@@ -19,13 +19,16 @@ func NewTxAndBlockNotification(txAndBlockNotif chan TxNotification) *TxAndBlockN
 func (txAndBlk *TxAndBlockNotification) OnTransaction(transaction string) {
 	var tx dcrlibwallet.Transaction
 	err := json.Unmarshal([]byte(transaction), &tx)
-	if err == nil {
-		update := TxNotification{
-			NotificationType: NewTx,
-			Transaction:      &tx,
-		}
-		txAndBlk.UpdateNotification(update)
+	if err != nil {
+		log.Errorf("Error unmarshalling transaction %v", err)
+		return
 	}
+
+	update := TxNotification{
+		NotificationType: NewTx,
+		Transaction:      &tx,
+	}
+	txAndBlk.UpdateNotification(update)
 }
 
 func (txAndBlk *TxAndBlockNotification) OnBlockAttached(walletID int, blockHeight int32) {
