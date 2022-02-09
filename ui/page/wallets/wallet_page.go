@@ -88,9 +88,6 @@ type WalletPage struct {
 	backupAcctIcon           *decredmaterial.Icon
 
 	listLock sync.Mutex
-
-	ctx       context.Context
-	ctxCancel context.CancelFunc
 }
 
 func NewWalletPage(l *load.Load) *WalletPage {
