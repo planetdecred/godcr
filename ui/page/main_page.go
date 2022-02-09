@@ -555,7 +555,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	mp.UpdateBalance()
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" {
+			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" && len(mp.totalBalanceUSD) > 0 {
 				inset := layout.Inset{
 					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
