@@ -23,7 +23,7 @@ type (
 
 type TransactionsPage struct {
 	*load.Load
-	*listeners.TxAndBlockNotification
+	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 	separator decredmaterial.Line
@@ -90,12 +90,12 @@ func (pg *TransactionsPage) ID() string {
 func (pg *TransactionsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	if pg.TxAndBlockNotification == nil {
-		pg.TxAndBlockNotification = listeners.NewTxAndBlockNotification(make(chan listeners.TxNotification, 4))
+	if pg.TxAndBlockNotificationListener == nil {
+		pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener(make(chan listeners.TxNotification, 4))
 	} else {
 		pg.TxAndBlockNotifChan = make(chan listeners.TxNotification, 4)
 	}
-	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotification, true, TransactionsPageID)
+	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, TransactionsPageID)
 
 	pg.listenForTxNotifications()
 	pg.loadTransactions()

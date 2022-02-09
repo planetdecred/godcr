@@ -6,21 +6,21 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 )
 
-type TxAndBlockNotification struct {
+type TxAndBlockNotificationListener struct {
 	TxAndBlockNotifChan chan TxNotification
 }
 
-func NewTxAndBlockNotification(txAndBlockNotif chan TxNotification) *TxAndBlockNotification {
-	return &TxAndBlockNotification{
+func NewTxAndBlockNotificationListener(txAndBlockNotif chan TxNotification) *TxAndBlockNotificationListener {
+	return &TxAndBlockNotificationListener{
 		TxAndBlockNotifChan: txAndBlockNotif,
 	}
 }
 
-func (txAndBlk *TxAndBlockNotification) OnTransaction(transaction string) {
+func (txAndBlk *TxAndBlockNotificationListener) OnTransaction(transaction string) {
 	var tx dcrlibwallet.Transaction
 	err := json.Unmarshal([]byte(transaction), &tx)
 	if err != nil {
-		log.Errorf("Error unmarshalling transaction %v", err)
+		log.Errorf("Error unmarshalling transaction: %v", err)
 		return
 	}
 
@@ -31,7 +31,7 @@ func (txAndBlk *TxAndBlockNotification) OnTransaction(transaction string) {
 	txAndBlk.UpdateNotification(update)
 }
 
-func (txAndBlk *TxAndBlockNotification) OnBlockAttached(walletID int, blockHeight int32) {
+func (txAndBlk *TxAndBlockNotificationListener) OnBlockAttached(walletID int, blockHeight int32) {
 	txAndBlk.UpdateNotification(TxNotification{
 		NotificationType: BlkAttached,
 		WalletID:         walletID,
@@ -39,7 +39,7 @@ func (txAndBlk *TxAndBlockNotification) OnBlockAttached(walletID int, blockHeigh
 	})
 }
 
-func (txAndBlk *TxAndBlockNotification) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
+func (txAndBlk *TxAndBlockNotificationListener) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
 	txAndBlk.UpdateNotification(TxNotification{
 		NotificationType: TxConfirmed,
 		WalletID:         walletID,
@@ -48,6 +48,6 @@ func (txAndBlk *TxAndBlockNotification) OnTransactionConfirmed(walletID int, has
 	})
 }
 
-func (txAndBlk *TxAndBlockNotification) UpdateNotification(signal TxNotification) {
+func (txAndBlk *TxAndBlockNotificationListener) UpdateNotification(signal TxNotification) {
 	txAndBlk.TxAndBlockNotifChan <- signal
 }

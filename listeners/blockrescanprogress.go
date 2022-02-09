@@ -5,24 +5,24 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-type BlockRescanUpdate struct {
+type BlocksRescanProgressListener struct {
 	BlockRescanChan chan wallet.RescanUpdate
 }
 
-func NewBlockRescanUpdate(blockRescanCh chan wallet.RescanUpdate) *BlockRescanUpdate {
-	return &BlockRescanUpdate{
+func NewBlocksRescanProgressListener(blockRescanCh chan wallet.RescanUpdate) *BlocksRescanProgressListener {
+	return &BlocksRescanProgressListener{
 		BlockRescanChan: blockRescanCh,
 	}
 }
 
-func (br *BlockRescanUpdate) OnBlocksRescanStarted(walletID int) {
+func (br *BlocksRescanProgressListener) OnBlocksRescanStarted(walletID int) {
 	br.UpdateNotification(wallet.RescanUpdate{
 		Stage:    wallet.RescanStarted,
 		WalletID: walletID,
 	})
 }
 
-func (br *BlockRescanUpdate) OnBlocksRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
+func (br *BlocksRescanProgressListener) OnBlocksRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
 	br.UpdateNotification(wallet.RescanUpdate{
 		Stage:          wallet.RescanProgress,
 		WalletID:       progress.WalletID,
@@ -30,13 +30,13 @@ func (br *BlockRescanUpdate) OnBlocksRescanProgress(progress *dcrlibwallet.Heade
 	})
 }
 
-func (br *BlockRescanUpdate) OnBlocksRescanEnded(walletID int, err error) {
+func (br *BlocksRescanProgressListener) OnBlocksRescanEnded(walletID int, err error) {
 	br.UpdateNotification(wallet.RescanUpdate{
 		Stage:    wallet.RescanEnded,
 		WalletID: walletID,
 	})
 }
 
-func (br *BlockRescanUpdate) UpdateNotification(signal wallet.RescanUpdate) {
+func (br *BlocksRescanProgressListener) UpdateNotification(signal wallet.RescanUpdate) {
 	br.BlockRescanChan <- signal
 }

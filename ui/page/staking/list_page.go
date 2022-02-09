@@ -33,7 +33,7 @@ const (
 
 type ListPage struct {
 	*load.Load
-	*listeners.TxAndBlockNotification
+	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -87,12 +87,12 @@ func (pg *ListPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *ListPage) OnNavigatedTo() {
-	if pg.TxAndBlockNotification == nil {
-		pg.TxAndBlockNotification = listeners.NewTxAndBlockNotification(make(chan listeners.TxNotification, 4))
+	if pg.TxAndBlockNotificationListener == nil {
+		pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener(make(chan listeners.TxNotification, 4))
 	} else {
 		pg.TxAndBlockNotifChan = make(chan listeners.TxNotification, 4)
 	}
-	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotification, true, listPageID)
+	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, listPageID)
 
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForTxNotifications()

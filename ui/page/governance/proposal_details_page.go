@@ -30,7 +30,7 @@ type proposalItemWidgets struct {
 
 type ProposalDetails struct {
 	*load.Load
-	*listeners.PoliteiaNotification
+	*listeners.ProposalNotificationListener
 	ctx                context.Context // page context
 	ctxCancel          context.CancelFunc
 	voteBar            *components.VoteBar
@@ -100,12 +100,12 @@ func (pg *ProposalDetails) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
 
-	if pg.PoliteiaNotification == nil {
-		pg.PoliteiaNotification = listeners.NewPoliteiaNotification(make(chan wallet.Proposal, 4))
+	if pg.ProposalNotificationListener == nil {
+		pg.ProposalNotificationListener = listeners.NewProposalNotificationListener(make(chan wallet.Proposal, 4))
 	} else {
-		pg.PoliteiaNotifChan = make(chan wallet.Proposal, 4)
+		pg.ProposalNotifChan = make(chan wallet.Proposal, 4)
 	}
-	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.PoliteiaNotification, ProposalDetailsPageID)
+	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalDetailsPageID)
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -141,7 +141,7 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 	go func() {
 		for {
 			select {
-			case notification := <-pg.PoliteiaNotifChan:
+			case notification := <-pg.ProposalNotifChan:
 				switch notification.ProposalStatus {
 				case wallet.Synced:
 					proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
@@ -170,7 +170,7 @@ func (pg *ProposalDetails) OnNavigatedFrom() {
 	pg.ctxCancel()
 
 	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
-	close(pg.PoliteiaNotifChan)
+	close(pg.ProposalNotifChan)
 }
 
 // - Layout

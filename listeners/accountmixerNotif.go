@@ -4,30 +4,30 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-type AccountMixerNotif struct {
+type AccountMixerNotificationListener struct {
 	MixerChan chan wallet.AccountMixer
 }
 
-func NewAccountMixerNotif(mixerCh chan wallet.AccountMixer) *AccountMixerNotif {
-	return &AccountMixerNotif{
+func NewAccountMixerNotificationListener(mixerCh chan wallet.AccountMixer) *AccountMixerNotificationListener {
+	return &AccountMixerNotificationListener{
 		MixerChan: mixerCh,
 	}
 }
 
-func (am *AccountMixerNotif) OnAccountMixerStarted(walletID int) {
+func (am *AccountMixerNotificationListener) OnAccountMixerStarted(walletID int) {
 	am.UpdateNotification(wallet.AccountMixer{
 		WalletID:  walletID,
 		RunStatus: wallet.MixerStarted,
 	})
 }
 
-func (am *AccountMixerNotif) OnAccountMixerEnded(walletID int) {
+func (am *AccountMixerNotificationListener) OnAccountMixerEnded(walletID int) {
 	am.UpdateNotification(wallet.AccountMixer{
 		WalletID:  walletID,
 		RunStatus: wallet.MixerEnded,
 	})
 }
 
-func (am *AccountMixerNotif) UpdateNotification(signal wallet.AccountMixer) {
+func (am *AccountMixerNotificationListener) UpdateNotification(signal wallet.AccountMixer) {
 	am.MixerChan <- signal
 }

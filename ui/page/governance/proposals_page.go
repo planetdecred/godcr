@@ -29,7 +29,7 @@ type (
 type ProposalsPage struct {
 	*load.Load
 
-	*listeners.PoliteiaNotification
+	*listeners.ProposalNotificationListener
 	ctx        context.Context // page context
 	ctxCancel  context.CancelFunc
 	proposalMu sync.Mutex
@@ -109,12 +109,12 @@ func (pg *ProposalsPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedTo() {
-	if pg.PoliteiaNotification == nil {
-		pg.PoliteiaNotification = listeners.NewPoliteiaNotification(make(chan wallet.Proposal, 4))
+	if pg.ProposalNotificationListener == nil {
+		pg.ProposalNotificationListener = listeners.NewProposalNotificationListener(make(chan wallet.Proposal, 4))
 	} else {
-		pg.PoliteiaNotifChan = make(chan wallet.Proposal, 4)
+		pg.ProposalNotifChan = make(chan wallet.Proposal, 4)
 	}
-	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.PoliteiaNotification, ProposalsPageID)
+	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalsPageID)
 
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
@@ -222,7 +222,7 @@ func (pg *ProposalsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 
 	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalsPageID)
-	close(pg.PoliteiaNotifChan)
+	close(pg.ProposalNotifChan)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -397,7 +397,7 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 	go func() {
 		for {
 			select {
-			case n := <-pg.PoliteiaNotifChan:
+			case n := <-pg.ProposalNotifChan:
 				if n.ProposalStatus == wallet.Synced {
 					pg.syncCompleted = true
 					pg.isSyncing = false

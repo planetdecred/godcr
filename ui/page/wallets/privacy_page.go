@@ -25,7 +25,7 @@ const PrivacyPageID = "Privacy"
 type PrivacyPage struct {
 	*load.Load
 
-	*listeners.AccountMixerNotif
+	*listeners.AccountMixerNotificationListener
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -81,8 +81,8 @@ func (pg *PrivacyPage) OnNavigatedTo() {
 		pg.allowUnspendUnmixedAcct.SetChecked(true)
 	}
 
-	if pg.AccountMixerNotif == nil {
-		pg.AccountMixerNotif = listeners.NewAccountMixerNotif(make(chan wallet.AccountMixer, 4))
+	if pg.AccountMixerNotificationListener == nil {
+		pg.AccountMixerNotificationListener = listeners.NewAccountMixerNotificationListener(make(chan wallet.AccountMixer, 4))
 	} else {
 		pg.MixerChan = make(chan wallet.AccountMixer, 4)
 	}
