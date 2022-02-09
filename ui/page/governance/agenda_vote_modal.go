@@ -146,14 +146,14 @@ func (avm *agendaVoteModal) FetchLiveTickets(walletID int) {
 		avm.liveTicketsIsFetched = false
 
 		wallet := avm.WL.MultiWallet.WalletWithID(walletID)
-		tickets, err := staking.WalletLiveTickets(wallet)
+		tickets, err := components.WalletLiveTickets(wallet)
 		if err != nil {
 			avm.Toast.NotifyError(err.Error())
 			return
 		}
 
 		liveTickets := make([]*dcrlibwallet.Transaction, 0)
-		txItems, err := staking.StakeToTransactionItems(avm.Load, tickets, true, func(filter int32) bool {
+		txItems, err := components.StakeToTransactionItems(avm.Load, tickets, true, func(filter int32) bool {
 			switch filter {
 			case dcrlibwallet.TxFilterUnmined:
 				fallthrough

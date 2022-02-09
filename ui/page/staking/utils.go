@@ -82,8 +82,8 @@ func WalletLiveTickets(w *dcrlibwallet.Wallet) ([]dcrlibwallet.Transaction, erro
 	return tickets, nil
 }
 
-func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimensions {
-	status := l.Theme.Label(values.MarginPadding14, strings.ToUpper(tx.status.Title))
+func ticketStatusTooltip(gtx C, l *load.Load, tx *components.TransactionItem) layout.Dimensions {
+	status := l.Theme.Label(values.MarginPadding14, strings.ToUpper(tx.Status.Title))
 	status.Font.Weight = text.Medium
 	status.Color = tx.Status.Color
 
@@ -396,7 +396,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *components.TransactionItem
 	)
 }
 
-func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showWalletName bool) layout.Dimensions {
+func ticketListLayout(gtx C, l *load.Load, ticket *components.TransactionItem, i int, showWalletName bool) layout.Dimensions {
 	wal := l.WL.MultiWallet.WalletWithID(ticket.Transaction.WalletID)
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {

@@ -112,7 +112,6 @@ func (win *Window) NewLoad() (*load.Load, error) {
 			UnspentOutputs:  win.walletUnspentOutputs,
 			BroadcastResult: win.broadcastResult,
 			Proposals:       win.proposals,
-			Agendas:         win.agendas,
 
 			SelectedProposal: win.selectedProposal,
 			TxAuthor:         win.txAuthor,

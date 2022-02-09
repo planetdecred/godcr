@@ -47,8 +47,6 @@ type stakingModal struct {
 	totalCost       int64
 	balanceLessCost int64
 	isLoading       bool
-	accountSelector *components.AccountSelector
-	vspSelector     *VSPSelector
 }
 
 func newStakingModal(l *load.Load) *stakingModal {
