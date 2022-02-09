@@ -45,7 +45,7 @@ type Page struct {
 	toTickets decredmaterial.TextAndIconButton
 
 	ticketOverview *dcrlibwallet.StakingOverview
-	liveTickets    []*transactionItem
+	liveTickets    []*components.TransactionItem
 
 	ticketPrice  string
 	totalRewards string
@@ -166,7 +166,7 @@ func (pg *Page) loadPageData() {
 			return
 		}
 
-		txItems, err := StakeToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
+		txItems, err := components.StakeToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
 			switch filter {
 			case dcrlibwallet.TxFilterUnmined:
 				fallthrough

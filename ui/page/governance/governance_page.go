@@ -92,7 +92,7 @@ func (pg *GovernancePage) OnNavigatedTo() {
 	/** begin consensus page OnNavigatedTo method */
 
 	pg.consensusPage.FetchAgendas()
-	go pg.WL.GetVSPList()
+	// go pg.WL.GetVSPList()
 
 	/** end consensus page OnNavigatedTo method */
 }

@@ -1,4 +1,4 @@
-package staking
+package components
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -44,7 +43,7 @@ func (v *VSPSelector) Changed() bool {
 	return changed
 }
 
-func (v *vspSelector) SelectVSP(vspHost string) {
+func (v *VSPSelector) SelectVSP(vspHost string) {
 	for _, vsp := range v.WL.MultiWallet.KnownVSPs() {
 		if vsp.Host == vspHost {
 			v.changed = true
@@ -54,7 +53,7 @@ func (v *vspSelector) SelectVSP(vspHost string) {
 	}
 }
 
-func (v *vspSelector) SelectedVSP() *dcrlibwallet.VSP {
+func (v *VSPSelector) SelectedVSP() *dcrlibwallet.VSP {
 	return v.selectedVSP
 }
 
@@ -63,7 +62,7 @@ func (v *VSPSelector) handle() {
 		newVSPSelectorModal(v.Load).
 			title("Voting service provider").
 			vspSelected(func(info *dcrlibwallet.VSP) {
-				v.selectVSP(info.Host)
+				v.SelectVSP(info.Host)
 			}).
 			Show()
 	}
@@ -221,7 +220,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 					txt.Color = v.Theme.Color.GrayText2
 					txtFee := v.Theme.Label(values.TextSize14, "Fee")
 					txtFee.Color = v.Theme.Color.GrayText2
-					return components.EndToEndRow(gtx, txt.Layout, txtFee.Layout)
+					return EndToEndRow(gtx, txt.Layout, txtFee.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					// if no vsp loaded, display a no vsp text
@@ -238,7 +237,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 								return layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
 									txt := v.Theme.Label(values.TextSize14, fmt.Sprintf("%v%%", vsps[i].FeePercentage))
 									txt.Color = v.Theme.Color.GrayText1
-									return components.EndToEndRow(gtx, v.Theme.Label(values.TextSize16, vsps[i].Host).Layout, txt.Layout)
+									return EndToEndRow(gtx, v.Theme.Label(values.TextSize16, vsps[i].Host).Layout, txt.Layout)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {

@@ -80,7 +80,6 @@ func (pg *ConsensusPage) ID() string {
 	return ConsensusPageID
 }
 
-
 func (pg *ConsensusPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.FetchAgendas()

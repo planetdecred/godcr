@@ -34,7 +34,7 @@ type ticketBuyerModal struct {
 	balToMaintainEditor decredmaterial.Editor
 
 	accountSelector *components.AccountSelector
-	vspSelector     *vspSelector
+	vspSelector     *components.VSPSelector
 }
 
 func newTicketBuyerModal(l *load.Load) *ticketBuyerModal {
@@ -44,7 +44,7 @@ func newTicketBuyerModal(l *load.Load) *ticketBuyerModal {
 		cancel:          l.Theme.OutlineButton("Cancel"),
 		saveSettingsBtn: l.Theme.Button("Save"),
 		modal:           *l.Theme.ModalFloatTitle(),
-		vspSelector:     newVSPSelector(l).title("Select a vsp"),
+		vspSelector:     components.NewVSPSelector(l).Title("Select a vsp"),
 	}
 
 	tb.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), "Balance to maintain (DCR)")
@@ -87,7 +87,7 @@ func (tb *ticketBuyerModal) OnResume() {
 				tb.Toast.NotifyError(err.Error())
 			}
 
-			tb.vspSelector.selectVSP(tbConfig.VspHost)
+			tb.vspSelector.SelectVSP(tbConfig.VspHost)
 			tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain), 'f', 0, 64))
 			tb.accountSelector.SetSelectedAccount(acct)
 			break
@@ -150,7 +150,7 @@ func (tb *ticketBuyerModal) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (tb *ticketBuyerModal) canSave() bool {
-	if tb.vspSelector.selectedVSP == nil {
+	if tb.vspSelector.SelectedVSP() == nil {
 		return false
 	}
 
@@ -203,7 +203,7 @@ func (tb *ticketBuyerModal) Handle() {
 	}
 
 	if tb.saveSettingsBtn.Clicked() {
-		vspHost := tb.vspSelector.selectedVSP.Host
+		vspHost := tb.vspSelector.SelectedVSP().Host
 		amount, err := strconv.ParseFloat(tb.balToMaintainEditor.Editor.Text(), 64)
 		if err != nil {
 			tb.Toast.NotifyError(err.Error())

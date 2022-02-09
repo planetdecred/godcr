@@ -14,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
-	"github.com/planetdecred/godcr/ui/page/staking"
+	// "github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -36,7 +36,7 @@ type agendaVoteModal struct {
 	consensusPage *ConsensusPage
 
 	walletSelector    *WalletSelector
-	vspSelector       *staking.VSPSelector
+	vspSelector       *components.VSPSelector
 	ticketSelector    *ticketSelector
 	spendingPassword  decredmaterial.Editor
 	materialLoader    material.LoaderStyle
@@ -115,7 +115,7 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 			return !w.IsWatchingOnlyWallet()
 		})
 
-	avm.vspIsFetched = len((*l.WL.VspInfo).List) > 0
+	avm.vspIsFetched = len(l.WL.MultiWallet.KnownVSPs()) > 0
 
 	return avm
 }
@@ -125,14 +125,14 @@ func (avm *agendaVoteModal) FetchLiveTickets(walletID int) {
 		avm.liveTicketsIsFetched = false
 
 		wallet := avm.WL.MultiWallet.WalletWithID(walletID)
-		tickets, err := staking.WalletLiveTickets(wallet)
+		tickets, err := components.WalletLiveTickets(wallet)
 		if err != nil {
 			avm.Toast.NotifyError(err.Error())
 			return
 		}
 
 		liveTickets := make([]*dcrlibwallet.Transaction, 0)
-		txItems, err := staking.StakeToTransactionItems(avm.Load, tickets, true, func(filter int32) bool {
+		txItems, err := components.StakeToTransactionItems(avm.Load, tickets, true, func(filter int32) bool {
 			switch filter {
 			case dcrlibwallet.TxFilterUnmined:
 				fallthrough
@@ -166,9 +166,9 @@ func (avm *agendaVoteModal) ModalID() string {
 func (avm *agendaVoteModal) OnResume() {
 	avm.walletSelector.SelectFirstValidWallet()
 
-	avm.vspSelector = staking.NewVSPSelector(avm.Load).Title("Select a vsp")
-	if avm.vspIsFetched && components.StringNotEmpty(avm.WL.GetRememberVSP()) {
-		avm.vspSelector.SelectVSP(avm.WL.GetRememberVSP())
+	avm.vspSelector = components.NewVSPSelector(avm.Load).Title("Select a vsp")
+	if avm.vspIsFetched && components.StringNotEmpty(avm.WL.MultiWallet.LastUsedVSP()) {
+		avm.vspSelector.SelectVSP(avm.WL.MultiWallet.LastUsedVSP())
 	}
 
 	initialValue := avm.agenda.VotingPreference
@@ -196,13 +196,13 @@ func (avm *agendaVoteModal) Dismiss() {
 
 func (avm *agendaVoteModal) Handle() {
 	if avm.vspSelector.Changed() {
-		avm.WL.RememberVSP(avm.vspSelector.SelectedVSP().Host)
+		avm.WL.MultiWallet.SaveLastUsedVSP(avm.vspSelector.SelectedVSP().Host)
 	}
 
 	// reselect vsp if there's a delay in fetching the VSP List
-	if !avm.vspIsFetched && len((*avm.WL.VspInfo).List) > 0 {
-		if avm.WL.GetRememberVSP() != "" {
-			avm.vspSelector.SelectVSP(avm.WL.GetRememberVSP())
+	if !avm.vspIsFetched && len(avm.WL.MultiWallet.KnownVSPs()) > 0 {
+		if avm.WL.MultiWallet.LastUsedVSP() != "" {
+			avm.vspSelector.SelectVSP(avm.WL.MultiWallet.LastUsedVSP())
 			avm.vspIsFetched = true
 		}
 	}
@@ -350,13 +350,13 @@ func (avm *agendaVoteModal) layoutItems() []layout.FlexChild {
 
 func (avm *agendaVoteModal) sendVotes() {
 	go func() {
-		password := avm.spendingPassword.Editor.Text()
+		password := []byte(avm.spendingPassword.Editor.Text())
 
 		defer func() {
 			avm.isVoting = false
 		}()
 
-		err := avm.WL.MultiWallet.Consensus.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Info.PubKey, avm.vspSelector.SelectedVSP().Host, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, "", password)
+		err := avm.WL.MultiWallet.SetVoteChoice(avm.walletSelector.selectedWallet.ID, avm.vspSelector.SelectedVSP().Host, avm.vspSelector.SelectedVSP().PubKey, avm.agenda.AgendaID, avm.optionsRadioGroup.Value, "", password)
 		if err != nil {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 				avm.spendingPassword.SetError("Invalid password")

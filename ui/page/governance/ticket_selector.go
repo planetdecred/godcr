@@ -118,7 +118,7 @@ type ticketSelectorModal struct {
 
 	dialogTitle string
 
-	modal    decredmaterial.Modal
+	modal decredmaterial.Modal
 
 	liveTickets    []*dcrlibwallet.Transaction
 	selectedTicket *dcrlibwallet.Transaction

@@ -39,7 +39,7 @@ type stakingModal struct {
 	tickets          decredmaterial.Editor
 
 	accountSelector  *components.AccountSelector
-	vspSelector      *vspSelector
+	vspSelector      *components.VSPSelector
 	materialLoader   material.LoaderStyle
 	ticketsPurchased func()
 
@@ -47,8 +47,6 @@ type stakingModal struct {
 	totalCost       int64
 	balanceLessCost int64
 	isLoading       bool
-	accountSelector *components.AccountSelector
-	vspSelector     *VSPSelector
 }
 
 func newStakingModal(l *load.Load) *stakingModal {
@@ -97,14 +95,14 @@ func (tp *stakingModal) OnResume() {
 		tp.Toast.NotifyError(err.Error())
 	}
 
-	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
+	tp.vspSelector = components.NewVSPSelector(tp.Load).Title("Select a vsp")
 
 	lastUsedVSP := tp.WL.MultiWallet.LastUsedVSP()
 	if len(tp.WL.MultiWallet.KnownVSPs()) == 0 {
 		// TODO: Does this modal need this list?
 		go tp.WL.MultiWallet.ReloadVSPList(context.TODO())
 	} else if components.StringNotEmpty(lastUsedVSP) {
-		tp.vspSelector.selectVSP(lastUsedVSP)
+		tp.vspSelector.SelectVSP(lastUsedVSP)
 	}
 
 	go func() {
@@ -276,7 +274,7 @@ func (tp *stakingModal) canPurchase() bool {
 		return false
 	}
 
-	if tp.vspSelector.selectedVSP == nil {
+	if tp.vspSelector.SelectedVSP == nil {
 		return false
 	}
 
@@ -334,7 +332,7 @@ func (tp *stakingModal) calculateTotals() {
 		return
 	}
 
-	feePercentage := tp.vspSelector.selectedVSP.FeePercentage
+	feePercentage := tp.vspSelector.SelectedVSP().FeePercentage
 	total := ticketPrice.TicketPrice * tp.ticketCount()
 	fee := int64((float64(total) / 100) * feePercentage)
 
@@ -346,7 +344,7 @@ func (tp *stakingModal) Handle() {
 	tp.stakeBtn.SetEnabled(tp.canPurchase())
 
 	if tp.vspSelector.Changed() {
-		tp.WL.MultiWallet.SaveLastUsedVSP(tp.vspSelector.selectedVSP.Host)
+		tp.WL.MultiWallet.SaveLastUsedVSP(tp.vspSelector.SelectedVSP().Host)
 	}
 
 	_, isChanged := decredmaterial.HandleEditorEvents(tp.spendingPassword.Editor)
@@ -357,7 +355,7 @@ func (tp *stakingModal) Handle() {
 	// reselect vsp if there's a delay in fetching the VSP List
 	lastUsedVSP := tp.WL.MultiWallet.LastUsedVSP()
 	if len(tp.WL.MultiWallet.KnownVSPs()) > 0 && lastUsedVSP != "" {
-		tp.vspSelector.selectVSP(lastUsedVSP)
+		tp.vspSelector.SelectVSP(lastUsedVSP)
 	}
 
 	if tp.cancelPurchase.Clicked() {
