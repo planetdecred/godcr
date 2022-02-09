@@ -86,13 +86,13 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 		layout.Rigid(func(gtx C) D {
 			return decredmaterial.LinearLayout{
 				Background: backgroundColor,
-				Width:     decredmaterial.WrapContent,
-				Height:    decredmaterial.WrapContent,
-				Direction: layout.Center,
-				Alignment: layout.Middle,
-				Border:    decredmaterial.Border{Color: backgroundColor, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
-				Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
-				Margin:    layout.Inset{Left: values.MarginPadding10},
+				Width:      decredmaterial.WrapContent,
+				Height:     decredmaterial.WrapContent,
+				Direction:  layout.Center,
+				Alignment:  layout.Middle,
+				Border:     decredmaterial.Border{Color: backgroundColor, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+				Padding:    layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
+				Margin:     layout.Inset{Left: values.MarginPadding10},
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
