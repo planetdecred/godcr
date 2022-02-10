@@ -46,6 +46,10 @@ type Page struct {
 	ordersHistoryBtn  *decredmaterial.Clickable
 	dexSettingsBtn    *decredmaterial.Clickable
 	dexSelectBtn      *decredmaterial.Clickable
+
+	toggleAdvancedTradeMode *decredmaterial.Clickable
+	advancedTradeFormWdg    *advancedTradeFormWidget
+	isAdvancedTradeMode     bool
 }
 
 func NewMarketPage(l *load.Load) *Page {
@@ -57,19 +61,23 @@ func NewMarketPage(l *load.Load) *Page {
 	}
 
 	pg := &Page{
-		Load:              l,
-		shouldStartDex:    l.Dexc().Core() == nil,
-		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
-		loginBtn:          l.Theme.Button(strLogin),
-		initializeBtn:     l.Theme.Button(strStartUseDex),
-		addDexBtn:         l.Theme.Button(strAddADex),
-		syncBtn:           l.Theme.Button(strStartSyncToUse),
-		ordersHistoryBtn:  clickable(),
-		walletSettingsBtn: clickable(),
-		dexSettingsBtn:    clickable(),
-		dexSelectBtn:      clickable(),
-		miniTradeFormWdg:  newMiniTradeFormWidget(l),
+		Load:                    l,
+		shouldStartDex:          l.Dexc().Core() == nil,
+		materialLoader:          material.Loader(material.NewTheme(gofont.Collection())),
+		loginBtn:                l.Theme.Button(strLogin),
+		initializeBtn:           l.Theme.Button(strStartUseDex),
+		addDexBtn:               l.Theme.Button(strAddADex),
+		syncBtn:                 l.Theme.Button(strStartSyncToUse),
+		ordersHistoryBtn:        clickable(),
+		walletSettingsBtn:       clickable(),
+		dexSettingsBtn:          clickable(),
+		dexSelectBtn:            clickable(),
+		toggleAdvancedTradeMode: l.Theme.NewClickable(false),
+		miniTradeFormWdg:        newMiniTradeFormWidget(l),
+		advancedTradeFormWdg:    newAdvancedTradeFormWidget(l),
 	}
+
+	pg.toggleAdvancedTradeMode.Radius = decredmaterial.Radius(24)
 
 	return pg
 }
@@ -103,29 +111,44 @@ func (pg *Page) Layout(gtx C) D {
 				}),
 			)
 		default:
-			if !pg.dexServer.Connected {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(pg.headerLayout()),
-					layout.Rigid(func(gtx C) D {
-						return pg.pageSections(gtx,
-							pg.Theme.Label(values.TextSize16, fmt.Sprintf(nStrConnHostError, pg.dexServer.Host)).Layout)
-					}),
-				)
-			}
-
-			if pg.dexServer.PendingFee != nil {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(pg.headerLayout()),
-					layout.Rigid(func(gtx C) D {
-						return pg.pageSections(gtx, pg.registrationStatusLayout())
-					}),
-				)
-			}
-
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.headerLayout()),
-				layout.Rigid(func(gtx C) D {
-					return pg.pageSections(gtx, pg.miniTradeFormWdg.setHostAndMarket(pg.dexServer.Host, pg.market).layout)
+			return layout.Stack{Alignment: layout.SE}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(pg.headerLayout()),
+						layout.Rigid(func(gtx C) D {
+							if !pg.dexServer.Connected {
+								return pg.pageSections(gtx,
+									pg.Theme.Label(values.TextSize16, fmt.Sprintf(nStrConnHostError, pg.dexServer.Host)).Layout)
+							}
+							if pg.dexServer.PendingFee != nil {
+								return pg.pageSections(gtx, pg.registrationStatusLayout())
+							}
+							if pg.isAdvancedTradeMode {
+								return pg.pageSections(gtx, pg.advancedTradeFormWdg.layout(pg.orderBook))
+							}
+							return pg.pageSections(gtx, pg.miniTradeFormWdg.setHostAndMarket(pg.dexServer.Host, pg.market).layout)
+						}),
+					)
+				}),
+				layout.Stacked(func(gtx C) D {
+					gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+					return layout.SE.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return decredmaterial.LinearLayout{
+									Width:      decredmaterial.WrapContent,
+									Height:     decredmaterial.WrapContent,
+									Padding:    layout.UniformInset(values.MarginPadding12),
+									Background: pg.Theme.Color.Surface,
+									Clickable:  pg.toggleAdvancedTradeMode,
+									Border:     decredmaterial.Border{Radius: pg.toggleAdvancedTradeMode.Radius},
+								}.Layout2(gtx, func(gtx C) D {
+									icon := pg.Icons.ExchangeIcon
+									return icon.Layout(gtx, pg.Theme.Color.Primary)
+								})
+							}),
+						)
+					})
 				}),
 			)
 		}
@@ -383,6 +406,10 @@ func (pg *Page) HandleUserInteractions() {
 					go pg.listenerMessages(pg.dexServer.Host, pg.market.BaseID, pg.market.QuoteID)
 				}
 			}).Show()
+	}
+
+	for pg.toggleAdvancedTradeMode.Clicked() {
+		pg.isAdvancedTradeMode = !pg.isAdvancedTradeMode
 	}
 }
 
