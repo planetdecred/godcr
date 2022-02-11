@@ -8,9 +8,9 @@ type TxNotifType int
 
 const (
 	// Transaction notification types
-	NewTx       TxNotifType = iota // 0 = New transaction.
-	BlkAttached                    // 1 = block attached.
-	TxConfirmed                    // 2 = Transaction confirmed.
+	NewTransaction TxNotifType = iota // 0 = New transaction.
+	BlockAttached                     // 1 = block attached.
+	TxConfirmed                       // 2 = Transaction confirmed.
 )
 
 // TxNotification models transaction notifications.

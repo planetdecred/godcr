@@ -32,11 +32,11 @@ type AccountSelector struct {
 	openSelectorDialog *decredmaterial.Clickable
 	selectorModal      *AccountSelectorModal
 
-	dialogTitle        string
-	selectedWalletName string
-	totalBalance       string
-	changed            bool
-	subbedTxNotif      bool
+	dialogTitle             string
+	selectedWalletName      string
+	totalBalance            string
+	changed                 bool
+	IsTxNotificationEnabled bool // Indicates if the account selector is enabled to receive Tx and block notifications.
 }
 
 func NewAccountSelector(l *load.Load) *AccountSelector {
@@ -207,7 +207,7 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 	// Complain if it try to listen for TX Notifications
 	// When not subscribed.
-	if !as.subbedTxNotif {
+	if !as.IsTxNotificationEnabled {
 		log.Warn("Account Selector not subscribed for Tx notifications but listening")
 	}
 	go func() {
@@ -215,7 +215,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 			select {
 			case n := <-as.TxAndBlockNotifChan:
 				switch n.NotificationType {
-				case listeners.BlkAttached:
+				case listeners.BlockAttached:
 					// refresh wallet account and balance on every new block
 					// only if sync is completed.
 					if as.WL.MultiWallet.IsSynced() {
@@ -225,7 +225,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 						}
 						as.RefreshWindow()
 					}
-				case listeners.NewTx:
+				case listeners.NewTransaction:
 					// refresh accounts list when new transaction is received
 					as.UpdateSelectedAccountBalance()
 					if as.selectorModal != nil {
@@ -243,19 +243,17 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 // SubscribeTxNotifications registers AccountSelector for tx and
 // Notifications from dcrlibwallet.
 func (as *AccountSelector) SubscribeTxNotifications() {
-	log.Info("Account selector subbed")
 	as.WL.MultiWallet.AddTxAndBlockNotificationListener(as.TxAndBlockNotificationListener, true, AccoutSelectorID)
-	as.subbedTxNotif = true
+	as.IsTxNotificationEnabled = true
 }
 
 // UnsubscribeTxNotifications removes AccountSelector from tx and
 // Notifications from dcrlibwallet.
 func (as *AccountSelector) UnsubscribeTxNotifications() {
-	log.Info("Account selector unsubscribed!!!")
 	as.WL.MultiWallet.RemoveTxAndBlockNotificationListener(AccoutSelectorID)
 	// Close notification channel.
 	close(as.TxAndBlockNotifChan)
-	as.subbedTxNotif = false
+	as.IsTxNotificationEnabled = false
 }
 
 const ModalAccountSelector = "AccountSelectorModal"

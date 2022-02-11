@@ -229,7 +229,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 		for {
 			select {
 			case n := <-pg.TxAndBlockNotifChan:
-				if n.NotificationType == listeners.NewTx {
+				if n.NotificationType == listeners.NewTransaction {
 					pg.UpdateBalance()
 
 					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]

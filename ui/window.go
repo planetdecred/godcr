@@ -126,10 +126,6 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		Printer: message.NewPrinter(language.English),
 	}
 
-	l.Receiver = &load.Receiver{
-		KeyEvents: win.keyEvents,
-	}
-
 	l.RefreshWindow = win.Invalidate
 	l.ShowModal = win.showModal
 	l.DismissModal = win.dismissModal

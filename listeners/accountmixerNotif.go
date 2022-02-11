@@ -1,8 +1,6 @@
 package listeners
 
-import (
-	"github.com/planetdecred/godcr/wallet"
-)
+import "github.com/planetdecred/godcr/wallet"
 
 // AccountMixerNotificationListener satisfies dcrlibwallet AccountMixerNotificationListener
 // interface contract. Consumers interested in mixer notification instantiates this type.

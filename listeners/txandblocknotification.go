@@ -26,7 +26,7 @@ func (txAndBlk *TxAndBlockNotificationListener) OnTransaction(transaction string
 	}
 
 	update := TxNotification{
-		NotificationType: NewTx,
+		NotificationType: NewTransaction,
 		Transaction:      &tx,
 	}
 	txAndBlk.UpdateNotification(update)
@@ -34,7 +34,7 @@ func (txAndBlk *TxAndBlockNotificationListener) OnTransaction(transaction string
 
 func (txAndBlk *TxAndBlockNotificationListener) OnBlockAttached(walletID int, blockHeight int32) {
 	txAndBlk.UpdateNotification(TxNotification{
-		NotificationType: BlkAttached,
+		NotificationType: BlockAttached,
 		WalletID:         walletID,
 		BlockHeight:      blockHeight,
 	})

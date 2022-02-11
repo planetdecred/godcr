@@ -395,7 +395,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 
 			case n := <-pg.TxAndBlockNotifChan:
 				switch n.NotificationType {
-				case listeners.BlkAttached:
+				case listeners.BlockAttached:
 					beep := pg.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
 					if beep {
 						_ = beeep.Beep(5, 1)
@@ -403,7 +403,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 
 					pg.UpdateBalance()
 					pg.RefreshWindow()
-				case listeners.NewTx:
+				case listeners.NewTransaction:
 					pg.UpdateBalance()
 					pg.loadTransactions()
 					pg.RefreshWindow()
