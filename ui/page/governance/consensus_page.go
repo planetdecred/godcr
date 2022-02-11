@@ -151,9 +151,7 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 											lastUpdatedInfo.Color = pg.Theme.Color.Success
 										}
 
-										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-											return lastUpdatedInfo.Layout(gtx)
-										})
+										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, lastUpdatedInfo.Layout)
 									}),
 								)
 							}
@@ -230,9 +228,7 @@ func (pg *ConsensusPage) layoutContent(gtx C) D {
 								layout.Rigid(func(gtx C) D {
 									return components.AgendasList(gtx, pg.Load, consensusItems[i])
 								}),
-								layout.Rigid(func(gtx C) D {
-									return pg.Theme.Separator().Layout(gtx)
-								}),
+								layout.Rigid(pg.Theme.Separator().Layout),
 							)
 						})
 					})
@@ -261,7 +257,5 @@ func (pg *ConsensusPage) layoutIsSyncingSection(gtx C) D {
 }
 
 func (pg *ConsensusPage) layoutStartSyncSection(gtx C) D {
-	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
-		return pg.Icons.Restore.Layout24dp(gtx)
-	})
+	return material.Clickable(gtx, pg.syncButton, pg.Icons.Restore.Layout24dp)
 }

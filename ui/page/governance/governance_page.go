@@ -104,8 +104,7 @@ func (pg *Page) OnNavigatedTo() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *Page) OnNavigatedFrom() {
-}
+func (pg *Page) OnNavigatedFrom() {}
 
 func (pg *Page) initTabWidgets() {
 	pg.tabCategoryList = pg.Theme.NewClickableList(layout.Horizontal)
@@ -237,14 +236,10 @@ func (pg *Page) Layout(gtx C) D {
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return pg.layoutTabs(gtx)
-						}),
+						layout.Rigid(pg.layoutTabs),
 					)
 				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.Theme.Separator().Layout(gtx)
-				}),
+				layout.Rigid(pg.Theme.Separator().Layout),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 						return layout.Stack{}.Layout(gtx,
@@ -286,7 +281,7 @@ func (pg *Page) layoutTabs(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										lbl := pg.Theme.Body1(governanceTabTitles[i])
-										lbl.Color = pg.Theme.Color.Gray1
+										lbl.Color = pg.Theme.Color.GrayText1
 										if selectedCategory == i {
 											lbl.Color = pg.Theme.Color.Primary
 										}

@@ -55,7 +55,7 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	switch agenda.Status {
 	case "Finished":
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
-		statusLabelColor = l.Theme.Color.Success
+		statusLabelColor = l.Theme.Color.GreenText
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
 		statusIcon.Color = statusLabelColor
 		backgroundColor = l.Theme.Color.Green50
@@ -69,7 +69,7 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 		canVote = true
 	case "Upcoming":
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
-		statusLabelColor = l.Theme.Color.DeepBlue
+		statusLabelColor = l.Theme.Color.Text
 		statusIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
 		statusIcon.Color = statusLabelColor
 		backgroundColor = l.Theme.Color.Gray2
@@ -99,9 +99,7 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 						return statusIcon.Layout(gtx, values.MarginPadding16)
 					})
 				}),
-				layout.Rigid(func(gtx C) D {
-					return statusLabel.Layout(gtx)
-				}))
+				layout.Rigid(statusLabel.Layout))
 		}),
 	)
 }
@@ -133,20 +131,17 @@ func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 		item.VoteButton.Background = l.Theme.Color.Gray3
 		item.VoteButton.SetEnabled(false)
 	}
-	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-		return item.VoteButton.Layout(gtx)
-	})
+	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, item.VoteButton.Layout)
 }
 
 func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	text := l.Theme.Body1("No agendas yet")
 
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
 			Top:    values.MarginPadding10,
 			Bottom: values.MarginPadding10,
-		}.Layout(gtx, text.Layout)
+		}.Layout(gtx, l.Theme.Body1("No agendas yet").Layout)
 	})
 }
 
