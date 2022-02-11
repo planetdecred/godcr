@@ -70,9 +70,9 @@ func main() {
 		return
 	}
 
-	newError := wal.InitMultiWallet()
-	if newError != nil {
-		log.Errorf("init multiwallet error: %v", newError)
+	err = wal.InitMultiWallet()
+	if err != nil {
+		log.Errorf("init multiwallet error: %v", err)
 		return
 	}
 
