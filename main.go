@@ -70,6 +70,12 @@ func main() {
 		return
 	}
 
+	newError := wal.InitMultiWallet()
+	if newError != nil {
+		log.Errorf("init multiwallet error: %v", newError)
+		return
+	}
+
 	go func() {
 		win.HandleEvents() // blocks until the app window is closed
 		wal.Shutdown()
