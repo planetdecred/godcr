@@ -168,16 +168,6 @@ func (win *Window) HandleEvents() {
 	for {
 		e := <-win.Events()
 		switch evt := e.(type) {
-		case system.StageEvent:
-			if evt.Stage == system.StageRunning {
-				// App is running, init multiwallet.
-				// TODO: Why wait till now to init MW?
-				err := win.wallet.InitMultiWallet()
-				if err != nil {
-					log.Errorf("init multiwallet error: %v", err)
-					return // exits the loop, caller will exit the program.
-				}
-			}
 
 		case system.DestroyEvent:
 			if win.currentPage != nil {
