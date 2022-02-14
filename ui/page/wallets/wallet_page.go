@@ -95,7 +95,7 @@ func NewWalletPage(l *load.Load) *WalletPage {
 		Load:        l,
 		multiWallet: l.WL.MultiWallet,
 		container: &widget.List{
-			List: layout.List{Axis: layout.Vertical, Position: layout.Position{}},
+			List: layout.List{Axis: layout.Vertical},
 		},
 		walletsList:              layout.List{Axis: layout.Vertical},
 		watchWalletsList:         l.Theme.NewClickableList(layout.Vertical),
@@ -428,20 +428,10 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		return
 	}
 
-	var inset layout.Inset
-
-	if optionsMenuIndex == 0 {
-		inset = layout.Inset{
-			Top:  unit.Dp(-30),
-			Left: unit.Dp(-150),
-		}
-	} else {
-		inset = layout.Inset{
-			Top:  unit.Dp(-95),
-			Left: unit.Dp(-150),
-		}
+	inset := layout.Inset{
+		Top:  unit.Dp(30),
+		Left: unit.Dp(-120),
 	}
-
 	menu := listItem.optionsMenu
 
 	m := op.Record(gtx.Ops)
@@ -457,7 +447,7 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 							card.Radius = decredmaterial.Radius(0)
 							return card.HoverableLayout(gtx, menu[i].button, func(gtx C) D {
 								return menu[i].button.Layout(gtx, func(gtx C) D {
-									m10 := values.MarginPadding7
+									m10 := values.MarginPadding10
 									return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
 										gtx.Constraints.Min.X = gtx.Constraints.Max.X
 										return pg.Theme.Body1(menu[i].text).Layout(gtx)
@@ -467,7 +457,7 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 						}),
 						layout.Rigid(func(gtx C) D {
 							if menu[i].separate {
-								m := values.MarginPadding0
+								m := values.MarginPadding5
 								return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.separator.Layout)
 							}
 							return D{}
