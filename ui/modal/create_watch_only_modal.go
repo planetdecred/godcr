@@ -90,6 +90,7 @@ func (cm *CreateWatchOnlyModal) Dismiss() {
 
 func (cm *CreateWatchOnlyModal) SetLoading(loading bool) {
 	cm.isLoading = loading
+	cm.modal.SetDisabled(loading)
 }
 
 func (cm *CreateWatchOnlyModal) SetCancelable(min bool) *CreateWatchOnlyModal {

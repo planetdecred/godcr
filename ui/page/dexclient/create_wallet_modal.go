@@ -113,9 +113,12 @@ func (md *createWalletModal) Handle() {
 		}
 
 		md.isSending = true
+		md.modal.SetDisabled(true)
+
 		go func() {
 			defer func() {
 				md.isSending = false
+				md.modal.SetDisabled(false)
 			}()
 
 			coinID := md.walletInfoWidget.coinID

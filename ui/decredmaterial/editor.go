@@ -231,9 +231,7 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 						Top:    e.m5,
 						Bottom: e.m5,
 					}
-					return inset.Layout(gtx, func(gtx C) D {
-						return e.EditorStyle.Layout(gtx)
-					})
+					return inset.Layout(gtx, e.EditorStyle.Layout)
 				}),
 			)
 		}),

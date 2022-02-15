@@ -140,6 +140,7 @@ func (cm *CreatePasswordModal) PasswordCreated(callback func(walletName, passwor
 
 func (cm *CreatePasswordModal) SetLoading(loading bool) {
 	cm.isLoading = loading
+	cm.modal.SetDisabled(loading)
 }
 
 func (cm *CreatePasswordModal) SetCancelable(min bool) *CreatePasswordModal {
@@ -173,7 +174,6 @@ func (cm *CreatePasswordModal) SetParent(parent load.Page) *CreatePasswordModal 
 }
 
 func (cm *CreatePasswordModal) Handle() {
-
 	if editorsNotEmpty(cm.passwordEditor.Editor) || editorsNotEmpty(cm.walletName.Editor) ||
 		editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
 		cm.btnPositve.Background = cm.Theme.Color.Primary

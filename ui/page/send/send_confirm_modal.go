@@ -100,9 +100,11 @@ func (scm *sendConfirmModal) broadcastTransaction() {
 	}
 
 	scm.isSending = true
+	scm.modal.SetDisabled(true)
 	go func() {
 		_, err := scm.authoredTxData.txAuthor.Broadcast([]byte(password))
 		scm.isSending = false
+		scm.modal.SetDisabled(false)
 		if err != nil {
 			scm.Toast.NotifyError(err.Error())
 			return
