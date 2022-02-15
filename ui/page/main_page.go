@@ -218,8 +218,6 @@ func (mp *MainPage) OnNavigatedTo() {
 			go mp.WL.MultiWallet.Politeia.Sync()
 		}
 	}
-
-	load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 }
 
 func (mp *MainPage) setLanguageSetting() {
@@ -228,6 +226,7 @@ func (mp *MainPage) setLanguageSetting() {
 }
 
 func (mp *MainPage) UpdateBalance() {
+	go load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
 
