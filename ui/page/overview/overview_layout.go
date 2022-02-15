@@ -62,6 +62,7 @@ type AppOverviewPage struct {
 	syncClickable    *decredmaterial.Clickable
 	transactionsList *decredmaterial.ClickableList
 	proposalsList    *decredmaterial.ClickableList
+	autoSync         *decredmaterial.Switch
 
 	syncingIcon                  *decredmaterial.Image
 	walletStatusIcon, cachedIcon *decredmaterial.Icon
@@ -246,6 +247,12 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 		pg.isBackupModalOpened = true
 	}
 
+	autoSync := pg.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey)
+	pg.autoSync.SetChecked(false)
+	if autoSync {
+		pg.autoSync.SetChecked(autoSync)
+	}
+
 	if pg.toMixer.Button.Clicked() {
 		if len(pg.mixerWallets) == 1 {
 			pg.ChangeFragment(wPage.NewPrivacyPage(pg.Load, pg.mixerWallets[0]))
@@ -300,6 +307,11 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 
 		pg.ChangeFragment(gPage.NewProposalDetailsPage(pg.Load, &selectedProposal))
 	}
+
+	if pg.autoSync.Changed() {
+		pg.WL.Wallet.SaveConfigValueForKey(load.AutoSyncConfigKey, pg.autoSync.IsChecked())
+	}
+
 }
 
 // listenForSyncNotifications starts a goroutine to watch for sync updates
