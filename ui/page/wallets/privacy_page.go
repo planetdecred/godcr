@@ -318,12 +318,12 @@ func (pg *PrivacyPage) HandleUserInteractions() {
 				PositiveButton("Confirm", func(textInput string, tim *modal.TextInputModal) bool {
 					if textInput != "I understand the risks" {
 						tim.SetError("confirmation text is incorrect")
-						tim.IsLoading = false
+						tim.SetLoading(false)
 					} else {
 						pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)
 						tim.Dismiss()
 					}
-					return tim.IsLoading
+					return false
 				})
 
 			textModal.Title("Confirm to allow spending from unmixed accounts").

@@ -410,6 +410,7 @@ func (tp *stakingModal) purchaseTickets() {
 	}
 
 	tp.isLoading = true
+	tp.modal.SetDisabled(true)
 	go func() {
 		password := []byte(tp.spendingPassword.Editor.Text())
 
@@ -420,6 +421,7 @@ func (tp *stakingModal) purchaseTickets() {
 
 		defer func() {
 			tp.isLoading = false
+			tp.modal.SetDisabled(false)
 		}()
 
 		vspHost, vspPubKey := selectedVSP.Host, selectedVSP.PubKey

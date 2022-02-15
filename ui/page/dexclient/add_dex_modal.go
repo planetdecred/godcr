@@ -84,10 +84,13 @@ func (md *addDexModal) Handle() {
 		}
 
 		md.isSending = true
+		md.modal.SetDisabled(true)
 		go func() {
 			cert := []byte(md.cert.Editor.Text())
 			dex, err := md.Dexc().DEXServerInfo(md.dexServerAddress.Editor.Text(), cert)
 			md.isSending = false
+			md.modal.SetDisabled(false)
+
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
