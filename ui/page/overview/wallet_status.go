@@ -184,7 +184,7 @@ func (pg *AppOverviewPage) syncDormantContent(gtx layout.Context, uniform layout
 							return pg.connectionPeer(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
-							return pg.autoSyncSec(gtx)
+							return pg.layoutAutoSyncSection(gtx)
 						}),
 					)
 				}

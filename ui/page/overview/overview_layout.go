@@ -62,7 +62,7 @@ type AppOverviewPage struct {
 	syncClickable    *decredmaterial.Clickable
 	transactionsList *decredmaterial.ClickableList
 	proposalsList    *decredmaterial.ClickableList
-	autoSync         *decredmaterial.Switch
+	autoSyncSwitch   *decredmaterial.Switch
 
 	syncingIcon                  *decredmaterial.Image
 	walletStatusIcon, cachedIcon *decredmaterial.Icon
@@ -248,10 +248,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 	}
 
 	autoSync := pg.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey)
-	pg.autoSync.SetChecked(false)
-	if autoSync {
-		pg.autoSync.SetChecked(autoSync)
-	}
+	pg.autoSyncSwitch.SetChecked(autoSync)
 
 	if pg.toMixer.Button.Clicked() {
 		if len(pg.mixerWallets) == 1 {
@@ -308,8 +305,8 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 		pg.ChangeFragment(gPage.NewProposalDetailsPage(pg.Load, &selectedProposal))
 	}
 
-	if pg.autoSync.Changed() {
-		pg.WL.Wallet.SaveConfigValueForKey(load.AutoSyncConfigKey, pg.autoSync.IsChecked())
+	if pg.autoSyncSwitch.Changed() {
+		pg.WL.Wallet.SaveConfigValueForKey(load.AutoSyncConfigKey, pg.autoSyncSwitch.IsChecked())
 	}
 
 }

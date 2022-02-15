@@ -20,7 +20,7 @@ func (pg *AppOverviewPage) initSyncDetailsWidgets() {
 	pg.sync.TextSize = values.TextSize14
 	pg.sync.Color = pg.Theme.Color.Text
 
-	pg.autoSync = pg.Theme.Switch()
+	pg.autoSyncSwitch = pg.Theme.Switch()
 
 }
 
@@ -53,7 +53,7 @@ func (pg *AppOverviewPage) connectionPeer(gtx layout.Context) layout.Dimensions 
 	)
 }
 
-func (pg *AppOverviewPage) autoSyncSec(gtx layout.Context) layout.Dimensions {
+func (pg *AppOverviewPage) layoutAutoSyncSection(gtx layout.Context) layout.Dimensions {
 	txt := pg.Theme.Body1("Automatically sync on startup")
 	txt.Color = pg.Theme.Color.GrayText2
 
@@ -61,7 +61,7 @@ func (pg *AppOverviewPage) autoSyncSec(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(txt.Layout),
 			layout.Flexed(1, func(gtx C) D {
-				return layout.E.Layout(gtx, pg.autoSync.Layout)
+				return layout.E.Layout(gtx, pg.autoSyncSwitch.Layout)
 			}),
 		)
 	})
