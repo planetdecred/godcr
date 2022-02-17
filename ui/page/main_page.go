@@ -226,7 +226,9 @@ func (mp *MainPage) setLanguageSetting() {
 }
 
 func (mp *MainPage) UpdateBalance() {
-	go load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
+	if len(mp.totalBalanceUSD) == 0 {
+		load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
+	}
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
 
