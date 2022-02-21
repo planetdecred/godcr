@@ -140,45 +140,6 @@ func (avm *agendaVoteModal) FetchLiveTickets(walletID int) {
 	}()
 }
 
-func (avm *agendaVoteModal) FetchLiveTickets(walletID int) {
-	go func() {
-		avm.liveTicketsIsFetched = false
-
-		wallet := avm.WL.MultiWallet.WalletWithID(walletID)
-		tickets, err := components.WalletLiveTickets(wallet)
-		if err != nil {
-			avm.Toast.NotifyError(err.Error())
-			return
-		}
-
-		liveTickets := make([]*dcrlibwallet.Transaction, 0)
-		txItems, err := components.StakeToTransactionItems(avm.Load, tickets, true, func(filter int32) bool {
-			switch filter {
-			case dcrlibwallet.TxFilterUnmined:
-				fallthrough
-			case dcrlibwallet.TxFilterImmature:
-				fallthrough
-			case dcrlibwallet.TxFilterLive:
-				return true
-			}
-
-			return false
-		})
-		if err != nil {
-			avm.Toast.NotifyError(err.Error())
-			return
-		}
-
-		for _, liveTicket := range txItems {
-			liveTickets = append(liveTickets, liveTicket.Transaction)
-		}
-
-		avm.LiveTickets = liveTickets
-		avm.liveTicketsIsFetched = true
-		avm.RefreshWindow()
-	}()
-}
-
 func (avm *agendaVoteModal) ModalID() string {
 	return ModalInputVote
 }
