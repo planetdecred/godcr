@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/unit"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -123,7 +124,7 @@ func layoutAgendaVotingPreference(gtx C, l *load.Load, agenda dcrlibwallet.Agend
 }
 
 func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
-	gtx.Constraints.Min.X, gtx.Constraints.Max.X = 150, 150
+	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Px(unit.Dp(150)), gtx.Px(unit.Dp(150))
 	if canVote {
 		item.VoteButton.Background = l.Theme.Color.Primary
 		item.VoteButton.SetEnabled(true)
