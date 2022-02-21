@@ -2,6 +2,7 @@ package governance
 
 import (
 	"context"
+	"image"
 	"time"
 
 	"gioui.org/font/gofont"
@@ -18,6 +19,12 @@ import (
 )
 
 const ConsensusPageID = "Consensus"
+
+type HeaderItem struct {
+	Title        decredmaterial.Label
+	tooltip      *decredmaterial.Tooltip
+	tooltipLabel decredmaterial.Label
+}
 
 type ConsensusPage struct {
 	*load.Load
@@ -108,6 +115,15 @@ func (pg *ConsensusPage) FetchAgendas() {
 	pg.RefreshWindow()
 }
 
+func layoutInfoTooltip(gtx C, rect image.Rectangle, item HeaderItem) {
+	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus195}
+	item.tooltip.Layout(gtx, rect, inset, func(gtx C) D {
+		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding195)
+		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding195)
+		return item.tooltipLabel.Layout(gtx)
+	})
+}
+
 func (pg *ConsensusPage) Layout(gtx C) D {
 	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -130,7 +146,28 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 									)
 								})
 							}),
-							layout.Rigid(pg.infoButton.Layout),
+							layout.Rigid(func(gtx C) D {
+								tooltipLabel := pg.Theme.Caption("")
+								tooltipLabel.Color = pg.Theme.Color.GrayText2
+								tooltipLabel.Text = "Waiting for author to authorize voting"
+								item := &HeaderItem{
+									Title:        pg.Theme.Label(values.TextSize20, "Consensus Changes"),
+									tooltip:      pg.Theme.Tooltip(),
+									tooltipLabel: tooltipLabel,
+								}
+								return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding0}.Layout(gtx, func(gtx C) D {
+									rect := image.Rectangle{
+										Min: gtx.Constraints.Min,
+										Max: gtx.Constraints.Max,
+									}
+									rect.Max.Y = 20
+									layoutInfoTooltip(gtx, rect, *item)
+
+									infoIcon := decredmaterial.NewIcon(pg.Icons.ActionInfo)
+									infoIcon.Color = pg.Theme.Color.GrayText2
+									return infoIcon.Layout(gtx, values.MarginPadding25)
+								})
+							}),
 						)
 					}),
 					layout.Rigid(func(gtx C) D {
