@@ -497,6 +497,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
+	mp.UpdateBalance()
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -553,7 +554,6 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
-	mp.UpdateBalance()
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" && len(mp.totalBalanceUSD) > 0 {
