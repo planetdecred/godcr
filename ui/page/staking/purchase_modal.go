@@ -87,8 +87,6 @@ func (tp *stakingModal) OnResume() {
 	tp.initializeAccountSelector()
 
 	tp.ctx, tp.ctxCancel = context.WithCancel(context.TODO())
-	tp.accountSelector.SubscribeTxNotifications()
-	tp.accountSelector.ListenForTxNotifications(tp.ctx)
 
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
@@ -320,9 +318,7 @@ func (tp *stakingModal) initializeAccountSelector() {
 		})
 }
 
-func (tp *stakingModal) OnDismiss() {
-	tp.accountSelector.UnsubscribeTxNotifications()
-}
+func (tp *stakingModal) OnDismiss() {}
 
 func (tp *stakingModal) calculateTotals() {
 	account := tp.accountSelector.SelectedAccount()
