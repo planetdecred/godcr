@@ -16,7 +16,7 @@ import (
 
 func (mp *MainPage) OnTransaction(transaction string) {
 	transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
-	mp.UpdateBalance()
+	mp.UpdateBalance(true)
 
 	var tx dcrlibwallet.Transaction
 	err := json.Unmarshal([]byte(transaction), &tx)
@@ -41,14 +41,14 @@ func (mp *MainPage) OnBlockAttached(walletID int, blockHeight int32) {
 		}
 	}
 
-	mp.UpdateBalance()
+	mp.UpdateBalance(true)
 	mp.UpdateNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.BlockAttached,
 	})
 }
 
 func (mp *MainPage) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
-	mp.UpdateBalance()
+	mp.UpdateBalance(true)
 }
 
 // Account mixer
@@ -148,7 +148,7 @@ func (mp *MainPage) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.
 	})
 }
 func (mp *MainPage) OnSyncCompleted() {
-	mp.UpdateBalance()
+	mp.UpdateBalance(true)
 	mp.UpdateNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.SyncCompleted,
 	})
