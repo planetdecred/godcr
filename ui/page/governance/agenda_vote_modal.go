@@ -9,6 +9,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -23,7 +24,6 @@ type agendaVoteModal struct {
 	LiveTickets []*dcrlibwallet.Transaction
 
 	agenda               *dcrlibwallet.Agenda
-	liveTicketsIsFetched bool
 	isVoting             bool
 	loadCount            int
 
@@ -107,8 +107,6 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 
 func (avm *agendaVoteModal) FetchLiveTickets(walletID int) {
 	go func() {
-		avm.liveTicketsIsFetched = false
-
 		wallet := avm.WL.MultiWallet.WalletWithID(walletID)
 		tickets, err := components.WalletLiveTickets(wallet)
 		if err != nil {
@@ -139,7 +137,6 @@ func (avm *agendaVoteModal) FetchLiveTickets(walletID int) {
 		}
 
 		avm.LiveTickets = liveTickets
-		avm.liveTicketsIsFetched = true
 		avm.RefreshWindow()
 	}()
 }
@@ -208,7 +205,7 @@ func (avm *agendaVoteModal) Handle() {
 		avm.currentValue = avm.optionsRadioGroup.Value
 	}
 
-	if avm.liveTicketsIsFetched {
+	if len(avm.LiveTickets) != 0 {
 		if avm.loadCount == 1 {
 			avm.loadCount++
 			avm.ticketSelector = newTicketSelector(avm.Load, avm.LiveTickets).Title("Select a ticket")
@@ -258,13 +255,13 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if len(avm.LiveTickets) < 1 {
+					if len(avm.LiveTickets) == 0 {
 						return D{}
 					}
 					return avm.vspSelector.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if !avm.liveTicketsIsFetched {
+					if len(avm.LiveTickets) == 0 {
 						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
 						return avm.materialLoader.Layout(gtx)
 					}
@@ -281,7 +278,7 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if len(avm.LiveTickets) < 1 {
+					if len(avm.LiveTickets) == 0 {
 						return D{}
 					}
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, avm.layoutItems()...)
