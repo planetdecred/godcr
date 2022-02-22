@@ -199,7 +199,6 @@ func (mp *MainPage) OnNavigatedTo() {
 	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
 
 	mp.setLanguageSetting()
-	mp.UpdateBalance()
 
 	if mp.currentPage == nil {
 		mp.currentPage = overview.NewOverviewPage(mp.Load)
@@ -219,8 +218,6 @@ func (mp *MainPage) OnNavigatedTo() {
 			go mp.WL.MultiWallet.Politeia.Sync()
 		}
 	}
-
-	load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 }
 
 func (mp *MainPage) setLanguageSetting() {
@@ -228,7 +225,10 @@ func (mp *MainPage) setLanguageSetting() {
 	values.SetUserLanguage(langPre)
 }
 
-func (mp *MainPage) UpdateBalance() {
+func (mp *MainPage) UpdateBalance(fetchExch bool) {
+	if len(mp.totalBalanceUSD) == 0 || fetchExch {
+		load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
+	}
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
 
@@ -497,6 +497,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
+	mp.UpdateBalance(false)
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -555,7 +556,7 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" {
+			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" && len(mp.totalBalanceUSD) > 0 {
 				inset := layout.Inset{
 					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
