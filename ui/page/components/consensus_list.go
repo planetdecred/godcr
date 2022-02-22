@@ -58,7 +58,7 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabelColor = l.Theme.Color.GreenText
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
-		statusIcon.Color = statusLabelColor
+		statusIcon.Color = l.Theme.Color.Green500
 		backgroundColor = l.Theme.Color.Green50
 		canVote = false
 	case "In progress":
@@ -72,7 +72,7 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabelColor = l.Theme.Color.Text
 		statusIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
-		statusIcon.Color = statusLabelColor
+		statusIcon.Color = l.Theme.Color.DeepBlue
 		backgroundColor = l.Theme.Color.Gray2
 		canVote = false
 	}
@@ -106,19 +106,19 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 }
 
 func layoutAgendaDescription(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-	lbl := l.Theme.H6(agenda.Description)
+	lbl := l.Theme.Label(values.MarginPadding16, agenda.Description)
 	lbl.Font.Weight = text.Light
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
 func layoutAgendaID(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-	lbl := l.Theme.H6("ID: #" + agenda.AgendaID)
+	lbl := l.Theme.Label(values.MarginPadding16, "ID: #"+agenda.AgendaID)
 	lbl.Font.Weight = text.Light
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
 func layoutAgendaVotingPreference(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-	lbl := l.Theme.H6("Voting Preference: " + agenda.VotingPreference)
+	lbl := l.Theme.Label(values.MarginPadding16, "Voting Preference: "+agenda.VotingPreference)
 	lbl.Font.Weight = text.Light
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }

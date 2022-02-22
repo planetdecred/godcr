@@ -23,9 +23,9 @@ type agendaVoteModal struct {
 
 	LiveTickets []*dcrlibwallet.Transaction
 
-	agenda               *dcrlibwallet.Agenda
-	isVoting             bool
-	loadCount            int
+	agenda    *dcrlibwallet.Agenda
+	isVoting  bool
+	loadCount int
 
 	consensusPage *ConsensusPage
 
