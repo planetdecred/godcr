@@ -225,8 +225,8 @@ func (mp *MainPage) setLanguageSetting() {
 	values.SetUserLanguage(langPre)
 }
 
-func (mp *MainPage) UpdateBalance() {
-	if len(mp.totalBalanceUSD) == 0 {
+func (mp *MainPage) UpdateBalance(fetchExch bool) {
+	if len(mp.totalBalanceUSD) == 0 || fetchExch {
 		load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 	}
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
@@ -497,7 +497,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	mp.UpdateBalance()
+	mp.UpdateBalance(false)
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
