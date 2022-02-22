@@ -2,8 +2,9 @@ package listeners
 
 import "github.com/planetdecred/godcr/wallet"
 
-// AccountMixerNotificationListener satisfies dcrlibwallet AccountMixerNotificationListener
-// interface contract. Consumers interested in mixer notification instantiates this type.
+// AccountMixerNotificationListener satisfies dcrlibwallet
+// AccountMixerNotificationListener interface. Consumers interested in mixer
+// notification instantiates this type.
 type AccountMixerNotificationListener struct {
 	MixerChan chan wallet.AccountMixer
 }
@@ -14,7 +15,8 @@ func NewAccountMixerNotificationListener(mixerCh chan wallet.AccountMixer) *Acco
 	}
 }
 
-// OnAccountMixerStarted is a callback func called when the account mixer is started.
+// OnAccountMixerStarted is a callback func called when the account mixer is
+// started.
 func (am *AccountMixerNotificationListener) OnAccountMixerStarted(walletID int) {
 	am.UpdateNotification(wallet.AccountMixer{
 		WalletID:  walletID,

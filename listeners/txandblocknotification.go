@@ -6,7 +6,8 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 )
 
-// TxAndBlockNotificationListener satisfies dcrlibwallet TxAndBlockNotificationListener interface contract.
+// TxAndBlockNotificationListener satisfies dcrlibwallet
+// TxAndBlockNotificationListener interface contract.
 type TxAndBlockNotificationListener struct {
 	TxAndBlockNotifChan chan TxNotification
 }

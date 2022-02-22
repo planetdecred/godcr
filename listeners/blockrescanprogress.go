@@ -5,7 +5,8 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-// BlocksRescanProgressListener satisfies dcrlibwallet BlocksRescanProgressListener interface contract.
+// BlocksRescanProgressListener satisfies dcrlibwallet
+// BlocksRescanProgressListener interface.
 type BlocksRescanProgressListener struct {
 	BlockRescanChan chan wallet.RescanUpdate
 }

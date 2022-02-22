@@ -5,7 +5,8 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-// SyncProgressListener satisfies dcrlibwallet SyncProgressListener interface contract.
+// SyncProgressListener satisfies dcrlibwallet SyncProgressListener interface
+// contract.
 type SyncProgressListener struct {
 	SyncStatusChan chan wallet.SyncStatusUpdate
 }
