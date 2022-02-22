@@ -46,7 +46,6 @@ type SettingsPage struct {
 	connectToPeer           *decredmaterial.Switch
 	userAgent               *decredmaterial.Switch
 	governance              *decredmaterial.Switch
-	autoSync                *decredmaterial.Switch
 	proposalNotification    *decredmaterial.Switch
 	transactionNotification *decredmaterial.Switch
 
@@ -75,7 +74,6 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		connectToPeer:           l.Theme.Switch(),
 		userAgent:               l.Theme.Switch(),
 		governance:              l.Theme.Switch(),
-		autoSync:                l.Theme.Switch(),
 		proposalNotification:    l.Theme.Switch(),
 		transactionNotification: l.Theme.Switch(),
 
@@ -92,11 +90,6 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
-	// pg.peerLabel = l.Theme.Body1("")
-	// pg.peerLabel.Color = l.Theme.Color.GrayText2
-
-	// pg.agentLabel = l.Theme.Body1("")
-	// pg.agentLabel.Color = l.Theme.Color.GrayText2
 	return pg
 }
 
@@ -231,9 +224,6 @@ func (pg *SettingsPage) connection() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, values.String(values.StrConnection), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Auto sync", pg.autoSync)
-				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.String(values.StrConnectToSpecificPeer), pg.connectToPeer)
 				}),
@@ -616,10 +606,6 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		pg.showWarningModalDialog(title, msg, userAgentKey)
 	}
 
-	if pg.autoSync.Changed() {
-		pg.WL.Wallet.SaveConfigValueForKey(load.AutoSyncConfigKey, pg.autoSync.IsChecked())
-	}
-
 	select {
 	case err := <-pg.errorReceiver:
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
@@ -721,12 +707,6 @@ func (pg *SettingsPage) updateSettingOptions() {
 	pg.transactionNotification.SetChecked(false)
 	if transactionNotification {
 		pg.transactionNotification.SetChecked(transactionNotification)
-	}
-
-	autoSync := pg.wal.ReadBoolConfigValueForKey(load.AutoSyncConfigKey)
-	pg.autoSync.SetChecked(false)
-	if autoSync {
-		pg.autoSync.SetChecked(autoSync)
 	}
 }
 
