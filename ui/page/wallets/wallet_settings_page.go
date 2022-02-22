@@ -204,6 +204,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 									m.SetLoading(false)
 									return
 								}
+								pg.Toast.Notify("Spending password updated")
 								m.Dismiss()
 							}()
 							return false
