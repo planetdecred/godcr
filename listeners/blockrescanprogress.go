@@ -11,9 +11,9 @@ type BlocksRescanProgressListener struct {
 	BlockRescanChan chan wallet.RescanUpdate
 }
 
-func NewBlocksRescanProgressListener(blockRescanCh chan wallet.RescanUpdate) *BlocksRescanProgressListener {
+func NewBlocksRescanProgressListener() *BlocksRescanProgressListener {
 	return &BlocksRescanProgressListener{
-		BlockRescanChan: blockRescanCh,
+		BlockRescanChan: make(chan wallet.RescanUpdate, 4),
 	}
 }
 

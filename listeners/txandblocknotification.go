@@ -12,9 +12,9 @@ type TxAndBlockNotificationListener struct {
 	TxAndBlockNotifChan chan TxNotification
 }
 
-func NewTxAndBlockNotificationListener(txAndBlockNotif chan TxNotification) *TxAndBlockNotificationListener {
+func NewTxAndBlockNotificationListener() *TxAndBlockNotificationListener {
 	return &TxAndBlockNotificationListener{
-		TxAndBlockNotifChan: txAndBlockNotif,
+		TxAndBlockNotifChan: make(chan TxNotification, 4),
 	}
 }
 

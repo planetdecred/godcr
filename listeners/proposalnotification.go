@@ -11,9 +11,9 @@ type ProposalNotificationListener struct {
 	ProposalNotifChan chan wallet.Proposal
 }
 
-func NewProposalNotificationListener(notifCh chan wallet.Proposal) *ProposalNotificationListener {
+func NewProposalNotificationListener() *ProposalNotificationListener {
 	return &ProposalNotificationListener{
-		ProposalNotifChan: notifCh,
+		ProposalNotifChan: make(chan wallet.Proposal, 4),
 	}
 }
 

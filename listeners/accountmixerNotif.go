@@ -9,9 +9,9 @@ type AccountMixerNotificationListener struct {
 	MixerChan chan wallet.AccountMixer
 }
 
-func NewAccountMixerNotificationListener(mixerCh chan wallet.AccountMixer) *AccountMixerNotificationListener {
+func NewAccountMixerNotificationListener() *AccountMixerNotificationListener {
 	return &AccountMixerNotificationListener{
-		MixerChan: mixerCh,
+		MixerChan: make(chan wallet.AccountMixer, 4),
 	}
 }
 

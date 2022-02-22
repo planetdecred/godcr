@@ -11,9 +11,9 @@ type SyncProgressListener struct {
 	SyncStatusChan chan wallet.SyncStatusUpdate
 }
 
-func NewSyncProgress(syncStatus chan wallet.SyncStatusUpdate) *SyncProgressListener {
+func NewSyncProgress() *SyncProgressListener {
 	return &SyncProgressListener{
-		SyncStatusChan: syncStatus,
+		SyncStatusChan: make(chan wallet.SyncStatusUpdate, 4),
 	}
 }
 
