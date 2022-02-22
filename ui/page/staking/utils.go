@@ -67,21 +67,6 @@ func WalletLiveTickets(w *dcrlibwallet.Wallet) ([]dcrlibwallet.Transaction, erro
 	return tickets, nil
 }
 
-func WalletLiveTickets(w *dcrlibwallet.Wallet) ([]dcrlibwallet.Transaction, error) {
-	var tickets []dcrlibwallet.Transaction
-	liveTicketFilters := []int32{dcrlibwallet.TxFilterUnmined, dcrlibwallet.TxFilterImmature, dcrlibwallet.TxFilterLive}
-	for _, filter := range liveTicketFilters {
-		tx, err := w.GetTransactionsRaw(0, 0, filter, true)
-		if err != nil {
-			return nil, err
-		}
-
-		tickets = append(tickets, tx...)
-	}
-
-	return tickets, nil
-}
-
 func ticketStatusTooltip(gtx C, l *load.Load, tx *components.TransactionItem) layout.Dimensions {
 	status := l.Theme.Label(values.MarginPadding14, strings.ToUpper(tx.Status.Title))
 	status.Font.Weight = text.Medium
