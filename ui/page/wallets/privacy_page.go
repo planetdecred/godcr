@@ -81,11 +81,7 @@ func (pg *PrivacyPage) OnNavigatedTo() {
 		pg.allowUnspendUnmixedAcct.SetChecked(true)
 	}
 
-	if pg.AccountMixerNotificationListener == nil {
-		pg.AccountMixerNotificationListener = listeners.NewAccountMixerNotificationListener(make(chan wallet.AccountMixer, 4))
-	} else {
-		pg.MixerChan = make(chan wallet.AccountMixer, 4)
-	}
+	pg.AccountMixerNotificationListener = listeners.NewAccountMixerNotificationListener()
 	pg.WL.MultiWallet.AddAccountMixerNotificationListener(pg, PrivacyPageID)
 }
 

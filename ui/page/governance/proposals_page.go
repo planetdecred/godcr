@@ -109,11 +109,7 @@ func (pg *ProposalsPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedTo() {
-	if pg.ProposalNotificationListener == nil {
-		pg.ProposalNotificationListener = listeners.NewProposalNotificationListener(make(chan wallet.Proposal, 4))
-	} else {
-		pg.ProposalNotifChan = make(chan wallet.Proposal, 4)
-	}
+	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
 	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalsPageID)
 
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())

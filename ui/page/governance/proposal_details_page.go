@@ -100,11 +100,7 @@ func (pg *ProposalDetails) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
 
-	if pg.ProposalNotificationListener == nil {
-		pg.ProposalNotificationListener = listeners.NewProposalNotificationListener(make(chan wallet.Proposal, 4))
-	} else {
-		pg.ProposalNotifChan = make(chan wallet.Proposal, 4)
-	}
+	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
 	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalDetailsPageID)
 }
 

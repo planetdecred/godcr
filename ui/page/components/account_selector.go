@@ -32,10 +32,10 @@ type AccountSelector struct {
 	openSelectorDialog *decredmaterial.Clickable
 	selectorModal      *AccountSelectorModal
 
-	dialogTitle             string
-	selectedWalletName      string
-	totalBalance            string
-	changed                 bool
+	dialogTitle        string
+	selectedWalletName string
+	totalBalance       string
+	changed            bool
 }
 
 func NewAccountSelector(l *load.Load) *AccountSelector {
@@ -44,7 +44,7 @@ func NewAccountSelector(l *load.Load) *AccountSelector {
 		multiWallet:                    l.WL.MultiWallet,
 		accountIsValid:                 func(*dcrlibwallet.Account) bool { return true },
 		openSelectorDialog:             l.Theme.NewClickable(true),
-		TxAndBlockNotificationListener: listeners.NewTxAndBlockNotificationListener(make(chan listeners.TxNotification, 4)),
+		TxAndBlockNotificationListener: listeners.NewTxAndBlockNotificationListener(),
 	}
 }
 

@@ -87,11 +87,7 @@ func (pg *ListPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *ListPage) OnNavigatedTo() {
-	if pg.TxAndBlockNotificationListener == nil {
-		pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener(make(chan listeners.TxNotification, 4))
-	} else {
-		pg.TxAndBlockNotifChan = make(chan listeners.TxNotification, 4)
-	}
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, listPageID)
 
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())

@@ -90,11 +90,7 @@ func (pg *TransactionsPage) ID() string {
 func (pg *TransactionsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	if pg.TxAndBlockNotificationListener == nil {
-		pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener(make(chan listeners.TxNotification, 4))
-	} else {
-		pg.TxAndBlockNotifChan = make(chan listeners.TxNotification, 4)
-	}
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, TransactionsPageID)
 
 	pg.listenForTxNotifications()
