@@ -54,8 +54,8 @@ var (
 	winLog     = backendLog.Logger("UI")
 	dlwlLog    = backendLog.Logger("DLWL")
 	pageLog    = backendLog.Logger("PAGE")
-	lstnersLog = backendLog.Logger("LSTNER")
-	cmpntLog   = backendLog.Logger("CMPNT")
+	lstnersLog = backendLog.Logger("LSTN")
+	cmpntLog   = backendLog.Logger("CPNT")
 )
 
 // Initialize package-global logger variables.
@@ -76,8 +76,8 @@ var subsystemLoggers = map[string]slog.Logger{
 	"UI":     winLog,
 	"GDCR":   log,
 	"PAGE":   pageLog,
-	"LSTNER": lstnersLog,
-	"CMPNT":  cmpntLog,
+	"LSTN": lstnersLog,
+	"CPNT":  cmpntLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and
