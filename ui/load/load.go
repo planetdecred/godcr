@@ -82,8 +82,6 @@ type Load struct {
 	SubscribeKeyEvent   func(eventChan chan *key.Event, pageID string) // Widgets call this function to recieve key events.
 	UnsubscribeKeyEvent func(pageID string) error
 	ReloadApp           func()
-	DesktopNotifier     func(notifier interface{}) // Widgets call this function to post desktop notifications.
-	UpdateBalance       func()                     // Widgets call this function to update total balance shown on the main page.s
 }
 
 func (l *Load) RefreshTheme() {

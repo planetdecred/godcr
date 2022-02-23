@@ -145,8 +145,6 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 						pg.proposal = proposal
 						pg.RefreshWindow()
 					}
-				default:
-					pg.DesktopNotifier(notification)
 				}
 			case <-pg.ctx.Done():
 				return

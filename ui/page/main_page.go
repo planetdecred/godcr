@@ -1,6 +1,7 @@
 package page
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/gen2brain/beeep"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -54,6 +56,11 @@ type NavHandler struct {
 
 type MainPage struct {
 	*load.Load
+	*listeners.SyncProgressListener
+	*listeners.TxAndBlockNotificationListener
+	*listeners.ProposalNotificationListener
+	ctx       context.Context
+	ctxCancel context.CancelFunc
 	appBarNav components.NavDrawer
 	drawerNav components.NavDrawer
 
@@ -97,8 +104,6 @@ func NewMainPage(l *load.Load) *MainPage {
 	l.ChangeFragment = mp.changeFragment
 	l.PopFragment = mp.popFragment
 	l.PopToFragment = mp.popToFragment
-	l.DesktopNotifier = mp.desktopNotifier // Assign to load for use by other widgets to post desktop notifications.
-	l.UpdateBalance = mp.UpdateBalance     // Assign to load for use by other widgets to update the shown total balance.
 
 	mp.initNavItems()
 
@@ -206,6 +211,9 @@ func (mp *MainPage) OnNavigatedTo() {
 	// register for notifications, unregister when the page disappears
 	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 	mp.setLanguageSetting()
+
+	mp.ctx, mp.ctxCancel = context.WithCancel(context.TODO())
+	mp.listenForSyncNotifications()
 
 	if mp.currentPage == nil {
 		mp.currentPage = overview.NewOverviewPage(mp.Load)
@@ -454,6 +462,8 @@ func (mp *MainPage) OnNavigatedFrom() {
 	}
 
 	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+
+	mp.ctxCancel()
 }
 
 func (mp *MainPage) currentPageID() string {
@@ -787,4 +797,69 @@ func initializeBeepNotification(n string) {
 	if err != nil {
 		log.Info("could not initiate desktop notification, reason:", err.Error())
 	}
+}
+
+// listenForSyncNotifications starts a goroutine to watch for sync updates
+// and update the UI accordingly.
+func (mp *MainPage) listenForSyncNotifications() {
+	// Setup listeners
+	mp.SyncProgressListener = listeners.NewSyncProgress()
+	mp.WL.MultiWallet.AddSyncProgressListener(mp.SyncProgressListener, MainPageID)
+
+	mp.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp.TxAndBlockNotificationListener, true, MainPageID)
+
+	mp.ProposalNotificationListener = listeners.NewProposalNotificationListener()
+	mp.WL.MultiWallet.Politeia.AddNotificationListener(mp.ProposalNotificationListener, MainPageID)
+	go func() {
+		for {
+			select {
+			case n := <-mp.TxAndBlockNotifChan:
+				switch n.NotificationType {
+				case listeners.NewTransaction:
+					mp.UpdateBalance(false)
+					transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
+					update := wallet.NewTransaction{
+						Transaction: n.Transaction,
+					}
+					if transactionNotification {
+						mp.desktopNotifier(update)
+					}
+					mp.RefreshWindow()
+				case listeners.BlockAttached:
+					beep := mp.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+					if beep {
+						_ = beeep.Beep(5, 1)
+					}
+
+					mp.UpdateBalance(false)
+					mp.RefreshWindow()
+				case listeners.TxConfirmed:
+					mp.UpdateBalance(false)
+					mp.RefreshWindow()
+
+				}
+			case notification := <-mp.ProposalNotifChan:
+				// Don't notify on wallet synced event.
+				if notification.ProposalStatus != wallet.Synced {
+					mp.desktopNotifier(notification)
+				}
+			case n := <-mp.SyncStatusChan:
+				if n.Stage == wallet.SyncCompleted {
+					mp.UpdateBalance(false)
+					mp.RefreshWindow()
+				}
+			case <-mp.ctx.Done():
+				mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
+				mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
+				mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
+
+				close(mp.SyncStatusChan)
+				close(mp.TxAndBlockNotifChan)
+				close(mp.ProposalNotifChan)
+
+				return
+			}
+		}
+	}()
 }

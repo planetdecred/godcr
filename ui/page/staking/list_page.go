@@ -108,7 +108,6 @@ func (pg *ListPage) listenForTxNotifications() {
 						pg.RefreshWindow()
 					}
 				} else if n.NotificationType == listeners.NewTransaction {
-					pg.UpdateBalance()
 					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 					if selectedWallet.ID == n.Transaction.WalletID {
 						pg.fetchTickets()

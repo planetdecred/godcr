@@ -11,7 +11,6 @@ import (
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v4"
-	"github.com/gen2brain/beeep"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -373,43 +372,21 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 					pg.loadTransactions()
 					pg.RefreshWindow()
 				case wallet.SyncCompleted:
-					pg.UpdateBalance()
 					pg.loadTransactions()
 					pg.RefreshWindow()
 				}
 
 			case n := <-pg.TxAndBlockNotifChan:
 				switch n.NotificationType {
-				case listeners.BlockAttached:
-					beep := pg.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
-					if beep {
-						_ = beeep.Beep(5, 1)
-					}
-
-					pg.UpdateBalance()
-					pg.RefreshWindow()
 				case listeners.NewTransaction:
-					pg.UpdateBalance()
 					pg.loadTransactions()
 					pg.RefreshWindow()
-					transactionNotification := pg.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
-					update := wallet.NewTransaction{
-						Transaction: n.Transaction,
-					}
-					if transactionNotification {
-						pg.DesktopNotifier(update)
-					}
-				case listeners.TxConfirmed:
-					pg.UpdateBalance()
 				}
 			case n := <-pg.ProposalNotifChan:
 				switch n.ProposalStatus {
 				case wallet.Synced:
 					pg.loadRecentProposals()
 					pg.RefreshWindow()
-				default:
-					pg.DesktopNotifier(n)
-
 				}
 
 			case n := <-pg.BlockRescanChan:
