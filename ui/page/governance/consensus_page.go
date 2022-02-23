@@ -51,6 +51,7 @@ type ConsensusPage struct {
 	wallets        []*dcrlibwallet.Wallet
 	LiveTickets    []*dcrlibwallet.Transaction
 
+	shadowBox     *decredmaterial.Shadow
 	syncCompleted bool
 	isSyncing     bool
 }
@@ -59,6 +60,7 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 	pg := &ConsensusPage{
 		Load:        l,
 		multiWallet: l.WL.MultiWallet,
+		shadowBox:   l.Theme.Shadow(),
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -252,22 +254,38 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 func (pg *ConsensusPage) layoutContent(gtx C) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			consensusItems := pg.consensusItems
-
+			list := layout.List{Axis: layout.Vertical}
 			return pg.Theme.List(pg.listContainer).Layout(gtx, 1, func(gtx C, i int) D {
 				return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-						if len(consensusItems) == 0 {
-							return components.LayoutNoAgendasFound(gtx, pg.Load, pg.isSyncing)
-						}
-						return pg.consensusList.Layout(gtx, len(consensusItems), func(gtx C, i int) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return components.AgendasList(gtx, pg.Load, consensusItems[i])
-								}),
-								layout.Rigid(pg.Theme.Separator().Layout),
-							)
-						})
+					return list.Layout(gtx, len(pg.consensusItems), func(gtx C, i int) D {
+						radius := decredmaterial.Radius(14)
+						pg.shadowBox.SetShadowRadius(14)
+						pg.shadowBox.SetShadowElevation(5)
+						return decredmaterial.LinearLayout{
+							Orientation: layout.Horizontal,
+							Width:       decredmaterial.MatchParent,
+							Height:      decredmaterial.WrapContent,
+							Background:  pg.Theme.Color.Surface,
+							Direction:   layout.W,
+							Shadow:      pg.shadowBox,
+							Border:      decredmaterial.Border{Radius: radius},
+							Padding:     layout.UniformInset(values.MarginPadding15),
+							Margin:      layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										if len(pg.consensusItems) == 0 {
+											return components.LayoutNoAgendasFound(gtx, pg.Load, pg.isSyncing)
+										}
+										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												return components.AgendasList(gtx, pg.Load, pg.consensusItems[i])
+											}),
+										)
+									}),
+								)
+							}),
+						)
 					})
 				})
 			})
