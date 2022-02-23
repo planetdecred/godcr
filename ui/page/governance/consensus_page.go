@@ -201,6 +201,35 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 							}),
 						)
 					}),
+				)
+			}),
+			// TODO: Move to after search bar
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+									return pg.Load.Icons.RedirectIcon.Layout24dp(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+												layout.Rigid(func(gtx C) D {
+													txt := pg.Theme.Label(values.TextSize20, "Voting Dasboard")
+													txt.Font.Weight = text.SemiBold
+													return txt.Layout(gtx)
+												}),
+											)
+										}),
+									)
+								})
+							}),
+						)
+					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 							body := func(gtx C) D {
