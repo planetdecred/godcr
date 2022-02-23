@@ -71,13 +71,13 @@ func init() {
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
 var subsystemLoggers = map[string]slog.Logger{
-	"WALL":   walletLog,
-	"DLWL":   dlwlLog,
-	"UI":     winLog,
-	"GDCR":   log,
-	"PAGE":   pageLog,
+	"WALL": walletLog,
+	"DLWL": dlwlLog,
+	"UI":   winLog,
+	"GDCR": log,
+	"PAGE": pageLog,
 	"LSTN": lstnersLog,
-	"CPNT":  cmpntLog,
+	"CPNT": cmpntLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and
