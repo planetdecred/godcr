@@ -203,70 +203,20 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 					}),
 				)
 			}),
-			// TODO: Move to after search bar
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									return pg.Load.Icons.RedirectIcon.Layout24dp(gtx)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													txt := pg.Theme.Label(values.TextSize20, "Voting Dasboard")
-													txt.Font.Weight = text.SemiBold
-													return txt.Layout(gtx)
-												}),
-											)
-										}),
-									)
-								})
-							}),
-						)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							body := func(gtx C) D {
-								return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										var text string
-										if pg.isSyncing {
-											text = "Syncing..."
-										} else if pg.syncCompleted {
-											text = "Updated"
-										}
-
-										lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
-										lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
-										if pg.syncCompleted {
-											lastUpdatedInfo.Color = pg.Theme.Color.Success
-										}
-
-										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, lastUpdatedInfo.Layout)
-									}),
-								)
-							}
-
-							return layout.Flex{}.Layout(gtx,
-								layout.Flexed(1, func(gtx C) D {
-									return layout.E.Layout(gtx, body)
-								}),
-							)
-						})
-					}),
-				)
-			}),
 			layout.Flexed(1, func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 					return layout.Stack{}.Layout(gtx,
 						layout.Expanded(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
+							return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
+								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return pg.layoutRedirectVoting(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return pg.layoutContent(gtx)
+									}),
+								)
+							})
 						}),
 						layout.Expanded(func(gtx C) D {
 							gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
@@ -309,6 +259,61 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 	return D{}
 }
 
+func (pg *ConsensusPage) layoutRedirectVoting(gtx C) D {
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return pg.Load.Icons.RedirectIcon.Layout16dp(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPaddingMinus2}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+									layout.Rigid(pg.Theme.Label(values.TextSize16, "Voting Dasboard").Layout),
+								)
+							}),
+						)
+					})
+				}),
+			)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+				body := func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							var text string
+							if pg.isSyncing {
+								text = "Syncing..."
+							} else if pg.syncCompleted {
+								text = "Updated"
+							}
+
+							lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
+							lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
+							if pg.syncCompleted {
+								lastUpdatedInfo.Color = pg.Theme.Color.Success
+							}
+
+							return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, lastUpdatedInfo.Layout)
+						}),
+					)
+				}
+
+				return layout.Flex{}.Layout(gtx,
+					layout.Flexed(1, func(gtx C) D {
+						return layout.E.Layout(gtx, body)
+					}),
+				)
+			})
+		}),
+	)
+}
+
 func (pg *ConsensusPage) layoutContent(gtx C) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
@@ -325,10 +330,10 @@ func (pg *ConsensusPage) layoutContent(gtx C) D {
 							Height:      decredmaterial.WrapContent,
 							Background:  pg.Theme.Color.Surface,
 							Direction:   layout.W,
-							Shadow:      pg.shadowBox,
-							Border:      decredmaterial.Border{Radius: radius},
-							Padding:     layout.UniformInset(values.MarginPadding15),
-							Margin:      layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout(gtx,
+							// Shadow:      pg.shadowBox,
+							Border:  decredmaterial.Border{Radius: radius},
+							Padding: layout.UniformInset(values.MarginPadding15),
+							Margin:  layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {

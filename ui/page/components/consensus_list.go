@@ -2,6 +2,7 @@ package components
 
 import (
 	"image/color"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -22,64 +23,55 @@ type ConsensusItem struct {
 
 func AgendasList(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-		agenda := consensusItem.Agenda
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layoutAgendaStatus(gtx, l, consensusItem.Agenda)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layoutAgendaDescription(gtx, l, agenda)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layoutAgendaID(gtx, l, agenda)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layoutAgendaVotingPreference(gtx, l, agenda)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layoutAgendaVoteAction(gtx, l, consensusItem)
-			}),
-		)
-	})
+	agenda := consensusItem.Agenda
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layoutAgendaStatus(gtx, l, consensusItem.Agenda)
+		}),
+		layout.Rigid(layoutAgendaDetails(gtx, l, agenda.Description)),
+		layout.Rigid(layoutAgendaDetails(gtx, l, "ID: #"+agenda.AgendaID)),
+		layout.Rigid(layoutAgendaDetails(gtx, l, "Voting Preference: "+agenda.VotingPreference)),
+		layout.Rigid(func(gtx C) D {
+			return layoutAgendaVoteAction(gtx, l, consensusItem)
+		}),
+	)
 }
 
 func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-	lbl := l.Theme.H5(agenda.AgendaID)
-	lbl.Font.Weight = text.SemiBold
 
 	var statusLabel decredmaterial.Label
-	var statusLabelColor color.NRGBA
 	var statusIcon *decredmaterial.Icon
 	var backgroundColor color.NRGBA
 
 	switch agenda.Status {
 	case "Finished":
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
-		statusLabelColor = l.Theme.Color.GreenText
+		statusLabel.Color = l.Theme.Color.GreenText
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
 		statusIcon.Color = l.Theme.Color.Green500
 		backgroundColor = l.Theme.Color.Green50
 		canVote = false
 	case "In progress":
+		clr := l.Theme.Color.Primary
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
-		statusLabelColor = l.Theme.Color.Primary
+		statusLabel.Color = clr
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
-		statusIcon.Color = statusLabelColor
+		statusIcon.Color = clr
 		backgroundColor = l.Theme.Color.LightBlue
 		canVote = true
 	case "Upcoming":
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
-		statusLabelColor = l.Theme.Color.Text
+		statusLabel.Color = l.Theme.Color.Text
 		statusIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
 		statusIcon.Color = l.Theme.Color.DeepBlue
 		backgroundColor = l.Theme.Color.Gray2
 		canVote = false
 	}
 
-	statusLabel.Color = statusLabelColor
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
+			lbl := l.Theme.Label(values.MarginPadding20, (strings.Title(strings.ToLower(agenda.AgendaID))))
+			lbl.Font.Weight = text.SemiBold
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(lbl.Layout),
 			)
@@ -105,22 +97,12 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	)
 }
 
-func layoutAgendaDescription(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-	lbl := l.Theme.Label(values.MarginPadding16, agenda.Description)
-	lbl.Font.Weight = text.Light
-	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
-}
-
-func layoutAgendaID(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-	lbl := l.Theme.Label(values.MarginPadding16, "ID: #"+agenda.AgendaID)
-	lbl.Font.Weight = text.Light
-	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
-}
-
-func layoutAgendaVotingPreference(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
-	lbl := l.Theme.Label(values.MarginPadding16, "Voting Preference: "+agenda.VotingPreference)
-	lbl.Font.Weight = text.Light
-	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
+func layoutAgendaDetails(gtx C, l *load.Load, data string) layout.Widget {
+	return func(gtx C) D {
+		lbl := l.Theme.Label(values.MarginPadding16, data)
+		lbl.Font.Weight = text.Light
+		return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, lbl.Layout)
+	}
 }
 
 func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
