@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
@@ -42,7 +41,6 @@ type ProposalsPage struct {
 	syncButton       *widget.Clickable
 	searchEditor     decredmaterial.Editor
 
-	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
 
 	updatedIcon *decredmaterial.Icon
@@ -70,8 +68,10 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 	pg.syncButton = new(widget.Clickable)
 
 	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
+	pg.proposalsList.IsShadowEnabled = true
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	_, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.infoButton.Size = values.MarginPadding20
 
 	// orderDropDown is the first dropdown when page is laid out. Its
 	// position should be 0 for consistent backdrop.
@@ -150,10 +150,6 @@ func (pg *ProposalsPage) fetchProposals() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *ProposalsPage) HandleUserInteractions() {
-	for pg.backButton.Button.Clicked() {
-		pg.PopFragment()
-	}
-
 	for pg.categoryDropDown.Changed() {
 		pg.fetchProposals()
 	}
@@ -206,107 +202,51 @@ func (pg *ProposalsPage) OnNavigatedFrom() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *ProposalsPage) Layout(gtx C) D {
-	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							body := func(gtx C) D {
-								return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										var text string
-										if pg.isSyncing {
-											text = "Syncing..."
-										} else if pg.syncCompleted {
-											text = "Updated"
-										} else {
-											text = "Upated " + components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
-										}
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(pg.layoutSectionHeader),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Expanded(func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
+					}),
+					layout.Expanded(func(gtx C) D {
+						gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-										lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
-										lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
-										if pg.syncCompleted {
-											lastUpdatedInfo.Color = pg.Theme.Color.Success
-										}
-
-										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, lastUpdatedInfo.Layout)
-									}),
-								)
-							}
-
-							return layout.Flex{}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-														layout.Rigid(func(gtx C) D {
-															txt := pg.Theme.Label(values.TextSize20, "Proposals")
-															txt.Font.Weight = text.SemiBold
-															return txt.Layout(gtx)
-														}),
-													)
-												}),
-											)
-										}),
-										layout.Rigid(pg.infoButton.Layout),
-									)
-								}),
-								layout.Flexed(1, func(gtx C) D {
-									return layout.E.Layout(gtx, body)
-								}),
-							)
+						card := pg.Theme.Card()
+						card.Radius = decredmaterial.Radius(8)
+						return card.Layout(gtx, func(gtx C) D {
+							return layout.Inset{
+								Left:   values.MarginPadding10,
+								Right:  values.MarginPadding10,
+								Top:    values.MarginPadding2,
+								Bottom: values.MarginPadding2,
+							}.Layout(gtx, pg.searchEditor.Layout)
 						})
 					}),
-				)
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-					return layout.Stack{}.Layout(gtx,
-						layout.Expanded(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
-						}),
-						layout.Expanded(func(gtx C) D {
-							gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-
+					layout.Expanded(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.E.Layout(gtx, func(gtx C) D {
 							card := pg.Theme.Card()
 							card.Radius = decredmaterial.Radius(8)
 							return card.Layout(gtx, func(gtx C) D {
-								return layout.Inset{
-									Left:   values.MarginPadding10,
-									Right:  values.MarginPadding10,
-									Top:    values.MarginPadding2,
-									Bottom: values.MarginPadding2,
-								}.Layout(gtx, pg.searchEditor.Layout)
-							})
-						}),
-						layout.Expanded(func(gtx C) D {
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return layout.E.Layout(gtx, func(gtx C) D {
-								card := pg.Theme.Card()
-								card.Radius = decredmaterial.Radius(8)
-								return card.Layout(gtx, func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
-										return pg.layoutSyncSection(gtx)
-									})
+								return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
+									return pg.layoutSyncSection(gtx)
 								})
 							})
-						}),
-						layout.Expanded(func(gtx C) D {
-							return pg.orderDropDown.Layout(gtx, 45, true)
-						}),
-						layout.Expanded(func(gtx C) D {
-							return pg.categoryDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
-						}),
-					)
-				})
-			}),
-		)
-	}
-	return D{}
+						})
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.orderDropDown.Layout(gtx, 45, true)
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.categoryDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
+					}),
+				)
+			})
+		}),
+	)
 }
 
 func (pg *ProposalsPage) layoutContent(gtx C) D {
@@ -357,9 +297,44 @@ func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
 }
 
 func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
-	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
-		return pg.Icons.Restore.Layout24dp(gtx)
-	})
+	// TODO: use decredmaterial clickable
+	return material.Clickable(gtx, pg.syncButton, pg.Icons.Restore.Layout24dp)
+}
+
+func (pg *ProposalsPage) layoutSectionHeader(gtx C) D {
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(pg.Theme.Label(values.TextSize20, "Proposals").Layout), // Do we really need to display the title? nav is proposals already
+				layout.Rigid(pg.infoButton.Layout),
+			)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			body := func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						var text string
+						if pg.isSyncing {
+							text = "Syncing..."
+						} else if pg.syncCompleted {
+							text = "Updated"
+						} else {
+							text = "Upated " + components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
+						}
+
+						lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
+						lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
+						if pg.syncCompleted {
+							lastUpdatedInfo.Color = pg.Theme.Color.Success
+						}
+
+						return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, lastUpdatedInfo.Layout)
+					}),
+				)
+			}
+			return layout.E.Layout(gtx, body)
+		}),
+	)
 }
 
 func (pg *ProposalsPage) listenForSyncNotifications() {

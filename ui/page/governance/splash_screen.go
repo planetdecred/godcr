@@ -11,7 +11,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-func (pg *Page) initializeWidget() {
+func (pg *Page) initSplashScreenWidgets() {
 	_, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.enableGovernanceBtn = pg.Theme.Button("Fetch proposals")
 }

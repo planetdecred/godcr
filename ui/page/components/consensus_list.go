@@ -28,9 +28,9 @@ func AgendasList(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
 		layout.Rigid(func(gtx C) D {
 			return layoutAgendaStatus(gtx, l, consensusItem.Agenda)
 		}),
-		layout.Rigid(layoutAgendaDetails(gtx, l, agenda.Description)),
-		layout.Rigid(layoutAgendaDetails(gtx, l, "ID: #"+agenda.AgendaID)),
-		layout.Rigid(layoutAgendaDetails(gtx, l, "Voting Preference: "+agenda.VotingPreference)),
+		layout.Rigid(layoutAgendaDetails(l, agenda.Description)),
+		layout.Rigid(layoutAgendaDetails(l, "ID: #"+agenda.AgendaID)),
+		layout.Rigid(layoutAgendaDetails(l, "Voting Preference: "+agenda.VotingPreference)),
 		layout.Rigid(func(gtx C) D {
 			return layoutAgendaVoteAction(gtx, l, consensusItem)
 		}),
@@ -97,7 +97,7 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	)
 }
 
-func layoutAgendaDetails(gtx C, l *load.Load, data string) layout.Widget {
+func layoutAgendaDetails(l *load.Load, data string) layout.Widget {
 	return func(gtx C) D {
 		lbl := l.Theme.Label(values.MarginPadding16, data)
 		lbl.Font.Weight = text.Light

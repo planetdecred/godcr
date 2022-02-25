@@ -31,18 +31,14 @@ type Page struct {
 
 	tabCategoryList *decredmaterial.ClickableList
 	listContainer   *widget.List
-	tabCard         decredmaterial.Card
-	itemCard        decredmaterial.Card
 
-	selectedCategoryIndex int
+	infoButton          decredmaterial.IconButton
+	enableGovernanceBtn decredmaterial.Button
 
 	proposalsPage *ProposalsPage
 	consensusPage *ConsensusPage
 
-	backButton decredmaterial.IconButton
-	infoButton decredmaterial.IconButton
-
-	enableGovernanceBtn decredmaterial.Button
+	selectedCategoryIndex int
 }
 
 var (
@@ -59,12 +55,12 @@ func NewGovernancePage(l *load.Load) *Page {
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
+		tabCategoryList: l.Theme.NewClickableList(layout.Horizontal),
 	}
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	_, pg.infoButton = components.SubpageHeaderButtons(l)
 
-	pg.initTabWidgets()
-	pg.initializeWidget()
+	pg.initSplashScreenWidgets()
 
 	return pg
 }
@@ -105,16 +101,6 @@ func (pg *Page) OnNavigatedTo() {
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedFrom() {}
 
-func (pg *Page) initTabWidgets() {
-	pg.tabCategoryList = pg.Theme.NewClickableList(layout.Horizontal)
-	pg.itemCard = pg.Theme.Card()
-
-	radius := decredmaterial.Radius(0)
-	pg.tabCard = pg.Theme.Card()
-	pg.tabCard.Color = pg.Theme.Color.Gray4
-	pg.tabCard.Radius = radius
-}
-
 func (pg *Page) ID() string {
 	return GovernancePageID
 }
@@ -124,10 +110,6 @@ func (pg *Page) HandleUserInteractions() {
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.proposalsPage.isSyncing = pg.proposalsPage.multiWallet.Politeia.IsSyncing()
 		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
-	}
-
-	for pg.backButton.Button.Clicked() {
-		pg.PopFragment()
 	}
 
 	if clicked, selectedItem := pg.tabCategoryList.ItemClicked(); clicked {
@@ -206,46 +188,18 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	/** end consensus page handles */
-
 }
 
 func (pg *Page) Layout(gtx C) D {
 	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 		return components.UniformPadding(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(pg.backButton.Layout),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-											layout.Rigid(func(gtx C) D {
-												txt := pg.Theme.Label(values.TextSize20, "Governance")
-												txt.Font.Weight = text.SemiBold
-												return txt.Layout(gtx)
-											}),
-										)
-									}),
-								)
-							})
-						}),
-					)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(pg.layoutTabs),
-					)
-				}),
+				layout.Rigid(pg.layoutPageTopNav),
+				layout.Rigid(pg.layoutTabs),
 				layout.Rigid(pg.Theme.Separator().Layout),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-						return layout.Stack{}.Layout(gtx,
-							layout.Expanded(func(gtx C) D {
-								return pg.switchTab(gtx, pg.selectedCategoryIndex)
-							}),
-						)
+						return pg.switchTab(gtx, pg.selectedCategoryIndex)
 					})
 				}),
 			)
@@ -263,46 +217,74 @@ func (pg *Page) switchTab(gtx C, selectedCategoryIndex int) D {
 }
 
 func (pg *Page) layoutTabs(gtx C) D {
-	width := float32(gtx.Constraints.Max.X-20) / float32(8)
-	selectedCategory := pg.selectedCategoryIndex
+	var dims layout.Dimensions
 
-	return pg.tabCard.Layout(gtx, func(gtx C) D {
-		return layout.Inset{
-			Left:  values.MarginPadding12,
-			Right: values.MarginPadding12,
-		}.Layout(gtx, func(gtx C) D {
-			return pg.tabCategoryList.Layout(gtx, len(governanceTabTitles), func(gtx C, i int) D {
-				gtx.Constraints.Min.X = int(width)
-				return layout.Stack{Alignment: layout.S}.Layout(gtx,
-					layout.Stacked(func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding14).Layout(gtx, func(gtx C) D {
-							return layout.Center.Layout(gtx, func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										lbl := pg.Theme.Body1(governanceTabTitles[i])
-										lbl.Color = pg.Theme.Color.GrayText1
-										if selectedCategory == i {
-											lbl.Color = pg.Theme.Color.Primary
-										}
-										return lbl.Layout(gtx)
-									}),
-								)
-							})
+	return layout.Inset{
+		Top: values.MarginPadding20,
+	}.Layout(gtx, func(gtx C) D {
+		return pg.tabCategoryList.Layout(gtx, len(governanceTabTitles), func(gtx C, i int) D {
+			return layout.Stack{Alignment: layout.S}.Layout(gtx,
+				layout.Stacked(func(gtx C) D {
+					return layout.Inset{
+						Right:  values.MarginPadding24,
+						Bottom: values.MarginPadding8,
+					}.Layout(gtx, func(gtx C) D {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							return layout.Flex{}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									lbl := pg.Theme.Label(values.TextSize16, governanceTabTitles[i])
+									lbl.Color = pg.Theme.Color.GrayText1
+									if pg.selectedCategoryIndex == i {
+										lbl.Color = pg.Theme.Color.Primary
+										dims = lbl.Layout(gtx)
+									}
+
+									return lbl.Layout(gtx)
+								}),
+							)
 						})
-					}),
-					layout.Stacked(func(gtx C) D {
-						if selectedCategory != i {
-							return D{}
-						}
-						tabHeight := gtx.Px(unit.Dp(2))
-						tabRect := image.Rect(0, 0, int(width), tabHeight)
+					})
+				}),
+				layout.Stacked(func(gtx C) D {
+					if pg.selectedCategoryIndex != i {
+						return D{}
+					}
+
+					tabHeight := gtx.Px(unit.Dp(2))
+					tabRect := image.Rect(0, 0, dims.Size.X, tabHeight)
+
+					return layout.Inset{
+						Left: values.MarginPaddingMinus22,
+					}.Layout(gtx, func(gtx C) D {
 						paint.FillShape(gtx.Ops, pg.Theme.Color.Primary, clip.Rect(tabRect).Op())
 						return layout.Dimensions{
-							Size: image.Point{X: int(width), Y: tabHeight},
+							Size: image.Point{X: dims.Size.X, Y: tabHeight},
 						}
-					}),
-				)
-			})
+					})
+				}),
+			)
 		})
 	})
+}
+
+func (pg *Page) layoutPageTopNav(gtx C) D {
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Rigid(pg.Icons.GovernanceActiveIcon.Layout24dp),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{
+				Left: values.MarginPadding20,
+			}.Layout(gtx, func(gtx C) D {
+				txt := pg.Theme.Label(values.TextSize20, "Governance")
+				txt.Font.Weight = text.SemiBold
+				return txt.Layout(gtx)
+			})
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return D{}
+				//TODO: governance syncing functionality.
+				//TODO: Split wallet sync from governance
+			})
+		}),
+	)
 }

@@ -7,7 +7,6 @@ import (
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
@@ -41,7 +40,6 @@ type ConsensusPage struct {
 	searchEditor      decredmaterial.Editor
 	fetchProposalsBtn decredmaterial.Button
 
-	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
 	voteButton decredmaterial.Button
 
@@ -76,7 +74,8 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 
 	pg.consensusList = pg.Theme.NewClickableList(layout.Vertical)
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	_, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.infoButton.Size = values.MarginPadding20
 
 	pg.voteButton = l.Theme.Button("Change Vote")
 
@@ -127,50 +126,27 @@ func layoutInfoTooltip(gtx C, rect image.Rectangle, item HeaderItem) {
 }
 
 func (pg *ConsensusPage) Layout(gtx C) D {
-	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													txt := pg.Theme.Label(values.TextSize20, "Consensus Changes")
-													txt.Font.Weight = text.SemiBold
-													return txt.Layout(gtx)
-												}),
-											)
-										}),
-									)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								tooltipLabel := pg.Theme.Caption("")
-								tooltipLabel.Color = pg.Theme.Color.GrayText2
-								tooltipLabel.Text = "Waiting for author to authorize voting"
-								item := &HeaderItem{
-									Title:        pg.Theme.Label(values.TextSize20, "Consensus Changes"),
-									tooltip:      pg.Theme.Tooltip(),
-									tooltipLabel: tooltipLabel,
-								}
-								return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding0}.Layout(gtx, func(gtx C) D {
-									rect := image.Rectangle{
-										Min: gtx.Constraints.Min,
-										Max: gtx.Constraints.Max,
-									}
-									rect.Max.Y = 20
-									layoutInfoTooltip(gtx, rect, *item)
-
-									infoIcon := decredmaterial.NewIcon(pg.Icons.ActionInfo)
-									infoIcon.Color = pg.Theme.Color.GrayText2
-									return infoIcon.Layout(gtx, values.MarginPadding25)
-								})
-							}),
-						)
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(pg.Theme.Label(values.TextSize20, "Consensus Changes").Layout), // Do we really need to display the title? nav is proposals already
+						layout.Rigid(pg.infoButton.Layout),
+					)
+				}),
+				layout.Flexed(1, func(gtx C) D {
+					return layout.E.Layout(gtx, pg.layoutRedirectVoting)
+				}),
+			)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Expanded(func(gtx C) D {
+						return layout.Inset{
+							Top: values.MarginPadding60,
+						}.Layout(gtx, pg.layoutContent)
 					}),
 				)
 			}),
@@ -225,90 +201,56 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 							card := pg.Theme.Card()
 							card.Radius = decredmaterial.Radius(8)
 							return card.Layout(gtx, func(gtx C) D {
-								return layout.Inset{
-									Left:   values.MarginPadding10,
-									Right:  values.MarginPadding10,
-									Top:    values.MarginPadding2,
-									Bottom: values.MarginPadding2,
-								}.Layout(gtx, pg.searchEditor.Layout)
-							})
-						}),
-						layout.Expanded(func(gtx C) D {
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return layout.E.Layout(gtx, func(gtx C) D {
-								card := pg.Theme.Card()
-								card.Radius = decredmaterial.Radius(8)
-								return card.Layout(gtx, func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
-										return pg.layoutSyncSection(gtx)
-									})
+								return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
+									return pg.layoutSyncSection(gtx)
 								})
 							})
-						}),
-						layout.Expanded(func(gtx C) D {
-							return pg.orderDropDown.Layout(gtx, 45, true)
-						}),
-						layout.Expanded(func(gtx C) D {
-							return pg.walletDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
-						}),
-					)
-				})
-			}),
-		)
-	}
-	return D{}
+						})
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.orderDropDown.Layout(gtx, 45, true)
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.walletDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
+					}),
+				)
+			})
+		}),
+	)
 }
 
 func (pg *ConsensusPage) layoutRedirectVoting(gtx C) D {
-	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+	return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.Load.Icons.RedirectIcon.Layout16dp(gtx)
-					})
+					return layout.Inset{
+						Right: values.MarginPadding10,
+					}.Layout(gtx, pg.Load.Icons.RedirectIcon.Layout16dp)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPaddingMinus2}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-									layout.Rigid(pg.Theme.Label(values.TextSize16, "Voting Dasboard").Layout),
-								)
-							}),
-						)
-					})
+					return layout.Inset{
+						Top: values.MarginPaddingMinus2,
+					}.Layout(gtx, pg.Theme.Label(values.TextSize16, "Voting Dasboard").Layout)
 				}),
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				body := func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							var text string
-							if pg.isSyncing {
-								text = "Syncing..."
-							} else if pg.syncCompleted {
-								text = "Updated"
-							}
+			var text string
+			if pg.isSyncing {
+				text = "Syncing..."
+			} else if pg.syncCompleted {
+				text = "Updated"
+			}
 
-							lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
-							lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
-							if pg.syncCompleted {
-								lastUpdatedInfo.Color = pg.Theme.Color.Success
-							}
+			lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
+			lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
+			if pg.syncCompleted {
+				lastUpdatedInfo.Color = pg.Theme.Color.Success
+			}
 
-							return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, lastUpdatedInfo.Layout)
-						}),
-					)
-				}
-
-				return layout.Flex{}.Layout(gtx,
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, body)
-					}),
-				)
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, lastUpdatedInfo.Layout)
 			})
 		}),
 	)
@@ -325,30 +267,20 @@ func (pg *ConsensusPage) layoutContent(gtx C) D {
 						pg.shadowBox.SetShadowRadius(14)
 						pg.shadowBox.SetShadowElevation(5)
 						return decredmaterial.LinearLayout{
-							Orientation: layout.Horizontal,
+							Orientation: layout.Vertical,
 							Width:       decredmaterial.MatchParent,
 							Height:      decredmaterial.WrapContent,
 							Background:  pg.Theme.Color.Surface,
 							Direction:   layout.W,
-							// Shadow:      pg.shadowBox,
-							Border:  decredmaterial.Border{Radius: radius},
-							Padding: layout.UniformInset(values.MarginPadding15),
-							Margin:  layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										if len(pg.consensusItems) == 0 {
-											return components.LayoutNoAgendasFound(gtx, pg.Load, pg.isSyncing)
-										}
-										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-											layout.Rigid(func(gtx C) D {
-												return components.AgendasList(gtx, pg.Load, pg.consensusItems[i])
-											}),
-										)
-									}),
-								)
-							}),
-						)
+							Border:      decredmaterial.Border{Radius: radius},
+							Padding:     layout.UniformInset(values.MarginPadding15),
+							Margin:      layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout2(gtx, func(gtx C) D {
+							if len(pg.consensusItems) == 0 {
+								return components.LayoutNoAgendasFound(gtx, pg.Load, pg.isSyncing)
+							}
+
+							return components.AgendasList(gtx, pg.Load, pg.consensusItems[i])
+						})
 					})
 				})
 			})
@@ -375,5 +307,6 @@ func (pg *ConsensusPage) layoutIsSyncingSection(gtx C) D {
 }
 
 func (pg *ConsensusPage) layoutStartSyncSection(gtx C) D {
+	// TODO: use decredmaterial clickable
 	return material.Clickable(gtx, pg.syncButton, pg.Icons.Restore.Layout24dp)
 }

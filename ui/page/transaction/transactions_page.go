@@ -48,6 +48,7 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	}
 
 	pg.transactionList.Radius = decredmaterial.Radius(values.MarginPadding14.V)
+	pg.transactionList.IsShadowEnabled = true
 
 	pg.orderDropDown = components.CreateOrderDropDown(l, values.TxDropdownGroup, 1)
 	pg.wallets = pg.WL.SortedWalletList()
