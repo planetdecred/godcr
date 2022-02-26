@@ -185,6 +185,10 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 	}
 
 	decredmaterial.DisplayOneDropdown(pg.orderDropDown, pg.categoryDropDown)
+
+	for pg.infoButton.Button.Clicked() {
+		//TODO: proposal info modal
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from

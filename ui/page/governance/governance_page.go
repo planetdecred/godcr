@@ -1,16 +1,12 @@
 package governance
 
 import (
-	"context"
 	"image"
-	"time"
 
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
-	"gioui.org/unit"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -24,26 +20,20 @@ const GovernancePageID = "Governance"
 type Page struct {
 	*load.Load
 
-	ctx       context.Context // page context
-	ctxCancel context.CancelFunc
-
 	multiWallet *dcrlibwallet.MultiWallet
 
-	tabCategoryList *decredmaterial.ClickableList
-	listContainer   *widget.List
-
-	infoButton          decredmaterial.IconButton
-	enableGovernanceBtn decredmaterial.Button
+	tabCategoryList        *decredmaterial.ClickableList
+	splashScreenInfoButton decredmaterial.IconButton
+	enableGovernanceBtn    decredmaterial.Button
 
 	proposalsPage *ProposalsPage
 	consensusPage *ConsensusPage
 
 	selectedCategoryIndex int
+	changed               bool
 }
 
-var (
-	governanceTabTitles = []string{"Proposals", "Consensus Changes"}
-)
+var governanceTabTitles = []string{"Proposals", "Consensus Changes"}
 
 func NewGovernancePage(l *load.Load) *Page {
 	pg := &Page{
@@ -52,13 +42,8 @@ func NewGovernancePage(l *load.Load) *Page {
 		selectedCategoryIndex: -1,
 		proposalsPage:         NewProposalsPage(l),
 		consensusPage:         NewConsensusPage(l),
-		listContainer: &widget.List{
-			List: layout.List{Axis: layout.Vertical},
-		},
-		tabCategoryList: l.Theme.NewClickableList(layout.Horizontal),
+		tabCategoryList:       l.Theme.NewClickableList(layout.Horizontal),
 	}
-
-	_, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	pg.initSplashScreenWidgets()
 
@@ -99,7 +84,10 @@ func (pg *Page) OnNavigatedTo() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *Page) OnNavigatedFrom() {}
+func (pg *Page) OnNavigatedFrom() {
+	pg.consensusPage.OnNavigatedFrom()
+	pg.proposalsPage.OnNavigatedFrom()
+}
 
 func (pg *Page) ID() string {
 	return GovernancePageID
@@ -107,87 +95,33 @@ func (pg *Page) ID() string {
 
 func (pg *Page) HandleUserInteractions() {
 	for pg.enableGovernanceBtn.Clicked() {
+		go pg.consensusPage.FetchAgendas()
 		go pg.WL.MultiWallet.Politeia.Sync()
-		pg.proposalsPage.isSyncing = pg.proposalsPage.multiWallet.Politeia.IsSyncing()
+		pg.proposalsPage.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
 	}
 
 	if clicked, selectedItem := pg.tabCategoryList.ItemClicked(); clicked {
-		pg.selectedCategoryIndex = selectedItem
-	}
-
-	/** begin proposal page handles */
-
-	for pg.proposalsPage.infoButton.Button.Clicked() {
-	}
-
-	for pg.proposalsPage.categoryDropDown.Changed() {
-		pg.proposalsPage.fetchProposals()
-	}
-
-	for pg.proposalsPage.orderDropDown.Changed() {
-		pg.proposalsPage.fetchProposals()
-	}
-
-	pg.proposalsPage.searchEditor.EditorIconButtonEvent = func() {
-		//TODO: Proposals search functionality
-	}
-
-	if clicked, selectedItem := pg.proposalsPage.proposalsList.ItemClicked(); clicked {
-		pg.proposalsPage.proposalMu.Lock()
-		selectedProposal := pg.proposalsPage.proposalItems[selectedItem].Proposal
-		pg.proposalsPage.proposalMu.Unlock()
-
-		pg.ChangeFragment(NewProposalDetailsPage(pg.Load, &selectedProposal))
-	}
-
-	for pg.proposalsPage.syncButton.Clicked() {
-		go pg.multiWallet.Politeia.Sync()
-		pg.proposalsPage.isSyncing = true
-
-		//Todo: check after 1min if sync does not start, set isSyncing to false and cancel sync
-	}
-
-	if pg.proposalsPage.syncCompleted {
-		time.AfterFunc(time.Second*3, func() {
-			pg.proposalsPage.syncCompleted = false
-			pg.RefreshWindow()
-		})
-	}
-
-	decredmaterial.DisplayOneDropdown(pg.proposalsPage.orderDropDown, pg.proposalsPage.categoryDropDown)
-
-	/** end proposal page handles */
-
-	/** begin consensus page handles */
-
-	for pg.consensusPage.walletDropDown.Changed() {
-		pg.consensusPage.FetchAgendas()
-	}
-
-	for pg.consensusPage.orderDropDown.Changed() {
-		pg.consensusPage.FetchAgendas()
-	}
-
-	for i := range pg.consensusPage.consensusItems {
-		if pg.consensusPage.consensusItems[i].VoteButton.Clicked() {
-			newAgendaVoteModal(pg.Load, &pg.consensusPage.consensusItems[i].Agenda, pg.consensusPage).Show()
+		if pg.selectedCategoryIndex != selectedItem {
+			pg.selectedCategoryIndex = selectedItem
+			pg.changed = true
 		}
+
+		// call selected page OnNavigatedTo() only once
+		if pg.changed && pg.selectedCategoryIndex == 0 {
+			pg.proposalsPage.OnNavigatedTo()
+		} else if pg.changed && pg.selectedCategoryIndex == 1 {
+			pg.consensusPage.OnNavigatedTo()
+		}
+		pg.changed = false
 	}
 
-	for pg.consensusPage.syncButton.Clicked() {
-		go pg.consensusPage.FetchAgendas()
-		pg.consensusPage.isSyncing = true
+	// handle individual page user interactions
+	if pg.selectedCategoryIndex == 0 {
+		pg.proposalsPage.HandleUserInteractions()
+	} else {
+		pg.consensusPage.HandleUserInteractions()
 	}
-
-	if pg.consensusPage.syncCompleted {
-		time.AfterFunc(time.Second*1, func() {
-			pg.consensusPage.syncCompleted = false
-			pg.RefreshWindow()
-		})
-	}
-
-	/** end consensus page handles */
 }
 
 func (pg *Page) Layout(gtx C) D {
@@ -250,7 +184,7 @@ func (pg *Page) layoutTabs(gtx C) D {
 						return D{}
 					}
 
-					tabHeight := gtx.Px(unit.Dp(2))
+					tabHeight := gtx.Px(values.MarginPadding2)
 					tabRect := image.Rect(0, 0, dims.Size.X, tabHeight)
 
 					return layout.Inset{

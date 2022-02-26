@@ -30,6 +30,7 @@ type WalletSelector struct {
 	totalBalance   string
 }
 
+// TODO: merge this into the account selector modal.
 func NewWalletSelector(l *load.Load) *WalletSelector {
 
 	return &WalletSelector{
@@ -59,7 +60,7 @@ func (as *WalletSelector) WalletSelected(callback func(*dcrlibwallet.Wallet)) *W
 
 func (as *WalletSelector) Handle() {
 	for as.openSelectorDialog.Clicked() {
-		newWalletSelectorModal(as.Load, as.selectedWallet, as.wallets).
+		newWalletSelectorModal(as.Load, as.selectedWallet).
 			title(as.dialogTitle).
 			accountValidator(as.walletIsValid).
 			accountSelected(func(wallet *dcrlibwallet.Wallet) {
@@ -119,22 +120,15 @@ func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						accountIcon := as.Icons.AccountIcon
-						inset := layout.Inset{
+						return layout.Inset{
 							Right: values.MarginPadding8,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout24dp(gtx)
-						})
+						}.Layout(gtx, accountIcon.Layout24dp)
 					}),
-					layout.Rigid(func(gtx C) D {
-						return as.Theme.Body1(as.selectedWallet.Name).Layout(gtx)
-					}),
+					layout.Rigid(as.Theme.Body1(as.selectedWallet.Name).Layout),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return as.Theme.Body1(as.totalBalance).Layout(gtx)
-								}),
+								layout.Rigid(as.Theme.Body1(as.totalBalance).Layout),
 								layout.Rigid(func(gtx C) D {
 									inset := layout.Inset{
 										Left: values.MarginPadding15,
@@ -168,18 +162,16 @@ type WalletSelectorModal struct {
 	walletsList *decredmaterial.ClickableList
 
 	currentSelectedWallet *dcrlibwallet.Wallet
-	wallets               []*dcrlibwallet.Wallet // TODO sort array instead
 	filteredWallets       []*dcrlibwallet.Wallet
 }
 
-func newWalletSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Wallet, wallets []*dcrlibwallet.Wallet) *WalletSelectorModal {
+func newWalletSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Wallet) *WalletSelectorModal {
 	asm := &WalletSelectorModal{
 		Load:        l,
 		modal:       *l.Theme.ModalFloatTitle(),
 		walletsList: l.Theme.NewClickableList(layout.Vertical),
 
 		currentSelectedWallet: currentSelectedAccount,
-		wallets:               wallets,
 		isCancelable:          true,
 	}
 
@@ -189,7 +181,7 @@ func newWalletSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.W
 func (asm *WalletSelectorModal) OnResume() {
 	wallets := make([]*dcrlibwallet.Wallet, 0)
 
-	for _, wal := range asm.wallets {
+	for _, wal := range asm.WL.SortedWalletList() {
 		if asm.walletIsValid(wal) {
 			wallets = append(wallets, wal)
 		}

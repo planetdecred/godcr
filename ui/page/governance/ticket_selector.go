@@ -91,18 +91,14 @@ func (ts *ticketSelector) Layout(gtx layout.Context) layout.Dimensions {
 					}),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							return layout.Flex{}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									inset := layout.Inset{
-										Left: values.MarginPadding15,
-									}
-									return inset.Layout(gtx, func(gtx C) D {
-										ic := decredmaterial.NewIcon(ts.Icons.DropDownIcon)
-										ic.Color = ts.Theme.Color.Gray1
-										return ic.Layout(gtx, values.MarginPadding20)
-									})
-								}),
-							)
+							inset := layout.Inset{
+								Left: values.MarginPadding15,
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								ic := decredmaterial.NewIcon(ts.Icons.DropDownIcon)
+								ic.Color = ts.Theme.Color.Gray1
+								return ic.Layout(gtx, values.MarginPadding20)
+							})
 						})
 					}),
 				)
@@ -139,9 +135,7 @@ func newTicketSelectorModal(l *load.Load, lv []*dcrlibwallet.Transaction) *ticke
 	return tsm
 }
 
-func (tsm *ticketSelectorModal) OnResume() {
-
-}
+func (tsm *ticketSelectorModal) OnResume() {}
 
 func (tsm *ticketSelectorModal) ModalID() string {
 	return TicketSelectorModalID

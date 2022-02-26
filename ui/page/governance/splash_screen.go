@@ -12,7 +12,7 @@ import (
 )
 
 func (pg *Page) initSplashScreenWidgets() {
-	_, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
+	_, pg.splashScreenInfoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.enableGovernanceBtn = pg.Theme.Button("Fetch proposals")
 }
 
@@ -29,7 +29,6 @@ func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 		layout.Flexed(1, func(gtx C) D {
 			return layout.Stack{Alignment: layout.NE}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					// return layout.Center.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							return pg.Icons.GovernanceActiveIcon.LayoutSize(gtx, values.MarginPadding150)
@@ -56,9 +55,8 @@ func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 							return renderers.RenderHTML(text, pg.Theme).Layout(gtx)
 						}),
 					)
-					// })
 				}),
-				layout.Stacked(pg.infoButton.Layout),
+				layout.Stacked(pg.splashScreenInfoButton.Layout),
 			)
 		}),
 		layout.Rigid(func(gtx C) D {

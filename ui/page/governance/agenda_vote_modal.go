@@ -259,10 +259,11 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 					return avm.vspSelector.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if len(avm.LiveTickets) == 0 {
-						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
-						return avm.materialLoader.Layout(gtx)
-					}
+					// to we need this loader? it seems redundant.
+					// if len(avm.LiveTickets) == 0 {
+					// 	gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
+					// 	return avm.materialLoader.Layout(gtx)
+					// }
 					var ticketCountLabel decredmaterial.Label
 					text := fmt.Sprintf("You have %d live tickets for the selected wallet [%s]", len(avm.LiveTickets), avm.walletSelector.SelectedWallet().Name)
 					ticketCountLabel = avm.Theme.Label(values.MarginPadding14, text)

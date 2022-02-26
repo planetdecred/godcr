@@ -2,7 +2,6 @@ package governance
 
 import (
 	"context"
-	"image"
 	"time"
 
 	"gioui.org/font/gofont"
@@ -19,67 +18,49 @@ import (
 
 const ConsensusPageID = "Consensus"
 
-type HeaderItem struct {
-	Title        decredmaterial.Label
-	tooltip      *decredmaterial.Tooltip
-	tooltipLabel decredmaterial.Label
-}
-
 type ConsensusPage struct {
 	*load.Load
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
-	multiWallet       *dcrlibwallet.MultiWallet
-	listContainer     *widget.List
-	walletDropDown    *decredmaterial.DropDown
-	orderDropDown     *decredmaterial.DropDown
-	consensusList     *decredmaterial.ClickableList
-	syncButton        *widget.Clickable
-	searchEditor      decredmaterial.Editor
-	fetchProposalsBtn decredmaterial.Button
-
-	infoButton decredmaterial.IconButton
-	voteButton decredmaterial.Button
-
-	updatedIcon *decredmaterial.Icon
-
-	consensusItems []*components.ConsensusItem
+	multiWallet    *dcrlibwallet.MultiWallet
 	wallets        []*dcrlibwallet.Wallet
 	LiveTickets    []*dcrlibwallet.Transaction
+	consensusItems []*components.ConsensusItem
 
-	shadowBox     *decredmaterial.Shadow
+	listContainer *widget.List
+	syncButton    *widget.Clickable
+
+	walletDropDown *decredmaterial.DropDown
+	orderDropDown  *decredmaterial.DropDown
+	consensusList  *decredmaterial.ClickableList
+
+	searchEditor decredmaterial.Editor
+	infoButton   decredmaterial.IconButton
+
 	syncCompleted bool
 	isSyncing     bool
 }
 
 func NewConsensusPage(l *load.Load) *ConsensusPage {
 	pg := &ConsensusPage{
-		Load:        l,
-		multiWallet: l.WL.MultiWallet,
-		shadowBox:   l.Theme.Shadow(),
+		Load:          l,
+		multiWallet:   l.WL.MultiWallet,
+		wallets:       l.WL.SortedWalletList(),
+		consensusList: l.Theme.NewClickableList(layout.Vertical),
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
+		syncButton: new(widget.Clickable),
 	}
 
 	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Icons.SearchIcon, true)
 	pg.searchEditor.Editor.SingleLine, pg.searchEditor.Editor.Submit, pg.searchEditor.Bordered = true, true, false
 
-	pg.updatedIcon = decredmaterial.NewIcon(pg.Icons.NavigationCheck)
-	pg.updatedIcon.Color = pg.Theme.Color.Success
-
-	pg.syncButton = new(widget.Clickable)
-
-	pg.consensusList = pg.Theme.NewClickableList(layout.Vertical)
-
 	_, pg.infoButton = components.SubpageHeaderButtons(l)
 	pg.infoButton.Size = values.MarginPadding20
 
-	pg.voteButton = l.Theme.Button("Change Vote")
-
-	pg.wallets = pg.WL.SortedWalletList()
 	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
 	pg.orderDropDown = components.CreateOrderDropDown(l, values.ConsensusDropdownGroup, 0)
 
@@ -99,30 +80,44 @@ func (pg *ConsensusPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 }
 
-func (pg *ConsensusPage) HandleUserInteractions() {}
+func (pg *ConsensusPage) HandleUserInteractions() {
+	for pg.walletDropDown.Changed() {
+		pg.FetchAgendas()
+	}
+
+	for pg.orderDropDown.Changed() {
+		pg.FetchAgendas()
+	}
+
+	for i := range pg.consensusItems {
+		if pg.consensusItems[i].VoteButton.Clicked() {
+			newAgendaVoteModal(pg.Load, &pg.consensusItems[i].Agenda, pg).Show()
+		}
+	}
+
+	for pg.syncButton.Clicked() {
+		go pg.FetchAgendas()
+	}
+
+	if pg.syncCompleted {
+		time.AfterFunc(time.Second*1, func() {
+			pg.syncCompleted = false
+			pg.RefreshWindow()
+		})
+	}
+}
 
 func (pg *ConsensusPage) FetchAgendas() {
 	newestFirst := pg.orderDropDown.SelectedIndex() == 0
-
 	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-	consensusItems := components.LoadAgendas(pg.Load, selectedWallet, newestFirst)
 
+	pg.isSyncing = true
+	consensusItems := components.LoadAgendas(pg.Load, selectedWallet, newestFirst)
 	pg.consensusItems = consensusItems
-	time.AfterFunc(time.Second*1, func() {
-		pg.isSyncing = false
-		pg.syncCompleted = true
-	})
+	pg.isSyncing = false
+	pg.syncCompleted = true
 
 	pg.RefreshWindow()
-}
-
-func layoutInfoTooltip(gtx C, rect image.Rectangle, item HeaderItem) {
-	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus195}
-	item.tooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding195)
-		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding195)
-		return item.tooltipLabel.Layout(gtx)
-	})
 }
 
 func (pg *ConsensusPage) Layout(gtx C) D {
@@ -264,8 +259,6 @@ func (pg *ConsensusPage) layoutContent(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 					return list.Layout(gtx, len(pg.consensusItems), func(gtx C, i int) D {
 						radius := decredmaterial.Radius(14)
-						pg.shadowBox.SetShadowRadius(14)
-						pg.shadowBox.SetShadowElevation(5)
 						return decredmaterial.LinearLayout{
 							Orientation: layout.Vertical,
 							Width:       decredmaterial.MatchParent,
@@ -292,7 +285,9 @@ func (pg *ConsensusPage) layoutSyncSection(gtx C) D {
 	if pg.isSyncing {
 		return pg.layoutIsSyncingSection(gtx)
 	} else if pg.syncCompleted {
-		return pg.updatedIcon.Layout(gtx, values.MarginPadding20)
+		updatedIcon := decredmaterial.NewIcon(pg.Icons.NavigationCheck)
+		updatedIcon.Color = pg.Theme.Color.Success
+		return updatedIcon.Layout(gtx, values.MarginPadding20)
 	}
 	return pg.layoutStartSyncSection(gtx)
 }
