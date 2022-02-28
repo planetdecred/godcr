@@ -8,6 +8,7 @@ import (
 	"decred.org/dcrdex/client/db"
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
+	"gioui.org/widget"
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -29,21 +30,30 @@ type Page struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	loginBtn       decredmaterial.Button
-	initializeBtn  decredmaterial.Button
-	addDexBtn      decredmaterial.Button
-	syncBtn        decredmaterial.Button
-	materialLoader material.LoaderStyle
+	loginBtn          decredmaterial.Button
+	initializeBtn     decredmaterial.Button
+	addDexBtn         decredmaterial.Button
+	syncBtn           decredmaterial.Button
+	materialLoader    material.LoaderStyle
+	walletSettingsBtn *decredmaterial.Clickable
 }
 
 func NewMarketPage(l *load.Load) *Page {
+	clickable := func() *decredmaterial.Clickable {
+		cl := l.Theme.NewClickable(true)
+		cl.ChangeStyle(&values.ClickableStyle{HoverColor: l.Theme.Color.Surface})
+		cl.Radius = decredmaterial.Radius(0)
+		return cl
+	}
+
 	pg := &Page{
-		Load:           l,
-		loginBtn:       l.Theme.Button(strLogin),
-		initializeBtn:  l.Theme.Button(strStartUseDex),
-		addDexBtn:      l.Theme.Button(strAddADex),
-		syncBtn:        l.Theme.Button(strStartSyncToUse),
-		materialLoader: material.Loader(material.NewTheme(gofont.Collection())),
+		Load:              l,
+		loginBtn:          l.Theme.Button(strLogin),
+		initializeBtn:     l.Theme.Button(strStartUseDex),
+		addDexBtn:         l.Theme.Button(strAddADex),
+		syncBtn:           l.Theme.Button(strStartSyncToUse),
+		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
+		walletSettingsBtn: clickable(),
 	}
 
 	return pg
@@ -71,19 +81,29 @@ func (pg *Page) Layout(gtx C) D {
 		case !pg.Dexc().IsLoggedIn():
 			return pg.pageSections(gtx, pg.welcomeLayout(&pg.loginBtn))
 		case pg.dexServer() == nil:
-			return pg.pageSections(gtx, pg.welcomeLayout(&pg.addDexBtn))
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(pg.headerLayout()),
+				layout.Rigid(func(gtx C) D {
+					return pg.pageSections(gtx, pg.welcomeLayout(&pg.addDexBtn))
+				}),
+			)
 		default:
 			d := pg.dexServer()
-			if !d.Connected {
-				return pg.pageSections(gtx,
-					pg.Theme.Label(values.TextSize16, fmt.Sprintf(nStrConnHostError, d.Host)).Layout)
-			}
-			if d.PendingFee != nil {
-				return pg.pageSections(gtx, pg.registrationStatusLayout())
-			}
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(pg.headerLayout()),
+				layout.Rigid(func(gtx C) D {
+					if !d.Connected {
+						return pg.pageSections(gtx,
+							pg.Theme.Label(values.TextSize16, fmt.Sprintf(nStrConnHostError, d.Host)).Layout)
+					}
+					if d.PendingFee != nil {
+						return pg.pageSections(gtx, pg.registrationStatusLayout())
+					}
 
-			// TODO: remove this and render trade UI
-			return pg.pageSections(gtx, pg.Theme.Label(values.TextSize14, "Registration fee payment successful!").Layout)
+					// TODO: remove this and render trade UI
+					return pg.pageSections(gtx, pg.Theme.Label(values.TextSize14, "Registration fee payment successful!").Layout)
+				}),
+			)
 		}
 	}
 
@@ -120,6 +140,39 @@ func (pg *Page) welcomeLayout(button *decredmaterial.Button) layout.Widget {
 					return button.Layout(gtx)
 				}),
 			)
+		})
+	}
+}
+
+func (pg *Page) headerLayout() layout.Widget {
+	return func(gtx C) D {
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
+		return layout.Inset{
+			Bottom: values.MarginPadding15,
+		}.Layout(gtx, func(gtx C) D {
+			walletIc := pg.Theme.Icons.WalletIcon
+			walletIc.Scale = .3
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return widget.Border{
+					Color:        pg.Theme.Color.Gray2,
+					CornerRadius: values.MarginPadding0,
+					Width:        values.MarginPadding1,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.walletSettingsBtn.Layout(gtx, func(gtx C) D {
+						return layout.Inset{
+							Top:    values.MarginPadding4,
+							Bottom: values.MarginPadding4,
+							Left:   values.MarginPadding8,
+							Right:  values.MarginPadding8,
+						}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+								layout.Rigid(pg.Theme.Label(values.MarginPadding12, strWalletSetting).Layout),
+								layout.Rigid(walletIc.Layout),
+							)
+						})
+					})
+				})
+			})
 		})
 	}
 }
@@ -239,6 +292,10 @@ func (pg *Page) HandleUserInteractions() {
 		newAddDexModal(pg.Load).OnDexAdded(func() {
 			pg.RefreshWindow()
 		}).Show()
+	}
+
+	if pg.walletSettingsBtn.Clicked() {
+		pg.ChangeFragment(NewDexWalletsPage(pg.Load))
 	}
 }
 

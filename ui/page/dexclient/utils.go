@@ -10,6 +10,7 @@ import (
 	"decred.org/dcrdex/client/asset/dcr"
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/dex"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 // TODO: add localizable support for all these strings values
@@ -22,6 +23,20 @@ const (
 	strWalletPassword           = "Wallet Password"
 	strSelectAccountForDex      = "Select DCR account to use with DEX"
 	strWaitingConfirms          = "Waiting for confirmations..."
+	strSetAppPassword           = "Set App Password"
+	strWalletSetting            = "Wallets Settings"
+	strSellectWallet            = "Sellect Wallet"
+	strNoWallet                 = "No wallet"
+	strReady                    = "Ready"
+	strLocked                   = "Locked"
+	strOff                      = "Off"
+	strWithdraw                 = "Withdraw"
+	strDeposit                  = "Deposit"
+	strLock                     = "Lock"
+	strUnLock                   = "Unlock"
+	strSuccessful               = "Successfully!"
+	strAddress                  = "Address"
+	strAmount                   = "Amount"
 	strDexAddr                  = "DEX Address"
 	strSubmit                   = "Submit"
 	strPickAServer              = "Pick a Server"
@@ -29,6 +44,8 @@ const (
 	strAddADex                  = "Add a dex"
 	strAddA                     = "Add a"
 	strTLSCert                  = "TLS Certificate"
+	strAddAFile                 = "Add a file"
+	strChooseOtherFile          = "Choose other file"
 	strRegister                 = "Register"
 	strConfirmReg               = "Confirm Registration"
 	strRequireWalletPayFee      = "Your wallet is required to pay registration fees."
@@ -38,15 +55,18 @@ const (
 	strMarket                   = "Market"
 	strAllMarketAt              = "All markets at"
 	strLotSize                  = "Lot Size"
-	strSetAppPassword           = "Set App Password"
 	strInitDexPasswordDesc      = "Set your app password. This password will protect your DEX account keys and connected wallets."
-	strSuccessful               = "Successfully!"
 
+	nStrNoWalletFound        = "no wallet found for %s"
+	nStrWithdrawErr          = "withdraw error: %s"
 	nStrNameWallet           = "%s Wallet"
+	nStrAmountAvailable      = "%s available"
+	nStrCreateAWallet        = "Create a %s Wallet"
+	nStrUnlockWall           = "Unlock %s Wallet"
 	nStrAlreadyConnectWallet = "Already connected a %s wallet"
-	nStrNumberConfirmations  = "%d confirmations"
 	nStrConnHostError        = "Connection to dex server %s failed. You can close app and try again later or wait for it to reconnect"
 	nStrConfirmationsStatus  = "In order to trade at %s, the registration fee payment needs %d confirmations."
+	nStrNumberConfirmations  = "%d confirmations"
 )
 
 // supportedMarket check supported market for app depend on dcrlibwallet.
@@ -112,4 +132,12 @@ func sortServers(mapExchanges map[string]*core.Exchange) []*core.Exchange {
 		return exchanges[i].Host < exchanges[j].Host
 	})
 	return exchanges
+}
+
+func walletSyncPercentage(wall *core.WalletState) string {
+	var percentage float32 = 0
+	if wall.SyncProgress != 1 {
+		percentage = wall.SyncProgress * 100
+	}
+	return fmt.Sprintf("%.2f%% %s", percentage, values.String(values.StrSynced))
 }
