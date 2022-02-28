@@ -12,6 +12,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -29,8 +30,10 @@ type ConsensusPage struct {
 	LiveTickets    []*dcrlibwallet.Transaction
 	consensusItems []*components.ConsensusItem
 
-	listContainer *widget.List
-	syncButton    *widget.Clickable
+	listContainer       *widget.List
+	syncButton          *widget.Clickable
+	viewVotingDashboard *decredmaterial.Clickable
+	redirectIcon        *decredmaterial.Image
 
 	walletDropDown *decredmaterial.DropDown
 	orderDropDown  *decredmaterial.DropDown
@@ -52,7 +55,9 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		syncButton: new(widget.Clickable),
+		syncButton:          new(widget.Clickable),
+		redirectIcon:        l.Icons.RedirectIcon,
+		viewVotingDashboard: l.Theme.NewClickable(true),
 	}
 
 	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Icons.SearchIcon, true)
@@ -77,7 +82,9 @@ func (pg *ConsensusPage) OnNavigatedTo() {
 }
 
 func (pg *ConsensusPage) OnNavigatedFrom() {
-	pg.ctxCancel()
+	if pg.ctxCancel != nil {
+		pg.ctxCancel()
+	}
 }
 
 func (pg *ConsensusPage) HandleUserInteractions() {
@@ -97,6 +104,20 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 
 	for pg.syncButton.Clicked() {
 		go pg.FetchAgendas()
+	}
+
+	if pg.infoButton.Button.Clicked() {
+		modal.NewInfoModal(pg.Load).
+			Title("Consensus changes").
+			Body("On-chain voting for upgrading the Decred network consensus rules.").
+			SetCancelable(true).
+			PositiveButton("Got it", func() {}).Show()
+	}
+
+	for pg.viewVotingDashboard.Clicked() {
+		host := "https://voting.decred.org"
+
+		components.GoToURL(host)
 	}
 
 	if pg.syncCompleted {
@@ -214,21 +235,29 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 	)
 }
 
+func (pg *ConsensusPage) lineSeparator(inset layout.Inset) layout.Widget {
+	return func(gtx C) D {
+		return inset.Layout(gtx, pg.Theme.Separator().Layout)
+	}
+}
+
 func (pg *ConsensusPage) layoutRedirectVoting(gtx C) D {
 	return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Right: values.MarginPadding10,
-					}.Layout(gtx, pg.Load.Icons.RedirectIcon.Layout16dp)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Top: values.MarginPaddingMinus2,
-					}.Layout(gtx, pg.Theme.Label(values.TextSize16, "Voting Dasboard").Layout)
-				}),
-			)
+			return pg.viewVotingDashboard.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Right: values.MarginPadding10,
+						}.Layout(gtx, pg.redirectIcon.Layout16dp)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Top: values.MarginPaddingMinus2,
+						}.Layout(gtx, pg.Theme.Label(values.TextSize16, "Voting Dashboard").Layout)
+					}),
+				)
+			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			var text string

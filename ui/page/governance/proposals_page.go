@@ -13,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -175,6 +176,14 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 		pg.isSyncing = true
 
 		//Todo: check after 1min if sync does not start, set isSyncing to false and cancel sync
+	}
+
+	if pg.infoButton.Button.Clicked() {
+		modal.NewInfoModal(pg.Load).
+			Title("Proposals").
+			Body("Off-chain voting for development and marketing initiatives funded by the Decred treasury.").
+			SetCancelable(true).
+			PositiveButton("Got it", func() {}).Show()
 	}
 
 	if pg.syncCompleted {
