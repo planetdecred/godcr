@@ -43,9 +43,9 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	var statusIcon *decredmaterial.Icon
 	var backgroundColor color.NRGBA
 
-	switch agenda.Status {
+	switch agenda.Status() {
 	case "Finished":
-		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status())
 		statusLabel.Color = l.Theme.Color.GreenText
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
 		statusIcon.Color = l.Theme.Color.Green500
@@ -53,14 +53,14 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 		canVote = false
 	case "In progress":
 		clr := l.Theme.Color.Primary
-		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status())
 		statusLabel.Color = clr
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
 		statusIcon.Color = clr
 		backgroundColor = l.Theme.Color.LightBlue
 		canVote = true
 	case "Upcoming":
-		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status())
 		statusLabel.Color = l.Theme.Color.Text
 		statusIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
 		statusIcon.Color = l.Theme.Color.DeepBlue
@@ -129,7 +129,7 @@ func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 
 func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst bool) []*ConsensusItem {
 	consensusItems := make([]*ConsensusItem, 0)
-	_, agendas, err := selectedWallet.GetAllAgendasForWallet("", newestFirst)
+	agendas, err := selectedWallet.AllVoteAgendas("", newestFirst)
 
 	if err == nil {
 		for i := 0; i < len(agendas); i++ {

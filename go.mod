@@ -3,7 +3,7 @@ module github.com/planetdecred/godcr
 go 1.16
 
 require (
-	decred.org/dcrdex v0.4.0-rc3
+	decred.org/dcrdex v0.4.1
 	gioui.org v0.0.0-20211011183043-05f0f5c20f45
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
@@ -24,4 +24,4 @@ require (
 	golang.org/x/text v0.3.7
 )
 
-replace github.com/planetdecred/dcrlibwallet => github.com/dreacot/dcrlibwallet v1.6.1-0.20220228104715-a64bd6f9a2bd
+replace github.com/planetdecred/dcrlibwallet => github.com/dreacot/dcrlibwallet v1.6.1-0.20220228225902-1b436eab0e40
