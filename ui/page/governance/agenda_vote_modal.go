@@ -71,7 +71,7 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 			// update agenda options prefrence to that of the selected wallet
 			consensusItems := components.LoadAgendas(avm.Load, w, false)
 			for _, consensusItem := range consensusItems {
-				if consensusItem.Agenda.ID == agenda.ID {
+				if consensusItem.Agenda.AgendaID == agenda.AgendaID {
 					ArrVoteOptions := make(map[string]string)
 					for i := range consensusItem.Agenda.Choices {
 						ArrVoteOptions[agenda.Choices[i].Id] = consensusItem.Agenda.Choices[i].Id
@@ -334,11 +334,10 @@ func (avm *agendaVoteModal) sendVotes() {
 			avm.isVoting = false
 		}()
 
-		walletID := avm.walletSelector.selectedWallet.ID
 		vspHost := avm.vspSelector.SelectedVSP().Host
 		pubKey := avm.vspSelector.SelectedVSP().PubKey
 		radioBtnGrp := avm.optionsRadioGroup.Value
-		err := avm.WL.MultiWallet.SetVoteChoice(walletID, vspHost, pubKey, avm.agenda.AgendaID, radioBtnGrp, "", password)
+		err := avm.walletSelector.selectedWallet.SetVoteChoice(vspHost, pubKey, avm.agenda.AgendaID, radioBtnGrp, "", password)
 		if err != nil {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 				avm.spendingPassword.SetError("Invalid password")

@@ -129,12 +129,12 @@ func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 
 func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst bool) []*ConsensusItem {
 	consensusItems := make([]*ConsensusItem, 0)
-	agendasResponse, err := l.WL.MultiWallet.GetAllAgendasForWallet(selectedWallet.ID, newestFirst)
+	_, agendas, err := selectedWallet.GetAllAgendasForWallet("", newestFirst)
 
 	if err == nil {
-		for i := 0; i < len(agendasResponse.Agendas); i++ {
+		for i := 0; i < len(agendas); i++ {
 			item := &ConsensusItem{
-				Agenda:     *agendasResponse.Agendas[i],
+				Agenda:     *agendas[i],
 				VoteButton: l.Theme.Button("Change Vote"),
 			}
 			consensusItems = append(consensusItems, item)
