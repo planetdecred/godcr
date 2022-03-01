@@ -353,11 +353,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 	if pg.BlocksRescanProgressListener == nil {
 		pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
 	}
-	err = pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
-	if err != nil {
-		log.Errorf("Error adding block rescan listener: %+v", err)
-		return
-	}
+	pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
 
 	go func() {
 		for {

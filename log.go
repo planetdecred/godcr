@@ -17,6 +17,11 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/governance"
+	"github.com/planetdecred/godcr/ui/page/overview"
+	"github.com/planetdecred/godcr/ui/page/staking"
+	"github.com/planetdecred/godcr/ui/page/transaction"
+	walletPage "github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -56,6 +61,11 @@ var (
 	pageLog    = backendLog.Logger("PAGE")
 	lstnersLog = backendLog.Logger("LSTN")
 	cmpntLog   = backendLog.Logger("CPNT")
+	txntLog    = backendLog.Logger("TXNT")
+	govnLog    = backendLog.Logger("GOVN")
+	walpLog    = backendLog.Logger("WALP")
+	ovewLog    = backendLog.Logger("OVEW")
+	stakLog    = backendLog.Logger("STAK")
 )
 
 // Initialize package-global logger variables.
@@ -67,6 +77,11 @@ func init() {
 	load.UseLogger(log)
 	listeners.UseLogger(lstnersLog)
 	components.UseLogger(cmpntLog)
+	transaction.UseLogger(txntLog)
+	governance.UseLogger(govnLog)
+	walletPage.UseLogger(walpLog)
+	overview.UseLogger(ovewLog)
+	staking.UseLogger(stakLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -78,6 +93,11 @@ var subsystemLoggers = map[string]slog.Logger{
 	"PAGE": pageLog,
 	"LSTN": lstnersLog,
 	"CPNT": cmpntLog,
+	"TXNT": txntLog,
+	"GOVN": govnLog,
+	"WALP": walpLog,
+	"OVEW": ovewLog,
+	"STAK": stakLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and
