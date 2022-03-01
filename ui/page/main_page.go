@@ -815,7 +815,7 @@ func (mp *MainPage) listenForSyncNotifications() {
 		for {
 			select {
 			case n := <-mp.TxAndBlockNotifChan:
-				switch n.NotificationType {
+				switch n.Type {
 				case listeners.NewTransaction:
 					mp.UpdateBalance(false)
 					transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)

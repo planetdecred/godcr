@@ -377,7 +377,7 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 				}
 
 			case n := <-pg.TxAndBlockNotifChan:
-				switch n.NotificationType {
+				switch n.Type {
 				case listeners.NewTransaction:
 					pg.loadTransactions()
 					pg.RefreshWindow()

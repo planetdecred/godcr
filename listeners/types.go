@@ -15,9 +15,9 @@ const (
 
 // TxNotification models transaction notifications.
 type TxNotification struct {
-	NotificationType TxNotifType
-	Transaction      *dcrlibwallet.Transaction
-	WalletID         int
-	BlockHeight      int32
-	Hash             string
+	Type        TxNotifType
+	Transaction *dcrlibwallet.Transaction
+	WalletID    int
+	BlockHeight int32
+	Hash        string
 }

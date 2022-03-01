@@ -1095,7 +1095,7 @@ func (pg *WalletPage) listenForTxNotifications() {
 		for {
 			select {
 			case n := <-pg.TxAndBlockNotifChan:
-				switch n.NotificationType {
+				switch n.Type {
 				case listeners.BlockAttached:
 					// refresh wallet account and balance on every new block
 					// only if sync is completed.

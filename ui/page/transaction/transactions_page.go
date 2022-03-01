@@ -225,7 +225,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 		for {
 			select {
 			case n := <-pg.TxAndBlockNotifChan:
-				if n.NotificationType == listeners.NewTransaction {
+				if n.Type == listeners.NewTransaction {
 
 					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 					if selectedWallet.ID == n.Transaction.WalletID {

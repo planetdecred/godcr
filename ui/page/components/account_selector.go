@@ -209,7 +209,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 		for {
 			select {
 			case n := <-as.TxAndBlockNotifChan:
-				switch n.NotificationType {
+				switch n.Type {
 				case listeners.BlockAttached:
 					// refresh wallet account and balance on every new block
 					// only if sync is completed.

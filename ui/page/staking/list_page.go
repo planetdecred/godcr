@@ -101,13 +101,13 @@ func (pg *ListPage) listenForTxNotifications() {
 
 			select {
 			case n := <-pg.TxAndBlockNotifChan:
-				if n.NotificationType == listeners.BlockAttached {
+				if n.Type == listeners.BlockAttached {
 					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 					if selectedWallet.ID == n.WalletID {
 						pg.fetchTickets()
 						pg.RefreshWindow()
 					}
-				} else if n.NotificationType == listeners.NewTransaction {
+				} else if n.Type == listeners.NewTransaction {
 					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 					if selectedWallet.ID == n.Transaction.WalletID {
 						pg.fetchTickets()

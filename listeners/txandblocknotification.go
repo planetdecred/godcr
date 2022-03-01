@@ -27,26 +27,26 @@ func (txAndBlk *TxAndBlockNotificationListener) OnTransaction(transaction string
 	}
 
 	update := TxNotification{
-		NotificationType: NewTransaction,
-		Transaction:      &tx,
+		Type:        NewTransaction,
+		Transaction: &tx,
 	}
 	txAndBlk.UpdateNotification(update)
 }
 
 func (txAndBlk *TxAndBlockNotificationListener) OnBlockAttached(walletID int, blockHeight int32) {
 	txAndBlk.UpdateNotification(TxNotification{
-		NotificationType: BlockAttached,
-		WalletID:         walletID,
-		BlockHeight:      blockHeight,
+		Type:        BlockAttached,
+		WalletID:    walletID,
+		BlockHeight: blockHeight,
 	})
 }
 
 func (txAndBlk *TxAndBlockNotificationListener) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
 	txAndBlk.UpdateNotification(TxNotification{
-		NotificationType: TxConfirmed,
-		WalletID:         walletID,
-		BlockHeight:      blockHeight,
-		Hash:             hash,
+		Type:        TxConfirmed,
+		WalletID:    walletID,
+		BlockHeight: blockHeight,
+		Hash:        hash,
 	})
 }
 
