@@ -99,9 +99,6 @@ func (pg *ProposalDetails) ID() string {
 func (pg *ProposalDetails) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
-
-	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
-	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalDetailsPageID)
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -133,6 +130,14 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 }
 
 func (pg *ProposalDetails) listenForSyncNotifications() {
+	if pg.ProposalNotificationListener == nil {
+		pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
+	}
+	err := pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalDetailsPageID)
+	if err != nil {
+		log.Errorf("Error adding Politeia notification listener: %+v", err)
+		return
+	}
 
 	go func() {
 		for {
@@ -147,6 +152,9 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 					}
 				}
 			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
+				close(pg.ProposalNotifChan)
+
 				return
 			}
 		}
@@ -162,9 +170,6 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 // Part of the load.Page interface.
 func (pg *ProposalDetails) OnNavigatedFrom() {
 	pg.ctxCancel()
-
-	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
-	close(pg.ProposalNotifChan)
 }
 
 // - Layout

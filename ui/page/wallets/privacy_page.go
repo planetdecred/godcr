@@ -80,9 +80,6 @@ func (pg *PrivacyPage) OnNavigatedTo() {
 	} else {
 		pg.allowUnspendUnmixedAcct.SetChecked(true)
 	}
-
-	pg.AccountMixerNotificationListener = listeners.NewAccountMixerNotificationListener()
-	pg.WL.MultiWallet.AddAccountMixerNotificationListener(pg, PrivacyPageID)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -418,6 +415,15 @@ func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 }
 
 func (pg *PrivacyPage) listenForMixerNotifications() {
+	if pg.AccountMixerNotificationListener == nil {
+		pg.AccountMixerNotificationListener = listeners.NewAccountMixerNotificationListener()
+	}
+	err := pg.WL.MultiWallet.AddAccountMixerNotificationListener(pg, PrivacyPageID)
+	if err != nil {
+		log.Errorf("Error adding account Mixer notification listener: %+v", err)
+		return
+	}
+
 	go func() {
 		for {
 			select {
@@ -433,6 +439,8 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 				}
 
 			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveAccountMixerNotificationListener(PrivacyPageID)
+				close(pg.MixerChan)
 				return
 			}
 		}
@@ -447,6 +455,5 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *PrivacyPage) OnNavigatedFrom() {
-	pg.WL.MultiWallet.RemoveAccountMixerNotificationListener(PrivacyPageID)
-	close(pg.MixerChan)
+	pg.ctxCancel()
 }

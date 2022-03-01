@@ -90,9 +90,6 @@ func (pg *TransactionsPage) ID() string {
 func (pg *TransactionsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, TransactionsPageID)
-
 	pg.listenForTxNotifications()
 	pg.loadTransactions()
 }
@@ -221,6 +218,13 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 }
 
 func (pg *TransactionsPage) listenForTxNotifications() {
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, TransactionsPageID)
+	if err != nil {
+		log.Errorf("Error Tx and block notification listener: %+v", err)
+		return
+	}
+
 	go func() {
 		for {
 			select {
@@ -234,6 +238,9 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 					}
 				}
 			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(TransactionsPageID)
+				close(pg.TxAndBlockNotifChan)
+
 				return
 			}
 		}
@@ -249,7 +256,4 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 // Part of the load.Page interface.
 func (pg *TransactionsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
-
-	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(TransactionsPageID)
-	close(pg.TxAndBlockNotifChan)
 }

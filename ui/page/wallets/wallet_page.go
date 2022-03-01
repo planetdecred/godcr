@@ -152,9 +152,6 @@ func (pg *WalletPage) ID() string {
 func (pg *WalletPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, WalletPageID)
-
 	pg.listenForTxNotifications()
 	pg.loadWalletAndAccounts()
 }
@@ -1091,6 +1088,15 @@ func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 }
 
 func (pg *WalletPage) listenForTxNotifications() {
+	if pg.TxAndBlockNotificationListener == nil {
+		pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	}
+	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, WalletPageID)
+	if err != nil {
+		log.Errorf("Error adding Tx and block notification listener: %+v", err)
+		return
+	}
+
 	go func() {
 		for {
 			select {
@@ -1109,6 +1115,9 @@ func (pg *WalletPage) listenForTxNotifications() {
 					pg.RefreshWindow()
 				}
 			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(WalletPageID)
+				close(pg.TxAndBlockNotifChan)
+
 				return
 			}
 		}
@@ -1148,7 +1157,4 @@ func (pg *WalletPage) updateAccountBalance() {
 func (pg *WalletPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 	pg.closePopups()
-
-	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(WalletPageID)
-	close(pg.TxAndBlockNotifChan)
 }

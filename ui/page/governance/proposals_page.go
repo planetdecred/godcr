@@ -109,9 +109,6 @@ func (pg *ProposalsPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedTo() {
-	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
-	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalsPageID)
-
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
 	pg.fetchProposals()
@@ -216,9 +213,6 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
-
-	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalsPageID)
-	close(pg.ProposalNotifChan)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -389,6 +383,12 @@ func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
 }
 
 func (pg *ProposalsPage) listenForSyncNotifications() {
+	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
+	err := pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalsPageID)
+	if err != nil {
+		log.Errorf("Error adding Politeia notification listener: %+v", err)
+		return
+	}
 
 	go func() {
 		for {
@@ -402,6 +402,9 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 					pg.RefreshWindow()
 				}
 			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalsPageID)
+				close(pg.ProposalNotifChan)
+
 				return
 			}
 		}

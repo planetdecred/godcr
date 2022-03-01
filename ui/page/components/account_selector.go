@@ -40,11 +40,10 @@ type AccountSelector struct {
 
 func NewAccountSelector(l *load.Load) *AccountSelector {
 	return &AccountSelector{
-		Load:                           l,
-		multiWallet:                    l.WL.MultiWallet,
-		accountIsValid:                 func(*dcrlibwallet.Account) bool { return true },
-		openSelectorDialog:             l.Theme.NewClickable(true),
-		TxAndBlockNotificationListener: listeners.NewTxAndBlockNotificationListener(),
+		Load:               l,
+		multiWallet:        l.WL.MultiWallet,
+		accountIsValid:     func(*dcrlibwallet.Account) bool { return true },
+		openSelectorDialog: l.Theme.NewClickable(true),
 	}
 }
 
@@ -204,7 +203,16 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
-	as.WL.MultiWallet.AddTxAndBlockNotificationListener(as.TxAndBlockNotificationListener, true, AccoutSelectorID)
+	if as.TxAndBlockNotificationListener == nil {
+		as.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	}
+
+	err := as.WL.MultiWallet.AddTxAndBlockNotificationListener(as.TxAndBlockNotificationListener, true, AccoutSelectorID)
+	if err != nil {
+		log.Errorf("Error Adding Tx notifications listener: %+v", err)
+		return
+	}
+
 	go func() {
 		for {
 			select {

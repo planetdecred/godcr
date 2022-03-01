@@ -213,7 +213,7 @@ func (mp *MainPage) OnNavigatedTo() {
 	mp.setLanguageSetting()
 
 	mp.ctx, mp.ctxCancel = context.WithCancel(context.TODO())
-	mp.listenForSyncNotifications()
+	mp.listenForNotifications()
 
 	if mp.currentPage == nil {
 		mp.currentPage = overview.NewOverviewPage(mp.Load)
@@ -801,16 +801,35 @@ func initializeBeepNotification(n string) {
 
 // listenForSyncNotifications starts a goroutine to watch for sync updates
 // and update the UI accordingly.
-func (mp *MainPage) listenForSyncNotifications() {
+func (mp *MainPage) listenForNotifications() {
 	// Setup listeners
-	mp.SyncProgressListener = listeners.NewSyncProgress()
-	mp.WL.MultiWallet.AddSyncProgressListener(mp.SyncProgressListener, MainPageID)
+	if mp.SyncProgressListener == nil {
+		mp.SyncProgressListener = listeners.NewSyncProgress()
+	}
+	err := mp.WL.MultiWallet.AddSyncProgressListener(mp.SyncProgressListener, MainPageID)
+	if err != nil {
+		log.Errorf("Error adding Sync Progress listener: %+v", err)
+		return
+	}
 
-	mp.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp.TxAndBlockNotificationListener, true, MainPageID)
+	if mp.TxAndBlockNotificationListener == nil {
+		mp.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	}
+	err = mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp.TxAndBlockNotificationListener, true, MainPageID)
+	if err != nil {
+		log.Errorf("Error adding Tx and block notification listener: %+v", err)
+		return
+	}
 
-	mp.ProposalNotificationListener = listeners.NewProposalNotificationListener()
-	mp.WL.MultiWallet.Politeia.AddNotificationListener(mp.ProposalNotificationListener, MainPageID)
+	if mp.ProposalNotificationListener == nil {
+		mp.ProposalNotificationListener = listeners.NewProposalNotificationListener()
+	}
+	err = mp.WL.MultiWallet.Politeia.AddNotificationListener(mp.ProposalNotificationListener, MainPageID)
+	if err != nil {
+		log.Errorf("Error adding Politeia notification listener: %+v", err)
+		return
+	}
+
 	go func() {
 		for {
 			select {

@@ -130,26 +130,10 @@ func (pg *AppOverviewPage) ID() string {
 func (pg *AppOverviewPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.setupListeners()
 	pg.getMixerWallets()
 	pg.loadTransactions()
 	pg.listenForSyncNotifications()
 	pg.loadRecentProposals()
-}
-
-func (pg *AppOverviewPage) setupListeners() {
-
-	pg.SyncProgressListener = listeners.NewSyncProgress()
-	pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
-
-	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, OverviewPageID)
-
-	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
-	pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, OverviewPageID)
-
-	pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
-	pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
 }
 
 // Layout draws the overview page UI components into the provided layout
@@ -339,6 +323,42 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 // refreshes the display every set interval. Other sync updates that affect
 // the UI but occur outside of an active sync requires a display refresh.
 func (pg *AppOverviewPage) listenForSyncNotifications() {
+	if pg.SyncProgressListener == nil {
+		pg.SyncProgressListener = listeners.NewSyncProgress()
+	}
+	err := pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
+	if err != nil {
+		log.Errorf("Error adding Sync Progress listener: %+v", err)
+		return
+	}
+
+	if pg.TxAndBlockNotificationListener == nil {
+		pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	}
+	err = pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, OverviewPageID)
+	if err != nil {
+		log.Errorf("Error adding Tx and block notification listener: %+v", err)
+		return
+	}
+
+	if pg.ProposalNotificationListener == nil {
+		pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
+	}
+	err = pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, OverviewPageID)
+	if err != nil {
+		log.Errorf("Error adding Politeia notification listener: %+v", err)
+		return
+	}
+
+	if pg.BlocksRescanProgressListener == nil {
+		pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
+	}
+	err = pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
+	if err != nil {
+		log.Errorf("Error adding block rescan listener: %+v", err)
+		return
+	}
+
 	go func() {
 		for {
 			select {
@@ -394,6 +414,15 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 					pg.RefreshWindow()
 				}
 			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
+				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(OverviewPageID)
+
+				close(pg.SyncStatusChan)
+				close(pg.TxAndBlockNotifChan)
+				close(pg.ProposalNotifChan)
+				close(pg.BlockRescanChan)
+
 				return
 			}
 		}
@@ -421,18 +450,4 @@ func (pg *AppOverviewPage) getMixerWallets() {
 // Part of the load.Page interface.
 func (pg *AppOverviewPage) OnNavigatedFrom() {
 	pg.ctxCancel()
-	pg.removeListeners()
-}
-
-// removeListeners removes sync, tx and politeia notification listeners
-// and Close corresponding channels.
-func (pg *AppOverviewPage) removeListeners() {
-	pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
-	pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
-	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(OverviewPageID)
-
-	close(pg.SyncStatusChan)
-	close(pg.TxAndBlockNotifChan)
-	close(pg.ProposalNotifChan)
-	close(pg.BlockRescanChan)
 }
