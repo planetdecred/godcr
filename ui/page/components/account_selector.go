@@ -209,7 +209,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 
 	err := as.WL.MultiWallet.AddTxAndBlockNotificationListener(as.TxAndBlockNotificationListener, true, AccoutSelectorID)
 	if err != nil {
-		log.Errorf("Error Adding Tx notifications listener: %+v", err)
+		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
 	}
 

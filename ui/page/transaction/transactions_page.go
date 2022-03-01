@@ -221,7 +221,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, TransactionsPageID)
 	if err != nil {
-		log.Errorf("Error Tx and block notification listener: %+v", err)
+		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
 	}
 

@@ -804,7 +804,7 @@ func (mp *MainPage) listenForNotifications() {
 	}
 	err := mp.WL.MultiWallet.AddSyncProgressListener(mp.SyncProgressListener, MainPageID)
 	if err != nil {
-		log.Errorf("Error adding Sync Progress listener: %+v", err)
+		log.Errorf("Error adding sync progress listener: %v", err)
 		return
 	}
 
@@ -813,7 +813,7 @@ func (mp *MainPage) listenForNotifications() {
 	}
 	err = mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp.TxAndBlockNotificationListener, true, MainPageID)
 	if err != nil {
-		log.Errorf("Error adding Tx and block notification listener: %+v", err)
+		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
 	}
 
@@ -822,7 +822,7 @@ func (mp *MainPage) listenForNotifications() {
 	}
 	err = mp.WL.MultiWallet.Politeia.AddNotificationListener(mp.ProposalNotificationListener, MainPageID)
 	if err != nil {
-		log.Errorf("Error adding Politeia notification listener: %+v", err)
+		log.Errorf("Error adding politeia notification listener: %v", err)
 		return
 	}
 

@@ -135,7 +135,7 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 	}
 	err := pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalDetailsPageID)
 	if err != nil {
-		log.Errorf("Error adding Politeia notification listener: %+v", err)
+		log.Errorf("Error adding politeia notification listener: %v", err)
 		return
 	}
 
