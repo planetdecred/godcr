@@ -132,7 +132,7 @@ func (pg *AppOverviewPage) OnNavigatedTo() {
 
 	pg.getMixerWallets()
 	pg.loadTransactions()
-	pg.listenForSyncNotifications()
+	pg.listenForNotifications()
 	pg.loadRecentProposals()
 }
 
@@ -316,43 +316,49 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 
 }
 
-// listenForSyncNotifications starts a goroutine to watch for sync updates
+// listenForNotifications starts a goroutine to watch for sync updates
 // and update the UI accordingly. To prevent UI lags, this method does not
 // refresh the window display everytime a sync update is received. During
 // active blocks sync, rescan or proposals sync, the Layout method auto
 // refreshes the display every set interval. Other sync updates that affect
 // the UI but occur outside of an active sync requires a display refresh.
-func (pg *AppOverviewPage) listenForSyncNotifications() {
-	if pg.SyncProgressListener == nil {
-		pg.SyncProgressListener = listeners.NewSyncProgress()
+func (pg *AppOverviewPage) listenForNotifications() {
+	// Return if any of the listener is not nill.
+	switch {
+	case  pg.SyncProgressListener != nil:
+		return
+	case pg.TxAndBlockNotificationListener != nil:
+		return
+	case pg.ProposalNotificationListener != nil:
+		return
+	case pg.BlocksRescanProgressListener != nil:
+		return
 	}
+	
+	pg.SyncProgressListener = listeners.NewSyncProgress()
 	err := pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
 	if err != nil {
 		log.Errorf("Error adding sync progress listener: %v", err)
 		return
 	}
 
-	if pg.TxAndBlockNotificationListener == nil {
-		pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	}
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	err = pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, OverviewPageID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
 	}
 
-	if pg.ProposalNotificationListener == nil {
-		pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
-	}
+	
+	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
 	err = pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, OverviewPageID)
 	if err != nil {
 		log.Errorf("Error adding politeia notification listener: %v", err)
 		return
 	}
 
-	if pg.BlocksRescanProgressListener == nil {
-		pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
-	}
+	
+	pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
 	pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
 
 	go func() {
@@ -418,6 +424,11 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 				close(pg.TxAndBlockNotifChan)
 				close(pg.ProposalNotifChan)
 				close(pg.BlockRescanChan)
+
+				mp.SyncProgressListener == nil
+				mp.TxAndBlockNotificationListener == nil
+				mp.ProposalNotificationListener == nil
+				pg.BlocksRescanProgressListener = nil
 
 				return
 			}

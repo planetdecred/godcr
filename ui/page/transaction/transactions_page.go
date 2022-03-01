@@ -218,6 +218,9 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 }
 
 func (pg *TransactionsPage) listenForTxNotifications() {
+	if pg.TxAndBlockNotificationListener != nil {
+		return
+	}
 	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, TransactionsPageID)
 	if err != nil {
@@ -240,6 +243,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(TransactionsPageID)
 				close(pg.TxAndBlockNotifChan)
+				pg.TxAndBlockNotificationListener = nil
 
 				return
 			}

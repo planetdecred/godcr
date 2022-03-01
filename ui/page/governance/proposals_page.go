@@ -383,6 +383,9 @@ func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
 }
 
 func (pg *ProposalsPage) listenForSyncNotifications() {
+	if pg.ProposalNotificationListener != nil {
+		return
+	}
 	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
 	err := pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalsPageID)
 	if err != nil {
@@ -404,6 +407,7 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalsPageID)
 				close(pg.ProposalNotifChan)
+				pg.ProposalNotificationListener = nil
 
 				return
 			}

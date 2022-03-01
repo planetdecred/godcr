@@ -203,10 +203,10 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
-	if as.TxAndBlockNotificationListener == nil {
-		as.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	if as.TxAndBlockNotificationListener != nil {
+		return
 	}
-
+	as.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	err := as.WL.MultiWallet.AddTxAndBlockNotificationListener(as.TxAndBlockNotificationListener, true, AccoutSelectorID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
@@ -238,8 +238,8 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 				}
 			case <-ctx.Done():
 				as.WL.MultiWallet.RemoveTxAndBlockNotificationListener(AccoutSelectorID)
-				// Close notification channel.
 				close(as.TxAndBlockNotifChan)
+				as.TxAndBlockNotificationListener = nil
 				return
 			}
 		}

@@ -131,8 +131,9 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 
 func (pg *ProposalDetails) listenForSyncNotifications() {
 	if pg.ProposalNotificationListener == nil {
-		pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
+		return
 	}
+	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
 	err := pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalDetailsPageID)
 	if err != nil {
 		log.Errorf("Error adding politeia notification listener: %v", err)
@@ -154,6 +155,7 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
 				close(pg.ProposalNotifChan)
+				pg.ProposalNotificationListener = nil
 
 				return
 			}

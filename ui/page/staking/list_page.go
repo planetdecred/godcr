@@ -93,9 +93,10 @@ func (pg *ListPage) OnNavigatedTo() {
 }
 
 func (pg *ListPage) listenForTxNotifications() {
-	if pg.TxAndBlockNotificationListener == nil {
-		pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	if pg.TxAndBlockNotificationListener != nil {
+		return
 	}
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, listPageID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
@@ -121,9 +122,10 @@ func (pg *ListPage) listenForTxNotifications() {
 					}
 				}
 			case <-pg.ctx.Done():
-				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(listPageID) // Remove listener
-				close(pg.TxAndBlockNotifChan)                                      // Close channel
-
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(listPageID)
+				close(pg.TxAndBlockNotifChan)
+				pg.TxAndBlockNotificationListener = nil  
+				                                    
 				return
 			}
 		}

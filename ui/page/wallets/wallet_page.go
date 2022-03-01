@@ -1088,9 +1088,10 @@ func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 }
 
 func (pg *WalletPage) listenForTxNotifications() {
-	if pg.TxAndBlockNotificationListener == nil {
-		pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	if pg.TxAndBlockNotificationListener != nil {
+		return
 	}
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, WalletPageID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
@@ -1117,6 +1118,7 @@ func (pg *WalletPage) listenForTxNotifications() {
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(WalletPageID)
 				close(pg.TxAndBlockNotifChan)
+				pg.TxAndBlockNotificationListener = nil
 
 				return
 			}

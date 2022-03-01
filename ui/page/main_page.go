@@ -795,31 +795,36 @@ func initializeBeepNotification(n string) {
 	}
 }
 
-// listenForSyncNotifications starts a goroutine to watch for sync updates
+// listenForNotifications starts a goroutine to watch for sync updates
 // and update the UI accordingly.
 func (mp *MainPage) listenForNotifications() {
-	// Setup listeners
-	if mp.SyncProgressListener == nil {
-		mp.SyncProgressListener = listeners.NewSyncProgress()
+	// Return if any of the listener is not nill.
+	switch {
+	case  mp.SyncProgressListener != nil:
+		return
+	case mp.TxAndBlockNotificationListener != nil:
+		return
+	case mp.ProposalNotificationListener != nil:
+		return
 	}
+	
+	mp.SyncProgressListener = listeners.NewSyncProgress()
 	err := mp.WL.MultiWallet.AddSyncProgressListener(mp.SyncProgressListener, MainPageID)
 	if err != nil {
 		log.Errorf("Error adding sync progress listener: %v", err)
 		return
 	}
 
-	if mp.TxAndBlockNotificationListener == nil {
-		mp.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	}
+	
+	mp.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	err = mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp.TxAndBlockNotificationListener, true, MainPageID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
 	}
 
-	if mp.ProposalNotificationListener == nil {
-		mp.ProposalNotificationListener = listeners.NewProposalNotificationListener()
-	}
+	
+	mp.ProposalNotificationListener = listeners.NewProposalNotificationListener()
 	err = mp.WL.MultiWallet.Politeia.AddNotificationListener(mp.ProposalNotificationListener, MainPageID)
 	if err != nil {
 		log.Errorf("Error adding politeia notification listener: %v", err)
@@ -872,6 +877,10 @@ func (mp *MainPage) listenForNotifications() {
 				close(mp.SyncStatusChan)
 				close(mp.TxAndBlockNotifChan)
 				close(mp.ProposalNotifChan)
+
+				mp.SyncProgressListener == nil
+				mp.TxAndBlockNotificationListener == nil
+				mp.ProposalNotificationListener == nil
 
 				return
 			}
