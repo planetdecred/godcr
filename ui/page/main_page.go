@@ -208,7 +208,6 @@ func (mp *MainPage) initNavItems() {
 // the page is displayed.
 // Part of the load.Page interface.
 func (mp *MainPage) OnNavigatedTo() {
-	// register for notifications, unregister when the page disappears
 	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 	mp.setLanguageSetting()
 
@@ -736,8 +735,8 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-// desktopNotifier posts desktop notifications.
-func (mp *MainPage) desktopNotifier(notifier interface{}) {
+// postDdesktopNotification posts notifications to the desktop.
+func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 	proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
 	var notification string
 	switch t := notifier.(type) {
@@ -842,7 +841,7 @@ func (mp *MainPage) listenForNotifications() {
 						Transaction: n.Transaction,
 					}
 					if transactionNotification {
-						mp.desktopNotifier(update)
+						mp.postDesktopNotification(update)
 					}
 					mp.RefreshWindow()
 				case listeners.BlockAttached:
@@ -861,7 +860,7 @@ func (mp *MainPage) listenForNotifications() {
 			case notification := <-mp.ProposalNotifChan:
 				// Don't notify on wallet synced event.
 				if notification.ProposalStatus != wallet.Synced {
-					mp.desktopNotifier(notification)
+					mp.postDesktopNotification(notification)
 				}
 			case n := <-mp.SyncStatusChan:
 				if n.Stage == wallet.SyncCompleted {
