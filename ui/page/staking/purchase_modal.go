@@ -88,6 +88,8 @@ func (tp *stakingModal) OnResume() {
 
 	tp.ctx, tp.ctxCancel = context.WithCancel(context.TODO())
 
+	tp.accountSelector.ListenForTxNotifications(tp.ctx)
+
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
 		tp.Toast.NotifyError(err.Error())

@@ -208,7 +208,6 @@ func (mp *MainPage) initNavItems() {
 // the page is displayed.
 // Part of the load.Page interface.
 func (mp *MainPage) OnNavigatedTo() {
-	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 	mp.setLanguageSetting()
 
 	mp.ctx, mp.ctxCancel = context.WithCancel(context.TODO())
@@ -459,8 +458,6 @@ func (mp *MainPage) OnNavigatedFrom() {
 	if mp.receivePage != nil {
 		mp.receivePage.OnNavigatedFrom()
 	}
-
-	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 
 	mp.ctxCancel()
 }

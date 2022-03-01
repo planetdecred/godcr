@@ -68,6 +68,7 @@ func (tb *ticketBuyerModal) OnCancel(cancel func()) *ticketBuyerModal {
 func (tb *ticketBuyerModal) OnResume() {
 	tb.initializeAccountSelector()
 	tb.ctx, tb.ctxCancel = context.WithCancel(context.TODO())
+	tb.accountSelector.ListenForTxNotifications(tb.ctx)
 
 	if len(tb.WL.MultiWallet.KnownVSPs()) == 0 {
 		// TODO: Does this modal need this list?
