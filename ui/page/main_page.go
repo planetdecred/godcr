@@ -768,7 +768,7 @@ func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 	case wallet.Proposal:
 		proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
 		if !proposalNotification {
-			return 
+			return
 		}
 		switch {
 		case t.ProposalStatus == wallet.NewProposalFound:
@@ -801,14 +801,14 @@ func initializeBeepNotification(n string) {
 func (mp *MainPage) listenForNotifications() {
 	// Return if any of the listener is not nill.
 	switch {
-	case  mp.SyncProgressListener != nil:
+	case mp.SyncProgressListener != nil:
 		return
 	case mp.TxAndBlockNotificationListener != nil:
 		return
 	case mp.ProposalNotificationListener != nil:
 		return
 	}
-	
+
 	mp.SyncProgressListener = listeners.NewSyncProgress()
 	err := mp.WL.MultiWallet.AddSyncProgressListener(mp.SyncProgressListener, MainPageID)
 	if err != nil {
@@ -816,7 +816,6 @@ func (mp *MainPage) listenForNotifications() {
 		return
 	}
 
-	
 	mp.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	err = mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp.TxAndBlockNotificationListener, true, MainPageID)
 	if err != nil {
@@ -824,7 +823,6 @@ func (mp *MainPage) listenForNotifications() {
 		return
 	}
 
-	
 	mp.ProposalNotificationListener = listeners.NewProposalNotificationListener()
 	err = mp.WL.MultiWallet.Politeia.AddNotificationListener(mp.ProposalNotificationListener, MainPageID)
 	if err != nil {
@@ -879,9 +877,9 @@ func (mp *MainPage) listenForNotifications() {
 				close(mp.TxAndBlockNotifChan)
 				close(mp.ProposalNotifChan)
 
-				mp.SyncProgressListener == nil
-				mp.TxAndBlockNotificationListener == nil
-				mp.ProposalNotificationListener == nil
+				mp.SyncProgressListener = nil
+				mp.TxAndBlockNotificationListener = nil
+				mp.ProposalNotificationListener = nil
 
 				return
 			}

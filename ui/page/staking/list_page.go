@@ -124,8 +124,8 @@ func (pg *ListPage) listenForTxNotifications() {
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(listPageID)
 				close(pg.TxAndBlockNotifChan)
-				pg.TxAndBlockNotificationListener = nil  
-				                                    
+				pg.TxAndBlockNotificationListener = nil
+
 				return
 			}
 		}

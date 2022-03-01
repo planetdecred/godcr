@@ -325,7 +325,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 func (pg *AppOverviewPage) listenForNotifications() {
 	// Return if any of the listener is not nill.
 	switch {
-	case  pg.SyncProgressListener != nil:
+	case pg.SyncProgressListener != nil:
 		return
 	case pg.TxAndBlockNotificationListener != nil:
 		return
@@ -334,7 +334,7 @@ func (pg *AppOverviewPage) listenForNotifications() {
 	case pg.BlocksRescanProgressListener != nil:
 		return
 	}
-	
+
 	pg.SyncProgressListener = listeners.NewSyncProgress()
 	err := pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
 	if err != nil {
@@ -349,7 +349,6 @@ func (pg *AppOverviewPage) listenForNotifications() {
 		return
 	}
 
-	
 	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
 	err = pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, OverviewPageID)
 	if err != nil {
@@ -357,7 +356,6 @@ func (pg *AppOverviewPage) listenForNotifications() {
 		return
 	}
 
-	
 	pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
 	pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
 
@@ -425,9 +423,9 @@ func (pg *AppOverviewPage) listenForNotifications() {
 				close(pg.ProposalNotifChan)
 				close(pg.BlockRescanChan)
 
-				mp.SyncProgressListener == nil
-				mp.TxAndBlockNotificationListener == nil
-				mp.ProposalNotificationListener == nil
+				pg.SyncProgressListener = nil
+				pg.TxAndBlockNotificationListener = nil
+				pg.ProposalNotificationListener = nil
 				pg.BlocksRescanProgressListener = nil
 
 				return
