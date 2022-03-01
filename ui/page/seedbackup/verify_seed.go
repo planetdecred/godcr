@@ -64,7 +64,7 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 // to differentiate this page from other pages.
 // Part of the load.Page interface.
 func (pg *VerifySeedPage) ID() string {
-	return SaveSeedPageID
+	return VerifySeedPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
