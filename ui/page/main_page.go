@@ -734,7 +734,6 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 
 // postDdesktopNotification posts notifications to the desktop.
 func (mp *MainPage) postDesktopNotification(notifier interface{}) {
-	proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
 	var notification string
 	switch t := notifier.(type) {
 	case wallet.NewTransaction:
@@ -767,6 +766,10 @@ func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 
 		initializeBeepNotification(notification)
 	case wallet.Proposal:
+		proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
+		if !proposalNotification {
+			return 
+		}
 		switch {
 		case t.ProposalStatus == wallet.NewProposalFound:
 			notification = fmt.Sprintf("A new proposal has been added Token: %s", t.Proposal.Token)
@@ -777,9 +780,7 @@ func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 		default:
 			notification = fmt.Sprintf("New update for proposal with Token: %s", t.Proposal.Token)
 		}
-		if proposalNotification {
-			initializeBeepNotification(notification)
-		}
+		initializeBeepNotification(notification)
 	}
 }
 
@@ -839,10 +840,10 @@ func (mp *MainPage) listenForNotifications() {
 				case listeners.NewTransaction:
 					mp.UpdateBalance(false)
 					transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
-					update := wallet.NewTransaction{
-						Transaction: n.Transaction,
-					}
 					if transactionNotification {
+						update := wallet.NewTransaction{
+							Transaction: n.Transaction,
+						}
 						mp.postDesktopNotification(update)
 					}
 					mp.RefreshWindow()
