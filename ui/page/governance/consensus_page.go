@@ -116,6 +116,9 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 
 	for pg.viewVotingDashboard.Clicked() {
 		host := "https://voting.decred.org"
+		if pg.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
+			host = "https://voting.decred.org/testnet"
+		}
 
 		components.GoToURL(host)
 	}
