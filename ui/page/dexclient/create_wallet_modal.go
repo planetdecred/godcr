@@ -8,6 +8,7 @@ import (
 	"decred.org/dcrdex/client/asset/btc"
 	"decred.org/dcrdex/client/asset/dcr"
 
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -29,14 +30,16 @@ type createWalletModal struct {
 
 	sourceAccountSelector *components.AccountSelector
 	modal                 *decredmaterial.Modal
-	submit                decredmaterial.Button
-	cancel                decredmaterial.Button
+	submitBtn             decredmaterial.Button
+	cancelBtn             decredmaterial.Button
 	walletPassword        decredmaterial.Editor
 	appPassword           decredmaterial.Editor
 	walletInfoWidget      *walletInfoWidget
 	materialLoader        material.LoaderStyle
 	isSending             bool
-	walletCreated         func()
+	dexClientPassword     string
+	isRegisterAction      bool
+	walletCreated         func(md *createWalletModal)
 }
 
 type walletInfoWidget struct {
@@ -45,24 +48,22 @@ type walletInfoWidget struct {
 	coinID   uint32
 }
 
-func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreated func()) *createWalletModal {
+func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, appPass string, walletCreated func(md *createWalletModal)) *createWalletModal {
 	md := &createWalletModal{
-		Load:             l,
-		modal:            l.Theme.ModalFloatTitle(),
-		walletPassword:   l.Theme.EditorPassword(new(widget.Editor), "Wallet Password"),
-		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App Password"),
-		submit:           l.Theme.Button("Add"),
-		cancel:           l.Theme.OutlineButton("Cancel"),
-		materialLoader:   material.Loader(l.Theme.Base),
-		walletInfoWidget: wallInfo,
-		walletCreated:    walletCreated,
+		Load:              l,
+		modal:             l.Theme.ModalFloatTitle(),
+		walletPassword:    l.Theme.EditorPassword(&widget.Editor{Submit: true}, strWalletPassword),
+		appPassword:       l.Theme.EditorPassword(&widget.Editor{Submit: true}, strAppPassword),
+		submitBtn:         l.Theme.Button(strSubmit),
+		cancelBtn:         l.Theme.OutlineButton(values.String(values.StrCancel)),
+		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
+		walletInfoWidget:  wallInfo,
+		walletCreated:     walletCreated,
+		dexClientPassword: appPass,
 	}
-
-	md.appPassword.Editor.SingleLine = true
-	md.appPassword.Editor.SetText("")
-
+	md.submitBtn.SetEnabled(false)
 	md.sourceAccountSelector = components.NewAccountSelector(md.Load, nil).
-		Title("Select DCR account to use with DEX").
+		Title(strSellectAccountForDex).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 			// Filter out imported account and mixed.
@@ -103,59 +104,105 @@ func (md *createWalletModal) OnResume() {
 	}
 }
 
-func (md *createWalletModal) Handle() {
-	if md.cancel.Button.Clicked() && !md.isSending {
-		md.Dismiss()
+func (md *createWalletModal) SetRegisterAction(registerAction bool) *createWalletModal {
+	md.isRegisterAction = registerAction
+	return md
+}
+
+func (md *createWalletModal) validateInputs(isRequiredWalletPassword bool) (bool, string, string) {
+	appPass := md.dexClientPassword
+	if appPass == "" {
+		appPass = md.appPassword.Editor.Text()
 	}
 
-	if md.submit.Button.Clicked() {
-		if md.appPassword.Editor.Text() == "" || md.isSending {
+	if appPass == "" {
+		md.submitBtn.SetEnabled(false)
+		return false, "", ""
+	}
+
+	wallPassword := md.walletPassword.Editor.Text()
+	if isRequiredWalletPassword && wallPassword == "" {
+		md.submitBtn.SetEnabled(false)
+		return false, "", ""
+	}
+
+	md.submitBtn.SetEnabled(true)
+	return true, appPass, wallPassword
+}
+
+func (md *createWalletModal) Handle() {
+	isRequiredWalletPassword := md.walletInfoWidget.coinID == dcr.BipID
+	canSubmit, appPass, walletPass := md.validateInputs(isRequiredWalletPassword)
+
+	if isWalletPasswordSubmit, _ := decredmaterial.HandleEditorEvents(md.walletPassword.Editor); isWalletPasswordSubmit {
+		if md.dexClientPassword != "" && canSubmit {
+			if isRequiredWalletPassword {
+				md.doCreateWallet([]byte(appPass), []byte(walletPass))
+			} else {
+				md.doCreateWallet([]byte(appPass), nil)
+			}
+		} else {
+			md.appPassword.Editor.Focus()
+		}
+	}
+
+	isSubmit, _ := decredmaterial.HandleEditorEvents(md.appPassword.Editor)
+	if canSubmit && (md.submitBtn.Button.Clicked() || isSubmit) {
+		if isRequiredWalletPassword {
+			md.doCreateWallet([]byte(appPass), []byte(walletPass))
+		} else {
+			md.doCreateWallet([]byte(appPass), nil)
+		}
+	}
+
+	if md.cancelBtn.Button.Clicked() && !md.isSending {
+		md.Dismiss()
+	}
+}
+
+func (md *createWalletModal) doCreateWallet(appPass, walletPass []byte) {
+	if md.isSending {
+		return
+	}
+
+	md.isSending = true
+	md.modal.SetDisabled(true)
+	go func() {
+		defer func() {
+			md.isSending = false
+			md.modal.SetDisabled(false)
+		}()
+
+		coinID := md.walletInfoWidget.coinID
+		coinName := md.walletInfoWidget.coinName
+		if md.Dexc().HasWallet(int32(coinID)) {
+			md.Toast.NotifyError(fmt.Sprintf(nStrAlreadyConnectWallet, coinName))
 			return
 		}
 
-		md.isSending = true
-		md.modal.SetDisabled(true)
+		settings := make(map[string]string)
+		var walletType string
+		switch coinID {
+		case dcr.BipID:
+			selectedAccount := md.sourceAccountSelector.SelectedAccount()
+			settings[dcrlibwallet.DexDcrWalletIDConfigKey] = strconv.Itoa(selectedAccount.WalletID)
+			settings["account"] = selectedAccount.Name
+			settings["password"] = md.walletPassword.Editor.Text()
+			walletType = dcrlibwallet.CustomDexDcrWalletType
+		case btc.BipID:
+			walletType = "SPV" // decred.org/dcrdex/client/asset/btc.walletTypeSPV
+			walletPass = nil   // Core doesn't accept wallet passwords for dex-managed spv wallets.
+		}
 
-		go func() {
-			defer func() {
-				md.isSending = false
-				md.modal.SetDisabled(false)
-			}()
+		err := md.Dexc().AddWallet(coinID, walletType, settings, appPass, walletPass)
+		if err != nil {
+			md.Toast.NotifyError(err.Error())
+			return
+		}
 
-			coinID := md.walletInfoWidget.coinID
-			coinName := md.walletInfoWidget.coinName
-			if md.Dexc().HasWallet(int32(coinID)) {
-				md.Toast.NotifyError(fmt.Sprintf("already connected a %s wallet", coinName))
-				return
-			}
-
-			settings := make(map[string]string)
-			var walletType string
-			appPass := []byte(md.appPassword.Editor.Text())
-			walletPass := []byte(md.walletPassword.Editor.Text())
-
-			switch coinID {
-			case dcr.BipID:
-				selectedAccount := md.sourceAccountSelector.SelectedAccount()
-				settings[dcrlibwallet.DexDcrWalletIDConfigKey] = strconv.Itoa(selectedAccount.WalletID)
-				settings["account"] = selectedAccount.Name
-				settings["password"] = md.walletPassword.Editor.Text()
-				walletType = dcrlibwallet.CustomDexDcrWalletType
-			case btc.BipID:
-				walletType = "SPV" // decred.org/dcrdex/client/asset/btc.walletTypeSPV
-				walletPass = nil   // Core doesn't accept wallet passwords for dex-managed spv wallets.
-			}
-
-			err := md.Dexc().AddWallet(coinID, walletType, settings, appPass, walletPass)
-			if err != nil {
-				md.Toast.NotifyError(err.Error())
-				return
-			}
-
-			md.Dismiss()
-			md.walletCreated()
-		}()
-	}
+		md.Dismiss()
+		md.walletCreated(md)
+	}()
 }
 
 func (md *createWalletModal) Layout(gtx layout.Context) D {
@@ -163,7 +210,7 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return md.Load.Theme.Label(values.TextSize20, "Add a").Layout(gtx)
+					return md.Load.Theme.Label(values.TextSize20, strAddA).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding8, Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
@@ -173,14 +220,17 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return md.Load.Theme.Label(values.TextSize20, fmt.Sprintf("%s Wallet", md.walletInfoWidget.coinName)).Layout(gtx)
+					return md.Load.Theme.Label(values.TextSize20, fmt.Sprintf(nStrNameWallet, md.walletInfoWidget.coinName)).Layout(gtx)
 				}),
 			)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return md.Load.Theme.Label(values.TextSize14, "Your wallet is required to pay registration fees.").Layout(gtx)
+					if !md.isRegisterAction {
+						return D{}
+					}
+					return md.Load.Theme.Label(values.TextSize14, strRequireWalletPayFee).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					if md.walletInfoWidget.coinID == dcr.BipID {
@@ -200,6 +250,9 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 					return D{}
 				}),
 				layout.Rigid(func(gtx C) D {
+					if md.dexClientPassword != "" {
+						return D{}
+					}
 					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 						return md.appPassword.Layout(gtx)
 					})
@@ -216,7 +269,7 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 						return layout.Inset{
 							Right:  values.MarginPadding4,
 							Bottom: values.MarginPadding15,
-						}.Layout(gtx, md.cancel.Layout)
+						}.Layout(gtx, md.cancelBtn.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if md.isSending {
@@ -225,7 +278,7 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 								Bottom: values.MarginPadding15,
 							}.Layout(gtx, md.materialLoader.Layout)
 						}
-						return md.submit.Layout(gtx)
+						return md.submitBtn.Layout(gtx)
 					}),
 				)
 			})
