@@ -14,14 +14,12 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-var canVote bool
-
 type ConsensusItem struct {
 	Agenda     dcrlibwallet.Agenda
 	VoteButton decredmaterial.Button
 }
 
-func AgendasList(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
+func AgendaItemWidget(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	agenda := consensusItem.Agenda
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -44,28 +42,25 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	var backgroundColor color.NRGBA
 
 	switch agenda.Status() {
-	case "Finished":
+	case dcrlibwallet.AgendaStatusFinished:
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status())
 		statusLabel.Color = l.Theme.Color.GreenText
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
 		statusIcon.Color = l.Theme.Color.Green500
 		backgroundColor = l.Theme.Color.Green50
-		canVote = false
-	case "In progress":
+	case dcrlibwallet.AgendaStatusInProgress:
 		clr := l.Theme.Color.Primary
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status())
 		statusLabel.Color = clr
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
 		statusIcon.Color = clr
 		backgroundColor = l.Theme.Color.LightBlue
-		canVote = true
-	case "Upcoming":
+	case dcrlibwallet.AgendaStatusUpcoming:
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status())
 		statusLabel.Color = l.Theme.Color.Text
 		statusIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
 		statusIcon.Color = l.Theme.Color.DeepBlue
 		backgroundColor = l.Theme.Color.Gray2
-		canVote = false
 	}
 
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -107,7 +102,7 @@ func layoutAgendaDetails(l *load.Load, data string) layout.Widget {
 
 func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Px(unit.Dp(150)), gtx.Px(unit.Dp(150))
-	if canVote {
+	if item.Agenda.Status() == dcrlibwallet.AgendaStatusInProgress {
 		item.VoteButton.Background = l.Theme.Color.Primary
 		item.VoteButton.SetEnabled(true)
 	} else {

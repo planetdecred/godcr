@@ -304,7 +304,7 @@ func (pg *ConsensusPage) layoutContent(gtx C) D {
 								return components.LayoutNoAgendasFound(gtx, pg.Load, pg.isSyncing)
 							}
 
-							return components.AgendasList(gtx, pg.Load, pg.consensusItems[i])
+							return components.AgendaItemWidget(gtx, pg.Load, pg.consensusItems[i])
 						})
 					})
 				})
