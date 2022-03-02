@@ -1,9 +1,6 @@
 package governance
 
 import (
-	"context"
-	"fmt"
-
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -30,7 +27,6 @@ type agendaVoteModal struct {
 	consensusPage *ConsensusPage
 
 	walletSelector    *WalletSelector
-	vspSelector       *components.VSPSelector
 	ticketSelector    *ticketSelector
 	spendingPassword  decredmaterial.Editor
 	materialLoader    material.LoaderStyle
@@ -53,7 +49,7 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
 		optionsRadioGroup: new(widget.Enum),
 		spendingPassword:  l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
-		voteBtn:           l.Theme.Button("Vote"),
+		voteBtn:           l.Theme.Button("Update Preference"),
 		cancelBtn:         l.Theme.OutlineButton("Cancel"),
 	}
 
@@ -177,16 +173,6 @@ func (avm *agendaVoteModal) Dismiss() {
 }
 
 func (avm *agendaVoteModal) Handle() {
-	if avm.vspSelector.Changed() {
-		avm.WL.MultiWallet.SaveLastUsedVSP(avm.vspSelector.SelectedVSP().Host)
-	}
-
-	// reselect vsp if there's a delay in fetching the VSP List
-	lastUsedVSP := avm.WL.MultiWallet.LastUsedVSP()
-	if len(avm.WL.MultiWallet.KnownVSPs()) > 0 && lastUsedVSP != "" {
-		avm.vspSelector.SelectVSP(lastUsedVSP)
-	}
-
 	for avm.cancelBtn.Clicked() {
 		if avm.isVoting {
 			continue
@@ -211,7 +197,7 @@ func (avm *agendaVoteModal) Handle() {
 
 	}
 
-	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue && avm.vspSelector.SelectedVSP() != nil && avm.spendingPassword.Editor.Text() != ""
+	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue && avm.spendingPassword.Editor.Text() != ""
 	avm.voteBtn.SetEnabled(validToVote)
 	if avm.voteBtn.Enabled() {
 		avm.voteBtn.Background = avm.Theme.Color.Primary
@@ -240,7 +226,7 @@ func (avm *agendaVoteModal) Handle() {
 func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
-			t := avm.Theme.H6("Change Vote")
+			t := avm.Theme.H6("Update voting preference")
 			t.Font.Weight = text.SemiBold
 			return t.Layout(gtx)
 		},
@@ -253,33 +239,6 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if len(avm.LiveTickets) == 0 {
-						return D{}
-					}
-					return avm.vspSelector.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					// to we need this loader? it seems redundant.
-					// if len(avm.LiveTickets) == 0 {
-					// 	gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
-					// 	return avm.materialLoader.Layout(gtx)
-					// }
-					var ticketCountLabel decredmaterial.Label
-					text := fmt.Sprintf("You have %d live tickets for the selected wallet [%s]", len(avm.LiveTickets), avm.walletSelector.SelectedWallet().Name)
-					ticketCountLabel = avm.Theme.Label(values.MarginPadding14, text)
-					if len(avm.LiveTickets) < 1 {
-						ticketCountLabel.Color = avm.Theme.Color.Danger
-					}
-					return ticketCountLabel.Layout(gtx)
-				}),
-			)
-		},
-		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					if len(avm.LiveTickets) == 0 {
-						return D{}
-					}
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, avm.layoutItems()...)
 				}),
 			)
@@ -287,9 +246,6 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if len(avm.LiveTickets) < 1 {
-						return D{}
-					}
 					return avm.spendingPassword.Layout(gtx)
 				}),
 			)
@@ -334,10 +290,8 @@ func (avm *agendaVoteModal) sendVotes() {
 			avm.isVoting = false
 		}()
 
-		vspHost := avm.vspSelector.SelectedVSP().Host
-		pubKey := avm.vspSelector.SelectedVSP().PubKey
-		radioBtnGrp := avm.optionsRadioGroup.Value
-		err := avm.walletSelector.selectedWallet.SetVoteChoice(vspHost, pubKey, avm.agenda.AgendaID, radioBtnGrp, "", password)
+		choiceID := avm.optionsRadioGroup.Value
+		err := avm.walletSelector.selectedWallet.SetVoteChoice(avm.agenda.AgendaID, choiceID, "", password)
 		if err != nil {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 				avm.spendingPassword.SetError("Invalid password")
@@ -347,7 +301,7 @@ func (avm *agendaVoteModal) sendVotes() {
 			return
 		}
 		avm.Dismiss()
-		avm.Toast.Notify("Vote updated successfully, refreshing agendas!")
+		avm.Toast.Notify("Vote preference updated successfully")
 
 		avm.Dismiss()
 		go avm.consensusPage.FetchAgendas()
