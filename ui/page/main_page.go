@@ -422,12 +422,7 @@ func (mp *MainPage) HandleUserInteractions() {
 			case governance.GovernancePageID:
 				pg = governance.NewGovernancePage(mp.Load)
 			case dexclient.MarketPageID:
-				_, err := mp.WL.MultiWallet.StartDexClient() // does nothing if already started
-				if err != nil {
-					mp.Toast.NotifyError(fmt.Sprintf("Unable to start DEX client: %v", err))
-				} else {
-					pg = dexclient.NewMarketPage(mp.Load)
-				}
+				pg = dexclient.NewMarketPage(mp.Load)
 			case MorePageID:
 				pg = NewMorePage(mp.Load)
 			}
