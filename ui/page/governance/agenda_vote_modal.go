@@ -226,7 +226,7 @@ func (avm *agendaVoteModal) Handle() {
 func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
-			t := avm.Theme.H6("Update voting preference")
+			t := avm.Theme.H6("Update Voting Preference")
 			t.Font.Weight = text.SemiBold
 			return t.Layout(gtx)
 		},
