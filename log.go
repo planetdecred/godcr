@@ -58,14 +58,7 @@ var (
 	walletLog  = backendLog.Logger("WALL")
 	winLog     = backendLog.Logger("UI")
 	dlwlLog    = backendLog.Logger("DLWL")
-	pageLog    = backendLog.Logger("PAGE")
 	lstnersLog = backendLog.Logger("LSTN")
-	cmpntLog   = backendLog.Logger("CPNT")
-	txntLog    = backendLog.Logger("TXNT")
-	govnLog    = backendLog.Logger("GOVN")
-	walpLog    = backendLog.Logger("WALP")
-	ovewLog    = backendLog.Logger("OVEW")
-	stakLog    = backendLog.Logger("STAK")
 )
 
 // Initialize package-global logger variables.
@@ -73,15 +66,15 @@ func init() {
 	wallet.UseLogger(walletLog)
 	ui.UseLogger(winLog)
 	dcrlibwallet.UseLogger(dlwlLog)
-	page.UseLogger(pageLog)
+	page.UseLogger(winLog)
 	load.UseLogger(log)
 	listeners.UseLogger(lstnersLog)
-	components.UseLogger(cmpntLog)
-	transaction.UseLogger(txntLog)
-	governance.UseLogger(govnLog)
-	walletPage.UseLogger(walpLog)
-	overview.UseLogger(ovewLog)
-	staking.UseLogger(stakLog)
+	components.UseLogger(winLog)
+	transaction.UseLogger(winLog)
+	governance.UseLogger(winLog)
+	walletPage.UseLogger(winLog)
+	overview.UseLogger(winLog)
+	staking.UseLogger(winLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -90,14 +83,7 @@ var subsystemLoggers = map[string]slog.Logger{
 	"DLWL": dlwlLog,
 	"UI":   winLog,
 	"GDCR": log,
-	"PAGE": pageLog,
 	"LSTN": lstnersLog,
-	"CPNT": cmpntLog,
-	"TXNT": txntLog,
-	"GOVN": govnLog,
-	"WALP": walpLog,
-	"OVEW": ovewLog,
-	"STAK": stakLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and
