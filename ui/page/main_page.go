@@ -1,12 +1,16 @@
 package page
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
@@ -31,6 +35,8 @@ const (
 var (
 	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
 	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
+
+	retryAttempts = 10
 )
 
 type HideBalanceItem struct {
@@ -59,12 +65,16 @@ type MainPage struct {
 	sendPage      *send.Page   // reuse value to keep data persistent onresume.
 	receivePage   *ReceivePage // pointer to receive page. to avoid duplication.
 
+	loader       material.LoaderStyle
+	refreshValue *decredmaterial.Clickable
+
 	// page state variables
-	usdExchangeSet  bool
-	dcrUsdtBittrex  load.DCRUSDTBittrex
-	isBalanceHidden bool
-	totalBalance    dcrutil.Amount
-	totalBalanceUSD string
+	usdExchangeSet    bool
+	isLoadingUSDValue bool
+	dcrUsdtBittrex    load.DCRUSDTBittrex
+	isBalanceHidden   bool
+	totalBalance      dcrutil.Amount
+	totalBalanceUSD   string
 }
 
 func NewMainPage(l *load.Load) *MainPage {
@@ -91,6 +101,11 @@ func NewMainPage(l *load.Load) *MainPage {
 	l.PopToFragment = mp.popToFragment
 
 	mp.initNavItems()
+
+	th := material.NewTheme(gofont.Collection())
+	mp.loader = material.Loader(th)
+
+	mp.refreshValue = mp.Theme.NewClickable(true)
 
 	// Show a seed backup prompt if necessary.
 	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
@@ -200,6 +215,8 @@ func (mp *MainPage) OnNavigatedTo() {
 
 	mp.setLanguageSetting()
 
+	go mp.fetchExchangeValue()
+
 	if mp.currentPage == nil {
 		mp.currentPage = overview.NewOverviewPage(mp.Load)
 	}
@@ -218,6 +235,8 @@ func (mp *MainPage) OnNavigatedTo() {
 			go mp.WL.MultiWallet.Politeia.Sync()
 		}
 	}
+
+	mp.UpdateBalance()
 }
 
 func (mp *MainPage) setLanguageSetting() {
@@ -225,10 +244,48 @@ func (mp *MainPage) setLanguageSetting() {
 	values.SetUserLanguage(langPre)
 }
 
-func (mp *MainPage) UpdateBalance(fetchExch bool) {
-	if len(mp.totalBalanceUSD) == 0 || fetchExch {
+func (mp *MainPage) fetchExchangeValue() {
+	err, attempts := retry(retryAttempts, 2*time.Second, func() error {
 		load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
+		if mp.dcrUsdtBittrex.LastTradeRate != "" {
+			log.Info("exchange value fetched")
+			mp.UpdateBalance()
+			mp.RefreshWindow()
+			mp.isLoadingUSDValue = false
+			return nil
+		}
+
+		mp.isLoadingUSDValue = true
+		return errors.New("failed to fetch dcrUsdtBittrex value")
+	})
+
+	if err != nil || mp.dcrUsdtBittrex.LastTradeRate == "" {
+		log.Error(err)
+
+		if attempts == retryAttempts {
+			mp.isLoadingUSDValue = false
+		}
+		return
 	}
+
+}
+
+func retry(attempts int, sleep time.Duration, errFunc func() error) (err error, att int) {
+	for i := 0; i < attempts; i++ {
+		if i > 0 {
+			log.Error("retrying after error:", err)
+			time.Sleep(sleep)
+			sleep *= 2
+		}
+		err = errFunc()
+		if err == nil {
+			return nil, -1
+		}
+	}
+	return fmt.Errorf("after %d attempts, last error: %s", attempts, err), attempts
+}
+
+func (mp *MainPage) UpdateBalance() {
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
 
@@ -315,6 +372,10 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 func (mp *MainPage) HandleUserInteractions() {
 	if mp.currentPage != nil {
 		mp.currentPage.HandleUserInteractions()
+	}
+
+	if mp.refreshValue.Clicked() && mp.usdExchangeSet {
+		go mp.fetchExchangeValue()
 	}
 
 	mp.drawerNav.CurrentPage = mp.currentPageID()
@@ -497,7 +558,6 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	mp.UpdateBalance(false)
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -554,31 +614,47 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" && len(mp.totalBalanceUSD) > 0 {
-				inset := layout.Inset{
-					Top:  values.MarginPadding3,
-					Left: values.MarginPadding8,
-				}
-				border := widget.Border{Color: mp.Theme.Color.Gray2, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
-				return inset.Layout(gtx, func(gtx C) D {
-					padding := layout.Inset{
-						Top:    values.MarginPadding3,
-						Bottom: values.MarginPadding3,
-						Left:   values.MarginPadding6,
-						Right:  values.MarginPadding6,
-					}
-					return border.Layout(gtx, func(gtx C) D {
-						return padding.Layout(gtx, func(gtx C) D {
-							return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
-						})
-					})
-				})
+	switch {
+	case mp.usdExchangeSet && mp.isLoadingUSDValue && mp.dcrUsdtBittrex.LastTradeRate == "":
+		gtx.Constraints.Max.Y = gtx.Px(values.MarginPadding18)
+		gtx.Constraints.Max.X = gtx.Constraints.Max.Y
+		return layout.Inset{
+			Top:  values.MarginPadding8,
+			Left: values.MarginPadding5,
+		}.Layout(gtx, func(gtx C) D {
+			return mp.loader.Layout(gtx)
+		})
+	case mp.usdExchangeSet && !mp.isLoadingUSDValue && mp.dcrUsdtBittrex.LastTradeRate == "":
+		return layout.Inset{
+			Top:  values.MarginPadding7,
+			Left: values.MarginPadding5,
+		}.Layout(gtx, func(gtx C) D {
+			return mp.refreshValue.Layout(gtx, func(gtx C) D {
+				return mp.Icons.Restore.Layout16dp(gtx)
+			})
+		})
+	case mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" && len(mp.totalBalanceUSD) > 0:
+		inset := layout.Inset{
+			Top:  values.MarginPadding3,
+			Left: values.MarginPadding8,
+		}
+		border := widget.Border{Color: mp.Theme.Color.Gray2, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
+		return inset.Layout(gtx, func(gtx C) D {
+			padding := layout.Inset{
+				Top:    values.MarginPadding3,
+				Bottom: values.MarginPadding3,
+				Left:   values.MarginPadding6,
+				Right:  values.MarginPadding6,
 			}
-			return D{}
-		}),
-	)
+			return border.Layout(gtx, func(gtx C) D {
+				return padding.Layout(gtx, func(gtx C) D {
+					return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
+				})
+			})
+		})
+	default:
+		return D{}
+	}
 }
 
 func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
