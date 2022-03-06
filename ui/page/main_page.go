@@ -35,8 +35,6 @@ const (
 var (
 	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
 	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
-
-	retryAttempts = 10
 )
 
 type HideBalanceItem struct {
@@ -253,7 +251,7 @@ func (mp *MainPage) updateExchangeSetting() {
 }
 
 func (mp *MainPage) fetchExchangeValue() {
-	err, attempts := retry(retryAttempts, 2*time.Second, func() error {
+	attempts, err := components.RetryFunc(components.RetryAttempts, 2*time.Second, func() error {
 		load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 		if mp.dcrUsdtBittrex.LastTradeRate != "" {
 			log.Info("exchange value fetched")
@@ -270,27 +268,11 @@ func (mp *MainPage) fetchExchangeValue() {
 	if err != nil || mp.dcrUsdtBittrex.LastTradeRate == "" {
 		log.Error(err)
 
-		if attempts == retryAttempts {
+		if attempts == components.RetryAttempts {
 			mp.isLoadingUSDValue = false
 		}
 		return
 	}
-
-}
-
-func retry(attempts int, sleep time.Duration, errFunc func() error) (err error, att int) {
-	for i := 0; i < attempts; i++ {
-		if i > 0 {
-			log.Error("retrying after error:", err)
-			time.Sleep(sleep)
-			sleep *= 2
-		}
-		err = errFunc()
-		if err == nil {
-			return nil, -1
-		}
-	}
-	return fmt.Errorf("after %d attempts, last error: %s", attempts, err), attempts
 }
 
 func (mp *MainPage) UpdateBalance() {

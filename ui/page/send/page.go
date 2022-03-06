@@ -2,9 +2,12 @@ package send
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"gioui.org/io/key"
 	"gioui.org/widget"
@@ -163,7 +166,7 @@ func (pg *Page) OnNavigatedTo() {
 	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyExchangeValue == values.USDExchangeValue {
 		pg.usdExchangeSet = true
-		pg.fetchExchangeValue()
+		go pg.fetchExchangeValue()
 	} else {
 		pg.usdExchangeSet = false
 	}
@@ -171,26 +174,43 @@ func (pg *Page) OnNavigatedTo() {
 }
 
 func (pg *Page) fetchExchangeValue() {
-	pg.exchangeError = ""
-	go func() {
-		var dcrUsdtBittrex load.DCRUSDTBittrex
+	var dcrUsdtBittrex load.DCRUSDTBittrex
+	errText := "failed to fetch dcrUsdtBittrex value"
+	attempts, err := components.RetryFunc(components.RetryAttempts, 2*time.Second, func() error {
 		err := load.GetUSDExchangeValue(&dcrUsdtBittrex)
 		if err != nil {
-			pg.exchangeError = err.Error()
-			return
+			if strings.Contains(err.Error(), "no such host") {
+				pg.exchangeError = "Exchange rate not fetched. Kindly check internet connection. Retrying..."
+				return errors.New(errText + " check internet connection.")
+			}
+
+			pg.exchangeError = "Exchange rate not fetched." + err.Error()
+			return errors.New(errText + " " + err.Error())
 		}
 
 		exchangeRate, err := strconv.ParseFloat(dcrUsdtBittrex.LastTradeRate, 64)
 		if err != nil {
 			pg.exchangeError = err.Error()
-			return
+			return err
 		}
 
 		pg.exchangeError = ""
 		pg.exchangeRate = exchangeRate
 		pg.amount.setExchangeRate(exchangeRate)
 		pg.validateAndConstructTx() // convert estimates to usd
-	}()
+		pg.RefreshWindow()
+		return nil
+	})
+
+	if err != nil || dcrUsdtBittrex.LastTradeRate == "" {
+		log.Println(err)
+
+		if attempts == components.RetryAttempts {
+			pg.exchangeError = "Exchange rate not fetched."
+		}
+		pg.RefreshWindow()
+		return
+	}
 }
 
 func (pg *Page) validateAndConstructTx() {
@@ -338,7 +358,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	for pg.retryExchange.Clicked() {
-		pg.fetchExchangeValue()
+		go pg.fetchExchangeValue()
 	}
 
 	for pg.nextButton.Clicked() {

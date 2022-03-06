@@ -2,6 +2,7 @@ package send
 
 import (
 	"fmt"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -40,7 +41,8 @@ func (pg *Page) initLayoutWidgets() {
 
 	pg.retryExchange = pg.Theme.Button("Retry")
 	pg.retryExchange.Background = pg.Theme.Color.Gray1
-	pg.retryExchange.Color = pg.Theme.Color.Primary
+	pg.retryExchange.Color = pg.Theme.Color.Surface
+	pg.retryExchange.TextSize = values.TextSize12
 	pg.retryExchange.Inset = layout.Inset{
 		Top:    values.MarginPadding5,
 		Right:  values.MarginPadding8,
@@ -276,11 +278,17 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								label := pg.Theme.Body2("Exchange rate not fetched")
+								label := pg.Theme.Body2(pg.exchangeError)
 								label.Color = pg.Theme.Color.Danger
+								if strings.Contains(pg.exchangeError, "Retrying") {
+									label.Color = pg.Theme.Color.Primary
+								}
 								return label.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
+								if strings.Contains(pg.exchangeError, "Retrying") {
+									return layout.Dimensions{}
+								}
 								gtx.Constraints.Min.X = gtx.Constraints.Max.X
 								return layout.E.Layout(gtx, pg.retryExchange.Layout)
 							}),
