@@ -215,8 +215,6 @@ func (mp *MainPage) OnNavigatedTo() {
 
 	mp.setLanguageSetting()
 
-	go mp.fetchExchangeValue()
-
 	if mp.currentPage == nil {
 		mp.currentPage = overview.NewOverviewPage(mp.Load)
 	}
@@ -236,12 +234,22 @@ func (mp *MainPage) OnNavigatedTo() {
 		}
 	}
 
+	mp.updateExchangeSetting()
+
 	mp.UpdateBalance()
 }
 
 func (mp *MainPage) setLanguageSetting() {
 	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey)
 	values.SetUserLanguage(langPre)
+}
+
+func (mp *MainPage) updateExchangeSetting() {
+	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
+	if mp.usdExchangeSet {
+		go mp.fetchExchangeValue()
+	}
 }
 
 func (mp *MainPage) fetchExchangeValue() {
@@ -286,9 +294,6 @@ func retry(attempts int, sleep time.Duration, errFunc func() error) (err error, 
 }
 
 func (mp *MainPage) UpdateBalance() {
-	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
-
 	totalBalance, err := mp.CalculateTotalWalletsBalance()
 	if err == nil {
 		mp.totalBalance = totalBalance
@@ -370,6 +375,11 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 // displayed.
 // Part of the load.Page interface.
 func (mp *MainPage) HandleUserInteractions() {
+	if mp.IsCurrencySettingUpdated {
+		mp.updateExchangeSetting()
+		mp.IsCurrencySettingUpdated = false
+	}
+
 	if mp.currentPage != nil {
 		mp.currentPage.HandleUserInteractions()
 	}

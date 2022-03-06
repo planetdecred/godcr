@@ -108,6 +108,9 @@ func (lp *ListPreferenceModal) Handle() {
 		lp.currentValue = lp.optionsRadioGroup.Value
 		lp.wallet.SaveConfigValueForKey(lp.preferenceKey, lp.optionsRadioGroup.Value)
 		lp.updateButtonClicked()
+		if lp.title == values.StrCurrencyConversion {
+			lp.IsCurrencySettingUpdated = true
+		}
 		lp.DismissModal(lp)
 	}
 

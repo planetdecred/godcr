@@ -83,6 +83,8 @@ type Load struct {
 	SubscribeKeyEvent   func(eventChan chan *key.Event, pageID string) // Widgets call this function to recieve key events.
 	UnsubscribeKeyEvent func(pageID string) error
 	ReloadApp           func()
+
+	IsCurrencySettingUpdated bool
 }
 
 func (l *Load) RefreshTheme() {
