@@ -389,8 +389,7 @@ func (pg *AppOverviewPage) listenForNotifications() {
 				case wallet.SyncStarted:
 					fallthrough
 				case wallet.SyncCanceled:
-					pg.loadTransactions()
-					pg.RefreshWindow()
+					fallthrough
 				case wallet.SyncCompleted:
 					pg.loadTransactions()
 					pg.RefreshWindow()
@@ -400,6 +399,8 @@ func (pg *AppOverviewPage) listenForNotifications() {
 				switch n.Type {
 				case listeners.NewTransaction:
 					pg.loadTransactions()
+					pg.RefreshWindow()
+				case listeners.BlockAttached:
 					pg.RefreshWindow()
 				}
 			case n := <-pg.ProposalNotifChan:
