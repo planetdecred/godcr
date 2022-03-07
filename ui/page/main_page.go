@@ -862,7 +862,7 @@ func (mp *MainPage) listenForNotifications() {
 
 				}
 			case notification := <-mp.ProposalNotifChan:
-				// Don't notify on wallet synced event.
+				// Post desktop notification for all events except the synced event.
 				if notification.ProposalStatus != wallet.Synced {
 					mp.postDesktopNotification(notification)
 				}
