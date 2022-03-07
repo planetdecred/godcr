@@ -836,7 +836,7 @@ func (mp *MainPage) listenForNotifications() {
 			case n := <-mp.TxAndBlockNotifChan:
 				switch n.Type {
 				case listeners.NewTransaction:
-					mp.UpdateBalance(false)
+					mp.UpdateBalance(true)
 					transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
 					if transactionNotification {
 						update := wallet.NewTransaction{
@@ -848,13 +848,16 @@ func (mp *MainPage) listenForNotifications() {
 				case listeners.BlockAttached:
 					beep := mp.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
 					if beep {
-						_ = beeep.Beep(5, 1)
+						err := beeep.Beep(5, 1)
+						if err != nil {
+							log.Error(err.Error)
+						}
 					}
 
-					mp.UpdateBalance(false)
+					mp.UpdateBalance(true)
 					mp.RefreshWindow()
 				case listeners.TxConfirmed:
-					mp.UpdateBalance(false)
+					mp.UpdateBalance(true)
 					mp.RefreshWindow()
 
 				}
@@ -865,7 +868,7 @@ func (mp *MainPage) listenForNotifications() {
 				}
 			case n := <-mp.SyncStatusChan:
 				if n.Stage == wallet.SyncCompleted {
-					mp.UpdateBalance(false)
+					mp.UpdateBalance(true)
 					mp.RefreshWindow()
 				}
 			case <-mp.ctx.Done():
