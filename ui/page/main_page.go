@@ -796,10 +796,10 @@ func initializeBeepNotification(n string) {
 	}
 }
 
-// listenForNotifications starts a goroutine to watch for sync updates
+// listenForNotifications starts a goroutine to watch for notifications
 // and update the UI accordingly.
 func (mp *MainPage) listenForNotifications() {
-	// Return if any of the listener is not nill.
+	// Return if any of the listener is not nil.
 	switch {
 	case mp.SyncProgressListener != nil:
 		return
