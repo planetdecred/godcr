@@ -415,9 +415,11 @@ func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 }
 
 func (pg *PrivacyPage) listenForMixerNotifications() {
-	if pg.AccountMixerNotificationListener == nil {
-		pg.AccountMixerNotificationListener = listeners.NewAccountMixerNotificationListener()
+	if pg.AccountMixerNotificationListener != nil {
+		return
 	}
+
+	pg.AccountMixerNotificationListener = listeners.NewAccountMixerNotificationListener()
 	err := pg.WL.MultiWallet.AddAccountMixerNotificationListener(pg, PrivacyPageID)
 	if err != nil {
 		log.Errorf("Error adding account Mixer notification listener: %+v", err)
@@ -441,6 +443,7 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.RemoveAccountMixerNotificationListener(PrivacyPageID)
 				close(pg.MixerChan)
+				pg.AccountMixerNotificationListener = nil
 				return
 			}
 		}
