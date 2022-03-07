@@ -60,7 +60,8 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 		Title("Voting wallet").
 		WalletSelected(func(w *dcrlibwallet.Wallet) {
 			avm.loadCount = 0
-			avm.FetchLiveTickets(w.ID)
+
+			avm.FetchUnspentUnexpiredTickets(w.ID)
 			avm.RefreshWindow()
 			avm.loadCount++
 
@@ -100,10 +101,10 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 	return avm
 }
 
-func (avm *agendaVoteModal) FetchLiveTickets(walletID int) {
+func (avm *agendaVoteModal) FetchUnspentUnexpiredTickets(walletID int) {
 	go func() {
 		wallet := avm.WL.MultiWallet.WalletWithID(walletID)
-		tickets, err := components.WalletLiveTickets(wallet)
+		tickets, err := wallet.UnspentUnexpiredTickets()
 		if err != nil {
 			avm.Toast.NotifyError(err.Error())
 			return

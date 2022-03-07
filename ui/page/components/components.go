@@ -740,21 +740,7 @@ func CoinImageBySymbol(icons *load.Icons, coinName string) *decredmaterial.Image
 	return nil
 }
 
-func WalletLiveTickets(w *dcrlibwallet.Wallet) ([]dcrlibwallet.Transaction, error) {
-	var tickets []dcrlibwallet.Transaction
-	liveTicketFilters := []int32{dcrlibwallet.TxFilterUnmined, dcrlibwallet.TxFilterImmature, dcrlibwallet.TxFilterLive}
-	for _, filter := range liveTicketFilters {
-		tx, err := w.GetTransactionsRaw(0, 0, filter, true)
-		if err != nil {
-			return nil, err
-		}
-
-		tickets = append(tickets, tx...)
-	}
-
-	return tickets, nil
-}
-
+// StakeToTransactionItems converts stake transactions to an array of TransactionItem
 func StakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newestFirst bool, hasFilter func(int32) bool) ([]*TransactionItem, error) {
 	tickets := make([]*TransactionItem, 0)
 	multiWallet := l.WL.MultiWallet

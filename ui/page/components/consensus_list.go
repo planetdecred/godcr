@@ -130,7 +130,7 @@ func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst 
 		for i := 0; i < len(agendas); i++ {
 			item := &ConsensusItem{
 				Agenda:     *agendas[i],
-				VoteButton: l.Theme.Button("Change Vote"),
+				VoteButton: l.Theme.Button("Update Preference"),
 			}
 			consensusItems = append(consensusItems, item)
 		}

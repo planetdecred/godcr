@@ -24,4 +24,4 @@ require (
 	golang.org/x/text v0.3.7
 )
 
-replace github.com/planetdecred/dcrlibwallet => github.com/dreacot/dcrlibwallet v1.6.1-0.20220302195943-cf1a91301b12
+replace github.com/planetdecred/dcrlibwallet => github.com/dreacot/dcrlibwallet v1.6.1-0.20220307090355-8e07f01e6c71
