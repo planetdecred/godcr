@@ -54,6 +54,7 @@ type TxDetailsPage struct {
 	transaction   *dcrlibwallet.Transaction
 	ticketSpender *dcrlibwallet.Transaction // vote or revoke ticket
 	ticketSpent   *dcrlibwallet.Transaction // ticket spent in a vote or revoke
+	txBackStack   *dcrlibwallet.Transaction // track original transaction
 	wallet        *dcrlibwallet.Wallet
 
 	txSourceAccount      string
@@ -98,10 +99,14 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 	pg.dot = decredmaterial.NewIcon(l.Icons.ImageBrightness1)
 	pg.dot.Color = l.Theme.Color.Gray1
 
+	return pg
+}
+
+func (pg *TxDetailsPage) getTXSourceAccountAndDirection() {
 	// find source account
-	if transaction.Direction == dcrlibwallet.TxDirectionSent ||
-		transaction.Direction == dcrlibwallet.TxDirectionTransferred {
-		for _, input := range transaction.Inputs {
+	if pg.transaction.Direction == dcrlibwallet.TxDirectionSent ||
+		pg.transaction.Direction == dcrlibwallet.TxDirectionTransferred {
+		for _, input := range pg.transaction.Inputs {
 			if input.AccountNumber != -1 {
 				accountName, err := pg.wallet.AccountName(input.AccountNumber)
 				if err != nil {
@@ -113,17 +118,13 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		}
 	}
 	//	find destination address
-	if transaction.Direction == dcrlibwallet.TxDirectionSent {
-		for _, output := range transaction.Outputs {
+	if pg.transaction.Direction == dcrlibwallet.TxDirectionSent {
+		for _, output := range pg.transaction.Outputs {
 			if output.AccountNumber == -1 {
 				pg.txDestinationAddress = output.Address
 			}
 		}
 	}
-
-	pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
-
-	return pg
 }
 
 // ID is a unique string that identifies the page and may be used
@@ -145,6 +146,9 @@ func (pg *TxDetailsPage) OnNavigatedTo() {
 	if ok, _ := pg.wallet.TicketHasVotedOrRevoked(pg.transaction.Hash); ok {
 		pg.ticketSpender, _ = pg.wallet.TicketSpender(pg.transaction.Hash)
 	}
+
+	pg.getTXSourceAccountAndDirection()
+	pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -160,7 +164,15 @@ func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.PopFragment()
+				if pg.txBackStack == nil {
+					pg.PopFragment()
+					return
+				}
+				pg.transaction = pg.txBackStack
+				pg.getTXSourceAccountAndDirection()
+				pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
+				pg.txBackStack = nil
+				pg.RefreshWindow()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				widgets := []func(gtx C) D{
@@ -721,7 +733,11 @@ func (pg *TxDetailsPage) HandleUserInteractions() {
 
 	for pg.associatedTicketClickable.Clicked() {
 		if pg.ticketSpent != nil {
-			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, pg.ticketSpent))
+			pg.txBackStack = pg.transaction
+			pg.transaction = pg.ticketSpent
+			pg.getTXSourceAccountAndDirection()
+			pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
+			pg.RefreshWindow()
 		}
 	}
 
