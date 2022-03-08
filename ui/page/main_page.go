@@ -1,7 +1,6 @@
 package page
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -63,8 +62,7 @@ type MainPage struct {
 	sendPage      *send.Page   // reuse value to keep data persistent onresume.
 	receivePage   *ReceivePage // pointer to receive page. to avoid duplication.
 
-	loader       material.LoaderStyle
-	refreshValue *decredmaterial.Clickable
+	refreshExchangeRateBtn *decredmaterial.Clickable
 
 	// page state variables
 	usdExchangeSet    bool
@@ -100,10 +98,7 @@ func NewMainPage(l *load.Load) *MainPage {
 
 	mp.initNavItems()
 
-	th := material.NewTheme(gofont.Collection())
-	mp.loader = material.Loader(th)
-
-	mp.refreshValue = mp.Theme.NewClickable(true)
+	mp.refreshExchangeRateBtn = mp.Theme.NewClickable(true)
 
 	// Show a seed backup prompt if necessary.
 	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
@@ -246,33 +241,30 @@ func (mp *MainPage) updateExchangeSetting() {
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
 	if mp.usdExchangeSet {
-		go mp.fetchExchangeValue()
+		go mp.fetchExchangeRate()
 	}
 }
 
-func (mp *MainPage) fetchExchangeValue() {
-	attempts, err := components.RetryFunc(components.RetryAttempts, 2*time.Second, func() error {
-		load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
-		if mp.dcrUsdtBittrex.LastTradeRate != "" {
-			log.Info("exchange value fetched")
-			mp.UpdateBalance()
-			mp.RefreshWindow()
-			mp.isLoadingUSDValue = false
-			return nil
-		}
-
-		mp.isLoadingUSDValue = true
-		return errors.New("failed to fetch dcrUsdtBittrex value")
-	})
-
-	if err != nil || mp.dcrUsdtBittrex.LastTradeRate == "" {
-		log.Error(err)
-
-		if attempts == components.RetryAttempts {
-			mp.isLoadingUSDValue = false
-		}
+func (mp *MainPage) fetchExchangeRate() {
+	if mp.isLoadingUSDValue {
 		return
 	}
+	maxAttempts := 7
+	delayBtwAttempts := 2 * time.Second
+	mp.isLoadingUSDValue = true
+	attempts, err := components.RetryFunc(maxAttempts, delayBtwAttempts, func() error {
+		return load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
+	})
+	if err != nil {
+		log.Errorf("error fetching usd exchange rate value after %d attempts: %v", attempts, err)
+	} else if mp.dcrUsdtBittrex.LastTradeRate == "" {
+		log.Errorf("no error while fetching usd exchange rate in %d tries, but no rate was fetched", attempts)
+	} else {
+		log.Infof("exchange rate value fetched: %s", mp.dcrUsdtBittrex.LastTradeRate)
+		mp.UpdateBalance()
+		mp.RefreshWindow()
+	}
+	mp.isLoadingUSDValue = false
 }
 
 func (mp *MainPage) UpdateBalance() {
@@ -366,8 +358,8 @@ func (mp *MainPage) HandleUserInteractions() {
 		mp.currentPage.HandleUserInteractions()
 	}
 
-	if mp.refreshValue.Clicked() && mp.usdExchangeSet {
-		go mp.fetchExchangeValue()
+	if mp.refreshExchangeRateBtn.Clicked() {
+		go mp.fetchExchangeRate()
 	}
 
 	mp.drawerNav.CurrentPage = mp.currentPageID()
@@ -606,26 +598,30 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
+	if !mp.usdExchangeSet {
+		return D{}
+	}
 	switch {
-	case mp.usdExchangeSet && mp.isLoadingUSDValue && mp.dcrUsdtBittrex.LastTradeRate == "":
+	case mp.isLoadingUSDValue && mp.dcrUsdtBittrex.LastTradeRate == "":
 		gtx.Constraints.Max.Y = gtx.Px(values.MarginPadding18)
 		gtx.Constraints.Max.X = gtx.Constraints.Max.Y
 		return layout.Inset{
 			Top:  values.MarginPadding8,
 			Left: values.MarginPadding5,
 		}.Layout(gtx, func(gtx C) D {
-			return mp.loader.Layout(gtx)
+			loader := material.Loader(material.NewTheme(gofont.Collection()))
+			return loader.Layout(gtx)
 		})
-	case mp.usdExchangeSet && !mp.isLoadingUSDValue && mp.dcrUsdtBittrex.LastTradeRate == "":
+	case !mp.isLoadingUSDValue && mp.dcrUsdtBittrex.LastTradeRate == "":
 		return layout.Inset{
 			Top:  values.MarginPadding7,
 			Left: values.MarginPadding5,
 		}.Layout(gtx, func(gtx C) D {
-			return mp.refreshValue.Layout(gtx, func(gtx C) D {
+			return mp.refreshExchangeRateBtn.Layout(gtx, func(gtx C) D {
 				return mp.Icons.Restore.Layout16dp(gtx)
 			})
 		})
-	case mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" && len(mp.totalBalanceUSD) > 0:
+	case len(mp.totalBalanceUSD) > 0:
 		inset := layout.Inset{
 			Top:  values.MarginPadding3,
 			Left: values.MarginPadding8,

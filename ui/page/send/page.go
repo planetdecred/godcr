@@ -166,17 +166,20 @@ func (pg *Page) OnNavigatedTo() {
 	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyExchangeValue == values.USDExchangeValue {
 		pg.usdExchangeSet = true
-		go pg.fetchExchangeValue()
+		go pg.fetchExchangeRate()
 	} else {
 		pg.usdExchangeSet = false
 	}
 	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 }
 
-func (pg *Page) fetchExchangeValue() {
+func (pg *Page) fetchExchangeRate() {
 	var dcrUsdtBittrex load.DCRUSDTBittrex
 	errText := "failed to fetch dcrUsdtBittrex value"
-	attempts, err := components.RetryFunc(components.RetryAttempts, 2*time.Second, func() error {
+
+	maxAttempts := 7
+	delayBtwAttempts := 2 * time.Second
+	attempts, err := components.RetryFunc(maxAttempts, delayBtwAttempts, func() error {
 		err := load.GetUSDExchangeValue(&dcrUsdtBittrex)
 		if err != nil {
 			if strings.Contains(err.Error(), "no such host") {
@@ -205,7 +208,7 @@ func (pg *Page) fetchExchangeValue() {
 	if err != nil || dcrUsdtBittrex.LastTradeRate == "" {
 		log.Println(err)
 
-		if attempts == components.RetryAttempts {
+		if attempts == maxAttempts {
 			pg.exchangeError = "Exchange rate not fetched."
 		}
 		pg.RefreshWindow()
@@ -358,7 +361,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	for pg.retryExchange.Clicked() {
-		go pg.fetchExchangeValue()
+		go pg.fetchExchangeRate()
 	}
 
 	for pg.nextButton.Clicked() {
