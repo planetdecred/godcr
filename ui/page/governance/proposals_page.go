@@ -244,9 +244,7 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 							card := pg.Theme.Card()
 							card.Radius = decredmaterial.Radius(8)
 							return card.Layout(gtx, func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
-									return pg.layoutSyncSection(gtx)
-								})
+								return layout.UniformInset(values.MarginPadding8).Layout(gtx, pg.layoutSyncSection)
 							})
 						})
 					}),

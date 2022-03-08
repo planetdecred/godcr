@@ -1,6 +1,8 @@
 package governance
 
 import (
+	"sort"
+
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -79,6 +81,16 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 					for k := range ArrVoteOptions {
 						sortedKeys = append(sortedKeys, k)
 					}
+
+					sort.Slice(sortedKeys, func(i, j int) bool {
+						var stringI string = sortedKeys[i]
+						var stringJ string = sortedKeys[j]
+						if stringI == stringJ {
+							return stringI < stringJ
+						}
+						return stringI < stringJ
+					})
+
 					avm.itemKeys = sortedKeys
 					avm.items = ArrVoteOptions
 
@@ -195,7 +207,6 @@ func (avm *agendaVoteModal) Handle() {
 			avm.loadCount++
 			avm.ticketSelector = newTicketSelector(avm.Load, avm.LiveTickets).Title("Select a ticket")
 		}
-
 	}
 
 	validToVote := avm.optionsRadioGroup.Value != "" && avm.optionsRadioGroup.Value != avm.initialValue && avm.spendingPassword.Editor.Text() != ""
@@ -231,12 +242,8 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 			t.Font.Weight = text.SemiBold
 			return t.Layout(gtx)
 		},
-		func(gtx C) D {
-			return avm.Theme.Body1("Select one of the options below to vote").Layout(gtx)
-		},
-		func(gtx C) D {
-			return avm.walletSelector.Layout(gtx)
-		},
+		avm.Theme.Body1("Select one of the options below to vote").Layout,
+		avm.walletSelector.Layout,
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -246,9 +253,7 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return avm.spendingPassword.Layout(gtx)
-				}),
+				layout.Rigid(avm.spendingPassword.Layout),
 			)
 		},
 		func(gtx C) D {
