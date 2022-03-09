@@ -19,9 +19,6 @@ func (pg *AppOverviewPage) initSyncDetailsWidgets() {
 	pg.sync = pg.Theme.Label(values.MarginPadding14, values.String(values.StrReconnect))
 	pg.sync.TextSize = values.TextSize14
 	pg.sync.Color = pg.Theme.Color.Text
-
-	pg.autoSyncSwitch = pg.Theme.Switch()
-
 }
 
 // syncDetail returns a walletSyncDetails object containing data of a single wallet sync box
@@ -51,20 +48,6 @@ func (pg *AppOverviewPage) connectionPeer(gtx layout.Context) layout.Dimensions 
 			return peersLabel.Layout(gtx)
 		}),
 	)
-}
-
-func (pg *AppOverviewPage) layoutAutoSyncSection(gtx layout.Context) layout.Dimensions {
-	txt := pg.Theme.Body1("Automatically sync on startup")
-	txt.Color = pg.Theme.Color.GrayText2
-
-	return layout.Inset{Top: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(txt.Layout),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.E.Layout(gtx, pg.autoSyncSwitch.Layout)
-			}),
-		)
-	})
 }
 
 // syncStatusTextRow lays out sync status text and sync button.
