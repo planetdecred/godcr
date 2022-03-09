@@ -2,7 +2,6 @@ package send
 
 import (
 	"fmt"
-	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -264,7 +263,7 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 				return pg.amount.dcrAmountEditor.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				if pg.exchangeError == "" {
+				if pg.exchangeRateMessage == "" {
 					return layout.Dimensions{}
 				}
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -278,15 +277,15 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								label := pg.Theme.Body2(pg.exchangeError)
+								label := pg.Theme.Body2(pg.exchangeRateMessage)
 								label.Color = pg.Theme.Color.Danger
-								if strings.Contains(pg.exchangeError, "Retrying") {
+								if pg.isFetchingExchangeRate {
 									label.Color = pg.Theme.Color.Primary
 								}
 								return label.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								if strings.Contains(pg.exchangeError, "Retrying") {
+								if pg.isFetchingExchangeRate {
 									return layout.Dimensions{}
 								}
 								gtx.Constraints.Min.X = gtx.Constraints.Max.X

@@ -65,12 +65,12 @@ type MainPage struct {
 	refreshExchangeRateBtn *decredmaterial.Clickable
 
 	// page state variables
-	usdExchangeSet    bool
-	isLoadingUSDValue bool
-	dcrUsdtBittrex    load.DCRUSDTBittrex
-	isBalanceHidden   bool
-	totalBalance      dcrutil.Amount
-	totalBalanceUSD   string
+	usdExchangeSet         bool
+	isFetchingExchangeRate bool
+	dcrUsdtBittrex         load.DCRUSDTBittrex
+	isBalanceHidden        bool
+	totalBalance           dcrutil.Amount
+	totalBalanceUSD        string
 }
 
 func NewMainPage(l *load.Load) *MainPage {
@@ -227,8 +227,6 @@ func (mp *MainPage) OnNavigatedTo() {
 		}
 	}
 
-	mp.updateExchangeSetting()
-
 	mp.UpdateBalance()
 }
 
@@ -239,20 +237,25 @@ func (mp *MainPage) setLanguageSetting() {
 
 func (mp *MainPage) updateExchangeSetting() {
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
+	usdExchangeSet := currencyExchangeValue == values.USDExchangeValue
+	if mp.usdExchangeSet == usdExchangeSet {
+		return // nothing has changed
+	}
+	mp.usdExchangeSet = usdExchangeSet
 	if mp.usdExchangeSet {
 		go mp.fetchExchangeRate()
 	}
 }
 
 func (mp *MainPage) fetchExchangeRate() {
-	if mp.isLoadingUSDValue {
+	if mp.isFetchingExchangeRate {
 		return
 	}
-	maxAttempts := 7
+	maxAttempts := 5
 	delayBtwAttempts := 2 * time.Second
-	mp.isLoadingUSDValue = true
-	attempts, err := components.RetryFunc(maxAttempts, delayBtwAttempts, func() error {
+	mp.isFetchingExchangeRate = true
+	desc := "for getting dcrUsdtBittrex exchange rate value"
+	attempts, err := components.RetryFunc(maxAttempts, delayBtwAttempts, desc, func() error {
 		return load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 	})
 	if err != nil {
@@ -264,7 +267,7 @@ func (mp *MainPage) fetchExchangeRate() {
 		mp.UpdateBalance()
 		mp.RefreshWindow()
 	}
-	mp.isLoadingUSDValue = false
+	mp.isFetchingExchangeRate = false
 }
 
 func (mp *MainPage) UpdateBalance() {
@@ -349,11 +352,6 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 // displayed.
 // Part of the load.Page interface.
 func (mp *MainPage) HandleUserInteractions() {
-	if mp.IsCurrencySettingUpdated {
-		mp.updateExchangeSetting()
-		mp.IsCurrencySettingUpdated = false
-	}
-
 	if mp.currentPage != nil {
 		mp.currentPage.HandleUserInteractions()
 	}
@@ -542,6 +540,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
+	mp.updateExchangeSetting() // the setting may have changed, leading to this window refresh, let's check
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -602,7 +601,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 		return D{}
 	}
 	switch {
-	case mp.isLoadingUSDValue && mp.dcrUsdtBittrex.LastTradeRate == "":
+	case mp.isFetchingExchangeRate && mp.dcrUsdtBittrex.LastTradeRate == "":
 		gtx.Constraints.Max.Y = gtx.Px(values.MarginPadding18)
 		gtx.Constraints.Max.X = gtx.Constraints.Max.Y
 		return layout.Inset{
@@ -612,7 +611,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 			loader := material.Loader(material.NewTheme(gofont.Collection()))
 			return loader.Layout(gtx)
 		})
-	case !mp.isLoadingUSDValue && mp.dcrUsdtBittrex.LastTradeRate == "":
+	case !mp.isFetchingExchangeRate && mp.dcrUsdtBittrex.LastTradeRate == "":
 		return layout.Inset{
 			Top:  values.MarginPadding7,
 			Left: values.MarginPadding5,

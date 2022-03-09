@@ -2,7 +2,6 @@ package send
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -57,12 +56,13 @@ type Page struct {
 	moreItems        []moreItem
 	backdrop         *widget.Clickable
 
-	moreOptionIsOpen bool
+	moreOptionIsOpen       bool
+	isFetchingExchangeRate bool
 
-	exchangeRate   float64
-	usdExchangeSet bool
-	exchangeError  string
-	confirmTxModal *sendConfirmModal
+	exchangeRate        float64
+	usdExchangeSet      bool
+	exchangeRateMessage string
+	confirmTxModal      *sendConfirmModal
 
 	*authoredTxData
 }
@@ -174,46 +174,39 @@ func (pg *Page) OnNavigatedTo() {
 }
 
 func (pg *Page) fetchExchangeRate() {
-	var dcrUsdtBittrex load.DCRUSDTBittrex
-	errText := "failed to fetch dcrUsdtBittrex value"
-
-	maxAttempts := 7
-	delayBtwAttempts := 2 * time.Second
-	attempts, err := components.RetryFunc(maxAttempts, delayBtwAttempts, func() error {
-		err := load.GetUSDExchangeValue(&dcrUsdtBittrex)
-		if err != nil {
-			if strings.Contains(err.Error(), "no such host") {
-				pg.exchangeError = "Exchange rate not fetched. Kindly check internet connection. Retrying..."
-				return errors.New(errText + " check internet connection.")
-			}
-
-			pg.exchangeError = "Exchange rate not fetched." + err.Error()
-			return errors.New(errText + " " + err.Error())
-		}
-
-		exchangeRate, err := strconv.ParseFloat(dcrUsdtBittrex.LastTradeRate, 64)
-		if err != nil {
-			pg.exchangeError = err.Error()
-			return err
-		}
-
-		pg.exchangeError = ""
-		pg.exchangeRate = exchangeRate
-		pg.amount.setExchangeRate(exchangeRate)
-		pg.validateAndConstructTx() // convert estimates to usd
-		pg.RefreshWindow()
-		return nil
-	})
-
-	if err != nil || dcrUsdtBittrex.LastTradeRate == "" {
-		log.Println(err)
-
-		if attempts == maxAttempts {
-			pg.exchangeError = "Exchange rate not fetched."
-		}
-		pg.RefreshWindow()
+	if pg.isFetchingExchangeRate {
 		return
 	}
+	maxAttempts := 7
+	delayBtwAttempts := 2 * time.Second
+	pg.isFetchingExchangeRate = true
+	desc := "for getting dcrUsdtBittrex exchange rate value"
+	pg.exchangeRateMessage = "fetching exchange rate..."
+
+	var dcrUsdtBittrex load.DCRUSDTBittrex
+	attempts, err := components.RetryFunc(maxAttempts, delayBtwAttempts, desc, func() error {
+		return load.GetUSDExchangeValue(&dcrUsdtBittrex)
+	})
+	if err != nil {
+		pg.exchangeRateMessage = "Exchange rate not fetched. Kindly check internet connection."
+		log.Printf("error fetching usd exchange rate value after %d attempts: %v", attempts, err)
+	} else if dcrUsdtBittrex.LastTradeRate == "" {
+		log.Printf("no error while fetching usd exchange rate in %d tries, but no rate was fetched", attempts)
+		pg.exchangeRateMessage = "Exchange rate not fetched."
+	} else {
+		log.Printf("exchange rate value fetched: %s", dcrUsdtBittrex.LastTradeRate)
+		pg.exchangeRateMessage = ""
+		exchangeRate, err := strconv.ParseFloat(dcrUsdtBittrex.LastTradeRate, 64)
+		if err != nil {
+			pg.exchangeRateMessage = err.Error()
+		} else {
+			pg.exchangeRate = exchangeRate
+			pg.amount.setExchangeRate(exchangeRate)
+			pg.validateAndConstructTx() // convert estimates to usd
+		}
+	}
+	pg.isFetchingExchangeRate = false
+	pg.RefreshWindow()
 }
 
 func (pg *Page) validateAndConstructTx() {
