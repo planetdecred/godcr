@@ -422,7 +422,7 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 	pg.AccountMixerNotificationListener = listeners.NewAccountMixerNotificationListener()
 	err := pg.WL.MultiWallet.AddAccountMixerNotificationListener(pg, PrivacyPageID)
 	if err != nil {
-		log.Errorf("Error adding account Mixer notification listener: %+v", err)
+		log.Errorf("Error adding account mixer notification listener: %+v", err)
 		return
 	}
 

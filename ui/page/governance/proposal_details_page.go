@@ -144,8 +144,7 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 		for {
 			select {
 			case notification := <-pg.ProposalNotifChan:
-				switch notification.ProposalStatus {
-				case wallet.Synced:
+				if notification.ProposalStatus == wallet.Synced {
 					proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
 					if err == nil {
 						pg.proposal = proposal

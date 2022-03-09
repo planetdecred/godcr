@@ -404,13 +404,12 @@ func (pg *AppOverviewPage) listenForNotifications() {
 					pg.RefreshWindow()
 				}
 			case n := <-pg.ProposalNotifChan:
-				switch n.ProposalStatus {
-				case wallet.Synced:
+				if n.ProposalStatus == wallet.Synced {
 					pg.loadRecentProposals()
 					pg.RefreshWindow()
 				}
-
 			case n := <-pg.BlockRescanChan:
+				pg.rescanUpdate = &n
 				if n.Stage == wallet.RescanEnded {
 					pg.RefreshWindow()
 				}
@@ -418,6 +417,7 @@ func (pg *AppOverviewPage) listenForNotifications() {
 				pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
 				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
 				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(OverviewPageID)
+				pg.WL.MultiWallet.SetBlocksRescanProgressListener(nil)
 
 				close(pg.SyncStatusChan)
 				close(pg.TxAndBlockNotifChan)
