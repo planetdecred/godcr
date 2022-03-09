@@ -27,6 +27,7 @@ func (pg *AppOverviewPage) initWalletStatusWidgets() {
 	pg.notSyncedIcon.Color = pg.Theme.Color.Danger
 
 	pg.walletStatusIcon = decredmaterial.NewIcon(pg.Icons.ImageBrightness1)
+	pg.autoSyncSwitch = pg.Theme.Switch()
 }
 
 // syncStatusSection lays out content for displaying sync status.
@@ -145,10 +146,15 @@ func (pg *AppOverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions
 		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(title.Layout),
 			layout.Rigid(func(gtx C) D {
-				if len(pg.transactions) > 0 {
-					return syncStatus(gtx)
-				}
-				return D{}
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(pg.layoutAutoSyncSection),
+					layout.Rigid(func(gtx C) D {
+						if len(pg.transactions) > 0 {
+							return syncStatus(gtx)
+						}
+						return D{}
+					}),
+				)
 			}),
 		)
 	})
@@ -218,4 +224,18 @@ func (pg *AppOverviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Rigid(pg.Theme.Body1(components.TimeAgo(bestBlock.Timestamp)).Layout),
 	)
+}
+
+func (pg *AppOverviewPage) layoutAutoSyncSection(gtx layout.Context) layout.Dimensions {
+	txt := pg.Theme.Body2("Auto sync")
+	txt.Color = pg.Theme.Color.GrayText2
+
+	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pg.autoSyncSwitch.Layout)
+			}),
+			layout.Rigid(txt.Layout),
+		)
+	})
 }
