@@ -185,14 +185,7 @@ func (pg *AppOverviewPage) syncDormantContent(gtx layout.Context, uniform layout
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.WL.MultiWallet.IsSynced() {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return pg.connectionPeer(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return pg.layoutAutoSyncSection(gtx)
-						}),
-					)
+					return pg.connectionPeer(gtx)
 				}
 				latestBlockTitleLabel := pg.Theme.Body1(values.String(values.StrNoConnectedPeer))
 				latestBlockTitleLabel.Color = pg.Theme.Color.GrayText2
