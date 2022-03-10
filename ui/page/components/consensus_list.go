@@ -41,22 +41,22 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	var statusIcon *decredmaterial.Icon
 	var backgroundColor color.NRGBA
 
-	switch agenda.Status() {
+	switch agenda.Status {
 	case dcrlibwallet.AgendaStatusFinished:
-		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status())
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabel.Color = l.Theme.Color.GreenText
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
 		statusIcon.Color = l.Theme.Color.Green500
 		backgroundColor = l.Theme.Color.Green50
 	case dcrlibwallet.AgendaStatusInProgress:
 		clr := l.Theme.Color.Primary
-		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status())
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabel.Color = clr
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
 		statusIcon.Color = clr
 		backgroundColor = l.Theme.Color.LightBlue
 	case dcrlibwallet.AgendaStatusUpcoming:
-		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status())
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabel.Color = l.Theme.Color.Text
 		statusIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
 		statusIcon.Color = l.Theme.Color.DeepBlue
@@ -102,7 +102,7 @@ func layoutAgendaDetails(l *load.Load, data string) layout.Widget {
 
 func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Px(unit.Dp(150)), gtx.Px(unit.Dp(200))
-	if item.Agenda.Status() == dcrlibwallet.AgendaStatusInProgress {
+	if item.Agenda.Status == dcrlibwallet.AgendaStatusInProgress {
 		item.VoteButton.Background = l.Theme.Color.Primary
 		item.VoteButton.SetEnabled(true)
 	} else {
