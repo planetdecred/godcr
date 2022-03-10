@@ -57,6 +57,8 @@ func NewInfoModal(l *load.Load) *InfoModal {
 	in.btnPositve.Font.Weight = text.Medium
 	in.btnNegative.Font.Weight = text.Medium
 
+	in.dismissModalOnEnterKey()
+
 	return in
 }
 
@@ -158,27 +160,22 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	return in
 }
 
-func HandleEnterKeypress(evt chan *key.Event) bool {
-	var IsEnterPressed bool
-	select {
-	case event := <-evt:
-		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press {
-			IsEnterPressed = true
+func (in *InfoModal) dismissModalOnEnterKey() {
+	go func() {
+		for {
+			event := <-in.keyEvent
+			if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press {
+				in.DismissModal(in)
+				in.RefreshWindow()
+			}
 		}
-	default:
-	}
-	return IsEnterPressed
+	}()
 }
 
 func (in *InfoModal) Handle() {
 	for in.btnPositve.Clicked() {
 		in.DismissModal(in)
 		in.positiveButtonClicked()
-	}
-
-	if HandleEnterKeypress(in.keyEvent) {
-		in.DismissModal(in)
-		in.RefreshWindow()
 	}
 
 	for in.btnNegative.Clicked() {
