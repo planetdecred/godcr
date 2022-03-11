@@ -25,7 +25,8 @@ import (
 )
 
 // TransactionItem holds useful information about a transaction not contained in the
-// dcrlibwallet Transaction struct, such as tooltips and transaction status.
+// dcrlibwallet Transaction struct such as txstatus, confirmations, etc. As well as
+// helpful UI elements such as tooltips.
 type TransactionItem struct {
 	Transaction   *dcrlibwallet.Transaction
 	TicketSpender *dcrlibwallet.Transaction
@@ -742,7 +743,6 @@ func CoinImageBySymbol(icons *load.Icons, coinName string) *decredmaterial.Image
 	return nil
 }
 
-// StakeToTransactionItems converts stake transactions to an array of TransactionItem
 func StakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newestFirst bool, hasFilter func(int32) bool) ([]*TransactionItem, error) {
 	tickets := make([]*TransactionItem, 0)
 	multiWallet := l.WL.MultiWallet

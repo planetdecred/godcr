@@ -22,9 +22,9 @@ type agendaVoteModal struct {
 
 	votableTickets []*dcrlibwallet.Transaction // tickets that have not been spent by a vote or revocation (unspent) and that have not expired (unexpired).
 
-	agenda    *dcrlibwallet.Agenda
-	isVoting  bool
-	loadCount int
+	agenda           *dcrlibwallet.Agenda
+	isVoting         bool
+	modalUpdateCount int // this keeps track of the number of times the modal has been updated.
 
 	consensusPage *ConsensusPage
 
@@ -32,11 +32,8 @@ type agendaVoteModal struct {
 	ticketSelector    *ticketSelector
 	spendingPassword  decredmaterial.Editor
 	materialLoader    material.LoaderStyle
-	items             map[string]string //[key]str-key
-	itemKeys          []string
-	defaultValue      string // str-key
+	voteChoices       []string
 	initialValue      string
-	currentValue      string
 	optionsRadioGroup *widget.Enum
 	voteBtn           decredmaterial.Button
 	cancelBtn         decredmaterial.Button
@@ -59,49 +56,25 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 	avm.voteBtn.Color = l.Theme.Color.Surface
 
 	avm.walletSelector = NewWalletSelector(l).
-		Title("Voting wallet").
+		Title("Select wallet").
 		WalletSelected(func(w *dcrlibwallet.Wallet) {
-			avm.loadCount = 0
+			avm.modalUpdateCount = 0 // modal just opened.
 
 			avm.FetchUnspentUnexpiredTickets(w.ID)
-			avm.loadCount++
+			avm.modalUpdateCount++
 
 			// update agenda options prefrence to that of the selected wallet
 			consensusItems := components.LoadAgendas(avm.Load, w, false)
 			for _, consensusItem := range consensusItems {
 				if consensusItem.Agenda.AgendaID == agenda.AgendaID {
-					ArrVoteOptions := make(map[string]string)
+					voteChoices := make([]string, len(consensusItem.Agenda.Choices))
 					for i := range consensusItem.Agenda.Choices {
-						ArrVoteOptions[agenda.Choices[i].Id] = consensusItem.Agenda.Choices[i].Id
+						voteChoices[i] = consensusItem.Agenda.Choices[i].Id
 					}
 
-					// sort keys to keep order when refreshed
-					sortedKeys := make([]string, 0)
-					for k := range ArrVoteOptions {
-						sortedKeys = append(sortedKeys, k)
-					}
-
-					sort.Slice(sortedKeys, func(i, j int) bool {
-						var stringI string = sortedKeys[i]
-						var stringJ string = sortedKeys[j]
-						if stringI == stringJ {
-							return stringI < stringJ
-						}
-						return stringI < stringJ
-					})
-
-					avm.itemKeys = sortedKeys
-					avm.items = ArrVoteOptions
-
-					initialValue := consensusItem.Agenda.VotingPreference
-					if initialValue == "" {
-						initialValue = avm.defaultValue
-					}
-
-					avm.initialValue = initialValue
-					avm.currentValue = initialValue
-
-					avm.optionsRadioGroup.Value = avm.currentValue
+					avm.voteChoices = voteChoices
+					avm.initialValue = consensusItem.Agenda.VotingPreference
+					avm.optionsRadioGroup.Value = avm.initialValue
 				}
 			}
 		}).
@@ -142,23 +115,8 @@ func (avm *agendaVoteModal) ModalID() string {
 func (avm *agendaVoteModal) OnResume() {
 	avm.walletSelector.SelectFirstValidWallet()
 
-	avm.vspSelector = components.NewVSPSelector(avm.Load).Title("Select a vsp")
-	lastUsedVSP := avm.WL.MultiWallet.LastUsedVSP()
-	if len(avm.WL.MultiWallet.KnownVSPs()) == 0 {
-		// TODO: Does this modal need this list?
-		go avm.WL.MultiWallet.ReloadVSPList(context.TODO())
-	} else if components.StringNotEmpty(lastUsedVSP) {
-		avm.vspSelector.SelectVSP(lastUsedVSP)
-	}
-	initialValue := avm.agenda.VotingPreference
-	if initialValue == "" {
-		initialValue = avm.defaultValue
-	}
-
-	avm.initialValue = initialValue
-	avm.currentValue = initialValue
-
-	avm.optionsRadioGroup.Value = avm.currentValue
+	avm.initialValue = avm.agenda.VotingPreference
+	avm.optionsRadioGroup.Value = avm.initialValue
 }
 
 func (avm *agendaVoteModal) OnDismiss() {}
@@ -184,13 +142,9 @@ func (avm *agendaVoteModal) Handle() {
 		avm.spendingPassword.SetError("")
 	}
 
-	for avm.optionsRadioGroup.Changed() {
-		avm.currentValue = avm.optionsRadioGroup.Value
-	}
-
 	if len(avm.votableTickets) != 0 {
-		if avm.loadCount == 1 {
-			avm.loadCount++
+		if avm.modalUpdateCount == 1 { // modal window has been updated once.
+			avm.modalUpdateCount++
 			avm.ticketSelector = newTicketSelector(avm.Load, avm.votableTickets).Title("Select a ticket")
 		}
 	}
@@ -265,8 +219,8 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 func (avm *agendaVoteModal) layoutItems() []layout.FlexChild {
 
 	items := make([]layout.FlexChild, 0)
-	for _, k := range avm.itemKeys {
-		radioBtn := avm.Load.Theme.RadioButton(avm.optionsRadioGroup, k, avm.items[k], avm.Load.Theme.Color.DeepBlue, avm.Load.Theme.Color.Primary)
+	for _, voteChoice := range avm.voteChoices {
+		radioBtn := avm.Load.Theme.RadioButton(avm.optionsRadioGroup, voteChoice, voteChoice, avm.Load.Theme.Color.DeepBlue, avm.Load.Theme.Color.Primary)
 		radioItem := layout.Rigid(radioBtn.Layout)
 		items = append(items, radioItem)
 	}
