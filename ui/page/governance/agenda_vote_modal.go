@@ -26,7 +26,7 @@ type agendaVoteModal struct {
 	isVoting         bool
 	modalUpdateCount int // this keeps track of the number of times the modal has been updated.
 
-	consensusPage *ConsensusPage
+	onPreferenceUpdated func()
 
 	walletSelector    *WalletSelector
 	ticketSelector    *ticketSelector
@@ -39,17 +39,17 @@ type agendaVoteModal struct {
 	cancelBtn         decredmaterial.Button
 }
 
-func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage *ConsensusPage) *agendaVoteModal {
+func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, onPreferenceUpdated func()) *agendaVoteModal {
 	avm := &agendaVoteModal{
-		Load:              l,
-		modal:             *l.Theme.ModalFloatTitle(),
-		agenda:            agenda,
-		consensusPage:     consensusPage,
-		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
-		optionsRadioGroup: new(widget.Enum),
-		spendingPassword:  l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
-		voteBtn:           l.Theme.Button("Update Preference"),
-		cancelBtn:         l.Theme.OutlineButton("Cancel"),
+		Load:                l,
+		modal:               *l.Theme.ModalFloatTitle(),
+		agenda:              agenda,
+		onPreferenceUpdated: onPreferenceUpdated,
+		materialLoader:      material.Loader(material.NewTheme(gofont.Collection())),
+		optionsRadioGroup:   new(widget.Enum),
+		spendingPassword:    l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
+		voteBtn:             l.Theme.Button("Update Preference"),
+		cancelBtn:           l.Theme.OutlineButton("Cancel"),
 	}
 
 	avm.voteBtn.Background = l.Theme.Color.Gray3
@@ -246,10 +246,9 @@ func (avm *agendaVoteModal) sendVotes() {
 			}
 			return
 		}
-		avm.Dismiss()
 		avm.Toast.Notify("Vote preference updated successfully")
 
 		avm.Dismiss()
-		go avm.consensusPage.FetchAgendas()
+		avm.onPreferenceUpdated()
 	}()
 }

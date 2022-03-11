@@ -98,7 +98,9 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 
 	for i := range pg.consensusItems {
 		if pg.consensusItems[i].VoteButton.Clicked() {
-			newAgendaVoteModal(pg.Load, &pg.consensusItems[i].Agenda, pg).Show()
+			newAgendaVoteModal(pg.Load, &pg.consensusItems[i].Agenda, func() {
+				go pg.FetchAgendas() // re-fetch agendas when modal is dismissed
+			}).Show()
 		}
 	}
 
