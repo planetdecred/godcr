@@ -20,7 +20,7 @@ type agendaVoteModal struct {
 	*load.Load
 	modal decredmaterial.Modal
 
-	LiveTickets []*dcrlibwallet.Transaction
+	votableTickets []*dcrlibwallet.Transaction // tickets that have not been spent by a vote or revocation (unspent) and that have not expired (unexpired).
 
 	agenda    *dcrlibwallet.Agenda
 	isVoting  bool
@@ -64,7 +64,6 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, consensusPage
 			avm.loadCount = 0
 
 			avm.FetchUnspentUnexpiredTickets(w.ID)
-			avm.RefreshWindow()
 			avm.loadCount++
 
 			// update agenda options prefrence to that of the selected wallet
@@ -122,29 +121,16 @@ func (avm *agendaVoteModal) FetchUnspentUnexpiredTickets(walletID int) {
 			return
 		}
 
-		liveTickets := make([]*dcrlibwallet.Transaction, 0)
-		txItems, err := components.StakeToTransactionItems(avm.Load, tickets, true, func(filter int32) bool {
-			switch filter {
-			case dcrlibwallet.TxFilterUnmined:
-				fallthrough
-			case dcrlibwallet.TxFilterImmature:
-				fallthrough
-			case dcrlibwallet.TxFilterLive:
-				return true
-			}
-
-			return false
+		// sort by newest first
+		sort.Slice(tickets[:], func(i, j int) bool {
+			var timeStampI = tickets[i].Timestamp
+			var timeStampJ = tickets[j].Timestamp
+			return timeStampI > timeStampJ
 		})
-		if err != nil {
-			avm.Toast.NotifyError(err.Error())
-			return
+		avm.votableTickets = make([]*dcrlibwallet.Transaction, len(tickets))
+		for i := range tickets {
+			avm.votableTickets[i] = &tickets[i]
 		}
-
-		for _, liveTicket := range txItems {
-			liveTickets = append(liveTickets, liveTicket.Transaction)
-		}
-
-		avm.LiveTickets = liveTickets
 		avm.RefreshWindow()
 	}()
 }
@@ -202,10 +188,10 @@ func (avm *agendaVoteModal) Handle() {
 		avm.currentValue = avm.optionsRadioGroup.Value
 	}
 
-	if len(avm.LiveTickets) != 0 {
+	if len(avm.votableTickets) != 0 {
 		if avm.loadCount == 1 {
 			avm.loadCount++
-			avm.ticketSelector = newTicketSelector(avm.Load, avm.LiveTickets).Title("Select a ticket")
+			avm.ticketSelector = newTicketSelector(avm.Load, avm.votableTickets).Title("Select a ticket")
 		}
 	}
 

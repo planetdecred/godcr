@@ -21,14 +21,13 @@ type ConsensusItem struct {
 
 func AgendaItemWidget(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	agenda := consensusItem.Agenda
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layoutAgendaStatus(gtx, l, consensusItem.Agenda)
 		}),
-		layout.Rigid(layoutAgendaDetails(l, agenda.Description)),
-		layout.Rigid(layoutAgendaDetails(l, "ID: #"+agenda.AgendaID)),
-		layout.Rigid(layoutAgendaDetails(l, "Voting Preference: "+agenda.VotingPreference)),
+		layout.Rigid(layoutAgendaDetails(l, consensusItem.Agenda.Description)),
+		layout.Rigid(layoutAgendaDetails(l, "ID: #"+consensusItem.Agenda.AgendaID)),
+		layout.Rigid(layoutAgendaDetails(l, "Voting Preference: "+consensusItem.Agenda.VotingPreference)),
 		layout.Rigid(func(gtx C) D {
 			return layoutAgendaVoteAction(gtx, l, consensusItem)
 		}),
@@ -123,16 +122,15 @@ func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 }
 
 func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst bool) []*ConsensusItem {
-	consensusItems := make([]*ConsensusItem, 0)
 	agendas, err := selectedWallet.AllVoteAgendas("", newestFirst)
-
-	if err == nil {
-		for i := 0; i < len(agendas); i++ {
-			item := &ConsensusItem{
-				Agenda:     *agendas[i],
-				VoteButton: l.Theme.Button("Update Preference"),
-			}
-			consensusItems = append(consensusItems, item)
+	if err != nil {
+		return nil
+	}
+	consensusItems := make([]*ConsensusItem, len(agendas))
+	for i := 0; i < len(agendas); i++ {
+		consensusItems[i] = &ConsensusItem{
+			Agenda:     *agendas[i],
+			VoteButton: l.Theme.Button("Update Preference"),
 		}
 	}
 	return consensusItems

@@ -12,7 +12,6 @@ type ClickableList struct {
 	Radius          CornerRadius // this radius is used by the clickable
 	selectedItem    int
 	DividerHeight   unit.Value
-	shadow          *Shadow
 	IsShadowEnabled bool
 }
 
@@ -24,10 +23,6 @@ func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
 			Axis: axis,
 		},
 	}
-
-	click.shadow = t.Shadow()
-	click.shadow.SetShadowRadius(14)
-	click.shadow.SetShadowElevation(5)
 
 	return click
 }
@@ -60,7 +55,10 @@ func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElem
 	cl.handleClickables(count)
 	return cl.List.Layout(gtx, count, func(gtx C, i int) D {
 		if cl.IsShadowEnabled && cl.clickables[i].button.Hovered() {
-			return cl.shadow.Layout(gtx, func(gtx C) D {
+			shadow := cl.theme.Shadow()
+			shadow.SetShadowRadius(14)
+			shadow.SetShadowElevation(5)
+			return shadow.Layout(gtx, func(gtx C) D {
 				return cl.row(gtx, count, i, w)
 			})
 		}

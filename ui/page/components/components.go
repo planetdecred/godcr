@@ -24,6 +24,8 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
+// TransactionItem holds useful information about a transaction not contained in the
+// dcrlibwallet Transaction struct, such as tooltips and transaction status.
 type TransactionItem struct {
 	Transaction   *dcrlibwallet.Transaction
 	TicketSpender *dcrlibwallet.Transaction
