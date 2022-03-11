@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -608,7 +607,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 			Top:  values.MarginPadding8,
 			Left: values.MarginPadding5,
 		}.Layout(gtx, func(gtx C) D {
-			loader := material.Loader(material.NewTheme(gofont.Collection()))
+			loader := material.Loader(mp.Theme.Base)
 			return loader.Layout(gtx)
 		})
 	case !mp.isFetchingExchangeRate && mp.dcrUsdtBittrex.LastTradeRate == "":

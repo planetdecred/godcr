@@ -7,10 +7,10 @@ import (
 
 	"decred.org/dcrdex/client/asset"
 	"decred.org/dcrdex/client/core"
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -42,7 +42,7 @@ func newAddDexModal(l *load.Load) *addDexModal {
 		cert:             l.Theme.Editor(new(widget.Editor), "Cert content"),
 		addDexServer:     l.Theme.Button("Submit"),
 		cancel:           l.Theme.OutlineButton("Cancel"),
-		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
+		materialLoader:   material.Loader(l.Theme.Base),
 	}
 
 	md.dexServerAddress.Editor.SingleLine = true

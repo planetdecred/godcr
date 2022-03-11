@@ -18,7 +18,7 @@ func ContextDone(ctx context.Context) bool {
 }
 
 // RetryFunc implements retry policy for processes that needs to be executed
-// the after initial failure.
+// after initial failure.
 func RetryFunc(retryAttempts int, sleepDur time.Duration, funcDesc string, errFunc func() error) (int, error) {
 	var err error
 	for i := 0; i < retryAttempts; i++ {

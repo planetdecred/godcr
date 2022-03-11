@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"gioui.org/font/gofont"
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -76,8 +75,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	cm.confirmPasswordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	cm.confirmPasswordEditor.Editor.SingleLine, cm.confirmPasswordEditor.Editor.Submit = true, true
 
-	th := material.NewTheme(gofont.Collection())
-	cm.materialLoader = material.Loader(th)
+	cm.materialLoader = material.Loader(l.Theme.Base)
 
 	l.SubscribeKeyEvent(cm.keyEvent, cm.randomID)
 

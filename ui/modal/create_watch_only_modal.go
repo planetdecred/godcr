@@ -3,7 +3,6 @@ package modal
 import (
 	"fmt"
 
-	"gioui.org/font/gofont"
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -61,8 +60,7 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 	cm.extendedPubKey = l.Theme.EditorPassword(new(widget.Editor), "Extended public key")
 	cm.extendedPubKey.Editor.Submit = true
 
-	th := material.NewTheme(gofont.Collection())
-	cm.materialLoader = material.Loader(th)
+	cm.materialLoader = material.Loader(l.Theme.Base)
 
 	return cm
 }

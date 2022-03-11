@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -391,11 +390,10 @@ func (pg *ProposalDetails) layoutDescription(gtx C) D {
 	if ok {
 		w = append(w, pg.proposalItems[proposal.Token].widgets...)
 	} else {
-		th := material.NewTheme(gofont.Collection())
 		loading := func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Flexed(1, func(gtx C) D {
 				return layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(gtx, func(gtx C) D {
-					return layout.Center.Layout(gtx, material.Loader(th).Layout)
+					return layout.Center.Layout(gtx, material.Loader(pg.Theme.Base).Layout)
 				})
 			}))
 		}

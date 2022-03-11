@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -61,7 +60,7 @@ func newStakingModal(l *load.Load) *stakingModal {
 		increment:        l.Theme.IconButton(l.Icons.ContentAdd),
 		decrement:        l.Theme.IconButton(l.Icons.ContentRemove),
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
-		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
+		materialLoader:   material.Loader(l.Theme.Base),
 	}
 
 	tp.tickets.Bordered = false

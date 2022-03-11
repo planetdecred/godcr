@@ -177,7 +177,7 @@ func (pg *Page) fetchExchangeRate() {
 	if pg.isFetchingExchangeRate {
 		return
 	}
-	maxAttempts := 7
+	maxAttempts := 5
 	delayBtwAttempts := 2 * time.Second
 	pg.isFetchingExchangeRate = true
 	desc := "for getting dcrUsdtBittrex exchange rate value"
