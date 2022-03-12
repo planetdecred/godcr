@@ -3,7 +3,6 @@ package modal
 import (
 	"fmt"
 
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -59,8 +58,7 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm.password = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
 
-	th := material.NewTheme(gofont.Collection())
-	pm.materialLoader = material.Loader(th)
+	pm.materialLoader = material.Loader(l.Theme.Base)
 
 	return pm
 }
