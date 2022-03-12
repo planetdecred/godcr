@@ -477,49 +477,57 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 				status.Color = l.Theme.Color.GrayText2
 				status.Text = FormatDateOrTime(row.Transaction.Timestamp)
 			}
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-					layout.Rigid(status.Layout),
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Alignment: layout.End}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
-									var title string
-									if row.Transaction.Type == dcrlibwallet.TxTypeVote {
-										title = "vote"
-									} else {
-										title = "revoke"
-									}
-
-									return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-										return WalletLabel(gtx, l, fmt.Sprintf("%dd to %s", row.Transaction.DaysToVoteOrRevoke, title))
-									})
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.WrapContent,
+				Height:      decredmaterial.MatchParent,
+				Orientation: layout.Vertical,
+				Padding:     layout.Inset{Left: values.MarginPadding16},
+				Alignment:   layout.End,
+				Direction:   layout.E,
+				Margin:      layout.Inset{Top: values.MarginPadding10},
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Direction(8).Layout(gtx, status.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
+								var title string
+								if row.Transaction.Type == dcrlibwallet.TxTypeVote {
+									title = "vote"
+								} else {
+									title = "revoke"
 								}
 
+								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+									return WalletLabel(gtx, l, fmt.Sprintf("%dd to %s", row.Transaction.DaysToVoteOrRevoke, title))
+								})
+							}
+
+							return D{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							currentTimestamp := time.Now().UTC().String()
+							txnTimestamp := time.Unix(row.Transaction.Timestamp, 0).UTC().String()
+							currentTimeSplit := strings.Split(currentTimestamp, " ")
+							txnTimeSplit := strings.Split(txnTimestamp, " ")
+							currentDate := strings.Split(currentTimeSplit[0], "-")
+							txnDate := strings.Split(txnTimeSplit[0], "-")
+
+							currentDay, _ := strconv.Atoi(currentDate[2])
+							txnDay, _ := strconv.Atoi(txnDate[2])
+
+							if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
 								return D{}
-							}),
-							layout.Rigid(func(gtx C) D {
-								currentTimestamp := time.Now().UTC().String()
-								txnTimestamp := time.Unix(row.Transaction.Timestamp, 0).UTC().String()
-								currentTimeSplit := strings.Split(currentTimestamp, " ")
-								txnTimeSplit := strings.Split(txnTimestamp, " ")
-								currentDate := strings.Split(currentTimeSplit[0], "-")
-								txnDate := strings.Split(txnTimeSplit[0], "-")
-
-								currentDay, _ := strconv.Atoi(currentDate[2])
-								txnDay, _ := strconv.Atoi(txnDate[2])
-
-								if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
-									return D{}
-								}
-								duration := l.Theme.Label(values.TextSize12, DurationAgo(row.Transaction.Timestamp))
-								duration.Color = l.Theme.Color.GrayText4
-								return layout.Inset{Left: values.MarginPadding2}.Layout(gtx, duration.Layout)
-							}),
-						)
-					}),
-				)
-			})
+							}
+							duration := l.Theme.Label(values.TextSize12, DurationAgo(row.Transaction.Timestamp))
+							duration.Color = l.Theme.Color.GrayText4
+							return layout.Inset{Left: values.MarginPadding2}.Layout(gtx, duration.Layout)
+						}),
+					)
+				}),
+			)
 		}),
 		layout.Rigid(func(gtx C) D {
 			statusIcon := l.Icons.ConfirmIcon
