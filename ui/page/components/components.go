@@ -486,9 +486,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 				Direction:   layout.E,
 				Margin:      layout.Inset{Top: values.MarginPadding10},
 			}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Direction(8).Layout(gtx, status.Layout)
-				}),
+				layout.Rigid(status.Layout),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
