@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -45,7 +44,7 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 		Load:           l,
 		modal:          *l.Theme.ModalFloatTitle(),
 		proposal:       proposal,
-		materialLoader: material.Loader(material.NewTheme(gofont.Collection())),
+		materialLoader: material.Loader(l.Theme.Base),
 		voteBtn:        l.Theme.Button("Vote"),
 		cancelBtn:      l.Theme.OutlineButton("Cancel"),
 	}

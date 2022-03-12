@@ -7,10 +7,11 @@ import (
 
 	"decred.org/dcrdex/client/asset/btc"
 	"decred.org/dcrdex/client/asset/dcr"
-	"gioui.org/font/gofont"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -52,7 +53,7 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreate
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App Password"),
 		submit:           l.Theme.Button("Add"),
 		cancel:           l.Theme.OutlineButton("Cancel"),
-		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
+		materialLoader:   material.Loader(l.Theme.Base),
 		walletInfoWidget: wallInfo,
 		walletCreated:    walletCreated,
 	}

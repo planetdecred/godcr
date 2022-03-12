@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -368,10 +367,9 @@ func (pg *ProposalsPage) layoutSyncSection(gtx C) D {
 }
 
 func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
-	th := material.NewTheme(gofont.Collection())
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding24)
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	loader := material.Loader(th)
+	loader := material.Loader(pg.Theme.Base)
 	loader.Color = pg.Theme.Color.Gray1
 	return loader.Layout(gtx)
 }

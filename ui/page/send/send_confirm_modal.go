@@ -3,12 +3,12 @@ package send
 import (
 	"fmt"
 
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -278,9 +278,8 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 					}),
 					layout.Rigid(func(gtx C) D {
 						if scm.isSending {
-							th := material.NewTheme(gofont.Collection())
 							return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
-								return material.Loader(th).Layout(gtx)
+								return material.Loader(scm.Theme.Base).Layout(gtx)
 							})
 						}
 						scm.confirmButton.Text = fmt.Sprintf("Send %s", scm.totalCost)
