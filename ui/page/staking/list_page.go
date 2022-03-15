@@ -9,12 +9,12 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	tpage "github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const listPageID = "StakingList"
@@ -33,7 +33,7 @@ const (
 
 type ListPage struct {
 	*load.Load
-
+	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -93,29 +93,34 @@ func (pg *ListPage) OnNavigatedTo() {
 }
 
 func (pg *ListPage) listenForTxNotifications() {
+	if pg.TxAndBlockNotificationListener != nil {
+		return
+	}
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, listPageID)
+	if err != nil {
+		log.Errorf("Error adding tx and block notification listener: %v", err)
+		return
+	}
+
 	go func() {
 		for {
-			var notification interface{}
 
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
+			case n := <-pg.TxAndBlockNotifChan:
+				if n.Type == listeners.BlockAttached || n.Type == listeners.NewTransaction {
+					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+					if selectedWallet.ID == n.WalletID {
+						pg.fetchTickets()
+						pg.RefreshWindow()
+					}
+				}
 			case <-pg.ctx.Done():
-				return
-			}
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(listPageID)
+				close(pg.TxAndBlockNotifChan)
+				pg.TxAndBlockNotificationListener = nil
 
-			switch n := notification.(type) {
-			case wallet.NewBlock:
-				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-				if selectedWallet.ID == n.WalletID {
-					pg.fetchTickets()
-					pg.RefreshWindow()
-				}
-			case wallet.NewTransaction:
-				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-				if selectedWallet.ID == n.Transaction.WalletID {
-					pg.fetchTickets()
-					pg.RefreshWindow()
-				}
+				return
 			}
 		}
 	}()

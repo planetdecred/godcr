@@ -12,6 +12,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -29,6 +30,7 @@ type proposalItemWidgets struct {
 
 type ProposalDetails struct {
 	*load.Load
+	*listeners.ProposalNotificationListener
 	ctx                context.Context // page context
 	ctxCancel          context.CancelFunc
 	voteBar            *components.VoteBar
@@ -128,26 +130,33 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 }
 
 func (pg *ProposalDetails) listenForSyncNotifications() {
+	if pg.ProposalNotificationListener == nil {
+		return
+	}
+	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
+	err := pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, ProposalDetailsPageID)
+	if err != nil {
+		log.Errorf("Error adding politeia notification listener: %v", err)
+		return
+	}
 
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.Proposal:
-				if n.ProposalStatus == wallet.Synced {
+			case notification := <-pg.ProposalNotifChan:
+				if notification.ProposalStatus == wallet.Synced {
 					proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
 					if err == nil {
 						pg.proposal = proposal
 						pg.RefreshWindow()
 					}
 				}
+			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
+				close(pg.ProposalNotifChan)
+				pg.ProposalNotificationListener = nil
+
+				return
 			}
 		}
 	}()

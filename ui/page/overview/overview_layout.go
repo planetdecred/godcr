@@ -12,6 +12,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -41,6 +42,10 @@ type walletSyncDetails struct {
 
 type AppOverviewPage struct {
 	*load.Load
+	*listeners.SyncProgressListener
+	*listeners.TxAndBlockNotificationListener
+	*listeners.ProposalNotificationListener
+	*listeners.BlocksRescanProgressListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -127,7 +132,7 @@ func (pg *AppOverviewPage) OnNavigatedTo() {
 
 	pg.getMixerWallets()
 	pg.loadTransactions()
-	pg.listenForSyncNotifications()
+	pg.listenForNotifications()
 	pg.loadRecentProposals()
 }
 
@@ -311,58 +316,70 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 
 }
 
-// listenForSyncNotifications starts a goroutine to watch for sync updates
+// listenForNotifications starts a goroutine to watch for sync updates
 // and update the UI accordingly. To prevent UI lags, this method does not
 // refresh the window display everytime a sync update is received. During
 // active blocks sync, rescan or proposals sync, the Layout method auto
 // refreshes the display every set interval. Other sync updates that affect
 // the UI but occur outside of an active sync requires a display refresh.
-func (pg *AppOverviewPage) listenForSyncNotifications() {
+func (pg *AppOverviewPage) listenForNotifications() {
+	// Return if any of the listener is not nill.
+	switch {
+	case pg.SyncProgressListener != nil:
+		return
+	case pg.TxAndBlockNotificationListener != nil:
+		return
+	case pg.ProposalNotificationListener != nil:
+		return
+	case pg.BlocksRescanProgressListener != nil:
+		return
+	}
+
+	pg.SyncProgressListener = listeners.NewSyncProgress()
+	err := pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
+	if err != nil {
+		log.Errorf("Error adding sync progress listener: %v", err)
+		return
+	}
+
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	err = pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, OverviewPageID)
+	if err != nil {
+		log.Errorf("Error adding tx and block notification listener: %v", err)
+		return
+	}
+
+	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
+	err = pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, OverviewPageID)
+	if err != nil {
+		log.Errorf("Error adding politeia notification listener: %v", err)
+		return
+	}
+
+	pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
+	pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
+
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				pg.loadTransactions()
-				pg.RefreshWindow()
-
-			case wallet.Proposal:
-				if n.ProposalStatus == wallet.Synced {
-					pg.loadRecentProposals()
-					pg.RefreshWindow()
-				}
-
-			case wallet.RescanUpdate:
-				pg.rescanUpdate = &n
-				if n.Stage == wallet.RescanEnded {
-					pg.RefreshWindow()
-				}
-
-			case wallet.SyncStatusUpdate:
+			case n := <-pg.SyncStatusChan:
 				// Update sync progress fields which will be displayed
 				// when the next UI invalidation occurs.
 				switch t := n.ProgressReport.(type) {
-				case wallet.SyncHeadersFetchProgress:
-					pg.headerFetchProgress = t.Progress.HeadersFetchProgress
-					pg.headersToFetchOrScan = t.Progress.TotalHeadersToFetch
-					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
+				case *dcrlibwallet.HeadersFetchProgressReport:
+					pg.headerFetchProgress = t.HeadersFetchProgress
+					pg.headersToFetchOrScan = t.TotalHeadersToFetch
+					pg.syncProgress = int(t.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.FetchHeadersSteps
-				case wallet.SyncAddressDiscoveryProgress:
-					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
+				case *dcrlibwallet.AddressDiscoveryProgressReport:
+					pg.syncProgress = int(t.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.AddressDiscoveryStep
-				case wallet.SyncHeadersRescanProgress:
-					pg.headersToFetchOrScan = t.Progress.TotalHeadersToScan
-					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
+				case *dcrlibwallet.HeadersRescanProgressReport:
+					pg.headersToFetchOrScan = t.TotalHeadersToScan
+					pg.syncProgress = int(t.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.RescanHeadersStep
 				}
 
@@ -376,9 +393,43 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 				case wallet.SyncCompleted:
 					pg.loadTransactions()
 					pg.RefreshWindow()
-				case wallet.BlockAttached:
+				}
+
+			case n := <-pg.TxAndBlockNotifChan:
+				switch n.Type {
+				case listeners.NewTransaction:
+					pg.loadTransactions()
+					pg.RefreshWindow()
+				case listeners.BlockAttached:
 					pg.RefreshWindow()
 				}
+			case n := <-pg.ProposalNotifChan:
+				if n.ProposalStatus == wallet.Synced {
+					pg.loadRecentProposals()
+					pg.RefreshWindow()
+				}
+			case n := <-pg.BlockRescanChan:
+				pg.rescanUpdate = &n
+				if n.Stage == wallet.RescanEnded {
+					pg.RefreshWindow()
+				}
+			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
+				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(OverviewPageID)
+				pg.WL.MultiWallet.SetBlocksRescanProgressListener(nil)
+
+				close(pg.SyncStatusChan)
+				close(pg.TxAndBlockNotifChan)
+				close(pg.ProposalNotifChan)
+				close(pg.BlockRescanChan)
+
+				pg.SyncProgressListener = nil
+				pg.TxAndBlockNotificationListener = nil
+				pg.ProposalNotificationListener = nil
+				pg.BlocksRescanProgressListener = nil
+
+				return
 			}
 		}
 	}()

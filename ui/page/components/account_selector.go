@@ -11,14 +11,17 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
+
+const AccoutSelectorID = "AccountSelector"
 
 type AccountSelector struct {
 	*load.Load
+	*listeners.TxAndBlockNotificationListener
 
 	multiWallet     *dcrlibwallet.MultiWallet
 	selectedAccount *dcrlibwallet.Account
@@ -200,34 +203,44 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
+	if as.TxAndBlockNotificationListener != nil {
+		return
+	}
+	as.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	err := as.WL.MultiWallet.AddTxAndBlockNotificationListener(as.TxAndBlockNotificationListener, true, AccoutSelectorID)
+	if err != nil {
+		log.Errorf("Error adding tx and block notification listener: %v", err)
+		return
+	}
+
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-as.Receiver.NotificationsUpdate:
-			case <-ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				// refresh accounts list when new transaction is received
-				as.UpdateSelectedAccountBalance()
-				if as.selectorModal != nil {
-					as.selectorModal.setupWalletAccounts()
-				}
-				as.RefreshWindow()
-			case wallet.SyncStatusUpdate:
-				// refresh wallet account and balance on every new block
-				// only if sync is completed.
-				if n.Stage == wallet.BlockAttached && as.WL.MultiWallet.IsSynced() {
+			case n := <-as.TxAndBlockNotifChan:
+				switch n.Type {
+				case listeners.BlockAttached:
+					// refresh wallet account and balance on every new block
+					// only if sync is completed.
+					if as.WL.MultiWallet.IsSynced() {
+						as.UpdateSelectedAccountBalance()
+						if as.selectorModal != nil {
+							as.selectorModal.setupWalletAccounts()
+						}
+						as.RefreshWindow()
+					}
+				case listeners.NewTransaction:
+					// refresh accounts list when new transaction is received
 					as.UpdateSelectedAccountBalance()
 					if as.selectorModal != nil {
 						as.selectorModal.setupWalletAccounts()
 					}
 					as.RefreshWindow()
 				}
+			case <-ctx.Done():
+				as.WL.MultiWallet.RemoveTxAndBlockNotificationListener(AccoutSelectorID)
+				close(as.TxAndBlockNotifChan)
+				as.TxAndBlockNotificationListener = nil
+				return
 			}
 		}
 	}()
