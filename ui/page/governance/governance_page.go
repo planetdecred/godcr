@@ -61,20 +61,11 @@ func (pg *Page) OnNavigatedTo() {
 		pg.selectedCategoryIndex = 0
 	}
 
-	/** begin proposal page OnNavigatedTo method */
-
-	pg.proposalsPage.ctx, pg.proposalsPage.ctxCancel = context.WithCancel(context.TODO())
-	pg.proposalsPage.listenForSyncNotifications()
-	pg.proposalsPage.fetchProposals()
-	pg.proposalsPage.isSyncing = pg.proposalsPage.multiWallet.Politeia.IsSyncing()
-
-	/** end proposal page OnNavigatedTo method */
-
-	/** begin consensus page OnNavigatedTo method */
-
-	pg.consensusPage.FetchAgendas()
-
-	/** end consensus page OnNavigatedTo method */
+	if pg.selectedCategoryIndex == 1 {
+		pg.consensusPage.OnNavigatedTo()
+	} else {
+		pg.proposalsPage.OnNavigatedTo()
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from

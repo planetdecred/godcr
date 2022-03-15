@@ -169,56 +169,24 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 							Top: values.MarginPadding60,
 						}.Layout(gtx, pg.layoutContent)
 					}),
-				)
-			}),
-			// TODO: Move to after search bar
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									return pg.Load.Icons.RedirectIcon.Layout24dp(gtx)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													txt := pg.Theme.Label(values.TextSize20, "Voting Dasboard")
-													txt.Font.Weight = text.SemiBold
-													return txt.Layout(gtx)
-												}),
-											)
-										}),
-									)
-								})
-							}),
-						)
-					}),
-				)
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-					return layout.Stack{}.Layout(gtx,
-						layout.Expanded(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
-								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return pg.layoutRedirectVoting(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return pg.layoutContent(gtx)
-									}),
-								)
-							})
-						}),
-						layout.Expanded(func(gtx C) D {
-							gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					layout.Expanded(func(gtx C) D {
+						gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
+						card := pg.Theme.Card()
+						card.Radius = decredmaterial.Radius(8)
+						return card.Layout(gtx, func(gtx C) D {
+							return layout.Inset{
+								Left:   values.MarginPadding10,
+								Right:  values.MarginPadding10,
+								Top:    values.MarginPadding2,
+								Bottom: values.MarginPadding2,
+							}.Layout(gtx, pg.searchEditor.Layout)
+						})
+					}),
+					layout.Expanded(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.E.Layout(gtx, func(gtx C) D {
 							card := pg.Theme.Card()
 							card.Radius = decredmaterial.Radius(8)
 							return card.Layout(gtx, func(gtx C) D {

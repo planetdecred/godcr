@@ -45,7 +45,7 @@ type Page struct {
 	toTickets decredmaterial.TextAndIconButton
 
 	ticketOverview *dcrlibwallet.StakingOverview
-	liveTickets    []*components.TransactionItem
+	liveTickets    []*transactionItem
 
 	ticketPrice  string
 	totalRewards string
@@ -160,13 +160,13 @@ func (pg *Page) loadPageData() {
 
 	go func() {
 		mw := pg.WL.MultiWallet
-		tickets, err := AllLiveTickets(mw)
+		tickets, err := allLiveTickets(mw)
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
 			return
 		}
 
-		txItems, err := components.StakeToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
+		txItems, err := stakeToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
 			switch filter {
 			case dcrlibwallet.TxFilterUnmined:
 				fallthrough
@@ -514,7 +514,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if clicked, selectedItem := pg.ticketsLive.ItemClicked(); clicked {
-		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].Transaction))
+		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
 	}
 
 	if pg.autoPurchase.Changed() {

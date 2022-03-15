@@ -20,7 +20,9 @@ type agendaVoteModal struct {
 	*load.Load
 	modal decredmaterial.Modal
 
-	votableTickets []*dcrlibwallet.Transaction // tickets that have not been spent by a vote or revocation (unspent) and that have not expired (unexpired).
+	// tickets that have not been spent by a vote or revocation (unspent) and that
+	// have not expired (unexpired).
+	votableTickets []*dcrlibwallet.Transaction
 
 	agenda           *dcrlibwallet.Agenda
 	isVoting         bool

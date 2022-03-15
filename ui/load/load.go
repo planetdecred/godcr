@@ -184,12 +184,12 @@ func IconSet() Icons {
 		TimerDarkMode:            decredmaterial.NewImage(decredIcons["timer_dm"]),
 		Rebroadcast:              decredmaterial.NewImage(decredIcons["rebroadcast"]),
 
-		SettingsActiveIcon:       decredmaterial.NewImage(decredIcons["settings_active"]),
-		SettingsInactiveIcon:     decredmaterial.NewImage(decredIcons["settings_inactive"]),
-		ActivatedActiveIcon:      decredmaterial.NewImage(decredIcons["activated_active"]),
-		ActivatedInactiveIcon:    decredmaterial.NewImage(decredIcons["activated_inactive"]),
-		LockinActiveIcon:         decredmaterial.NewImage(decredIcons["lockin_active"]),
-		LockinInactiveIcon:       decredmaterial.NewImage(decredIcons["lockin_inactive"]),
+		SettingsActiveIcon:    decredmaterial.NewImage(decredIcons["settings_active"]),
+		SettingsInactiveIcon:  decredmaterial.NewImage(decredIcons["settings_inactive"]),
+		ActivatedActiveIcon:   decredmaterial.NewImage(decredIcons["activated_active"]),
+		ActivatedInactiveIcon: decredmaterial.NewImage(decredIcons["activated_inactive"]),
+		LockinActiveIcon:      decredmaterial.NewImage(decredIcons["lockin_active"]),
+		LockinInactiveIcon:    decredmaterial.NewImage(decredIcons["lockin_inactive"]),
 
 		DexIcon:         decredmaterial.NewImage(decredIcons["dex_icon"]),
 		DexIconInactive: decredmaterial.NewImage(decredIcons["dex_icon_inactive"]),

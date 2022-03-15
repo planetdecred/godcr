@@ -8,7 +8,6 @@ import (
 	"image/color"
 	"os/exec"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -23,27 +22,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
-
-// TransactionItem holds useful information about a transaction not contained in the
-// dcrlibwallet Transaction struct such as txstatus, confirmations, etc. As well as
-// helpful UI elements such as tooltips.
-type TransactionItem struct {
-	Transaction   *dcrlibwallet.Transaction
-	TicketSpender *dcrlibwallet.Transaction
-	Status        *TxStatus
-	Confirmations int32
-	Progress      float32
-	ShowProgress  bool
-	ShowTime      bool
-	PurchaseTime  string
-	TicketAge     string
-
-	StatusTooltip     *decredmaterial.Tooltip
-	WalletNameTooltip *decredmaterial.Tooltip
-	DateTooltip       *decredmaterial.Tooltip
-	DaysBehindTooltip *decredmaterial.Tooltip
-	DurationTooltip   *decredmaterial.Tooltip
-}
 
 const (
 	Uint32Size    = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
@@ -741,108 +719,4 @@ func CoinImageBySymbol(icons *load.Icons, coinName string) *decredmaterial.Image
 		return icons.DCR
 	}
 	return nil
-}
-
-func StakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newestFirst bool, hasFilter func(int32) bool) ([]*TransactionItem, error) {
-	tickets := make([]*TransactionItem, 0)
-	multiWallet := l.WL.MultiWallet
-	for _, tx := range txs {
-		w := multiWallet.WalletWithID(tx.WalletID)
-
-		ticketSpender, err := w.TicketSpender(tx.Hash)
-		if err != nil {
-			return nil, err
-		}
-
-		// Apply voted and revoked tx filter
-		if (hasFilter(dcrlibwallet.TxFilterVoted) || hasFilter(dcrlibwallet.TxFilterRevoked)) && ticketSpender == nil {
-			continue
-		}
-
-		if hasFilter(dcrlibwallet.TxFilterVoted) && ticketSpender.Type != dcrlibwallet.TxTypeVote {
-			continue
-		}
-
-		if hasFilter(dcrlibwallet.TxFilterRevoked) && ticketSpender.Type != dcrlibwallet.TxTypeRevocation {
-			continue
-		}
-
-		// This fixes a dcrlibwallet bug where live tickets transactions
-		// do not have updated data of Stake spender.
-		if hasFilter(dcrlibwallet.TxFilterLive) && ticketSpender != nil {
-			continue
-		}
-
-		ticketCopy := tx
-		txStatus := TransactionTitleIcon(l, w, &tx, ticketSpender)
-		confirmations := tx.Confirmations(w.GetBestBlock())
-		var ticketAge string
-
-		showProgress := txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature || txStatus.TicketStatus == dcrlibwallet.TicketStatusLive
-		if ticketSpender != nil { /// voted or revoked
-			showProgress = ticketSpender.Confirmations(w.GetBestBlock()) <= multiWallet.TicketMaturity()
-			ticketAge = fmt.Sprintf("%d days", ticketSpender.DaysToVoteOrRevoke)
-		} else if txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature ||
-			txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
-
-			ticketAgeDuration := time.Since(time.Unix(tx.Timestamp, 0)).Seconds()
-			ticketAge = TimeFormat(int(ticketAgeDuration), true)
-		}
-
-		showTime := showProgress && txStatus.TicketStatus != dcrlibwallet.TicketStatusLive
-
-		var progress float32
-		if showProgress {
-			progressMax := multiWallet.TicketMaturity()
-			if txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
-				progressMax = multiWallet.TicketExpiry()
-			}
-
-			confs := confirmations
-			if ticketSpender != nil {
-				confs = ticketSpender.Confirmations(w.GetBestBlock())
-			}
-
-			progress = (float32(confs) / float32(progressMax)) * 100
-		}
-
-		tickets = append(tickets, &TransactionItem{
-			Transaction:   &ticketCopy,
-			TicketSpender: ticketSpender,
-			Status:        txStatus,
-			Confirmations: tx.Confirmations(w.GetBestBlock()),
-			Progress:      progress,
-			ShowProgress:  showProgress,
-			ShowTime:      showTime,
-			PurchaseTime:  time.Unix(tx.Timestamp, 0).Format("Jan 2, 2006 15:04:05 PM"),
-			TicketAge:     ticketAge,
-
-			StatusTooltip:     l.Theme.Tooltip(),
-			WalletNameTooltip: l.Theme.Tooltip(),
-			DateTooltip:       l.Theme.Tooltip(),
-			DaysBehindTooltip: l.Theme.Tooltip(),
-			DurationTooltip:   l.Theme.Tooltip(),
-		})
-	}
-
-	// bring vote and revoke tx forward
-	sort.Slice(tickets[:], func(i, j int) bool {
-		var timeStampI = tickets[i].Transaction.Timestamp
-		var timeStampJ = tickets[j].Transaction.Timestamp
-
-		if tickets[i].TicketSpender != nil {
-			timeStampI = tickets[i].TicketSpender.Timestamp
-		}
-
-		if tickets[j].TicketSpender != nil {
-			timeStampJ = tickets[j].TicketSpender.Timestamp
-		}
-
-		if newestFirst {
-			return timeStampI > timeStampJ
-		}
-		return timeStampI < timeStampJ
-	})
-
-	return tickets, nil
 }
