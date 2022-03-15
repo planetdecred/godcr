@@ -138,11 +138,18 @@ func (pg *ConsensusPage) FetchAgendas() {
 	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 
 	pg.isSyncing = true
-	consensusItems := components.LoadAgendas(pg.Load, selectedWallet, newestFirst)
-	pg.consensusItems = consensusItems
-	pg.isSyncing = false
-	pg.syncCompleted = true
 
+	// Fetch (or re-fetch) agendas in background as this makes
+	// a network call. Refresh the window once the call completes.
+	go func() {
+		pg.consensusItems = components.LoadAgendas(pg.Load, selectedWallet, newestFirst)
+		pg.isSyncing = false
+		pg.syncCompleted = true
+		pg.RefreshWindow()
+	}()
+
+	// Refresh the window now to signify that the syncing
+	// has started with pg.isSyncing set to true above.
 	pg.RefreshWindow()
 }
 
@@ -254,28 +261,27 @@ func (pg *ConsensusPage) layoutRedirectVoting(gtx C) D {
 }
 
 func (pg *ConsensusPage) layoutContent(gtx C) D {
+	if len(pg.consensusItems) == 0 {
+		return components.LayoutNoAgendasFound(gtx, pg.Load, pg.isSyncing)
+	}
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
 			return pg.Theme.List(pg.listContainer).Layout(gtx, 1, func(gtx C, i int) D {
 				return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 					return list.Layout(gtx, len(pg.consensusItems), func(gtx C, i int) D {
-						radius := decredmaterial.Radius(14)
 						return decredmaterial.LinearLayout{
 							Orientation: layout.Vertical,
 							Width:       decredmaterial.MatchParent,
 							Height:      decredmaterial.WrapContent,
 							Background:  pg.Theme.Color.Surface,
 							Direction:   layout.W,
-							Border:      decredmaterial.Border{Radius: radius},
+							Border:      decredmaterial.Border{Radius: decredmaterial.Radius(14)},
 							Padding:     layout.UniformInset(values.MarginPadding15),
-							Margin:      layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout2(gtx, func(gtx C) D {
-							if len(pg.consensusItems) == 0 {
-								return components.LayoutNoAgendasFound(gtx, pg.Load, pg.isSyncing)
-							}
-
-							return components.AgendaItemWidget(gtx, pg.Load, pg.consensusItems[i])
-						})
+							Margin:      layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.
+							Layout2(gtx, func(gtx C) D {
+								return components.AgendaItemWidget(gtx, pg.Load, pg.consensusItems[i])
+							})
 					})
 				})
 			})

@@ -113,11 +113,16 @@ func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 
 func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	text := l.Theme.Body1("No agendas yet")
+	text.Color = l.Theme.Color.GrayText3
+	if syncing {
+		text = l.Theme.Body1("Fetching agendas...")
+	}
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
 			Top:    values.MarginPadding10,
 			Bottom: values.MarginPadding10,
-		}.Layout(gtx, l.Theme.Body1("No agendas yet").Layout)
+		}.Layout(gtx, text.Layout)
 	})
 }
 
