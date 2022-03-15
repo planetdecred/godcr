@@ -1,7 +1,9 @@
 package page
 
 import (
+	"context"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -11,7 +13,9 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil/v4"
+	"github.com/gen2brain/beeep"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -24,6 +28,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -51,6 +56,11 @@ type NavHandler struct {
 
 type MainPage struct {
 	*load.Load
+	*listeners.SyncProgressListener
+	*listeners.TxAndBlockNotificationListener
+	*listeners.ProposalNotificationListener
+	ctx       context.Context
+	ctxCancel context.CancelFunc
 	appBarNav components.NavDrawer
 	drawerNav components.NavDrawer
 
@@ -198,14 +208,10 @@ func (mp *MainPage) initNavItems() {
 // the page is displayed.
 // Part of the load.Page interface.
 func (mp *MainPage) OnNavigatedTo() {
-	// register for notifications, unregister when the page disappears
-	mp.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
-	mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
-	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, true, MainPageID) // notification methods will be invoked asynchronously to prevent potential deadlocks
-	mp.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
-	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
-
 	mp.setLanguageSetting()
+
+	mp.ctx, mp.ctxCancel = context.WithCancel(context.TODO())
+	mp.listenForNotifications()
 
 	if mp.currentPage == nil {
 		mp.currentPage = overview.NewOverviewPage(mp.Load)
@@ -226,7 +232,7 @@ func (mp *MainPage) OnNavigatedTo() {
 		}
 	}
 
-	mp.UpdateBalance()
+	mp.updateBalance()
 }
 
 func (mp *MainPage) setLanguageSetting() {
@@ -263,13 +269,13 @@ func (mp *MainPage) fetchExchangeRate() {
 		log.Errorf("no error while fetching usd exchange rate in %d tries, but no rate was fetched", attempts)
 	} else {
 		log.Infof("exchange rate value fetched: %s", mp.dcrUsdtBittrex.LastTradeRate)
-		mp.UpdateBalance()
+		mp.updateBalance()
 		mp.RefreshWindow()
 	}
 	mp.isFetchingExchangeRate = false
 }
 
-func (mp *MainPage) UpdateBalance() {
+func (mp *MainPage) updateBalance() {
 	totalBalance, err := mp.CalculateTotalWalletsBalance()
 	if err == nil {
 		mp.totalBalance = totalBalance
@@ -453,10 +459,7 @@ func (mp *MainPage) OnNavigatedFrom() {
 		mp.receivePage.OnNavigatedFrom()
 	}
 
-	mp.WL.MultiWallet.RemoveAccountMixerNotificationListener(MainPageID)
-	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
-	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
-	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
+	mp.ctxCancel()
 }
 
 func (mp *MainPage) currentPageID() string {
@@ -727,4 +730,162 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 			return mp.Theme.Separator().Layout(gtx)
 		}),
 	)
+}
+
+// postDdesktopNotification posts notifications to the desktop.
+func (mp *MainPage) postDesktopNotification(notifier interface{}) {
+	var notification string
+	switch t := notifier.(type) {
+	case wallet.NewTransaction:
+
+		switch t.Transaction.Type {
+		case dcrlibwallet.TxTypeRegular:
+			if t.Transaction.Direction != dcrlibwallet.TxDirectionReceived {
+				return
+			}
+			// remove trailing zeros from amount and convert to string
+			amount := strconv.FormatFloat(dcrlibwallet.AmountCoin(t.Transaction.Amount), 'f', -1, 64)
+			notification = fmt.Sprintf("You have received %s DCR", amount)
+		case dcrlibwallet.TxTypeVote:
+			reward := strconv.FormatFloat(dcrlibwallet.AmountCoin(t.Transaction.VoteReward), 'f', -1, 64)
+			notification = fmt.Sprintf("A ticket just voted\nVote reward: %s DCR", reward)
+		case dcrlibwallet.TxTypeRevocation:
+			notification = "A ticket was revoked"
+		default:
+			return
+		}
+
+		if mp.WL.MultiWallet.OpenedWalletsCount() > 1 {
+			wallet := mp.WL.MultiWallet.WalletWithID(t.Transaction.WalletID)
+			if wallet == nil {
+				return
+			}
+
+			notification = fmt.Sprintf("[%s] %s", wallet.Name, notification)
+		}
+
+		initializeBeepNotification(notification)
+	case wallet.Proposal:
+		proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
+		if !proposalNotification {
+			return
+		}
+		switch {
+		case t.ProposalStatus == wallet.NewProposalFound:
+			notification = fmt.Sprintf("A new proposal has been added Token: %s", t.Proposal.Token)
+		case t.ProposalStatus == wallet.VoteStarted:
+			notification = fmt.Sprintf("Voting has started for proposal with Token: %s", t.Proposal.Token)
+		case t.ProposalStatus == wallet.VoteFinished:
+			notification = fmt.Sprintf("Voting has ended for proposal with Token: %s", t.Proposal.Token)
+		default:
+			notification = fmt.Sprintf("New update for proposal with Token: %s", t.Proposal.Token)
+		}
+		initializeBeepNotification(notification)
+	}
+}
+
+func initializeBeepNotification(n string) {
+	absoluteWdPath, err := GetAbsolutePath()
+	if err != nil {
+		log.Error(err.Error())
+	}
+
+	err = beeep.Notify("Decred Godcr Wallet", n, filepath.Join(absoluteWdPath, "ui/assets/decredicons/qrcodeSymbol.png"))
+	if err != nil {
+		log.Info("could not initiate desktop notification, reason:", err.Error())
+	}
+}
+
+// listenForNotifications starts a goroutine to watch for notifications
+// and update the UI accordingly.
+func (mp *MainPage) listenForNotifications() {
+	// Return if any of the listener is not nil.
+	switch {
+	case mp.SyncProgressListener != nil:
+		return
+	case mp.TxAndBlockNotificationListener != nil:
+		return
+	case mp.ProposalNotificationListener != nil:
+		return
+	}
+
+	mp.SyncProgressListener = listeners.NewSyncProgress()
+	err := mp.WL.MultiWallet.AddSyncProgressListener(mp.SyncProgressListener, MainPageID)
+	if err != nil {
+		log.Errorf("Error adding sync progress listener: %v", err)
+		return
+	}
+
+	mp.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	err = mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp.TxAndBlockNotificationListener, true, MainPageID)
+	if err != nil {
+		log.Errorf("Error adding tx and block notification listener: %v", err)
+		return
+	}
+
+	mp.ProposalNotificationListener = listeners.NewProposalNotificationListener()
+	err = mp.WL.MultiWallet.Politeia.AddNotificationListener(mp.ProposalNotificationListener, MainPageID)
+	if err != nil {
+		log.Errorf("Error adding politeia notification listener: %v", err)
+		return
+	}
+
+	go func() {
+		for {
+			select {
+			case n := <-mp.TxAndBlockNotifChan:
+				switch n.Type {
+				case listeners.NewTransaction:
+					mp.updateBalance()
+					transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
+					if transactionNotification {
+						update := wallet.NewTransaction{
+							Transaction: n.Transaction,
+						}
+						mp.postDesktopNotification(update)
+					}
+					mp.RefreshWindow()
+				case listeners.BlockAttached:
+					beep := mp.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+					if beep {
+						err := beeep.Beep(5, 1)
+						if err != nil {
+							log.Error(err.Error)
+						}
+					}
+
+					mp.updateBalance()
+					mp.RefreshWindow()
+				case listeners.TxConfirmed:
+					mp.updateBalance()
+					mp.RefreshWindow()
+
+				}
+			case notification := <-mp.ProposalNotifChan:
+				// Post desktop notification for all events except the synced event.
+				if notification.ProposalStatus != wallet.Synced {
+					mp.postDesktopNotification(notification)
+				}
+			case n := <-mp.SyncStatusChan:
+				if n.Stage == wallet.SyncCompleted {
+					mp.updateBalance()
+					mp.RefreshWindow()
+				}
+			case <-mp.ctx.Done():
+				mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
+				mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
+				mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
+
+				close(mp.SyncStatusChan)
+				close(mp.TxAndBlockNotifChan)
+				close(mp.ProposalNotifChan)
+
+				mp.SyncProgressListener = nil
+				mp.TxAndBlockNotificationListener = nil
+				mp.ProposalNotificationListener = nil
+
+				return
+			}
+		}
+	}()
 }

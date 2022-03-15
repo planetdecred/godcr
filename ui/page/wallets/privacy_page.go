@@ -10,6 +10,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -23,6 +24,8 @@ const PrivacyPageID = "Privacy"
 
 type PrivacyPage struct {
 	*load.Load
+
+	*listeners.AccountMixerNotificationListener
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -412,18 +415,21 @@ func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 }
 
 func (pg *PrivacyPage) listenForMixerNotifications() {
+	if pg.AccountMixerNotificationListener != nil {
+		return
+	}
+
+	pg.AccountMixerNotificationListener = listeners.NewAccountMixerNotificationListener()
+	err := pg.WL.MultiWallet.AddAccountMixerNotificationListener(pg, PrivacyPageID)
+	if err != nil {
+		log.Errorf("Error adding account mixer notification listener: %+v", err)
+		return
+	}
+
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.AccountMixer:
+			case n := <-pg.MixerChan:
 				if n.RunStatus == wallet.MixerStarted {
 					pg.Toast.Notify("Mixer start Successfully")
 					pg.RefreshWindow()
@@ -433,6 +439,12 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 					pg.mixerCompleted = true
 					pg.RefreshWindow()
 				}
+
+			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveAccountMixerNotificationListener(PrivacyPageID)
+				close(pg.MixerChan)
+				pg.AccountMixerNotificationListener = nil
+				return
 			}
 		}
 	}()

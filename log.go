@@ -12,9 +12,16 @@ import (
 	"github.com/decred/slog"
 	"github.com/jrick/logrotate/rotator"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
+	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/governance"
+	"github.com/planetdecred/godcr/ui/page/overview"
+	"github.com/planetdecred/godcr/ui/page/staking"
+	"github.com/planetdecred/godcr/ui/page/transaction"
+	walletPage "github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -48,10 +55,10 @@ var (
 
 	log = backendLog.Logger("GDCR")
 
-	walletLog = backendLog.Logger("WALL")
-	winLog    = backendLog.Logger("UI")
-	dlwlLog   = backendLog.Logger("DLWL")
-	pageLog   = backendLog.Logger("PAGE")
+	walletLog  = backendLog.Logger("WALL")
+	winLog     = backendLog.Logger("UI")
+	dlwlLog    = backendLog.Logger("DLWL")
+	lstnersLog = backendLog.Logger("LSTN")
 )
 
 // Initialize package-global logger variables.
@@ -59,8 +66,15 @@ func init() {
 	wallet.UseLogger(walletLog)
 	ui.UseLogger(winLog)
 	dcrlibwallet.UseLogger(dlwlLog)
-	page.UseLogger(pageLog)
+	page.UseLogger(winLog)
 	load.UseLogger(log)
+	listeners.UseLogger(lstnersLog)
+	components.UseLogger(winLog)
+	transaction.UseLogger(winLog)
+	governance.UseLogger(winLog)
+	walletPage.UseLogger(winLog)
+	overview.UseLogger(winLog)
+	staking.UseLogger(winLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -69,7 +83,7 @@ var subsystemLoggers = map[string]slog.Logger{
 	"DLWL": dlwlLog,
 	"UI":   winLog,
 	"GDCR": log,
-	"PAGE": pageLog,
+	"LSTN": lstnersLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and

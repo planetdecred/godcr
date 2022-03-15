@@ -87,6 +87,7 @@ func (tp *stakingModal) OnResume() {
 	tp.initializeAccountSelector()
 
 	tp.ctx, tp.ctxCancel = context.WithCancel(context.TODO())
+
 	tp.accountSelector.ListenForTxNotifications(tp.ctx)
 
 	err := tp.accountSelector.SelectFirstWalletValidAccount()

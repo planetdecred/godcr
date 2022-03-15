@@ -12,13 +12,13 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const WalletPageID = components.WalletsPageID
@@ -60,6 +60,7 @@ type menuItem struct {
 
 type WalletPage struct {
 	*load.Load
+	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -150,6 +151,7 @@ func (pg *WalletPage) ID() string {
 // Part of the load.Page interface.
 func (pg *WalletPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
 	pg.listenForTxNotifications()
 	pg.loadWalletAndAccounts()
 }
@@ -1086,28 +1088,39 @@ func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 }
 
 func (pg *WalletPage) listenForTxNotifications() {
+	if pg.TxAndBlockNotificationListener != nil {
+		return
+	}
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, WalletPageID)
+	if err != nil {
+		log.Errorf("Error adding tx and block notification listener: %v", err)
+		return
+	}
+
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
-
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				// refresh wallets when new transaction is received
-				pg.updateAccountBalance()
-				pg.RefreshWindow()
-			case wallet.SyncStatusUpdate:
-				// refresh wallet account and balance on every new block
-				// only if sync is completed.
-				if n.Stage == wallet.BlockAttached && pg.WL.MultiWallet.IsSynced() {
+			case n := <-pg.TxAndBlockNotifChan:
+				switch n.Type {
+				case listeners.BlockAttached:
+					// refresh wallet account and balance on every new block
+					// only if sync is completed.
+					if pg.WL.MultiWallet.IsSynced() {
+						pg.updateAccountBalance()
+						pg.RefreshWindow()
+					}
+				case listeners.NewTransaction:
+					// refresh wallets when new transaction is received
 					pg.updateAccountBalance()
 					pg.RefreshWindow()
 				}
+			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(WalletPageID)
+				close(pg.TxAndBlockNotifChan)
+				pg.TxAndBlockNotificationListener = nil
+
+				return
 			}
 		}
 	}()

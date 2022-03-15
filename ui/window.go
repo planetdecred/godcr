@@ -118,8 +118,7 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		},
 
 		Receiver: &load.Receiver{
-			KeyEvents:           win.keyEvents,
-			NotificationsUpdate: make(chan interface{}, 10),
+			KeyEvents: win.keyEvents,
 		},
 
 		Toast: notification.NewToast(th),

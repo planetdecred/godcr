@@ -7,11 +7,11 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const TransactionsPageID = "Transactions"
@@ -23,6 +23,7 @@ type (
 
 type TransactionsPage struct {
 	*load.Load
+	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 	separator decredmaterial.Line
@@ -88,6 +89,7 @@ func (pg *TransactionsPage) ID() string {
 // Part of the load.Page interface.
 func (pg *TransactionsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
 	pg.listenForTxNotifications()
 	pg.loadTransactions()
 }
@@ -216,23 +218,34 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 }
 
 func (pg *TransactionsPage) listenForTxNotifications() {
+	if pg.TxAndBlockNotificationListener != nil {
+		return
+	}
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, TransactionsPageID)
+	if err != nil {
+		log.Errorf("Error adding tx and block notification listener: %v", err)
+		return
+	}
+
 	go func() {
 		for {
-			var notification interface{}
-
 			select {
-			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.ctx.Done():
-				return
-			}
+			case n := <-pg.TxAndBlockNotifChan:
+				if n.Type == listeners.NewTransaction {
 
-			switch n := notification.(type) {
-			case wallet.NewTransaction:
-				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-				if selectedWallet.ID == n.Transaction.WalletID {
-					pg.loadTransactions()
-					pg.RefreshWindow()
+					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+					if selectedWallet.ID == n.Transaction.WalletID {
+						pg.loadTransactions()
+						pg.RefreshWindow()
+					}
 				}
+			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(TransactionsPageID)
+				close(pg.TxAndBlockNotifChan)
+				pg.TxAndBlockNotificationListener = nil
+
+				return
 			}
 		}
 	}()
