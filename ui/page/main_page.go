@@ -232,7 +232,7 @@ func (mp *MainPage) OnNavigatedTo() {
 		}
 	}
 
-	mp.UpdateBalance()
+	mp.updateBalance()
 }
 
 func (mp *MainPage) setLanguageSetting() {
@@ -269,13 +269,13 @@ func (mp *MainPage) fetchExchangeRate() {
 		log.Errorf("no error while fetching usd exchange rate in %d tries, but no rate was fetched", attempts)
 	} else {
 		log.Infof("exchange rate value fetched: %s", mp.dcrUsdtBittrex.LastTradeRate)
-		mp.UpdateBalance()
+		mp.updateBalance()
 		mp.RefreshWindow()
 	}
 	mp.isFetchingExchangeRate = false
 }
 
-func (mp *MainPage) UpdateBalance() {
+func (mp *MainPage) updateBalance() {
 	totalBalance, err := mp.CalculateTotalWalletsBalance()
 	if err == nil {
 		mp.totalBalance = totalBalance
@@ -836,7 +836,7 @@ func (mp *MainPage) listenForNotifications() {
 			case n := <-mp.TxAndBlockNotifChan:
 				switch n.Type {
 				case listeners.NewTransaction:
-					mp.UpdateBalance(true)
+					mp.updateBalance()
 					transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
 					if transactionNotification {
 						update := wallet.NewTransaction{
@@ -854,10 +854,10 @@ func (mp *MainPage) listenForNotifications() {
 						}
 					}
 
-					mp.UpdateBalance(true)
+					mp.updateBalance()
 					mp.RefreshWindow()
 				case listeners.TxConfirmed:
-					mp.UpdateBalance(true)
+					mp.updateBalance()
 					mp.RefreshWindow()
 
 				}
@@ -868,7 +868,7 @@ func (mp *MainPage) listenForNotifications() {
 				}
 			case n := <-mp.SyncStatusChan:
 				if n.Stage == wallet.SyncCompleted {
-					mp.UpdateBalance(true)
+					mp.updateBalance()
 					mp.RefreshWindow()
 				}
 			case <-mp.ctx.Done():
