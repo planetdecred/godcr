@@ -101,12 +101,12 @@ func layoutAgendaDetails(l *load.Load, data string) layout.Widget {
 
 func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Px(unit.Dp(150)), gtx.Px(unit.Dp(200))
-	if item.Agenda.Status == dcrlibwallet.AgendaStatusInProgress {
-		item.VoteButton.Background = l.Theme.Color.Primary
-		item.VoteButton.SetEnabled(true)
-	} else {
+	if item.Agenda.Status == dcrlibwallet.AgendaStatusFinished {
 		item.VoteButton.Background = l.Theme.Color.Gray3
 		item.VoteButton.SetEnabled(false)
+	} else {
+		item.VoteButton.Background = l.Theme.Color.Primary
+		item.VoteButton.SetEnabled(true)
 	}
 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, item.VoteButton.Layout)
 }
