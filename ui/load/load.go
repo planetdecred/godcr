@@ -31,7 +31,7 @@ type Icons struct {
 	ContentAdd, NavigationCheck, NavigationMore, ActionCheckCircle, ActionInfo, NavigationArrowBack,
 	NavigationArrowForward, ActionCheck, ChevronRight, NavigationCancel, NavMoreIcon,
 	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ConcealIcon, RevealIcon,
-	SearchIcon *widget.Icon
+	SearchIcon, PlayIcon *widget.Icon
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
@@ -42,7 +42,8 @@ type Icons struct {
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon,
 	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon,
-	LogoDarkMode, TimerDarkMode, Rebroadcast, SettingsActiveIcon, SettingsInactiveIcon *decredmaterial.Image
+	LogoDarkMode, TimerDarkMode, Rebroadcast, SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon,
+	ActivatedInactiveIcon, LockinActiveIcon, LockinInactiveIcon *decredmaterial.Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -116,6 +117,7 @@ func IconSet() Icons {
 		ConcealIcon:            decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibility)),
 		RevealIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 		SearchIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionSearch)),
+		PlayIcon:               decredmaterial.MustIcon(widget.NewIcon(icons.AVPlayArrow)),
 
 		OverviewIcon:             decredmaterial.NewImage(decredIcons["overview"]),
 		OverviewIconInactive:     decredmaterial.NewImage(decredIcons["overview_inactive"]),
@@ -181,8 +183,13 @@ func IconSet() Icons {
 		LogoDarkMode:             decredmaterial.NewImage(decredIcons["logo_darkmode"]),
 		TimerDarkMode:            decredmaterial.NewImage(decredIcons["timer_dm"]),
 		Rebroadcast:              decredmaterial.NewImage(decredIcons["rebroadcast"]),
-		SettingsActiveIcon:       decredmaterial.NewImage(decredIcons["settings_active"]),
-		SettingsInactiveIcon:     decredmaterial.NewImage(decredIcons["settings_inactive"]),
+
+		SettingsActiveIcon:    decredmaterial.NewImage(decredIcons["settings_active"]),
+		SettingsInactiveIcon:  decredmaterial.NewImage(decredIcons["settings_inactive"]),
+		ActivatedActiveIcon:   decredmaterial.NewImage(decredIcons["activated_active"]),
+		ActivatedInactiveIcon: decredmaterial.NewImage(decredIcons["activated_inactive"]),
+		LockinActiveIcon:      decredmaterial.NewImage(decredIcons["lockin_active"]),
+		LockinInactiveIcon:    decredmaterial.NewImage(decredIcons["lockin_inactive"]),
 
 		DexIcon:         decredmaterial.NewImage(decredIcons["dex_icon"]),
 		DexIconInactive: decredmaterial.NewImage(decredIcons["dex_icon_inactive"]),

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -34,16 +34,14 @@ type ProposalsPage struct {
 	ctxCancel  context.CancelFunc
 	proposalMu sync.Mutex
 
-	multiWallet       *dcrlibwallet.MultiWallet
-	listContainer     *widget.List
-	orderDropDown     *decredmaterial.DropDown
-	categoryDropDown  *decredmaterial.DropDown
-	proposalsList     *decredmaterial.ClickableList
-	syncButton        *widget.Clickable
-	searchEditor      decredmaterial.Editor
-	fetchProposalsBtn decredmaterial.Button
+	multiWallet      *dcrlibwallet.MultiWallet
+	listContainer    *widget.List
+	orderDropDown    *decredmaterial.DropDown
+	categoryDropDown *decredmaterial.DropDown
+	proposalsList    *decredmaterial.ClickableList
+	syncButton       *widget.Clickable
+	searchEditor     decredmaterial.Editor
 
-	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
 
 	updatedIcon *decredmaterial.Icon
@@ -71,8 +69,10 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 	pg.syncButton = new(widget.Clickable)
 
 	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
+	pg.proposalsList.IsShadowEnabled = true
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	_, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.infoButton.Size = values.MarginPadding20
 
 	// orderDropDown is the first dropdown when page is laid out. Its
 	// position should be 0 for consistent backdrop.
@@ -91,8 +91,6 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 			Text: "Abandoned",
 		},
 	}, values.ProposalDropdownGroup, 1)
-
-	pg.initializeWidget()
 
 	return pg
 }
@@ -153,20 +151,6 @@ func (pg *ProposalsPage) fetchProposals() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *ProposalsPage) HandleUserInteractions() {
-	for pg.fetchProposalsBtn.Clicked() {
-		go pg.WL.MultiWallet.Politeia.Sync()
-		pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
-		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
-	}
-
-	for pg.infoButton.Button.Clicked() {
-		pg.showInfoModal()
-	}
-
-	for pg.backButton.Button.Clicked() {
-		pg.PopFragment()
-	}
-
 	for pg.categoryDropDown.Changed() {
 		pg.fetchProposals()
 	}
@@ -194,6 +178,14 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 		//Todo: check after 1min if sync does not start, set isSyncing to false and cancel sync
 	}
 
+	if pg.infoButton.Button.Clicked() {
+		modal.NewInfoModal(pg.Load).
+			Title("Proposals").
+			Body("Off-chain voting for development and marketing initiatives funded by the Decred treasury.").
+			SetCancelable(true).
+			PositiveButton("Got it", func() {}).Show()
+	}
+
 	if pg.syncCompleted {
 		time.AfterFunc(time.Second*3, func() {
 			pg.syncCompleted = false
@@ -202,6 +194,10 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 	}
 
 	decredmaterial.DisplayOneDropdown(pg.orderDropDown, pg.categoryDropDown)
+
+	for pg.infoButton.Button.Clicked() {
+		//TODO: proposal info modal
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -219,114 +215,49 @@ func (pg *ProposalsPage) OnNavigatedFrom() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *ProposalsPage) Layout(gtx C) D {
-	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
-		return components.UniformPadding(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(pg.backButton.Layout),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-								body := func(gtx C) D {
-									return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													txt := pg.Theme.Label(values.TextSize14, "Available Treasury Balance: ")
-													txt.Font.Weight = text.SemiBold
-													return txt.Layout(gtx)
-												}),
-												layout.Rigid(func(gtx C) D {
-													// Todo get available treasury balance
-													return components.LayoutBalanceSize(gtx, pg.Load, "678,678.687654 DCR", values.TextSize14)
-												}),
-											)
-										}),
-										layout.Rigid(func(gtx C) D {
-											var text string
-											if pg.isSyncing {
-												text = "Syncing..."
-											} else if pg.syncCompleted {
-												text = "Updated"
-											} else {
-												text = "Upated " + components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
-											}
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(pg.layoutSectionHeader),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Expanded(func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
+					}),
+					layout.Expanded(func(gtx C) D {
+						gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-											lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
-											lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
-											if pg.syncCompleted {
-												lastUpdatedInfo.Color = pg.Theme.Color.Success
-											}
-
-											return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-												return lastUpdatedInfo.Layout(gtx)
-											})
-										}),
-									)
-								}
-
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-											layout.Rigid(func(gtx C) D {
-												txt := pg.Theme.Label(values.TextSize20, "Proposals")
-												txt.Font.Weight = text.SemiBold
-												return txt.Layout(gtx)
-											}),
-										)
-									}),
-									layout.Flexed(1, func(gtx C) D {
-										return layout.E.Layout(gtx, body)
-									}),
-								)
-							})
-						}),
-					)
-				}),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.Stack{}.Layout(gtx,
-						layout.Expanded(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
-						}),
-						layout.Expanded(func(gtx C) D {
-							gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-
+						card := pg.Theme.Card()
+						card.Radius = decredmaterial.Radius(8)
+						return card.Layout(gtx, func(gtx C) D {
+							return layout.Inset{
+								Left:   values.MarginPadding10,
+								Right:  values.MarginPadding10,
+								Top:    values.MarginPadding2,
+								Bottom: values.MarginPadding2,
+							}.Layout(gtx, pg.searchEditor.Layout)
+						})
+					}),
+					layout.Expanded(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.E.Layout(gtx, func(gtx C) D {
 							card := pg.Theme.Card()
 							card.Radius = decredmaterial.Radius(8)
 							return card.Layout(gtx, func(gtx C) D {
-								return layout.Inset{
-									Left:   values.MarginPadding10,
-									Right:  values.MarginPadding10,
-									Top:    values.MarginPadding2,
-									Bottom: values.MarginPadding2,
-								}.Layout(gtx, pg.searchEditor.Layout)
+								return layout.UniformInset(values.MarginPadding8).Layout(gtx, pg.layoutSyncSection)
 							})
-						}),
-						layout.Expanded(func(gtx C) D {
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return layout.E.Layout(gtx, func(gtx C) D {
-								card := pg.Theme.Card()
-								card.Radius = decredmaterial.Radius(8)
-								return card.Layout(gtx, func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
-										return pg.layoutSyncSection(gtx)
-									})
-								})
-							})
-						}),
-						layout.Expanded(func(gtx C) D {
-							return pg.orderDropDown.Layout(gtx, 45, true)
-						}),
-						layout.Expanded(func(gtx C) D {
-							return pg.categoryDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
-						}),
-					)
-				}),
-			)
-		})
-	}
-	return components.UniformPadding(gtx, pg.splashScreenLayout)
+						})
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.orderDropDown.Layout(gtx, 45, true)
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.categoryDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
+					}),
+				)
+			})
+		}),
+	)
 }
 
 func (pg *ProposalsPage) layoutContent(gtx C) D {
@@ -377,9 +308,44 @@ func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
 }
 
 func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
-	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
-		return pg.Icons.Restore.Layout24dp(gtx)
-	})
+	// TODO: use decredmaterial clickable
+	return material.Clickable(gtx, pg.syncButton, pg.Icons.Restore.Layout24dp)
+}
+
+func (pg *ProposalsPage) layoutSectionHeader(gtx C) D {
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(pg.Theme.Label(values.TextSize20, "Proposals").Layout), // Do we really need to display the title? nav is proposals already
+				layout.Rigid(pg.infoButton.Layout),
+			)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			body := func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						var text string
+						if pg.isSyncing {
+							text = "Syncing..."
+						} else if pg.syncCompleted {
+							text = "Updated"
+						} else {
+							text = "Upated " + components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
+						}
+
+						lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
+						lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
+						if pg.syncCompleted {
+							lastUpdatedInfo.Color = pg.Theme.Color.Success
+						}
+
+						return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, lastUpdatedInfo.Layout)
+					}),
+				)
+			}
+			return layout.E.Layout(gtx, body)
+		}),
+	)
 }
 
 func (pg *ProposalsPage) listenForSyncNotifications() {

@@ -181,7 +181,7 @@ func (mp *MainPage) initNavItems() {
 				Image:         mp.Icons.GovernanceActiveIcon,
 				ImageInactive: mp.Icons.GovernanceInactiveIcon,
 				Title:         "Governance",
-				PageID:        governance.ProposalsPageID,
+				PageID:        governance.GovernancePageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -411,8 +411,8 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = wallets.NewWalletPage(mp.Load)
 			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
-			case governance.ProposalsPageID:
-				pg = governance.NewProposalsPage(mp.Load)
+			case governance.GovernancePageID:
+				pg = governance.NewGovernancePage(mp.Load)
 			case dexclient.MarketPageID:
 				_, err := mp.WL.MultiWallet.StartDexClient() // does nothing if already started
 				if err != nil {
