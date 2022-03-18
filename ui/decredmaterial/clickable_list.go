@@ -7,11 +7,12 @@ import (
 
 type ClickableList struct {
 	layout.List
-	theme         *Theme
-	clickables    []*Clickable
-	Radius        CornerRadius // this radius is used by the clickable
-	selectedItem  int
-	DividerHeight unit.Value
+	theme           *Theme
+	clickables      []*Clickable
+	Radius          CornerRadius // this radius is used by the clickable
+	selectedItem    int
+	DividerHeight   unit.Value
+	IsShadowEnabled bool
 }
 
 func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
@@ -53,6 +54,14 @@ func (cl *ClickableList) handleClickables(count int) {
 func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElement) layout.Dimensions {
 	cl.handleClickables(count)
 	return cl.List.Layout(gtx, count, func(gtx C, i int) D {
+		if cl.IsShadowEnabled && cl.clickables[i].button.Hovered() {
+			shadow := cl.theme.Shadow()
+			shadow.SetShadowRadius(14)
+			shadow.SetShadowElevation(5)
+			return shadow.Layout(gtx, func(gtx C) D {
+				return cl.row(gtx, count, i, w)
+			})
+		}
 		return cl.row(gtx, count, i, w)
 	})
 }

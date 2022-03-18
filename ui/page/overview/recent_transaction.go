@@ -11,6 +11,7 @@ import (
 
 func (pg *AppOverviewPage) initRecentTxWidgets() {
 	pg.transactionsList = pg.Theme.NewClickableList(layout.Vertical)
+	pg.transactionsList.IsShadowEnabled = true
 	pg.transactionsList.Radius = decredmaterial.CornerRadius{
 		BottomRight: values.MarginPadding14.V,
 		BottomLeft:  values.MarginPadding14.V,
