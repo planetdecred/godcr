@@ -44,10 +44,6 @@ func NewSetupPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SetupPrivac
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
-	if pg.wallet.MixedAccountNumber() > 0 && pg.wallet.UnmixedAccountNumber() > 0 {
-		pg.ChangeFragment(NewAccountMixerPage(pg.Load, wallet))
-	}
-
 	return pg
 
 }
@@ -65,6 +61,10 @@ func (pg *SetupPrivacyPage) ID() string {
 // Part of the load.Page interface.
 func (pg *SetupPrivacyPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
+	if pg.wallet.MixedAccountNumber() > 0 && pg.wallet.UnmixedAccountNumber() > 0 {
+		go pg.ChangeFragment(NewAccountMixerPage(pg.Load, pg.wallet))
+	}
 }
 
 // Layout draws the page UI components into the provided layout context

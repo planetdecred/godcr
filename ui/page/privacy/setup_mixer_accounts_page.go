@@ -48,7 +48,6 @@ func NewSetupMixerAccountsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Setup
 	pg.nextIcon.Color = pg.Theme.Color.Gray1
 
 	pg.autoSetupClickable = pg.Theme.NewClickable(true)
-
 	pg.manualSetupClickable = pg.Theme.NewClickable(true)
 
 	return pg
@@ -109,9 +108,9 @@ func (pg *SetupMixerAccountsPage) Layout(gtx layout.Context) layout.Dimensions {
 														<b>Mixed </b> account will be the outbounding spending account.
 													</span>`
 
-															return layout.Inset{Left: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-																return renderers.RenderHTML(txt2, pg.Theme).Layout(gtx)
-															})
+															return layout.Inset{
+																Left: values.MarginPadding8,
+															}.Layout(gtx, renderers.RenderHTML(txt2, pg.Theme).Layout)
 														}),
 													)
 												})
@@ -129,9 +128,9 @@ func (pg *SetupMixerAccountsPage) Layout(gtx layout.Context) layout.Dimensions {
 													<b>Unmixed </b> account will be the change handling account.
 												</span>`
 
-															return layout.Inset{Left: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-																return renderers.RenderHTML(txt3, pg.Theme).Layout(gtx)
-															})
+															return layout.Inset{
+																Left: values.MarginPadding8,
+															}.Layout(gtx, renderers.RenderHTML(txt3, pg.Theme).Layout)
 														}),
 													)
 												})
@@ -143,15 +142,11 @@ func (pg *SetupMixerAccountsPage) Layout(gtx layout.Context) layout.Dimensions {
 						}),
 						layout.Rigid(func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return pg.autoSetupClickable.Layout(gtx, func(gtx C) D {
-								return pg.autoSetupLayout(gtx)
-							})
+							return pg.autoSetupClickable.Layout(gtx, pg.autoSetupLayout)
 						}),
 						layout.Rigid(func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return pg.manualSetupClickable.Layout(gtx, func(gtx C) D {
-								return pg.manualSetupLayout(gtx)
-							})
+							return pg.manualSetupClickable.Layout(gtx, pg.manualSetupLayout)
 						}),
 					)
 				})

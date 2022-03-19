@@ -29,8 +29,6 @@ type ManualMixerSetupPage struct {
 	backButton     decredmaterial.IconButton
 	infoButton     decredmaterial.IconButton
 	toPrivacySetup decredmaterial.Button
-
-	autoSetupIcon *decredmaterial.Icon
 }
 
 func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualMixerSetupPage {
@@ -67,9 +65,6 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 		})
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
-
-	pg.autoSetupIcon = decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
-	pg.autoSetupIcon.Color = pg.Theme.Color.Success
 
 	return pg
 }
@@ -112,15 +107,11 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 						layout.Flexed(1, func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return pg.mixerAccountSections(gtx, "Mixed account", func(gtx C) D {
-										return pg.mixedAccountSelector.Layout(gtx)
-									})
+									return pg.mixerAccountSections(gtx, "Mixed account", pg.mixedAccountSelector.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Top: values.MarginPaddingMinus15}.Layout(gtx, func(gtx C) D {
-										return pg.mixerAccountSections(gtx, "Unmixed account", func(gtx C) D {
-											return pg.unmixedAccountSelector.Layout(gtx)
-										})
+										return pg.mixerAccountSections(gtx, "Unmixed account", pg.unmixedAccountSelector.Layout)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -139,9 +130,7 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 										</span>`
 												return layout.Inset{
 													Left: values.MarginPadding8,
-												}.Layout(gtx, func(gtx C) D {
-													return renderers.RenderHTML(txt, pg.Theme).Layout(gtx)
-												})
+												}.Layout(gtx, renderers.RenderHTML(txt, pg.Theme).Layout)
 											}),
 										)
 									})
@@ -183,11 +172,6 @@ func (pg *ManualMixerSetupPage) mixerAccountSections(gtx layout.Context, title s
 }
 
 func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
-	if pg.mixedAccountSelector.SelectedAccount().WalletID != pg.unmixedAccountSelector.SelectedAccount().WalletID {
-		pg.Toast.NotifyError("Selected accounts do not belong to the same wallet")
-		return
-	}
-
 	if pg.mixedAccountSelector.SelectedAccount().Number == pg.unmixedAccountSelector.SelectedAccount().Number {
 		pg.Toast.NotifyError("Cannot use same account for mixed & unmixed")
 		return
