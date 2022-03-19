@@ -254,7 +254,7 @@ func (pg *SetupMixerAccountsPage) manualSetupLayout(gtx C) D {
 func (pg *SetupMixerAccountsPage) showModalSetupMixerInfo() {
 	info := modal.NewInfoModal(pg.Load).
 		Title("Set up mixer by creating two needed accounts").
-		Body("Two dedicated accounts (\"mixed\" & \"unmixed\") will be created in order to use the mixer. \n\n <b>This action cannot be undone.</b>").
+		SetupWithTemplate(modal.SetupMixerInfoTemplate).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton("Begin setup", func() {
 			pg.showModalSetupMixerAcct()

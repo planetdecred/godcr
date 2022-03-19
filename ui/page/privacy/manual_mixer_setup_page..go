@@ -117,8 +117,10 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									return pg.mixerAccountSections(gtx, "Unmixed account", func(gtx C) D {
-										return pg.unmixedAccountSelector.Layout(gtx)
+									return layout.Inset{Top: values.MarginPaddingMinus15}.Layout(gtx, func(gtx C) D {
+										return pg.mixerAccountSections(gtx, "Unmixed account", func(gtx C) D {
+											return pg.unmixedAccountSelector.Layout(gtx)
+										})
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -168,7 +170,7 @@ func (pg *ManualMixerSetupPage) mixerAccountSections(gtx layout.Context, title s
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							inset := layout.Inset{
-								Bottom: values.MarginPadding16,
+								Bottom: values.MarginPadding8,
 							}
 							return inset.Layout(gtx, pg.Theme.Body1(title).Layout)
 						}),
