@@ -160,3 +160,7 @@ func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) 
 func (c *CollapsibleWithOption) MoreTriggered() bool {
 	return c.moreIconButton.Button.Clicked()
 }
+
+func (c *CollapsibleWithOption) IsExpanded() bool {
+	return c.isExpanded
+}
