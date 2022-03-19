@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -144,6 +145,7 @@ func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 		modal:    *l.Theme.ModalFloatTitle(),
 		vspList:  l.Theme.NewClickableList(layout.Vertical),
 	}
+	v.inputVSP.Editor.SingleLine = true
 
 	v.addVSP.SetEnabled(false)
 
@@ -263,7 +265,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 
 func (v *vspSelectorModal) editorsNotEmpty(editors ...*widget.Editor) bool {
 	for _, e := range editors {
-		if e.Text() == "" {
+		if strings.TrimSpace(e.Text()) == "" {
 			return false
 		}
 	}
