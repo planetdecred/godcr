@@ -95,7 +95,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
-	pg.selector = components.NewAccountSelector(pg.Load).
+	pg.selector = components.NewAccountSelector(pg.Load, nil).
 		Title("Receiving account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)

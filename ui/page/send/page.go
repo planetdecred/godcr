@@ -98,7 +98,7 @@ func NewSendPage(l *load.Load) *Page {
 	}
 
 	// Source account picker
-	pg.sourceAccountSelector = components.NewAccountSelector(l).
+	pg.sourceAccountSelector = components.NewAccountSelector(l, nil).
 		Title("Sending account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			pg.validateAndConstructTx()

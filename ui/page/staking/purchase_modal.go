@@ -302,7 +302,7 @@ func (tp *stakingModal) Show() {
 }
 
 func (tp *stakingModal) initializeAccountSelector() {
-	tp.accountSelector = components.NewAccountSelector(tp.Load).
+	tp.accountSelector = components.NewAccountSelector(tp.Load, nil).
 		Title("Purchasing account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {

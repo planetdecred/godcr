@@ -41,7 +41,7 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 	}
 
 	// Mixed account picker
-	pg.mixedAccountSelector = components.NewAccountSelector(l).
+	pg.mixedAccountSelector = components.NewAccountSelector(l, wallet).
 		Title("Mixed account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
@@ -54,7 +54,7 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 		})
 
 	// Unmixed account picker
-	pg.unmixedAccountSelector = components.NewAccountSelector(l).
+	pg.unmixedAccountSelector = components.NewAccountSelector(l, wallet).
 		Title("Unmixed account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
@@ -181,6 +181,11 @@ func (pg *ManualMixerSetupPage) mixerAccountSections(gtx layout.Context, title s
 }
 
 func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
+	if pg.mixedAccountSelector.SelectedAccount().WalletID != pg.unmixedAccountSelector.SelectedAccount().WalletID {
+		pg.Toast.NotifyError("Selected accounts do not belong to the same wallet")
+		return
+	}
+
 	if pg.mixedAccountSelector.SelectedAccount().Number == pg.unmixedAccountSelector.SelectedAccount().Number {
 		pg.Toast.NotifyError("Cannot use same account for mixed & unmixed")
 		return
