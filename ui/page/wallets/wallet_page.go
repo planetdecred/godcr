@@ -2,10 +2,8 @@ package wallets
 
 import (
 	"context"
-	"fmt"
 	"image"
 	"image/color"
-	"math"
 	"sync"
 
 	"gioui.org/gesture"
