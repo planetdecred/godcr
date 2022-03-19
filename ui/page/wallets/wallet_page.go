@@ -17,6 +17,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -273,7 +274,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			text:     values.String(values.StrStakeShuffle),
 			button:   pg.Theme.NewClickable(true),
 			separate: true,
-			id:       PrivacyPageID,
+			id:       privacy.SetupPrivacyPageID,
 		},
 		{
 			text:   values.String(values.StrRename),
@@ -1036,8 +1037,8 @@ func (pg *WalletPage) HandleUserInteractions() {
 				switch menu.id {
 				case SignMessagePageID:
 					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal))
-				case PrivacyPageID:
-					pg.ChangeFragment(NewPrivacyPage(pg.Load, listItem.wal))
+				case privacy.SetupPrivacyPageID:
+					pg.ChangeFragment(privacy.NewSetupPrivacyPage(pg.Load, listItem.wal))
 				case WalletSettingsPageID:
 					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal))
 				default:

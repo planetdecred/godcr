@@ -18,6 +18,7 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	gPage "github.com/planetdecred/godcr/ui/page/governance"
+	"github.com/planetdecred/godcr/ui/page/privacy"
 	tPage "github.com/planetdecred/godcr/ui/page/transaction"
 	wPage "github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
@@ -257,7 +258,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 
 	if pg.toMixer.Button.Clicked() {
 		if len(pg.mixerWallets) == 1 {
-			pg.ChangeFragment(wPage.NewPrivacyPage(pg.Load, pg.mixerWallets[0]))
+			pg.ChangeFragment(privacy.NewAccountMixerPage(pg.Load, pg.mixerWallets[0]))
 		}
 		pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
 	}
