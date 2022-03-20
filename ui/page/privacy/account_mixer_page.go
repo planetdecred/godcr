@@ -290,6 +290,9 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 		}
 	}
 
+	if pg.backButton.Button.Clicked() {
+		pg.PopToFragment(components.WalletsPageID)
+	}
 }
 
 func (pg *AccountMixerPage) showModalPasswordStartAccountMixer() {
