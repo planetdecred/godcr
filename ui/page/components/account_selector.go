@@ -123,6 +123,9 @@ func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
 
 	as.selectedAccount = account
 	as.selectedWalletName = wal.Name
+	if as.selectedWallet != nil {
+		as.selectedWalletName = as.selectedWallet.Name
+	}
 	as.totalBalance = dcrutil.Amount(account.TotalBalance).String()
 }
 
@@ -466,7 +469,6 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						})
 					})
-
 				}),
 				layout.Stacked(func(gtx C) D {
 					if false { //TODO
