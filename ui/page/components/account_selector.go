@@ -92,11 +92,30 @@ func (as *AccountSelector) Handle() {
 	}
 }
 
-func (as *AccountSelector) SelectFirstWalletValidAccount() error {
+// SelectFirstWalletValidAccount selects the first valid account from the first wallet in the
+// SortedWalletList. If selectedWallet is not nil, the first account for the selectWallet
+// is selected.
+func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibwallet.Wallet) error {
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
 		as.UpdateSelectedAccountBalance()
 		// no need to select account
 		return nil
+	}
+
+	if selectedWallet != nil {
+		accountsResult, err := selectedWallet.GetAccountsRaw()
+		if err != nil {
+			return err
+		}
+
+		accounts := accountsResult.Acc
+		for _, account := range accounts {
+			if as.accountIsValid(account) {
+				as.SetSelectedAccount(account)
+				as.callback(account)
+				return nil
+			}
+		}
 	}
 
 	for _, wal := range as.WL.SortedWalletList() {
@@ -123,9 +142,6 @@ func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
 
 	as.selectedAccount = account
 	as.selectedWalletName = wal.Name
-	if as.selectedWallet != nil {
-		as.selectedWalletName = as.selectedWallet.Name
-	}
 	as.totalBalance = dcrutil.Amount(account.TotalBalance).String()
 }
 

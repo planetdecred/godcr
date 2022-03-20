@@ -286,7 +286,10 @@ func (pg *SetupMixerAccountsPage) showModalSetupMixerAcct() {
 					pm.SetLoading(false)
 					return
 				}
+				pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 				pm.Dismiss()
+
+				pg.ChangeFragment(NewAccountMixerPage(pg.Load, pg.wallet))
 			}()
 
 			return false
