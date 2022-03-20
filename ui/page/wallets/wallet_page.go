@@ -564,7 +564,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 								return blankLine.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								pg.card.Color = pg.Theme.Color.White
+								pg.card.Color = pg.Theme.Color.Surface
 								pg.card.Radius = decredmaterial.CornerRadius{BottomLeft: 10, BottomRight: 10}
 								return pg.card.Layout(gtx, func(gtx C) D {
 									return pg.checkMixerSection(gtx, listItem)
