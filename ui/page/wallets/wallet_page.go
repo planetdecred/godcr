@@ -2,9 +2,12 @@ package wallets
 
 import (
 	"context"
+	"image"
 	"image/color"
 	"sync"
 
+	"gioui.org/gesture"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/unit"
@@ -63,32 +66,39 @@ type WalletPage struct {
 	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
+	listLock  sync.Mutex
 
-	multiWallet    *dcrlibwallet.MultiWallet
+	multiWallet *dcrlibwallet.MultiWallet
+
 	listItems      []*walletListItem
 	badWalletsList []*badWalletListItem
+	addWalletMenu  []menuItem
+
+	container   *widget.List
+	backdrop    *widget.Clickable
+	walletsList layout.List
 
 	walletIcon               *decredmaterial.Image
 	walletAlertIcon          *decredmaterial.Image
-	container                *widget.List
-	walletsList              layout.List
-	watchWalletsList         *decredmaterial.ClickableList
-	iconButton               decredmaterial.IconButton
-	card                     decredmaterial.Card
-	backdrop                 *widget.Clickable
-	optionsMenuCard          decredmaterial.Card
-	addWalletMenu            []menuItem
-	openPopupIndex           int
-	openAddWalletPopupButton *decredmaterial.Clickable
-	isAddWalletMenuOpen      bool
-	watchOnlyWalletLabel     decredmaterial.Label
 	watchOnlyWalletIcon      *decredmaterial.Image
+	watchWalletsList         *decredmaterial.ClickableList
+	openAddWalletPopupButton *decredmaterial.Clickable
 	shadowBox                *decredmaterial.Shadow
-	separator                decredmaterial.Line
 	addAcctIcon              *decredmaterial.Icon
 	backupAcctIcon           *decredmaterial.Icon
 
-	listLock sync.Mutex
+	iconButton           decredmaterial.IconButton
+	card                 decredmaterial.Card
+	optionsMenuCard      decredmaterial.Card
+	watchOnlyWalletLabel decredmaterial.Label
+	separator            decredmaterial.Line
+
+	mt    unit.Value    // option menu top margin padding
+	click gesture.Click // page click event
+
+	openPopupIndex      int
+	isAddWalletMenuOpen bool
+	hasWatchOnly        bool
 }
 
 func NewWalletPage(l *load.Load) *WalletPage {
@@ -182,6 +192,7 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 		}
 
 		if wal.IsWatchingOnlyWallet() {
+			pg.hasWatchOnly = true
 			listItem.moreButton = pg.Theme.IconButtonWithStyle(
 				decredmaterial.IconButtonStyle{
 					Button: new(widget.Clickable),
@@ -377,37 +388,68 @@ func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
 		}).Show()
 }
 
+// moreOptionPositionEvent tracks the position of the click event on the page
+func (pg *WalletPage) moreOptionPositionEvent(gtx layout.Context) {
+	setUnitValue := func() {
+		pg.mt = unit.Dp(-220)
+	}
+
+	for _, e := range pg.click.Events(gtx) {
+		switch e.Type {
+		case gesture.TypeClick:
+
+			// calculate the click position making reference to list length
+			pos := (e.Position.Y / float32(pg.container.Position.Length)) * 100
+
+			switch {
+			case pg.container.Position.Count > 1 && pos > -20 && pos < 1:
+				setUnitValue()
+			case pg.container.Position.Count > 1 && pos > 10:
+				pg.mt = unit.Dp(-80) // set watchonly wallet top padding
+			case pg.container.Position.Count == 1 && pos > 58 && !pg.hasWatchOnly:
+				setUnitValue()
+			case pg.container.Position.Count == 1 && pos > 30 && pg.hasWatchOnly:
+				setUnitValue()
+			default:
+				pg.mt = values.MarginPadding30
+			}
+		}
+	}
+}
+
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 // Layout lays out the widgets for the main wallets pg.
 func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
+	pg.moreOptionPositionEvent(gtx)
 	pageContent := []func(gtx C) D{
-		func(gtx C) D {
-			return pg.walletSection(gtx)
-		},
-		func(gtx C) D {
-			return pg.watchOnlyWalletSection(gtx)
-		},
-		func(gtx C) D {
-			if len(pg.badWalletsList) == 0 {
-				return D{}
-			}
-			return pg.badWalletsSection(gtx)
-		},
+		pg.walletSection,
+	}
+
+	if pg.hasWatchOnly {
+		pageContent = append(pageContent, pg.watchOnlyWalletSection)
+	}
+
+	if len(pg.badWalletsList) != 0 {
+		pageContent = append(pageContent, pg.badWalletsSection)
 	}
 
 	body := func(gtx C) D {
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				return pg.Theme.List(pg.container).Layout(gtx, 3, func(gtx C, i int) D {
+				return pg.Theme.List(pg.container).Layout(gtx, len(pageContent), func(gtx C, i int) D {
 					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+						defer pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops).Pop()
+						pg.click.Add(gtx.Ops)
 						return pageContent[i](gtx)
 					})
 				})
 			}),
 			layout.Stacked(func(gtx C) D {
-				return pg.layoutAddWalletSection(gtx)
+				return layout.Inset{Right: values.MarginPadding50}.Layout(gtx, func(gtx C) D {
+					return pg.layoutAddWalletSection(gtx)
+				})
 			}),
 		)
 	}
@@ -431,9 +473,10 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 	}
 
 	inset := layout.Inset{
-		Top:  unit.Dp(30),
+		Top:  pg.mt,
 		Left: unit.Dp(-120),
 	}
+
 	menu := listItem.optionsMenu
 
 	m := op.Record(gtx.Ops)
@@ -570,19 +613,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *WalletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensions {
-	hasWatchOnly := false
-
-	pg.listLock.Lock()
-	listItems := pg.listItems
-	pg.listLock.Unlock()
-
-	for _, listItem := range listItems {
-		if listItem.wal.IsWatchingOnlyWallet() {
-			hasWatchOnly = true
-			break
-		}
-	}
-	if !hasWatchOnly {
+	if !pg.hasWatchOnly {
 		return D{}
 	}
 	card := pg.card
@@ -926,7 +957,7 @@ func (pg *WalletPage) layoutAddWalletSection(gtx layout.Context) layout.Dimensio
 					Width:      decredmaterial.WrapContent,
 					Height:     decredmaterial.WrapContent,
 					Padding:    layout.UniformInset(values.MarginPadding12),
-					Background: pg.Theme.Color.Surface,
+					Background: pg.Theme.Color.Gray4,
 					Clickable:  pg.openAddWalletPopupButton,
 					Border:     decredmaterial.Border{Radius: pg.openAddWalletPopupButton.Radius},
 				}.Layout2(gtx, icon.Layout24dp)
@@ -948,7 +979,6 @@ func (pg *WalletPage) openPopup(index int) {
 		}
 		pg.closePopups()
 	}
-
 	pg.openPopupIndex = index
 }
 
@@ -982,10 +1012,15 @@ func (pg *WalletPage) HandleUserInteractions() {
 
 		if listItem.wal.IsWatchingOnlyWallet() {
 			for listItem.moreButton.Button.Clicked() {
-				pg.openPopup(index)
+				if pg.openPopupIndex != -1 {
+					pg.closePopups()
+				} else {
+					pg.openPopup(index)
+				}
 			}
 		} else {
 			for listItem.collapsible.MoreTriggered() {
+				pg.isAddWalletMenuOpen = false
 				pg.openPopup(index)
 			}
 
@@ -1063,6 +1098,9 @@ func (pg *WalletPage) HandleUserInteractions() {
 	}
 
 	for pg.openAddWalletPopupButton.Clicked() {
+		if pg.openPopupIndex != -1 {
+			pg.closePopups()
+		}
 		pg.isAddWalletMenuOpen = !pg.isAddWalletMenuOpen
 	}
 }
