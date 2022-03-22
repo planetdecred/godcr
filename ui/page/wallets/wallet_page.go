@@ -761,19 +761,38 @@ func (pg *WalletPage) layoutCollapsibleHeader(gtx layout.Context, listItem *wall
 					return pg.Theme.Body1(listItem.wal.Name).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					var txt decredmaterial.Label
-					if len(listItem.wal.EncryptedSeed) > 0 {
-						txt = pg.Theme.Caption(values.String(values.StrNotBackedUp))
-						txt.Color = pg.Theme.Color.Danger
-					}
-					if listItem.wal.IsAccountMixerActive() {
-						txt = pg.Theme.Caption("Mixing...")
-						txt.Color = pg.Theme.Color.GrayText2
-					}
-					if (txt != decredmaterial.Label{}) {
-						return txt.Layout(gtx)
-					}
-					return D{}
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							var txt decredmaterial.Label
+							if len(listItem.wal.EncryptedSeed) > 0 {
+								txt = pg.Theme.Caption(values.String(values.StrNotBackedUp))
+								txt.Color = pg.Theme.Color.Danger
+								return txt.Layout(gtx)
+							}
+							return D{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							if listItem.wal.IsAccountMixerActive() {
+								return layout.Inset{
+									Left: values.MarginPadding4,
+								}.Layout(gtx, func(gtx C) D {
+									return decredmaterial.Card{
+										Color: pg.Theme.Color.Gray4,
+									}.Layout(gtx, func(gtx C) D {
+										return layout.Inset{
+											Left:  values.MarginPadding4,
+											Right: values.MarginPadding4,
+										}.Layout(gtx, func(gtx C) D {
+											name := pg.Theme.Label(values.TextSize12, "Mixing...")
+											name.Color = pg.Theme.Color.GrayText2
+											return name.Layout(gtx)
+										})
+									})
+								})
+							}
+							return D{}
+						}),
+					)
 				}),
 			)
 		}),
