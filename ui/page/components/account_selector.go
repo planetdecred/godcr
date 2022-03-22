@@ -92,9 +92,9 @@ func (as *AccountSelector) Handle() {
 	}
 }
 
-// SelectFirstWalletValidAccount selects the first valid account from the first wallet in the
-// SortedWalletList. If selectedWallet is not nil, the first account for the selectWallet
-// is selected.
+// SelectFirstWalletValidAccount selects the first valid account from the
+// first wallet in the SortedWalletList. If selectedWallet is not nil,
+// the first account for the selectWallet is selected.
 func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibwallet.Wallet) error {
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
 		as.UpdateSelectedAccountBalance()

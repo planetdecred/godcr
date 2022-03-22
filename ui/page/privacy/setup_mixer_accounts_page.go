@@ -161,41 +161,33 @@ func (pg *SetupMixerAccountsPage) Layout(gtx layout.Context) layout.Dimensions {
 func (pg *SetupMixerAccountsPage) autoSetupLayout(gtx C) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return pg.autoSetupIcon.Layout(gtx, values.MarginPadding20)
-							}),
-							layout.Rigid(func(gtx C) D {
-								autoSetupText := pg.Theme.H6("Auto setup")
-								txt := pg.Theme.Body2("Create and set up the needed accounts for you.")
-								return layout.Inset{
-									Left: values.MarginPadding16,
-								}.Layout(gtx, func(gtx C) D {
-									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-										layout.Rigid(autoSetupText.Layout),
-										layout.Rigid(txt.Layout),
-									)
-								})
-							}),
-						)
+						return pg.autoSetupIcon.Layout(gtx, values.MarginPadding20)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Right: values.MarginPadding4,
-									Top:   values.MarginPadding10,
-								}.Layout(gtx, func(gtx C) D {
-									return pg.nextIcon.Layout(gtx, values.MarginPadding20)
-								})
-							}),
-						)
+						autoSetupText := pg.Theme.H6("Auto setup")
+						txt := pg.Theme.Body2("Create and setup the needed accounts for you.")
+						return layout.Inset{
+							Left: values.MarginPadding16,
+						}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(autoSetupText.Layout),
+								layout.Rigid(txt.Layout),
+							)
+						})
 					}),
 				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{
+					Right: values.MarginPadding4,
+					Top:   values.MarginPadding10,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.nextIcon.Layout(gtx, values.MarginPadding20)
+				})
 			}),
 		)
 	})
@@ -204,43 +196,31 @@ func (pg *SetupMixerAccountsPage) autoSetupLayout(gtx C) D {
 func (pg *SetupMixerAccountsPage) manualSetupLayout(gtx C) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(pg.Icons.EditIcon.Layout24dp),
 					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							layout.Rigid(pg.Icons.EditIcon.Layout24dp),
-							layout.Rigid(func(gtx C) D {
-								autoSetupText := pg.Theme.H6("Manual setup")
-								txt := pg.Theme.Body2("For wallets that have enabled privacy before.")
-								return layout.Inset{
-									Left: values.MarginPadding16,
-								}.Layout(gtx, func(gtx C) D {
-									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-										layout.Rigid(autoSetupText.Layout),
-										layout.Rigid(txt.Layout),
-									)
-								})
-							}),
-						)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Right: values.MarginPadding4,
-											Top:   values.MarginPadding10,
-										}.Layout(gtx, func(gtx C) D {
-											return pg.nextIcon.Layout(gtx, values.MarginPadding20)
-										})
-									}),
-								)
-							}),
-						)
+						autoSetupText := pg.Theme.H6("Manual setup")
+						txt := pg.Theme.Body2("For wallets that have enabled privacy before.")
+						return layout.Inset{
+							Left: values.MarginPadding16,
+						}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(autoSetupText.Layout),
+								layout.Rigid(txt.Layout),
+							)
+						})
 					}),
 				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{
+					Right: values.MarginPadding4,
+					Top:   values.MarginPadding10,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.nextIcon.Layout(gtx, values.MarginPadding20)
+				})
 			}),
 		)
 	})
@@ -259,6 +239,7 @@ func (pg *SetupMixerAccountsPage) showModalSetupMixerInfo() {
 
 func (pg *SetupMixerAccountsPage) showModalSetupMixerAcct() {
 	accounts, _ := pg.wallet.GetAccountsRaw()
+	txt := "There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup."
 	for _, acct := range accounts.Acc {
 		if acct.Name == "mixed" || acct.Name == "unmixed" {
 			alert := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.AlertError)))
@@ -266,7 +247,7 @@ func (pg *SetupMixerAccountsPage) showModalSetupMixerAcct() {
 			info := modal.NewInfoModal(pg.Load).
 				Icon(alert).
 				Title("Account name is taken").
-				Body("There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup.").
+				Body(txt).
 				PositiveButton("Go back & rename", func() {
 					pg.PopFragment()
 				})

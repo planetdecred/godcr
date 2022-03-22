@@ -952,7 +952,10 @@ func (pg *WalletPage) checkMixerSection(gtx layout.Context, listItem *walletList
 									return layout.Flex{}.Layout(gtx,
 										layout.Rigid(txt.Layout),
 										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Top: values.MarginPadding2, Left: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+											return layout.Inset{
+												Top:  values.MarginPadding2,
+												Left: values.MarginPadding8,
+											}.Layout(gtx, func(gtx C) D {
 												return pg.nextIcon.Layout(gtx, values.MarginPadding16)
 											})
 										}),

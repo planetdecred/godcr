@@ -4,13 +4,13 @@ import (
 	"context"
 
 	"gioui.org/layout"
-	"github.com/planetdecred/godcr/ui/renderers"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -116,13 +116,11 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Top: values.MarginPadding10, Left: values.MarginPadding16, Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+										return layout.Flex{
+											Axis: layout.Horizontal,
+										}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-													layout.Rigid(func(gtx C) D {
-														return pg.Icons.ActionInfo.Layout(gtx, pg.Theme.Color.Gray1)
-													}),
-												)
+												return pg.Icons.ActionInfo.Layout(gtx, pg.Theme.Color.Gray1)
 											}),
 											layout.Rigid(func(gtx C) D {
 												txt := `<span style="text-color: grayText2">
@@ -156,14 +154,9 @@ func (pg *ManualMixerSetupPage) mixerAccountSections(gtx layout.Context, title s
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							inset := layout.Inset{
-								Bottom: values.MarginPadding8,
-							}
-							return inset.Layout(gtx, pg.Theme.Body1(title).Layout)
-						}),
-					)
+					return layout.Inset{
+						Bottom: values.MarginPadding8,
+					}.Layout(gtx, pg.Theme.Body1(title).Layout)
 				}),
 				layout.Rigid(body),
 			)
