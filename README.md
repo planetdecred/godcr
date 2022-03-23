@@ -13,6 +13,9 @@ Follow the [installation](https://gioui.org/doc/install) instructions for gio.
 
 Then `go build`.
 
+### Linux
+To build **godcr** on Linux these [gio dependencies](https://gioui.org/doc/install/linux) are required.
+
 ## Running godcr
 ### General usage
 By default, **godcr** runs on Mainnet network type. However, godcr can run on testnet by issuing commands on the terminal in the format:
