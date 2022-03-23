@@ -138,7 +138,9 @@ func (pg *Page) loadPageData() {
 	go func() {
 		if len(pg.WL.MultiWallet.KnownVSPs()) == 0 {
 			// TODO: Does this page need this list?
-			pg.WL.MultiWallet.ReloadVSPList(pg.ctx)
+			if pg.ctx != nil {
+				pg.WL.MultiWallet.ReloadVSPList(pg.ctx)
+			}
 		}
 
 		totalRewards, err := pg.WL.MultiWallet.TotalStakingRewards()
