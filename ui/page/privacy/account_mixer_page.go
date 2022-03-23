@@ -187,7 +187,6 @@ func (pg *AccountMixerPage) mixerSettingsLayout(gtx layout.Context) layout.Dimen
 			layout.Rigid(func(gtx C) D {
 				return layout.UniformInset(values.MarginPadding15).Layout(gtx, pg.Theme.Body2("Mixer Settings").Layout)
 			}),
-
 			layout.Rigid(func(gtx C) D { return row("Mixed account", mixedAccountName) }),
 			layout.Rigid(pg.Theme.Separator().Layout),
 			layout.Rigid(func(gtx C) D { return row("Change account", unmixedAccountName) }),

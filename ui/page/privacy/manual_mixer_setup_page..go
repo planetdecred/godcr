@@ -170,16 +170,6 @@ func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
 		return
 	}
 
-	if pg.mixedAccountSelector.SelectedAccount().Name == "mixed" || pg.mixedAccountSelector.SelectedAccount().Name == "unmixed" {
-		pg.Toast.NotifyError("The selected mixed account already has privacy enabled")
-		return
-	}
-
-	if pg.unmixedAccountSelector.SelectedAccount().Name == "mixed" || pg.unmixedAccountSelector.SelectedAccount().Name == "unmixed" {
-		pg.Toast.NotifyError("The selected unmixed account already has privacy enabled")
-		return
-	}
-
 	modal.NewPasswordModal(pg.Load).
 		Title("Confirm to set mixer accounts").
 		NegativeButton("Cancel", func() {}).

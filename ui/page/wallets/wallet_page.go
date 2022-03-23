@@ -557,20 +557,11 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 			if listItem.wal.IsAccountMixerActive() {
 				children = append(children, layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: unit.Dp(-8)}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								blankLine := pg.Theme.Line(10, gtx.Constraints.Max.X)
-								blankLine.Color = pg.Theme.Color.Surface
-								return blankLine.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								pg.card.Color = pg.Theme.Color.Surface
-								pg.card.Radius = decredmaterial.CornerRadius{BottomLeft: 10, BottomRight: 10}
-								return pg.card.Layout(gtx, func(gtx C) D {
-									return pg.checkMixerSection(gtx, listItem)
-								})
-							}),
-						)
+						pg.card.Color = pg.Theme.Color.Surface
+						pg.card.Radius = decredmaterial.CornerRadius{BottomLeft: 10, BottomRight: 10}
+						return pg.card.Layout(gtx, func(gtx C) D {
+							return pg.checkMixerSection(gtx, listItem)
+						})
 					})
 				}))
 			}
