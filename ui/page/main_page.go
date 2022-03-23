@@ -183,13 +183,14 @@ func (mp *MainPage) initNavItems() {
 				Title:         "Governance",
 				PageID:        governance.GovernancePageID,
 			},
-			{
-				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.DexIcon,
-				ImageInactive: mp.Icons.DexIconInactive,
-				Title:         values.String(values.StrDex),
-				PageID:        dexclient.MarketPageID,
-			},
+			// Temp disabling. Will uncomment after release
+			// {
+			// 	Clickable:     mp.Theme.NewClickable(true),
+			// 	Image:         mp.Icons.DexIcon,
+			// 	ImageInactive: mp.Icons.DexIconInactive,
+			// 	Title:         values.String(values.StrDex),
+			// 	PageID:        dexclient.MarketPageID,
+			// },
 			{
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Icons.MoreIcon,
