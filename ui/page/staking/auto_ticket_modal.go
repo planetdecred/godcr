@@ -95,7 +95,7 @@ func (tb *ticketBuyerModal) OnResume() {
 	}
 
 	if tb.accountSelector.SelectedAccount() == nil {
-		err := tb.accountSelector.SelectFirstWalletValidAccount()
+		err := tb.accountSelector.SelectFirstWalletValidAccount(nil)
 		if err != nil {
 			tb.Toast.NotifyError(err.Error())
 		}
@@ -175,7 +175,7 @@ func (tb *ticketBuyerModal) Dismiss() {
 }
 
 func (tb *ticketBuyerModal) initializeAccountSelector() {
-	tb.accountSelector = components.NewAccountSelector(tb.Load).
+	tb.accountSelector = components.NewAccountSelector(tb.Load, nil).
 		Title("Purchasing account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {

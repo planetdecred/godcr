@@ -20,6 +20,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -48,6 +49,7 @@ type walletListItem struct {
 	collapsible         *decredmaterial.CollapsibleWithOption
 	addAcctClickable    *decredmaterial.Clickable
 	backupAcctClickable *decredmaterial.Clickable
+	checkMixerClickable *decredmaterial.Clickable
 
 	// watch only
 	moreButton decredmaterial.IconButton
@@ -86,6 +88,7 @@ type WalletPage struct {
 	shadowBox                *decredmaterial.Shadow
 	addAcctIcon              *decredmaterial.Icon
 	backupAcctIcon           *decredmaterial.Icon
+	nextIcon                 *decredmaterial.Icon
 
 	iconButton           decredmaterial.IconButton
 	card                 decredmaterial.Card
@@ -141,6 +144,9 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	pg.walletIcon = pg.Icons.WalletIcon
 
 	pg.walletAlertIcon = pg.Icons.WalletAlertIcon
+
+	pg.nextIcon = decredmaterial.NewIcon(pg.Icons.NavigationArrowForward)
+	pg.nextIcon.Color = pg.Theme.Color.Primary
 
 	pg.initializeFloatingMenu()
 	pg.watchOnlyWalletIcon = pg.Icons.WatchOnlyWalletIcon
@@ -213,6 +219,10 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 			backupClickable.Radius = decredmaterial.CornerRadius{BottomRight: 14, BottomLeft: 14}
 			listItem.backupAcctClickable = backupClickable
 
+			checkMixerClickable := pg.Theme.NewClickable(false)
+			checkMixerClickable.Radius = decredmaterial.CornerRadius{BottomRight: 14, BottomLeft: 14}
+			listItem.checkMixerClickable = checkMixerClickable
+
 			listItem.collapsible = pg.Theme.CollapsibleWithOption()
 		}
 		listItems = append(listItems, listItem)
@@ -284,7 +294,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			text:     values.String(values.StrStakeShuffle),
 			button:   pg.Theme.NewClickable(true),
 			separate: true,
-			id:       PrivacyPageID,
+			id:       privacy.SetupPrivacyPageID,
 		},
 		{
 			text:   values.String(values.StrRename),
@@ -587,6 +597,18 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 				return listItem.collapsible.Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleMore)
 			}))
 
+			if listItem.wal.IsAccountMixerActive() {
+				children = append(children, layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: unit.Dp(-8)}.Layout(gtx, func(gtx C) D {
+						pg.card.Color = pg.Theme.Color.Surface
+						pg.card.Radius = decredmaterial.CornerRadius{BottomLeft: 10, BottomRight: 10}
+						return pg.card.Layout(gtx, func(gtx C) D {
+							return pg.checkMixerSection(gtx, listItem)
+						})
+					})
+				}))
+			}
+
 			if len(listItem.wal.EncryptedSeed) > 0 {
 				children = append(children, layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: unit.Dp(-10)}.Layout(gtx, func(gtx C) D {
@@ -761,12 +783,38 @@ func (pg *WalletPage) layoutCollapsibleHeader(gtx layout.Context, listItem *wall
 					return pg.Theme.Body1(listItem.wal.Name).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if len(listItem.wal.EncryptedSeed) > 0 {
-						txt := pg.Theme.Caption(values.String(values.StrNotBackedUp))
-						txt.Color = pg.Theme.Color.Danger
-						return txt.Layout(gtx)
-					}
-					return D{}
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							var txt decredmaterial.Label
+							if len(listItem.wal.EncryptedSeed) > 0 {
+								txt = pg.Theme.Caption(values.String(values.StrNotBackedUp))
+								txt.Color = pg.Theme.Color.Danger
+								return txt.Layout(gtx)
+							}
+							return D{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							if listItem.wal.IsAccountMixerActive() {
+								return layout.Inset{
+									Left: values.MarginPadding4,
+								}.Layout(gtx, func(gtx C) D {
+									return decredmaterial.Card{
+										Color: pg.Theme.Color.Gray4,
+									}.Layout(gtx, func(gtx C) D {
+										return layout.Inset{
+											Left:  values.MarginPadding4,
+											Right: values.MarginPadding4,
+										}.Layout(gtx, func(gtx C) D {
+											name := pg.Theme.Label(values.TextSize12, "Mixing...")
+											name.Color = pg.Theme.Color.GrayText2
+											return name.Layout(gtx)
+										})
+									})
+								})
+							}
+							return D{}
+						}),
+					)
 				}),
 			)
 		}),
@@ -919,6 +967,50 @@ func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walle
 	})
 }
 
+func (pg *WalletPage) checkMixerSection(gtx layout.Context, listItem *walletListItem) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return listItem.checkMixerClickable.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Top:   values.MarginPaddingMinus8,
+						Left:  values.MarginPadding36,
+						Right: values.MarginPadding10,
+					}.Layout(gtx, pg.Theme.Separator().Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+						layout.Flexed(1, func(gtx C) D {
+							inset := layout.Inset{
+								Top: values.MarginPadding5,
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									txt := pg.Theme.Body2("Check mixer status")
+									txt.Color = pg.Theme.Color.Primary
+
+									return layout.Flex{}.Layout(gtx,
+										layout.Rigid(txt.Layout),
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{
+												Top:  values.MarginPadding2,
+												Left: values.MarginPadding8,
+											}.Layout(gtx, func(gtx C) D {
+												return pg.nextIcon.Layout(gtx, values.MarginPadding16)
+											})
+										}),
+									)
+								})
+							})
+						}),
+					)
+				}),
+			)
+		})
+	})
+}
+
 func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions {
 	inset := layout.Inset{
 		Top:  unit.Dp(-100),
@@ -1064,6 +1156,10 @@ func (pg *WalletPage) HandleUserInteractions() {
 			for listItem.backupAcctClickable.Clicked() {
 				pg.ChangeFragment(seedbackup.NewBackupInstructionsPage(pg.Load, listItem.wal))
 			}
+
+			for listItem.checkMixerClickable.Clicked() {
+				pg.ChangeFragment(privacy.NewAccountMixerPage(pg.Load, listItem.wal))
+			}
 		}
 
 		for _, menu := range listItem.optionsMenu {
@@ -1071,8 +1167,8 @@ func (pg *WalletPage) HandleUserInteractions() {
 				switch menu.id {
 				case SignMessagePageID:
 					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal))
-				case PrivacyPageID:
-					pg.ChangeFragment(NewPrivacyPage(pg.Load, listItem.wal))
+				case privacy.SetupPrivacyPageID:
+					pg.ChangeFragment(privacy.NewSetupPrivacyPage(pg.Load, listItem.wal))
 				case WalletSettingsPageID:
 					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal))
 				default:

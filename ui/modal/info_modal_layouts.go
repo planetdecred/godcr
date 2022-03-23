@@ -87,7 +87,7 @@ func privacyInfo(l *load.Load) []layout.Widget {
 
 func setupMixerInfo(th *decredmaterial.Theme) []layout.Widget {
 	text := `<span style="text-color: grayText2">
-				Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.
+				Two dedicated accounts ("mixed" & "unmixed") will be created in order to use the mixer. <br></br>
 				<b>This action cannot be undone.</b>
 			</span>`
 
