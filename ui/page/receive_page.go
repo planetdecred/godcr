@@ -95,7 +95,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
-	pg.selector = components.NewAccountSelector(pg.Load).
+	pg.selector = components.NewAccountSelector(pg.Load, nil).
 		Title("Receiving account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)
@@ -136,7 +136,7 @@ func (pg *ReceivePage) ID() string {
 func (pg *ReceivePage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.selector.ListenForTxNotifications(pg.ctx)
-	pg.selector.SelectFirstWalletValidAccount() // Want to reset the user's selection everytime this page appears?
+	pg.selector.SelectFirstWalletValidAccount(nil) // Want to reset the user's selection everytime this page appears?
 	// might be better to track the last selection in a variable and reselect it.
 }
 

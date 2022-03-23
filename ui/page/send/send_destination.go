@@ -34,7 +34,7 @@ func newSendDestination(l *load.Load) *destination {
 	dst.accountSwitch = l.Theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
 
 	// Destination account picker
-	dst.destinationAccountSelector = components.NewAccountSelector(dst.Load).
+	dst.destinationAccountSelector = components.NewAccountSelector(dst.Load, nil).
 		Title("Receiving account").
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 

@@ -532,6 +532,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 	if len(mp.pageBackStack) > 0 {
 		// set curent page to `pageID`
 		mp.currentPage = mp.pageBackStack[len(mp.pageBackStack)-1]
+		mp.currentPage.OnNavigatedTo()
 		// remove current page from backstack history
 		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
 	} else {
