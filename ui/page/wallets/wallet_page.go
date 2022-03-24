@@ -1012,8 +1012,7 @@ func (pg *WalletPage) checkMixerSection(gtx layout.Context, listItem *walletList
 }
 
 func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions {
-	width := unit.Value{U: unit.UnitDp, V: 55}
-	gtx.Constraints.Max.X = gtx.Px(width)
+	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding56)
 	inset := layout.Inset{
 		Top:  unit.Dp(-100),
 		Left: unit.Dp(-130),
@@ -1023,21 +1022,16 @@ func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 		return pg.Theme.Shadow().Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							card := pg.Theme.Card()
-							card.Radius = decredmaterial.Radius(0)
-							return card.HoverableLayout(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
-								return pg.addWalletMenu[i].button.Layout(gtx, func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-										gtx.Constraints.Min.X = gtx.Constraints.Max.X
-										return pg.Theme.Body2(pg.addWalletMenu[i].text).Layout(gtx)
-									})
-								})
+					card := pg.Theme.Card()
+					card.Radius = decredmaterial.Radius(0)
+					return card.HoverableLayout(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
+						return pg.addWalletMenu[i].button.Layout(gtx, func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								return pg.Theme.Body2(pg.addWalletMenu[i].text).Layout(gtx)
 							})
-						}),
-					)
-
+						})
+					})
 				})
 			})
 		})
