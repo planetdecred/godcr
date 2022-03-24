@@ -49,9 +49,6 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 		cancelBtn:      l.Theme.OutlineButton("Cancel"),
 	}
 
-	vm.voteBtn.Background = l.Theme.Color.Gray3
-	vm.voteBtn.Color = l.Theme.Color.Surface
-
 	vm.yesVote = newInputVoteOptions(vm.Load, "Yes")
 	vm.noVote = newInputVoteOptions(vm.Load, "No")
 	vm.noVote.activeBg = l.Theme.Color.Orange2
