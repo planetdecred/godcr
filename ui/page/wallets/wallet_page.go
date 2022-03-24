@@ -1022,8 +1022,6 @@ func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 		return pg.Theme.Shadow().Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
-					card := pg.Theme.Card()
-					card.Radius = decredmaterial.Radius(0)
 					return pg.addWalletMenu[i].button.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
