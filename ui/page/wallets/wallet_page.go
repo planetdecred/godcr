@@ -1012,6 +1012,7 @@ func (pg *WalletPage) checkMixerSection(gtx layout.Context, listItem *walletList
 }
 
 func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions {
+	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding56)
 	inset := layout.Inset{
 		Top:  unit.Dp(-100),
 		Left: unit.Dp(-130),
@@ -1022,7 +1023,10 @@ func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
 					return pg.addWalletMenu[i].button.Layout(gtx, func(gtx C) D {
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, pg.Theme.Body2(pg.addWalletMenu[i].text).Layout)
+						return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return pg.Theme.Body2(pg.addWalletMenu[i].text).Layout(gtx)
+						})
 					})
 				})
 			})
