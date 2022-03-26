@@ -29,6 +29,7 @@ type AboutPage struct {
 	chevronRightIcon *decredmaterial.Icon
 
 	backButton decredmaterial.IconButton
+	shadowBox  *decredmaterial.Shadow
 }
 
 func NewAboutPage(l *load.Load) *AboutPage {
@@ -43,6 +44,7 @@ func NewAboutPage(l *load.Load) *AboutPage {
 		network:          l.Theme.Body1("Network"),
 		license:          l.Theme.Body1("License"),
 		licenseRow:       l.Theme.NewClickable(true),
+		shadowBox:        l.Theme.Shadow(),
 		chevronRightIcon: decredmaterial.NewIcon(l.Icons.ChevronRight),
 	}
 
@@ -129,6 +131,25 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 			})
 		},
 		func(gtx C) D {
+			if pg.licenseRow.IsHovered() {
+				return pg.shadowBox.Layout(gtx, func(gtx C) D {
+					return pg.licenseRow.Layout(gtx, func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return in.Layout(gtx, pg.license.Layout)
+							}),
+							layout.Flexed(1, func(gtx C) D {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									return in.Layout(gtx, func(gtx C) D {
+										pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
+										return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+									})
+								})
+							}),
+						)
+					})
+				})
+			}
 			return pg.licenseRow.Layout(gtx, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {

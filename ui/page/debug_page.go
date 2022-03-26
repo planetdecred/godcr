@@ -50,6 +50,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 		list:       l.Theme.NewClickableList(layout.Vertical),
 	}
 	pg.list.Radius = decredmaterial.Radius(14)
+	pg.list.IsShadowEnabled = true
 
 	// Add a "Reset DEX Client" option.
 	pg.debugItems = append(pg.debugItems, debugItem{
