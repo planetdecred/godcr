@@ -13,31 +13,34 @@ import (
 const DebugPageID = "Debug"
 
 type debugItem struct {
-	text   string
-	page   string
-	action func()
+	text      string
+	page      string
+	action    func()
+	clickable *decredmaterial.Clickable
 }
 
 type DebugPage struct {
 	*load.Load
+	container  layout.Flex
+	shadowBox  *decredmaterial.Shadow
 	debugItems []debugItem
-	list       *decredmaterial.ClickableList
-
 	backButton decredmaterial.IconButton
 }
 
 func NewDebugPage(l *load.Load) *DebugPage {
 	debugItems := []debugItem{
 		{
-			text: "Check wallet logs",
-			page: LogPageID,
+			clickable: l.Theme.NewClickable(true),
+			text:      "Check wallet logs",
+			page:      LogPageID,
 			action: func() {
 				l.ChangeFragment(NewLogPage(l))
 			},
 		},
 		{
-			text: "Check statistics",
-			page: StatisticsPageID,
+			clickable: l.Theme.NewClickable(true),
+			text:      "Check statistics",
+			page:      StatisticsPageID,
 			action: func() {
 				l.ChangeFragment(NewStatPage(l))
 			},
@@ -45,16 +48,16 @@ func NewDebugPage(l *load.Load) *DebugPage {
 	}
 
 	pg := &DebugPage{
-		Load:       l,
+		container:  layout.Flex{Axis: layout.Vertical},
 		debugItems: debugItems,
-		list:       l.Theme.NewClickableList(layout.Vertical),
+		Load:       l,
+		shadowBox:  l.Theme.Shadow(),
 	}
-	pg.list.Radius = decredmaterial.Radius(14)
-	pg.list.IsShadowEnabled = true
 
 	// Add a "Reset DEX Client" option.
 	pg.debugItems = append(pg.debugItems, debugItem{
-		text: "Reset DEX Client",
+		clickable: l.Theme.NewClickable(true),
+		text:      "Reset DEX Client",
 		action: func() {
 			pg.resetDexData()
 		},
@@ -86,8 +89,10 @@ func (pg *DebugPage) OnNavigatedTo() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *DebugPage) HandleUserInteractions() {
-	if clicked, item := pg.list.ItemClicked(); clicked {
-		pg.debugItems[item].action()
+	for _, item := range pg.debugItems {
+		for item.clickable.Clicked() {
+			item.action()
+		}
 	}
 }
 
@@ -117,27 +122,29 @@ func (pg *DebugPage) debugItem(gtx C, i int) D {
 	)
 }
 
-func (pg *DebugPage) layoutDebugItems(gtx C) {
-	background := pg.Theme.Color.Surface
-	card := pg.Theme.Card()
-	card.Color = background
-	card.Layout(gtx, func(gtx C) D {
-		return pg.list.Layout(gtx, len(pg.debugItems), func(gtx C, i int) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.debugItem(gtx, i)
-				}),
-				layout.Rigid(func(gtx C) D {
-					if i == len(pg.debugItems)-1 {
-						return layout.Dimensions{}
-					}
-					return layout.Inset{
-						Left: values.MarginPadding16,
-					}.Layout(gtx, pg.Theme.Separator().Layout)
-				}),
-			)
-		})
+func (pg *DebugPage) layoutDebugItems(gtx C) D {
+	list := layout.List{Axis: layout.Vertical}
+	return list.Layout(gtx, len(pg.debugItems), func(gtx C, i int) D {
+		radius := decredmaterial.Radius(14)
+		pg.shadowBox.SetShadowRadius(14)
+		pg.shadowBox.SetShadowElevation(5)
+		return decredmaterial.LinearLayout{
+			Orientation: layout.Horizontal,
+			Width:       decredmaterial.MatchParent,
+			Height:      decredmaterial.WrapContent,
+			Background:  pg.Theme.Color.Surface,
+			Clickable:   pg.debugItems[i].clickable,
+			Direction:   layout.W,
+			Shadow:      pg.shadowBox,
+			Border:      decredmaterial.Border{Radius: radius},
+			Padding:     layout.UniformInset(values.MarginPadding0),
+			Margin:      layout.Inset{Bottom: values.MarginPadding1, Top: values.MarginPadding1}}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return pg.debugItem(gtx, i)
+			}),
+		)
 	})
+
 }
 
 // Layout draws the page UI components into the provided layout context
