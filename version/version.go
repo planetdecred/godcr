@@ -24,8 +24,8 @@ const (
 // versioning 2.0.0 spec (http://semver.org/).
 const (
 	AppName  string = "godcr"
-	AppMajor uint   = 0
-	AppMinor uint   = 2
+	AppMajor uint   = 1
+	AppMinor uint   = 0
 	AppPatch uint   = 0
 )
 
@@ -34,12 +34,12 @@ var (
 	// appPreRelease is defined as a variable so it can be overridden during the
 	// build process. It MUST only contain characters from semanticAlphabet per
 	// the semantic versioning spec.
-	appPreRelease = "pre"
+	appPreRelease = ""
 
 	// appBuild is defined as a variable so it can be overridden during the
 	// build process. It MUST only contain characters from semanticBuildAlphabet
 	// per the semantic versioning spec.
-	appBuild = "dev"
+	appBuild = "beta1"
 )
 
 // Version returns the application version as a properly formed string per the
