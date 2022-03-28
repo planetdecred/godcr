@@ -90,14 +90,15 @@ func (pg *Page) topNav(gtx layout.Context) layout.Dimensions {
 
 func (pg *Page) getMoreItem() []moreItem {
 	return []moreItem{
-		{
-			text:   "Advanced mode",
-			button: pg.Theme.NewClickable(true),
-			id:     UTXOPageID,
-			action: func() {
-				pg.ChangeFragment(NewUTXOPage(pg.Load, pg.sourceAccountSelector.SelectedAccount()))
-			},
-		},
+		// TODO: temp removal till issue #658 is resolved and V1.0 is release
+		// {
+		// 	text:   "Advanced mode",
+		// 	button: pg.Theme.NewClickable(true),
+		// 	id:     UTXOPageID,
+		// 	action: func() {
+		// 		pg.ChangeFragment(NewUTXOPage(pg.Load, pg.sourceAccountSelector.SelectedAccount()))
+		// 	},
+		// },
 		{
 			text:   "Clear all fields",
 			button: pg.Theme.NewClickable(true),
