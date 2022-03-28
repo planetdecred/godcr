@@ -14,7 +14,7 @@ const LicensePageID = "License"
 
 const license = `ISC License
 
-Copyright (c) 2018-2021, Raedah Group
+Copyright (c) 2018-2022, Raedah Group
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
