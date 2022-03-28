@@ -254,14 +254,8 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float
 }
 
 func (v *VoteBar) layoutInfo(gtx C) D {
-	quorumRequirement := (v.requiredPercentage / 100) * v.eligibleVotes
-
-	requirement := v.Theme.Body2(fmt.Sprintf("/%d votes", int(quorumRequirement)))
-	requirement.Color = v.Theme.Color.GrayText2
-
 	dims := layout.Flex{}.Layout(gtx,
-		layout.Rigid(v.Theme.Body2(fmt.Sprintf("%d", int(v.totalVotes))).Layout),
-		layout.Rigid(requirement.Layout),
+		layout.Rigid(v.Theme.Body2(fmt.Sprintf("%d Total votes", int(v.totalVotes))).Layout),
 		layout.Rigid(func(gtx C) D {
 			rect := image.Rectangle{
 				Min: gtx.Constraints.Min,

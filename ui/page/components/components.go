@@ -652,21 +652,21 @@ func TimeFormat(secs int, long bool) string {
 	if secs > 86399 {
 		val = "d"
 		if long {
-			val = " day(s)"
+			val = " days"
 		}
 		days := secs / 86400
 		return fmt.Sprintf("%d%s", days, val)
 	} else if secs > 3599 {
 		val = "h"
 		if long {
-			val = " hour(s)"
+			val = " hours"
 		}
 		hours := secs / 3600
 		return fmt.Sprintf("%d%s", hours, val)
 	} else if secs > 59 {
 		val = "s"
 		if long {
-			val = " min(s)"
+			val = " mins"
 		}
 		mins := secs / 60
 		return fmt.Sprintf("%d%s", mins, val)
@@ -674,7 +674,7 @@ func TimeFormat(secs int, long bool) string {
 
 	val = "s"
 	if long {
-		val = " sec(s)"
+		val = " secs"
 	}
 	return fmt.Sprintf("%d %s", secs, val)
 }
