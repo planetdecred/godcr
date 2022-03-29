@@ -14,7 +14,6 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
-	"github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -141,8 +140,7 @@ func (pg *ReceivePage) OnNavigatedTo() {
 }
 
 func (pg *ReceivePage) generateQRForAddress() {
-	opt := qrcode.WithLogoImage(assets.DecredIcons["qrcodeSymbol"])
-	qrCode, err := qrcode.New(pg.currentAddress, opt)
+	qrCode, err := qrcode.New(pg.currentAddress)
 	if err != nil {
 		log.Error("Error generating address qrCode: " + err.Error())
 		return
