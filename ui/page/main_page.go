@@ -238,11 +238,18 @@ func (mp *MainPage) OnNavigatedTo() {
 
 func (mp *MainPage) setLanguageSetting() {
 	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey)
+	if langPre == "" {
+		mp.WL.Wallet.SaveConfigValueForKey(load.LanguagePreferenceKey, values.DefaultLangauge)
+	}
 	values.SetUserLanguage(langPre)
 }
 
 func (mp *MainPage) updateExchangeSetting() {
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	if currencyExchangeValue == "" {
+		mp.WL.Wallet.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue)
+	}
+
 	usdExchangeSet := currencyExchangeValue == values.USDExchangeValue
 	if mp.usdExchangeSet == usdExchangeSet {
 		return // nothing has changed
