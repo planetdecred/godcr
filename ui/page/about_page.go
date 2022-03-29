@@ -133,38 +133,10 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 		func(gtx C) D {
 			if pg.licenseRow.IsHovered() {
 				return pg.shadowBox.Layout(gtx, func(gtx C) D {
-					return pg.licenseRow.Layout(gtx, func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return in.Layout(gtx, pg.license.Layout)
-							}),
-							layout.Flexed(1, func(gtx C) D {
-								return layout.E.Layout(gtx, func(gtx C) D {
-									return in.Layout(gtx, func(gtx C) D {
-										pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
-										return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-									})
-								})
-							}),
-						)
-					})
+					return pg.licenseRowLayout(gtx, in)
 				})
 			}
-			return pg.licenseRow.Layout(gtx, func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return in.Layout(gtx, pg.license.Layout)
-					}),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return in.Layout(gtx, func(gtx C) D {
-								pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
-								return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-							})
-						})
-					}),
-				)
-			})
+			return pg.licenseRowLayout(gtx, in)
 		},
 	}
 
@@ -182,6 +154,24 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 				}),
 			)
 		})
+	})
+}
+
+func (pg *AboutPage) licenseRowLayout(gtx C, in layout.Inset) D {
+	return pg.licenseRow.Layout(gtx, func(gtx C) D {
+		return layout.Flex{}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return in.Layout(gtx, pg.license.Layout)
+			}),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.E.Layout(gtx, func(gtx C) D {
+					return in.Layout(gtx, func(gtx C) D {
+						pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
+						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+					})
+				})
+			}),
+		)
 	})
 }
 
