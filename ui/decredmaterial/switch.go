@@ -4,7 +4,6 @@ package decredmaterial
 
 import (
 	"image"
-	"image/color"
 
 	"gioui.org/f32"
 	"gioui.org/io/pointer"
@@ -31,12 +30,11 @@ type SwitchItem struct {
 }
 
 type SwitchButtonText struct {
-	t                                  *Theme
-	activeTextColor, inactiveTextColor color.NRGBA
-	active, inactive                   color.NRGBA
-	items                              []SwitchItem
-	selected                           int
-	changed                            bool
+	t        *Theme
+	style    *values.SwitchStyle
+	items    []SwitchItem
+	selected int
+	changed  bool
 }
 
 func (t *Theme) Switch() *Switch {
@@ -50,15 +48,13 @@ func (t *Theme) SwitchButtonText(i []SwitchItem) *SwitchButtonText {
 	sw := &SwitchButtonText{
 		t:     t,
 		items: make([]SwitchItem, len(i)+1),
+		style: t.Styles.SwitchButtonTextStyle,
 	}
-
-	sw.active, sw.inactive = sw.t.Color.Surface, color.NRGBA{}
-	sw.activeTextColor, sw.inactiveTextColor = sw.t.Color.GrayText1, sw.t.Color.Text
 
 	for index := range i {
 		i[index].button = t.Button(i[index].Text)
 		i[index].button.HighlightColor = t.Color.SurfaceHighlight
-		i[index].button.Background, i[index].button.Color = sw.inactive, sw.inactiveTextColor
+		i[index].button.Background, i[index].button.Color = sw.style.ActiveColor, sw.style.InactiveTextColor
 		i[index].button.TextSize = unit.Sp(14)
 		sw.items[index+1] = i[index]
 	}
@@ -212,11 +208,11 @@ func (s *SwitchButtonText) handleClickEvent() {
 		}
 
 		if s.selected == index {
-			s.items[s.selected].button.Background = s.active
-			s.items[s.selected].button.Color = s.activeTextColor
+			s.items[s.selected].button.Background = s.style.ActiveColor
+			s.items[s.selected].button.Color = s.style.ActiveTextColor
 		} else {
-			s.items[index].button.Background = s.inactive
-			s.items[index].button.Color = s.inactiveTextColor
+			s.items[index].button.Background = s.style.InactiveColor
+			s.items[index].button.Color = s.style.InactiveTextColor
 		}
 	}
 }

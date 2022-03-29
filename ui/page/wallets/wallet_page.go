@@ -90,7 +90,6 @@ type WalletPage struct {
 	backupAcctIcon           *decredmaterial.Icon
 	nextIcon                 *decredmaterial.Icon
 
-	iconButton           decredmaterial.IconButton
 	card                 decredmaterial.Card
 	optionsMenuCard      decredmaterial.Card
 	watchOnlyWalletLabel decredmaterial.Label
@@ -129,14 +128,6 @@ func NewWalletPage(l *load.Load) *WalletPage {
 
 	pg.watchOnlyWalletLabel = pg.Theme.Body1(values.String(values.StrWatchOnlyWallets))
 	pg.watchOnlyWalletLabel.Color = pg.Theme.Color.GrayText2
-
-	pg.iconButton = decredmaterial.IconButton{
-		IconButtonStyle: decredmaterial.IconButtonStyle{
-			Size:  unit.Dp(25),
-			Inset: layout.UniformInset(unit.Dp(0)),
-		},
-	}
-	pg.iconButton.ChangeColorStyle(pg.Theme.Styles.IconButtonColorStyle)
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
 	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)

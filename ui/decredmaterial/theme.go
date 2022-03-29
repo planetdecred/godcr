@@ -102,10 +102,23 @@ func (t *Theme) updateStyles(isDarkModeOn bool) {
 	t.Styles.SwitchStyle.ActiveColor = t.Color.Primary
 	t.Styles.SwitchStyle.InactiveColor = t.Color.Gray3
 	t.Styles.SwitchStyle.ThumbColor = t.Color.White
+	t.Styles.SwitchStyle.ActiveTextColor = color.NRGBA{}
+	t.Styles.SwitchStyle.InactiveTextColor = color.NRGBA{}
+
+	// update SwitchButtonText style colors
+	t.Styles.SwitchButtonTextStyle.ActiveColor = t.Color.Surface
+	t.Styles.SwitchButtonTextStyle.InactiveColor = color.NRGBA{}
+	t.Styles.SwitchButtonTextStyle.ThumbColor = color.NRGBA{}
+	t.Styles.SwitchButtonTextStyle.ActiveTextColor = t.Color.GrayText1
+	t.Styles.SwitchButtonTextStyle.InactiveTextColor = t.Color.Text
 
 	// update icon button style colors
 	t.Styles.IconButtonColorStyle.Background = color.NRGBA{}
 	t.Styles.IconButtonColorStyle.Foreground = t.Color.Gray1
+
+	// update Collapsible widget style colors
+	t.Styles.CollapsibleStyle.Background = t.Color.Surface
+	t.Styles.CollapsibleStyle.Foreground = color.NRGBA{}
 
 	// update clickable colors
 	t.Styles.ClickableStyle.Color = t.Color.SurfaceHighlight
