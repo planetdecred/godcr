@@ -59,14 +59,14 @@ func privacyInfo(l *load.Load) []layout.Widget {
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),
 				layout.Rigid(func(gtx C) D {
-					text := l.Theme.Body1("When you turn on the mixer, your unmixed DCRs in this wallet (unmixed balance) will be gradually mixed.")
+					text := l.Theme.Body1("When the mixer is activated, funds will be gradually transfered from the unmixed account to the mixed account.")
 					text.Color = l.Theme.Color.GrayText2
 					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, text.Layout)
 				}),
 			)
 		},
 		func(gtx C) D {
-			txt := l.Theme.Body1("Important: keep this app opened while mixer is running.")
+			txt := l.Theme.Body1("Important: keep this app open while mixer is running.")
 			txt.Font.Weight = text.SemiBold
 			return txt.Layout(gtx)
 		},
@@ -76,7 +76,7 @@ func privacyInfo(l *load.Load) []layout.Widget {
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),
 				layout.Rigid(func(gtx C) D {
-					text := l.Theme.Body1("Mixer will automatically stop when unmixed balance are fully mixed.")
+					text := l.Theme.Body1("The mixer routine will automatically stop when the unmixed balance is fully mixed.")
 					text.Color = l.Theme.Color.GrayText2
 					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, text.Layout)
 				}),
