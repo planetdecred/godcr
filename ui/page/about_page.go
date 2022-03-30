@@ -130,18 +130,34 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 				return components.EndToEndRow(gtx, pg.network.Layout, pg.networkValue.Layout)
 			})
 		},
+
 		func(gtx C) D {
-			if pg.licenseRow.IsHovered() {
-				return pg.shadowBox.Layout(gtx, func(gtx C) D {
-					return pg.licenseRowLayout(gtx, in)
+			licenseRowLayout := func(gtx C) D {
+				return pg.licenseRow.Layout(gtx, func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return in.Layout(gtx, pg.license.Layout)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return in.Layout(gtx, func(gtx C) D {
+									pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
+									return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+								})
+							})
+						}),
+					)
 				})
 			}
-			return pg.licenseRowLayout(gtx, in)
+			if pg.licenseRow.IsHovered() {
+				return pg.shadowBox.Layout(gtx, licenseRowLayout)
+			}
+			return licenseRowLayout(gtx)
 		},
 	}
 
 	return pg.container.Layout(gtx, len(w), func(gtx C, i int) D {
-		return layout.Inset{}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Bottom: values.MarginPadding3}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(w[i]),
 				layout.Rigid(func(gtx C) D {
@@ -157,23 +173,23 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *AboutPage) licenseRowLayout(gtx C, in layout.Inset) D {
-	return pg.licenseRow.Layout(gtx, func(gtx C) D {
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return in.Layout(gtx, pg.license.Layout)
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.E.Layout(gtx, func(gtx C) D {
-					return in.Layout(gtx, func(gtx C) D {
-						pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
-						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-					})
-				})
-			}),
-		)
-	})
-}
+// func (pg *AboutPage) licenseRowLayout(gtx C, in layout.Inset) D {
+// 	return pg.licenseRow.Layout(gtx, func(gtx C) D {
+// 		return layout.Flex{}.Layout(gtx,
+// 			layout.Rigid(func(gtx C) D {
+// 				return in.Layout(gtx, pg.license.Layout)
+// 			}),
+// 			layout.Flexed(1, func(gtx C) D {
+// 				return layout.E.Layout(gtx, func(gtx C) D {
+// 					return in.Layout(gtx, func(gtx C) D {
+// 						pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
+// 						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+// 					})
+// 				})
+// 			}),
+// 		)
+// 	})
+// }
 
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
