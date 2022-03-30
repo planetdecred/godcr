@@ -59,7 +59,7 @@ func privacyInfo(l *load.Load) []layout.Widget {
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),
 				layout.Rigid(func(gtx C) D {
-					text := l.Theme.Body1("When the mixer is activated, Decred will be gradually transfered from the unmixed account to the mixed account.")
+					text := l.Theme.Body1("When the mixer is activated, funds will be gradually transfered from the unmixed account to the mixed account.")
 					text.Color = l.Theme.Color.GrayText2
 					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, text.Layout)
 				}),
