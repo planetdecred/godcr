@@ -51,7 +51,7 @@ type ProposalDetails struct {
 	copyIcon     *decredmaterial.Image
 
 	viewInPoliteiaBtn *decredmaterial.Clickable
-	copyRedirectUrl   *decredmaterial.Clickable
+	copyRedirectURL   *decredmaterial.Clickable
 
 	descriptionCard decredmaterial.Card
 	vote            decredmaterial.Button
@@ -78,7 +78,7 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 		rejectedIcon:      l.Icons.NavigationCancel,
 		successIcon:       l.Icons.ActionCheckCircle,
 		viewInPoliteiaBtn: l.Theme.NewClickable(false),
-		copyRedirectUrl:   l.Theme.NewClickable(false),
+		copyRedirectURL:   l.Theme.NewClickable(false),
 		voteBar:           components.NewVoteBar(l),
 	}
 
@@ -141,8 +141,8 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 		info := modal.NewInfoModal(pg.Load).
 			Title("View on Politeia").
 			Body("Copy the link below to your browser.").
+			SetCancelable(true).
 			UseCustomWidget(func(gtx C) D {
-				// return layout.Rigid(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
 						border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
@@ -156,11 +156,11 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 										layout.Flexed(0.1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
 												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-													if pg.copyRedirectUrl.Clicked() {
+													if pg.copyRedirectURL.Clicked() {
 														clipboard.WriteOp{Text: host}.Add(gtx.Ops)
 														pg.Toast.Notify("Web link copied")
 													}
-													return pg.copyRedirectUrl.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
+													return pg.copyRedirectURL.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
 												})
 											})
 										}),
