@@ -66,7 +66,7 @@ func privacyInfo(l *load.Load) []layout.Widget {
 			)
 		},
 		func(gtx C) D {
-			txt := l.Theme.Body1("Important: keep this app opened while mixer is running.")
+			txt := l.Theme.Body1("Important: keep this app open while mixer is running.")
 			txt.Font.Weight = text.SemiBold
 			return txt.Layout(gtx)
 		},
