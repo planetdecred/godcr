@@ -192,7 +192,7 @@ func LayoutNoProposalsFound(gtx C, l *load.Load, syncing bool, category int32) D
 	}
 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	text := l.Theme.Body1(fmt.Sprintf("No %s proposals yet ", selectedCategory))
+	text := l.Theme.Body1(fmt.Sprintf("No proposals %s ", selectedCategory))
 	text.Color = l.Theme.Color.GrayText3
 	if syncing {
 		text = l.Theme.Body1("Fetching proposals...")
