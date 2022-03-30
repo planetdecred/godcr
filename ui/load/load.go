@@ -1,4 +1,4 @@
-// The load package contains data structures that are shared by components in the ui package. It is not a dumping ground
+F// The load package contains data structures that are shared by components in the ui package. It is not a dumping ground
 // for code you feel might be shared with other components in the future. Before adding code here, ask yourself, can
 // the code be isolated in the package you're calling it from? Is it really needed by other packages in the ui package?
 // or you're just planning for a use case that might never used.
@@ -98,9 +98,7 @@ func (l *Load) Dexc() *dcrlibwallet.DexClient {
 	return l.WL.MultiWallet.DexClient()
 }
 
-func IconSet() Icons {
-	decredIcons := assets.DecredIcons
-
+func IconSet(isDarkModeOn bool) Icons {
 	ic := Icons{
 		ContentAdd:             decredmaterial.MustIcon(widget.NewIcon(icons.ContentAdd)),
 		NavigationCheck:        decredmaterial.MustIcon(widget.NewIcon(icons.NavigationCheck)),
@@ -122,83 +120,100 @@ func IconSet() Icons {
 		RevealIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 		SearchIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionSearch)),
 		PlayIcon:               decredmaterial.MustIcon(widget.NewIcon(icons.AVPlayArrow)),
-
-		OverviewIcon:             decredmaterial.NewImage(decredIcons["overview"]),
-		OverviewIconInactive:     decredmaterial.NewImage(decredIcons["overview_inactive"]),
-		WalletIconInactive:       decredmaterial.NewImage(decredIcons["wallet_inactive"]),
-		ReceiveIcon:              decredmaterial.NewImage(decredIcons["receive"]),
-		Transferred:              decredmaterial.NewImage(decredIcons["transferred"]),
-		TransactionsIcon:         decredmaterial.NewImage(decredIcons["transactions"]),
-		TransactionsIconInactive: decredmaterial.NewImage(decredIcons["transactions_inactive"]),
-		SendIcon:                 decredmaterial.NewImage(decredIcons["send"]),
-		MoreIcon:                 decredmaterial.NewImage(decredIcons["more"]),
-		MoreIconInactive:         decredmaterial.NewImage(decredIcons["more_inactive"]),
-		Logo:                     decredmaterial.NewImage(decredIcons["logo"]),
-		ConfirmIcon:              decredmaterial.NewImage(decredIcons["confirmed"]),
-		PendingIcon:              decredmaterial.NewImage(decredIcons["pending"]),
-		RedirectIcon:             decredmaterial.NewImage(decredIcons["redirect"]),
-		NewWalletIcon:            decredmaterial.NewImage(decredIcons["addNewWallet"]),
-		WalletAlertIcon:          decredmaterial.NewImage(decredIcons["walletAlert"]),
-		AccountIcon:              decredmaterial.NewImage(decredIcons["account"]),
-		ImportedAccountIcon:      decredmaterial.NewImage(decredIcons["imported_account"]),
-		EditIcon:                 decredmaterial.NewImage(decredIcons["editIcon"]),
-		expandIcon:               decredmaterial.NewImage(decredIcons["expand_icon"]),
-		CopyIcon:                 decredmaterial.NewImage(decredIcons["copy_icon"]),
-		MixedTx:                  decredmaterial.NewImage(decredIcons["mixed_tx"]),
-		Mixer:                    decredmaterial.NewImage(decredIcons["mixer"]),
-		PrivacySetup:             decredmaterial.NewImage(decredIcons["privacy_setup"]),
-		Next:                     decredmaterial.NewImage(decredIcons["ic_next"]),
-		SettingsIcon:             decredmaterial.NewImage(decredIcons["settings"]),
-		SecurityIcon:             decredmaterial.NewImage(decredIcons["security"]),
-		HelpIcon:                 decredmaterial.NewImage(decredIcons["help_icon"]),
-		AboutIcon:                decredmaterial.NewImage(decredIcons["about_icon"]),
-		DebugIcon:                decredmaterial.NewImage(decredIcons["debug"]),
-		VerifyMessageIcon:        decredmaterial.NewImage(decredIcons["verify_message"]),
-		LocationPinIcon:          decredmaterial.NewImage(decredIcons["location_pin"]),
-		AlertGray:                decredmaterial.NewImage(decredIcons["alert_gray"]),
-		ArrowDownIcon:            decredmaterial.NewImage(decredIcons["arrow_down"]),
-		WatchOnlyWalletIcon:      decredmaterial.NewImage(decredIcons["watch_only_wallet"]),
-		CurrencySwapIcon:         decredmaterial.NewImage(decredIcons["swap"]),
-		SyncingIcon:              decredmaterial.NewImage(decredIcons["syncing"]),
-		DocumentationIcon:        decredmaterial.NewImage(decredIcons["documentation"]),
-		ProposalIconActive:       decredmaterial.NewImage(decredIcons["politeiaActive"]),
-		ProposalIconInactive:     decredmaterial.NewImage(decredIcons["politeiaInactive"]),
-		Restore:                  decredmaterial.NewImage(decredIcons["restore"]),
-		DownloadIcon:             decredmaterial.NewImage(decredIcons["downloadIcon"]),
-		TimerIcon:                decredmaterial.NewImage(decredIcons["timerIcon"]),
-		WalletIcon:               decredmaterial.NewImage(decredIcons["wallet"]),
-		StakeIcon:                decredmaterial.NewImage(decredIcons["stake"]),
-		StakeIconInactive:        decredmaterial.NewImage(decredIcons["stake_inactive"]),
-		StakeyIcon:               decredmaterial.NewImage(decredIcons["stakey"]),
-		NewStakeIcon:             decredmaterial.NewImage(decredIcons["stake_purchased"]),
-		TicketImmatureIcon:       decredmaterial.NewImage(decredIcons["ticket_immature"]),
-		TicketUnminedIcon:        decredmaterial.NewImage(decredIcons["ticket_unmined"]),
-		TicketLiveIcon:           decredmaterial.NewImage(decredIcons["ticket_live"]),
-		TicketVotedIcon:          decredmaterial.NewImage(decredIcons["ticket_voted"]),
-		TicketMissedIcon:         decredmaterial.NewImage(decredIcons["ticket_missed"]),
-		TicketExpiredIcon:        decredmaterial.NewImage(decredIcons["ticket_expired"]),
-		TicketRevokedIcon:        decredmaterial.NewImage(decredIcons["ticket_revoked"]),
-		List:                     decredmaterial.NewImage(decredIcons["list"]),
-		ListGridIcon:             decredmaterial.NewImage(decredIcons["list_grid"]),
-		DecredSymbolIcon:         decredmaterial.NewImage(decredIcons["decred_symbol"]),
-		DecredSymbol2:            decredmaterial.NewImage(decredIcons["ic_decred02"]),
-		GovernanceActiveIcon:     decredmaterial.NewImage(decredIcons["governance_active"]),
-		GovernanceInactiveIcon:   decredmaterial.NewImage(decredIcons["governance_inactive"]),
-		LogoDarkMode:             decredmaterial.NewImage(decredIcons["logo_darkmode"]),
-		TimerDarkMode:            decredmaterial.NewImage(decredIcons["timer_dm"]),
-		Rebroadcast:              decredmaterial.NewImage(decredIcons["rebroadcast"]),
-
-		SettingsActiveIcon:    decredmaterial.NewImage(decredIcons["settings_active"]),
-		SettingsInactiveIcon:  decredmaterial.NewImage(decredIcons["settings_inactive"]),
-		ActivatedActiveIcon:   decredmaterial.NewImage(decredIcons["activated_active"]),
-		ActivatedInactiveIcon: decredmaterial.NewImage(decredIcons["activated_inactive"]),
-		LockinActiveIcon:      decredmaterial.NewImage(decredIcons["lockin_active"]),
-		LockinInactiveIcon:    decredmaterial.NewImage(decredIcons["lockin_inactive"]),
-
-		DexIcon:         decredmaterial.NewImage(decredIcons["dex_icon"]),
-		DexIconInactive: decredmaterial.NewImage(decredIcons["dex_icon_inactive"]),
-		BTC:             decredmaterial.NewImage(decredIcons["dex_btc"]),
-		DCR:             decredmaterial.NewImage(decredIcons["dex_dcr"]),
 	}
+
+	defaultIcons(&ic)
+	// if isDarkModeOn{
+	// 	darkModeIcons(&ic)
+	// }
+
 	return ic
+}
+
+func defaultIcons(ic *Icons) {
+	decredIcons := assets.DecredIcons
+
+	ic.OverviewIcon = decredmaterial.NewImage(decredIcons["overview"])
+	ic.OverviewIconInactive = decredmaterial.NewImage(decredIcons["overview_inactive"])
+	ic.WalletIconInactive = decredmaterial.NewImage(decredIcons["wallet_inactive"])
+	ic.ReceiveIcon = decredmaterial.NewImage(decredIcons["receive"])
+	ic.Transferred = decredmaterial.NewImage(decredIcons["transferred"])
+	ic.TransactionsIcon = decredmaterial.NewImage(decredIcons["transactions"])
+	ic.TransactionsIconInactive = decredmaterial.NewImage(decredIcons["transactions_inactive"])
+	ic.SendIcon = decredmaterial.NewImage(decredIcons["send"])
+	ic.MoreIcon = decredmaterial.NewImage(decredIcons["more"])
+	ic.MoreIconInactive = decredmaterial.NewImage(decredIcons["more_inactive"])
+	ic.Logo = decredmaterial.NewImage(decredIcons["logo"])
+	ic.ConfirmIcon = decredmaterial.NewImage(decredIcons["confirmed"])
+	ic.PendingIcon = decredmaterial.NewImage(decredIcons["pending"])
+	ic.RedirectIcon = decredmaterial.NewImage(decredIcons["redirect"])
+	ic.NewWalletIcon = decredmaterial.NewImage(decredIcons["addNewWallet"])
+	ic.WalletAlertIcon = decredmaterial.NewImage(decredIcons["walletAlert"])
+	ic.AccountIcon = decredmaterial.NewImage(decredIcons["account"])
+	ic.ImportedAccountIcon = decredmaterial.NewImage(decredIcons["imported_account"])
+	ic.EditIcon = decredmaterial.NewImage(decredIcons["editIcon"])
+	ic.expandIcon = decredmaterial.NewImage(decredIcons["expand_icon"])
+	ic.CopyIcon = decredmaterial.NewImage(decredIcons["copy_icon"])
+	ic.MixedTx = decredmaterial.NewImage(decredIcons["mixed_tx"])
+	ic.Mixer = decredmaterial.NewImage(decredIcons["mixer"])
+	ic.PrivacySetup = decredmaterial.NewImage(decredIcons["privacy_setup"])
+	ic.Next = decredmaterial.NewImage(decredIcons["ic_next"])
+	ic.SettingsIcon = decredmaterial.NewImage(decredIcons["settings"])
+	ic.SecurityIcon = decredmaterial.NewImage(decredIcons["security"])
+	ic.HelpIcon = decredmaterial.NewImage(decredIcons["help_icon"])
+	ic.AboutIcon = decredmaterial.NewImage(decredIcons["about_icon"])
+	ic.DebugIcon = decredmaterial.NewImage(decredIcons["debug"])
+	ic.VerifyMessageIcon = decredmaterial.NewImage(decredIcons["verify_message"])
+	ic.LocationPinIcon = decredmaterial.NewImage(decredIcons["location_pin"])
+	ic.AlertGray = decredmaterial.NewImage(decredIcons["alert_gray"])
+	ic.ArrowDownIcon = decredmaterial.NewImage(decredIcons["arrow_down"])
+	ic.WatchOnlyWalletIcon = decredmaterial.NewImage(decredIcons["watch_only_wallet"])
+	ic.CurrencySwapIcon = decredmaterial.NewImage(decredIcons["swap"])
+	ic.SyncingIcon = decredmaterial.NewImage(decredIcons["syncing"])
+	ic.DocumentationIcon = decredmaterial.NewImage(decredIcons["documentation"])
+	ic.ProposalIconActive = decredmaterial.NewImage(decredIcons["politeiaActive"])
+	ic.ProposalIconInactive = decredmaterial.NewImage(decredIcons["politeiaInactive"])
+	ic.Restore = decredmaterial.NewImage(decredIcons["restore"])
+	ic.DownloadIcon = decredmaterial.NewImage(decredIcons["downloadIcon"])
+	ic.TimerIcon = decredmaterial.NewImage(decredIcons["timerIcon"])
+	ic.WalletIcon = decredmaterial.NewImage(decredIcons["wallet"])
+	ic.StakeIcon = decredmaterial.NewImage(decredIcons["stake"])
+	ic.StakeIconInactive = decredmaterial.NewImage(decredIcons["stake_inactive"])
+	ic.StakeyIcon = decredmaterial.NewImage(decredIcons["stakey"])
+	ic.NewStakeIcon = decredmaterial.NewImage(decredIcons["stake_purchased"])
+	ic.TicketImmatureIcon = decredmaterial.NewImage(decredIcons["ticket_immature"])
+	ic.TicketUnminedIcon = decredmaterial.NewImage(decredIcons["ticket_unmined"])
+	ic.TicketLiveIcon = decredmaterial.NewImage(decredIcons["ticket_live"])
+	ic.TicketVotedIcon = decredmaterial.NewImage(decredIcons["ticket_voted"])
+	ic.TicketMissedIcon = decredmaterial.NewImage(decredIcons["ticket_missed"])
+	ic.TicketExpiredIcon = decredmaterial.NewImage(decredIcons["ticket_expired"])
+	ic.TicketRevokedIcon = decredmaterial.NewImage(decredIcons["ticket_revoked"])
+	ic.List = decredmaterial.NewImage(decredIcons["list"])
+	ic.ListGridIcon = decredmaterial.NewImage(decredIcons["list_grid"])
+	ic.DecredSymbolIcon = decredmaterial.NewImage(decredIcons["decred_symbol"])
+	ic.DecredSymbol2 = decredmaterial.NewImage(decredIcons["ic_decred02"])
+	ic.GovernanceActiveIcon = decredmaterial.NewImage(decredIcons["governance_active"])
+	ic.GovernanceInactiveIcon = decredmaterial.NewImage(decredIcons["governance_inactive"])
+	ic.LogoDarkMode = decredmaterial.NewImage(decredIcons["logo_darkmode"])
+	ic.TimerDarkMode = decredmaterial.NewImage(decredIcons["timer_dm"])
+	ic.Rebroadcast = decredmaterial.NewImage(decredIcons["rebroadcast"])
+
+	ic.SettingsActiveIcon = decredmaterial.NewImage(decredIcons["settings_active"])
+	ic.SettingsInactiveIcon = decredmaterial.NewImage(decredIcons["settings_inactive"])
+	ic.ActivatedActiveIcon = decredmaterial.NewImage(decredIcons["activated_active"])
+	ic.ActivatedInactiveIcon = decredmaterial.NewImage(decredIcons["activated_inactive"])
+	ic.LockinActiveIcon = decredmaterial.NewImage(decredIcons["lockin_active"])
+	ic.LockinInactiveIcon = decredmaterial.NewImage(decredIcons["lockin_inactive"])
+
+	ic.DexIcon = decredmaterial.NewImage(decredIcons["dex_icon"])
+	ic.DexIconInactive = decredmaterial.NewImage(decredIcons["dex_icon_inactive"])
+	ic.BTC = decredmaterial.NewImage(decredIcons["dex_btc"])
+	ic.DCR = decredmaterial.NewImage(decredIcons["dex_dcr"])
+}
+
+func darkModeIcons(ic *Icons) {
+	decredIcons := assets.DecredIcons
+
+	ic.OverviewIcon = decredmaterial.NewImage(decredIcons["overview"])
+	ic.OverviewIconInactive = decredmaterial.NewImage(decredIcons["overview_inactive"])
 }
