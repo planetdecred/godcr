@@ -124,7 +124,7 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 											}),
 											layout.Rigid(func(gtx C) D {
 												txt := `<span style="text-color: grayText2">
-											<b>Make sure to select the corresponding accounts to the previous setup. </b> Failing to do so could damage wallet privacy.
+											<b>Make sure to select the corresponding accounts to the previous privacy setup. </b> Failing to do so could compromise wallet privacy. You may not select the same account for mixed and unmixed.
 										</span>`
 												return layout.Inset{
 													Left: values.MarginPadding8,
