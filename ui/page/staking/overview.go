@@ -348,7 +348,7 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				if len(pg.liveTickets) == 0 {
-					noLiveStake := pg.Theme.Label(values.TextSize16, "No current tickets.")
+					noLiveStake := pg.Theme.Label(values.TextSize16, "No active tickets.")
 					noLiveStake.Color = pg.Theme.Color.GrayText3
 					return noLiveStake.Layout(gtx)
 				}
