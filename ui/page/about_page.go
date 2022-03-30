@@ -173,24 +173,6 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-// func (pg *AboutPage) licenseRowLayout(gtx C, in layout.Inset) D {
-// 	return pg.licenseRow.Layout(gtx, func(gtx C) D {
-// 		return layout.Flex{}.Layout(gtx,
-// 			layout.Rigid(func(gtx C) D {
-// 				return in.Layout(gtx, pg.license.Layout)
-// 			}),
-// 			layout.Flexed(1, func(gtx C) D {
-// 				return layout.E.Layout(gtx, func(gtx C) D {
-// 					return in.Layout(gtx, func(gtx C) D {
-// 						pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
-// 						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-// 					})
-// 				})
-// 			}),
-// 		)
-// 	})
-// }
-
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
