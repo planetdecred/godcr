@@ -140,7 +140,7 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 
 		info := modal.NewInfoModal(pg.Load).
 			Title("View on Politeia").
-			Body("Copy the link below to your browser.").
+			Body("Copy and paste the link below in your browser, to view proposal on Politeia dashboard.").
 			SetCancelable(true).
 			UseCustomWidget(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
@@ -158,7 +158,7 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 													if pg.copyRedirectURL.Clicked() {
 														clipboard.WriteOp{Text: host}.Add(gtx.Ops)
-														pg.Toast.Notify("Web link copied")
+														pg.Toast.Notify("URL copied")
 													}
 													return pg.copyRedirectURL.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
 												})
@@ -208,13 +208,13 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 						pg.RefreshWindow()
 					}
 				}
-			// not needed as lsitner as been set up on main.go
+			// is this really needed since listener has been set up on main.go
 			case <-pg.ctx.Done():
-				// 	pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
+				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
 				close(pg.ProposalNotifChan)
-				// 	pg.ProposalNotificationListener = nil
+				pg.ProposalNotificationListener = nil
 
-				// 	return
+				return
 			}
 		}
 	}()

@@ -126,8 +126,8 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 		}
 
 		info := modal.NewInfoModal(pg.Load).
-			Title("View on Politeia").
-			Body("Copy the link below to your browser.").
+			Title("Consensus Vote Dashboard").
+			Body("Copy and paste the link below in your browser, to the view consensus vote dashboard.").
 			SetCancelable(true).
 			UseCustomWidget(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
@@ -144,7 +144,7 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 											return layout.E.Layout(gtx, func(gtx C) D {
 												if pg.copyRedirectURL.Clicked() {
 													clipboard.WriteOp{Text: host}.Add(gtx.Ops)
-													pg.Toast.Notify("Web link copied")
+													pg.Toast.Notify("URL copied")
 												}
 												return pg.copyRedirectURL.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
 											})
