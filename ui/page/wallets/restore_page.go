@@ -403,20 +403,33 @@ func (pg *Restore) updateSeedResetBtn() bool {
 
 func (pg *Restore) validateSeeds() bool {
 	pg.seedPhrase = ""
+	seedMatchCounter := 0
 	for i, editor := range pg.seedEditors.editors {
 		if editor.Edit.Editor.Text() == "" {
 			pg.seedEditors.editors[i].Edit.HintColor = pg.Theme.Color.Danger
 			return false
 		}
 
+		for i := 0; i < len(pg.allSuggestions); i++ {
+			if editor.Edit.Editor.Text() == pg.allSuggestions[i] {
+				seedMatchCounter += 1
+			}
+		}
 		pg.seedPhrase += editor.Edit.Editor.Text() + " "
 	}
 
+	for seedMatchCounter < 33 {
+		return false
+	}
+
+	return true
+}
+
+func (pg *Restore) verifySeedWords() bool {
 	if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
 		pg.Toast.NotifyError("invalid seed phrase")
 		return false
 	}
-
 	return true
 }
 
@@ -449,7 +462,7 @@ func (pg *Restore) HandleUserInteractions() {
 	}
 
 	for pg.validateSeed.Clicked() {
-		if !pg.validateSeeds() {
+		if !pg.validateSeeds() || !pg.verifySeedWords() {
 			return
 		}
 
