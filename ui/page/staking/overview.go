@@ -185,30 +185,33 @@ func (pg *Page) loadPageData() {
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *Page) Layout(gtx C) D {
 	widgets := []layout.Widget{
-		func(ctx layout.Context) layout.Dimensions {
+		func(gtx C) D {
 			return components.UniformHorizontalPadding(gtx, pg.stakePriceSection)
 		},
-		func(ctx layout.Context) layout.Dimensions {
+		func(gtx C) D {
+			return components.UniformHorizontalPadding(gtx, pg.walletBalanceLayout)
+		},
+		func(gtx C) D {
 			return components.UniformHorizontalPadding(gtx, pg.stakeLiveSection)
 		},
-		func(ctx layout.Context) layout.Dimensions {
+		func(gtx C) D {
 			return components.UniformHorizontalPadding(gtx, pg.stakingRecordSection)
 		},
 	}
 
-	return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+	return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.List(pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
 			return widgets[i](gtx)
 		})
 	})
 }
 
-func (pg *Page) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *Page) pageSections(gtx C, body layout.Widget) D {
 	return layout.Inset{
 		Bottom: values.MarginPadding8,
-	}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+	}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
@@ -216,7 +219,7 @@ func (pg *Page) pageSections(gtx layout.Context, body layout.Widget) layout.Dime
 	})
 }
 
-func (pg *Page) titleRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
+func (pg *Page) titleRow(gtx C, leftWidget, rightWidget func(C) D) D {
 	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(leftWidget),
 		layout.Rigid(rightWidget),
