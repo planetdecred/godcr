@@ -126,6 +126,7 @@ func (pg *AppOverviewPage) progressBarRow(gtx C, inset layout.Inset) D {
 
 // progressStatusRow lays out the progress status when the wallet is syncing.
 func (pg *AppOverviewPage) progressStatusRow(gtx C, inset layout.Inset) D {
+	var timeLeftLabel decredmaterial.Label
 	timeLeft := pg.remainingSyncTime
 	progress := pg.syncProgress
 	rescanUpdate := pg.rescanUpdate
@@ -135,7 +136,11 @@ func (pg *AppOverviewPage) progressStatusRow(gtx C, inset layout.Inset) D {
 	}
 
 	percentageLabel := pg.Theme.Body1(fmt.Sprintf("%v%%", progress))
-	timeLeftLabel := pg.Theme.Body1(fmt.Sprintf("%v left", timeLeft))
+	if progress == 0 {
+		timeLeftLabel = pg.Theme.Body1("Estimating")
+	} else {
+		timeLeftLabel = pg.Theme.Body1(fmt.Sprintf("%v left", timeLeft))
+	}
 	return inset.Layout(gtx, func(gtx C) D {
 		return components.EndToEndRow(gtx, percentageLabel.Layout, timeLeftLabel.Layout)
 	})
