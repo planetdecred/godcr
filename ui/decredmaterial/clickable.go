@@ -39,6 +39,10 @@ func (cl *Clickable) Clicked() bool {
 	return cl.button.Clicked()
 }
 
+func (cl *Clickable) IsHovered() bool {
+	return cl.button.Hovered()
+}
+
 // SetEnabled enables/disables the clickable.
 func (cl *Clickable) SetEnabled(enable bool, gtx *layout.Context) layout.Context {
 	var mGtx layout.Context
