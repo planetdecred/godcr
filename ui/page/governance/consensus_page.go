@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gioui.org/font/gofont"
+	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -33,6 +34,7 @@ type ConsensusPage struct {
 	listContainer       *widget.List
 	syncButton          *widget.Clickable
 	viewVotingDashboard *decredmaterial.Clickable
+	copyRedirectURL     *decredmaterial.Clickable
 	redirectIcon        *decredmaterial.Image
 
 	walletDropDown *decredmaterial.DropDown
@@ -57,7 +59,8 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 		},
 		syncButton:          new(widget.Clickable),
 		redirectIcon:        l.Icons.RedirectIcon,
-		viewVotingDashboard: l.Theme.NewClickable(true),
+		viewVotingDashboard: l.Theme.NewClickable(false),
+		copyRedirectURL:     l.Theme.NewClickable(false),
 	}
 
 	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Icons.SearchIcon, true)
@@ -122,7 +125,49 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 			host = "https://voting.decred.org/testnet"
 		}
 
-		components.GoToURL(host)
+		info := modal.NewInfoModal(pg.Load).
+			Title("Consensus Vote Dashboard").
+			Body("Copy and paste the link below in your browser, to the view consensus vote dashboard.").
+			SetCancelable(true).
+			UseCustomWidget(func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						wrapper := pg.Theme.Card()
+						wrapper.Color = pg.Theme.Color.Gray4
+						return border.Layout(gtx, func(gtx C) D {
+							return wrapper.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Flexed(0.9, pg.Theme.Body1(host).Layout),
+										layout.Flexed(0.1, func(gtx C) D {
+											return layout.E.Layout(gtx, func(gtx C) D {
+												if pg.copyRedirectURL.Clicked() {
+													clipboard.WriteOp{Text: host}.Add(gtx.Ops)
+													pg.Toast.Notify("URL copied")
+												}
+												return pg.copyRedirectURL.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
+											})
+										}),
+									)
+								})
+							})
+						})
+					}),
+					layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{
+							Top:  values.MarginPaddingMinus10,
+							Left: values.MarginPadding10,
+						}.Layout(gtx, func(gtx C) D {
+							label := pg.Theme.Body2("Web URL")
+							label.Color = pg.Theme.Color.GrayText2
+							return label.Layout(gtx)
+						})
+					}),
+				)
+			}).
+			PositiveButton("Got it", func() {})
+		pg.ShowModal(info)
 	}
 
 	if pg.syncCompleted {

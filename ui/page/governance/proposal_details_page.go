@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -15,6 +16,7 @@ import (
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
@@ -30,23 +32,33 @@ type proposalItemWidgets struct {
 
 type ProposalDetails struct {
 	*load.Load
-	*listeners.ProposalNotificationListener
-	ctx                context.Context // page context
-	ctxCancel          context.CancelFunc
+	*listeners.ProposalNotificationListener //not needed.
+
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+
+	descriptionList *layout.List
+
+	proposal      *dcrlibwallet.Proposal
+	proposalItems map[string]proposalItemWidgets
+
+	scrollbarList *widget.List
+	rejectedIcon  *widget.Icon
+	successIcon   *widget.Icon
+
+	redirectIcon *decredmaterial.Image
+	downloadIcon *decredmaterial.Image
+	copyIcon     *decredmaterial.Image
+
+	viewInPoliteiaBtn *decredmaterial.Clickable
+	copyRedirectURL   *decredmaterial.Clickable
+
+	descriptionCard decredmaterial.Card
+	vote            decredmaterial.Button
+	backButton      decredmaterial.IconButton
+
 	voteBar            *components.VoteBar
 	loadingDescription bool
-	proposal           *dcrlibwallet.Proposal
-	descriptionCard    decredmaterial.Card
-	proposalItems      map[string]proposalItemWidgets
-	descriptionList    *layout.List
-	scrollbarList      *widget.List
-	redirectIcon       *decredmaterial.Image
-	rejectedIcon       *widget.Icon
-	downloadIcon       *decredmaterial.Image
-	successIcon        *widget.Icon
-	vote               decredmaterial.Button
-	backButton         decredmaterial.IconButton
-	viewInPoliteiaBtn  *decredmaterial.Clickable
 }
 
 func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *ProposalDetails {
@@ -65,7 +77,8 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 		proposalItems:     make(map[string]proposalItemWidgets),
 		rejectedIcon:      l.Icons.NavigationCancel,
 		successIcon:       l.Icons.ActionCheckCircle,
-		viewInPoliteiaBtn: l.Theme.NewClickable(true),
+		viewInPoliteiaBtn: l.Theme.NewClickable(false),
+		copyRedirectURL:   l.Theme.NewClickable(false),
 		voteBar:           components.NewVoteBar(l),
 	}
 
@@ -120,12 +133,56 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 	}
 
 	for pg.viewInPoliteiaBtn.Clicked() {
-		host := "https://proposals.decred.org/record/"
+		host := "https://proposals.decred.org/record/" + pg.proposal.Token
 		if pg.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
-			host = "https://test-proposals.decred.org/record/"
+			host = "https://test-proposals.decred.org/record/" + pg.proposal.Token
 		}
 
-		components.GoToURL(host + pg.proposal.Token)
+		info := modal.NewInfoModal(pg.Load).
+			Title("View on Politeia").
+			Body("Copy and paste the link below in your browser, to view proposal on Politeia dashboard.").
+			SetCancelable(true).
+			UseCustomWidget(func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						wrapper := pg.Theme.Card()
+						wrapper.Color = pg.Theme.Color.Gray4
+						return border.Layout(gtx, func(gtx C) D {
+							return wrapper.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Flexed(0.9, pg.Theme.Body1(host).Layout),
+										layout.Flexed(0.1, func(gtx C) D {
+											return layout.E.Layout(gtx, func(gtx C) D {
+												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+													if pg.copyRedirectURL.Clicked() {
+														clipboard.WriteOp{Text: host}.Add(gtx.Ops)
+														pg.Toast.Notify("URL copied")
+													}
+													return pg.copyRedirectURL.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
+												})
+											})
+										}),
+									)
+								})
+							})
+						})
+					}),
+					layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{
+							Top:  values.MarginPaddingMinus10,
+							Left: values.MarginPadding10,
+						}.Layout(gtx, func(gtx C) D {
+							label := pg.Theme.Body2("Web URL")
+							label.Color = pg.Theme.Color.GrayText2
+							return label.Layout(gtx)
+						})
+					}),
+				)
+			}).
+			PositiveButton("Got it", func() {})
+		pg.ShowModal(info)
 	}
 }
 
@@ -151,6 +208,7 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 						pg.RefreshWindow()
 					}
 				}
+			// is this really needed since listener has been set up on main.go
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalDetailsPageID)
 				close(pg.ProposalNotifChan)
@@ -502,10 +560,18 @@ func (pg *ProposalDetails) Layout(gtx C) D {
 				)
 			},
 			ExtraItem: pg.viewInPoliteiaBtn,
-			ExtraText: "View on Politeia",
 			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
-					return layout.E.Layout(gtx, pg.redirectIcon.Layout24dp)
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Top: values.MarginPadding5,
+								}.Layout(gtx, pg.Theme.Caption("View in politeia").Layout)
+							}),
+							layout.Rigid(pg.redirectIcon.Layout24dp),
+						)
+					})
 				})
 			},
 		}

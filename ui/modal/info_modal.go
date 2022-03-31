@@ -26,6 +26,7 @@ type InfoModal struct {
 	dialogTitle    string
 	subtitle       string
 	customTemplate []layout.Widget
+	customWidget   layout.Widget
 
 	positiveButtonText    string
 	positiveButtonClicked func()
@@ -160,6 +161,11 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	return in
 }
 
+func (in *InfoModal) UseCustomWidget(layout layout.Widget) *InfoModal {
+	in.customWidget = layout
+	return in
+}
+
 func (in *InfoModal) dismissModalOnEnterKey() {
 	go func() {
 		for {
@@ -248,6 +254,10 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 
 	if in.checkbox.CheckBox != nil {
 		w = append(w, checkbox)
+	}
+
+	if in.customWidget != nil {
+		w = append(w, in.customWidget)
 	}
 
 	if in.negativeButtonText != "" || in.positiveButtonText != "" {
