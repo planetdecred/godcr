@@ -277,7 +277,10 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 	if wal.IsWatchingOnlyWallet() {
 		return pg.getWatchOnlyWalletMenu(wal)
 	}
-
+	privacyPageID := privacy.SetupPrivacyPageID
+	if wal.AccountMixerConfigIsSet() {
+		privacyPageID = privacy.AccountMixerPageID
+	}
 	return []menuItem{
 		{
 			text:   values.String(values.StrSignMessage),
@@ -294,7 +297,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			text:     values.String(values.StrStakeShuffle),
 			button:   pg.Theme.NewClickable(true),
 			separate: true,
-			id:       privacy.SetupPrivacyPageID,
+			id:       privacyPageID,
 		},
 		{
 			text:   values.String(values.StrRename),
@@ -1173,6 +1176,8 @@ func (pg *WalletPage) HandleUserInteractions() {
 					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal))
 				case privacy.SetupPrivacyPageID:
 					pg.ChangeFragment(privacy.NewSetupPrivacyPage(pg.Load, listItem.wal))
+				case privacy.AccountMixerPageID:
+					pg.ChangeFragment(privacy.NewAccountMixerPage(pg.Load, listItem.wal))
 				case WalletSettingsPageID:
 					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal))
 				default:
