@@ -380,8 +380,14 @@ func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) 
 
 func (pg Restore) suggestionSeeds(text string) []string {
 	var seeds []string
-	if text == "" {
-		return seeds
+	for _, editor := range pg.seedEditors.editors {
+		if editor.Edit.Editor.Focused() {
+			for i := 0; i < len(pg.allSuggestions); i++ {
+				if editor.Edit.Editor.Text() == pg.allSuggestions[i] || text == "" {
+					return seeds
+				}
+			}
+		}
 	}
 
 	for _, word := range pg.allSuggestions {
@@ -412,7 +418,7 @@ func (pg *Restore) validateSeeds() bool {
 
 		for i := 0; i < len(pg.allSuggestions); i++ {
 			if editor.Edit.Editor.Text() == pg.allSuggestions[i] {
-				seedMatchCounter += 1
+				seedMatchCounter++
 			}
 		}
 		pg.seedPhrase += editor.Edit.Editor.Text() + " "
@@ -506,10 +512,12 @@ func (pg *Restore) HandleUserInteractions() {
 	select {
 	case evt := <-pg.keyEvent:
 		if evt.Name == key.NameTab && evt.State == key.Press {
-			focus := pg.seedEditors.focusIndex
-			pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[0])
-			pg.seedClicked = true
-			pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
+			if len(pg.suggestions) > 0 {
+				focus := pg.seedEditors.focusIndex
+				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[0])
+				pg.seedClicked = true
+				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
+			}
 
 			switchSeedEditors(pg.seedEditors.editors)
 		}
