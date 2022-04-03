@@ -137,7 +137,7 @@ func (pg *AppOverviewPage) progressStatusRow(gtx C, inset layout.Inset) D {
 
 	percentageLabel := pg.Theme.Body1(fmt.Sprintf("%v%%", progress))
 	if progress == 0 {
-		timeLeftLabel = pg.Theme.Body1("Estimating")
+		timeLeftLabel = pg.Theme.Body1("connecting")
 	} else {
 		timeLeftLabel = pg.Theme.Body1(fmt.Sprintf("%v left", timeLeft))
 	}
