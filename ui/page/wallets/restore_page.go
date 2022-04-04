@@ -493,11 +493,11 @@ func (pg *Restore) HandleUserInteractions() {
 	select {
 	case evt := <-pg.keyEvent:
 		if evt.Name == key.NameTab && evt.State == key.Press {
-			if len(pg.suggestions) == 1 {
+			if len(pg.suggestions) > 0 {
 				focus := pg.seedEditors.focusIndex
-				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[0])
+				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[pg.selected])
 				pg.seedClicked = true
-				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
+				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[pg.selected]), -1)
 			}
 			switchSeedEditors(pg.seedEditors.editors)
 		}
