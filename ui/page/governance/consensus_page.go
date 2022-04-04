@@ -131,6 +131,10 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 			pg.RefreshWindow()
 		})
 	}
+
+	pg.searchEditor.EditorIconButtonEvent = func() {
+		//TODO: consensus search functionality
+	}
 }
 
 func (pg *ConsensusPage) FetchAgendas() {
