@@ -380,14 +380,8 @@ func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) 
 
 func (pg Restore) suggestionSeeds(text string) []string {
 	var seeds []string
-	for _, editor := range pg.seedEditors.editors {
-		if editor.Edit.Editor.Focused() {
-			for i := 0; i < len(pg.allSuggestions); i++ {
-				if editor.Edit.Editor.Text() == pg.allSuggestions[i] || text == "" {
-					return seeds
-				}
-			}
-		}
+	if text == "" {
+		return seeds
 	}
 
 	for _, word := range pg.allSuggestions {
@@ -409,33 +403,20 @@ func (pg *Restore) updateSeedResetBtn() bool {
 
 func (pg *Restore) validateSeeds() bool {
 	pg.seedPhrase = ""
-	seedMatchCounter := 0
 	for i, editor := range pg.seedEditors.editors {
 		if editor.Edit.Editor.Text() == "" {
 			pg.seedEditors.editors[i].Edit.HintColor = pg.Theme.Color.Danger
 			return false
 		}
 
-		for i := 0; i < len(pg.allSuggestions); i++ {
-			if editor.Edit.Editor.Text() == pg.allSuggestions[i] {
-				seedMatchCounter++
-			}
-		}
 		pg.seedPhrase += editor.Edit.Editor.Text() + " "
 	}
 
-	for seedMatchCounter < 33 {
-		return false
-	}
-
-	return true
-}
-
-func (pg *Restore) verifySeedWords() bool {
 	if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
 		pg.Toast.NotifyError("invalid seed phrase")
 		return false
 	}
+
 	return true
 }
 
@@ -468,7 +449,7 @@ func (pg *Restore) HandleUserInteractions() {
 	}
 
 	for pg.validateSeed.Clicked() {
-		if !pg.validateSeeds() || !pg.verifySeedWords() {
+		if !pg.validateSeeds() {
 			return
 		}
 
@@ -512,13 +493,12 @@ func (pg *Restore) HandleUserInteractions() {
 	select {
 	case evt := <-pg.keyEvent:
 		if evt.Name == key.NameTab && evt.State == key.Press {
-			if len(pg.suggestions) > 0 {
+			if len(pg.suggestions) == 1 {
 				focus := pg.seedEditors.focusIndex
 				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[0])
 				pg.seedClicked = true
 				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
-
 			switchSeedEditors(pg.seedEditors.editors)
 		}
 		if evt.Name == key.NameTab && evt.Modifiers == key.ModShift && evt.State == key.Press {
