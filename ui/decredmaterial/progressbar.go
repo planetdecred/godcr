@@ -3,13 +3,11 @@
 package decredmaterial
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
-	// "gioui.org/widget"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
@@ -32,7 +30,8 @@ type ProgressBarItem struct {
 	SubText string
 }
 
-// VoteBar shows the range/percentage of the yes votes and no votes against the total required.
+// MultiLayerProgressBar shows the percentage of the mutiple progress layer
+// against the total/expected progress.
 type MultiLayerProgressBar struct {
 	t *Theme
 
@@ -45,6 +44,18 @@ type MultiLayerProgressBar struct {
 
 func (t *Theme) ProgressBar(progress int) ProgressBarStyle {
 	return ProgressBarStyle{ProgressBarStyle: material.ProgressBar(t.Base, float32(progress)/100)}
+}
+
+func (t *Theme) MultiLayerProgressBar(total float32, items []ProgressBarItem) *MultiLayerProgressBar {
+	mp := &MultiLayerProgressBar{
+		t: t,
+
+		total:  total,
+		Height: values.MarginPadding8,
+		items:  items,
+	}
+
+	return mp
 }
 
 // This achieves a progress bar using linear layouts.
@@ -117,18 +128,7 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (t *Theme) MultiLayerProgressBar(total float32, items []ProgressBarItem) *MultiLayerProgressBar {
-	mp := &MultiLayerProgressBar{
-		t: t,
-
-		total:  total,
-		Height: values.MarginPadding8,
-		items:  items,
-	}
-
-	return mp
-}
-
+// TODO: Allow more than just 2 layers and make it dynamic
 func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 	r := float32(gtx.Px(values.MarginPadding0))
 	mp.Width = float32(gtx.Constraints.Max.X)
@@ -150,105 +150,38 @@ func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 		}
 	}
 
-	return layout.Stack{Alignment: layout.W}.Layout(gtx,
-		// layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-		// 	return progressScale(mp.Width, mp.t.Color.Gray2)
-		// }),
-		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			// progressLayer := make([]layout.Widget, 0)
-			var w []layout.Widget
+	calProgressWidth := func(progress float32) float32 {
+		val := (progress / mp.total) * 100
+		return (mp.Width / 100) * val
+	}
 
-			for _, item := range mp.items {
-				val := (item.Value / mp.total) * 100
-				width := (mp.Width / 100) * val
-				fmt.Println(val)
-				fmt.Println(width)
-				fmt.Println(item)
-				fmt.Println(mp.Width)
-
-				w = append(w, func(gtx C) D {
-					if width == 0 {
-						return D{}
-					}
-
-					// return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					// layout.Rigid(mp.t.Label(values.TextSize14, item.SubText).Layout),
-					// layout.Rigid(func(gtx C) D {
-					return progressScale(width, item.Color)
-					// })
-					// )
-				})
-
+	// This takes only 2 layers
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			width := calProgressWidth(mp.items[0].Value)
+			if width == 0 {
+				return D{}
 			}
-
-			// fmt.Println(len(progressLayer))
-			// return layout.Flex{}.Layout(gtx, progressLayer...)
-			list := &layout.List{Axis: layout.Horizontal}
-			return list.Layout(gtx, len(w), func(gtx C, i int) D {
-				return w[i](gtx)
-			})
-
+			return progressScale(width, mp.items[0].Color)
+		}),
+		layout.Rigid(func(gtx C) D {
+			width := calProgressWidth(mp.items[1].Value)
+			if width == 0 {
+				return D{}
+			}
+			return progressScale(width, mp.items[1].Color)
 		}),
 	)
 }
 
-func (mp *MultiLayerProgressBar) Layout(gtx C) D {
-	return layout.Stack{}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					// layout.Rigid(func(gtx C) D {
-					// 	return layout.Flex{}.Layout(gtx,
-					// 		layout.Rigid(func(gtx C) D {
-					// 			yesLabel := mp.Theme.Body1("Yes: ")
-					// 			return mp.layoutIconAndText(gtx, yesLabel, mp.yesVotes, mp.yesColor)
-					// 		}),
-					// 		layout.Rigid(func(gtx C) D {
-					// 			noLabel := mp.Theme.Body1("No: ")
-					// 			return mp.layoutIconAndText(gtx, noLabel, mp.noVotes, mp.noColor)
-					// 		}),
-					// 		layout.Flexed(1, func(gtx C) D {
-					// 			return layout.E.Layout(gtx, func(gtx C) D {
-					// 				return mp.layoutInfo(gtx)
-					// 			})
-					// 		}),
-					// 	)
-					// }),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, mp.progressBarLayout)
-					}),
-				)
-			})
+func (mp *MultiLayerProgressBar) Layout(gtx C, labelWdg layout.Widget) D {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(labelWdg),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, mp.progressBarLayout)
 		}),
 	)
 }
-
-// func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32, col color.NRGBA) D {
-// 	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-// 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-// 			layout.Rigid(func(gtx C) D {
-// 				return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-// 					mp.legendIcon.Color = col
-// 					return mp.legendIcon.Layout(gtx, values.MarginPadding10)
-// 				})
-// 			}),
-// 			layout.Rigid(func(gtx C) D {
-// 				lbl.Font.Weight = text.SemiBold
-// 				return lbl.Layout(gtx)
-// 			}),
-// 			layout.Rigid(func(gtx C) D {
-// 				percentage := (count / mp.totalVotes) * 100
-// 				if percentage != percentage {
-// 					percentage = 0
-// 				}
-// 				percentageStr := strconv.FormatFloat(float64(percentage), 'f', 1, 64) + "%"
-// 				countStr := strconv.FormatFloat(float64(count), 'f', 0, 64)
-
-// 				return mp.Theme.Body1(fmt.Sprintf("%s (%s)", countStr, percentageStr)).Layout(gtx)
-// 			}),
-// 		)
-// 	})
-// }
 
 // clamp1 limits mp.to range [0..1].
 func clamp1(v float32) float32 {
