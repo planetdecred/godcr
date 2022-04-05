@@ -60,8 +60,9 @@ type Restore struct {
 	seedClicked  bool
 	isLastEditor bool
 
-	seedEditors seedEditors
-	keyEvent    chan *key.Event
+	seedEditors         seedEditors
+	keyEvent            chan *key.Event
+	editorSwitchTracker int
 }
 
 func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
@@ -120,6 +121,7 @@ func (pg *Restore) ID() string {
 // Part of the load.Page interface.
 func (pg *Restore) OnNavigatedTo() {
 	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
+	pg.editorSwitchTracker = 0
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -438,12 +440,26 @@ func switchSeedEditors(editors []decredmaterial.RestoreEditor) {
 	}
 }
 
+func (pg *Restore) isSeedEditorChanged() bool {
+	focus := pg.seedEditors.focusIndex
+	if pg.editorSwitchTracker != focus {
+		pg.selected = 0
+		pg.suggestions = make([]string, 0)
+		pg.editorSwitchTracker = focus
+		return true
+	}
+
+	return false
+}
+
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
 // displayed.
 // Part of the load.Page interface.
 func (pg *Restore) HandleUserInteractions() {
+	pg.isSeedEditorChanged()
+
 	for pg.backButton.Button.Clicked() {
 		pg.PopWindowPage()
 	}
@@ -493,12 +509,17 @@ func (pg *Restore) HandleUserInteractions() {
 	select {
 	case evt := <-pg.keyEvent:
 		if evt.Name == key.NameTab && evt.State == key.Press {
+			focus := pg.seedEditors.focusIndex
 			if len(pg.suggestions) > 0 {
-				focus := pg.seedEditors.focusIndex
-				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[pg.selected])
-				pg.seedClicked = true
-				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[pg.selected]), -1)
+				for i := range pg.suggestions {
+					if pg.selected == i {
+						pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[i])
+						pg.seedClicked = true
+						pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[i]), -1)
+					}
+				}
 			}
+
 			switchSeedEditors(pg.seedEditors.editors)
 		}
 		if evt.Name == key.NameTab && evt.Modifiers == key.ModShift && evt.State == key.Press {
