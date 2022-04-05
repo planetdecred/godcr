@@ -28,6 +28,8 @@ type Button struct {
 	HighlightColor     color.NRGBA
 
 	Margin layout.Inset
+
+	colorStyle *values.ColorStyle
 }
 
 type ButtonLayout struct {
@@ -53,7 +55,7 @@ func (t *Theme) Button(txt string) Button {
 	clickable := new(widget.Clickable)
 	buttonStyle := material.Button(t.Base, clickable, txt)
 	buttonStyle.TextSize = values.TextSize16
-	buttonStyle.Background = t.Color.Primary
+	// buttonStyle.Background = t.Color.Primary
 	buttonStyle.CornerRadius = values.MarginPadding8
 	buttonStyle.Inset = layout.Inset{
 		Top:    values.MarginPadding10,
@@ -61,6 +63,7 @@ func (t *Theme) Button(txt string) Button {
 		Bottom: values.MarginPadding10,
 		Left:   values.MarginPadding16,
 	}
+
 	return Button{
 		ButtonStyle:        buttonStyle,
 		label:              t.Label(values.TextSize16, txt),
@@ -69,6 +72,7 @@ func (t *Theme) Button(txt string) Button {
 		disabledTextColor:  t.Color.Surface,
 		HighlightColor:     t.Color.PrimaryHighlight,
 		isEnabled:          true,
+		colorStyle: t.Styles.ButtonColorStyle,
 	}
 }
 
@@ -137,6 +141,10 @@ func (b Button) Click() {
 	b.clickable.Click()
 }
 
+func (b Button) ChangeColorStyle(colorStyle *values.ColorStyle) {
+	b.colorStyle = colorStyle
+}
+
 func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 	wdg := func(gtx layout.Context) layout.Dimensions {
 		return b.Inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -169,7 +177,7 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 				Y: float32(gtx.Constraints.Min.Y),
 			}}, rr).Push(gtx.Ops).Pop()
 
-			background := b.Background
+			background := b.colorStyle.Background
 			if !b.Enabled() {
 				background = b.disabledBackground
 			} else if b.clickable.Hovered() {

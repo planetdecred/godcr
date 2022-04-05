@@ -4,6 +4,7 @@ package decredmaterial
 
 import (
 	"image"
+	"image/color"
 
 	"gioui.org/f32"
 	"gioui.org/io/pointer"
@@ -13,6 +14,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -54,7 +56,8 @@ func (t *Theme) SwitchButtonText(i []SwitchItem) *SwitchButtonText {
 	for index := range i {
 		i[index].button = t.Button(i[index].Text)
 		i[index].button.HighlightColor = t.Color.SurfaceHighlight
-		i[index].button.Background, i[index].button.Color = sw.style.ActiveColor, sw.style.InactiveTextColor
+		i[index].button.Color = sw.style.InactiveTextColor
+		i[index].button.ChangeColorStyle(&values.ColorStyle{Background: sw.style.ActiveColor, Foreground: color.NRGBA{}})
 		i[index].button.TextSize = unit.Sp(14)
 		sw.items[index+1] = i[index]
 	}
@@ -208,10 +211,11 @@ func (s *SwitchButtonText) handleClickEvent() {
 		}
 
 		if s.selected == index {
-			s.items[s.selected].button.Background = s.style.ActiveColor
+			// s.items[s.selected].button.Background = s.style.ActiveColor
+			s.items[s.selected].button.ChangeColorStyle(&values.ColorStyle{Background: s.style.ActiveColor, Foreground: color.NRGBA{}})
 			s.items[s.selected].button.Color = s.style.ActiveTextColor
 		} else {
-			s.items[index].button.Background = s.style.InactiveColor
+			s.items[index].button.ChangeColorStyle(&values.ColorStyle{Background: s.style.InactiveColor, Foreground: color.NRGBA{}})/* = s.style.InactiveColor*/
 			s.items[index].button.Color = s.style.InactiveTextColor
 		}
 	}

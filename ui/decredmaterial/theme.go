@@ -3,6 +3,7 @@
 package decredmaterial
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 
@@ -51,15 +52,12 @@ type Theme struct {
 	collapseIcon          *Image
 
 	dropDownMenus []*DropDown
-
-	DarkMode bool
 }
 
 func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image, isDarkModeOn bool) *Theme {
 	t := &Theme{
 		Shaper:   text.NewCache(fontCollection),
 		Base:     material.NewTheme(fontCollection),
-		DarkMode: isDarkModeOn,
 		Color:    &values.Color{},
 		Styles:   values.DefaultWidgetStyles(),
 		TextSize: values.TextSize16,
@@ -82,7 +80,9 @@ func (t *Theme) SwitchDarkMode(isDarkModeOn bool, decredIcons map[string]image.I
 	t.Color.DefualtThemeColors()
 	expandIcon := "expand_icon"
 	collapseIcon := "collapse_icon"
+		fmt.Println("isDarkModeOn ",isDarkModeOn)
 	if isDarkModeOn {
+		fmt.Println("in theme 1")
 		t.Color.DarkThemeColors() // override defaults with dark themed colors
 		expandIcon = "expand_dm"
 		collapseIcon = "collapse_dm"
@@ -115,6 +115,10 @@ func (t *Theme) updateStyles(isDarkModeOn bool) {
 	// update icon button style colors
 	t.Styles.IconButtonColorStyle.Background = color.NRGBA{}
 	t.Styles.IconButtonColorStyle.Foreground = t.Color.Gray1
+
+	// // update button style colors
+	// t.Styles.ButtonColorStyle.Background = t.Color.Primary
+	// t.Styles.ButtonColorStyle.Foreground = color.NRGBA{}
 
 	// update Collapsible widget style colors
 	t.Styles.CollapsibleStyle.Background = t.Color.Surface
