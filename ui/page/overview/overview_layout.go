@@ -190,7 +190,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 			return pg.recentTransactionsSection(gtx)
 		},
 		func(gtx C) D {
-			if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
+			if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) && len(pg.proposalItems) != 0 {
 				return pg.recentProposalsSection(gtx)
 			}
 			return D{}
