@@ -63,9 +63,6 @@ func (pg *AppOverviewPage) recentProposalsSection(gtx C) D {
 				}),
 				layout.Rigid(pg.Theme.Separator().Layout),
 				layout.Rigid(func(gtx C) D {
-					if len(proposalItems) == 0 {
-						return components.LayoutNoProposalsFound(gtx, pg.Load, pg.WL.MultiWallet.Politeia.IsSyncing(), dcrlibwallet.ProposalCategoryAll)
-					}
 					return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
