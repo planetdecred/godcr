@@ -131,7 +131,9 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 // TODO: Allow more than just 2 layers and make it dynamic
 func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 	r := float32(gtx.Px(values.MarginPadding0))
-	mp.Width = float32(gtx.Constraints.Max.X)
+	if mp.Width <= 0 {
+		mp.Width = float32(gtx.Constraints.Max.X)
+	}
 
 	// progressScale represent the different progress bar layers
 	progressScale := func(width float32, color color.NRGBA) layout.Dimensions {

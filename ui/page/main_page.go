@@ -298,27 +298,6 @@ func (mp *MainPage) updateBalance() {
 	}
 }
 
-// func (mp *MainPage) CalculateTotalWalletsBalance() (dcrutil.Amount, error) {
-// 	totalBalance := int64(0)
-// wallets := mp.WL.SortedWalletList()
-// 	if len(wallets) == 0 {
-// 		return 0, nil
-// 	}
-
-// 	for _, wallet := range wallets {
-// 		accountsResult, err := wallet.GetAccountsRaw()
-// 		if err != nil {
-// 			return 0, err
-// 		}
-
-// 		for _, account := range accountsResult.Acc {
-// 			totalBalance += account.TotalBalance
-// 		}
-// 	}
-
-// 	return dcrutil.Amount(totalBalance), nil
-// }
-
 func (mp *MainPage) StartSyncing() {
 	for _, wal := range mp.WL.SortedWalletList() {
 		if !wal.HasDiscoveredAccounts && wal.IsLocked() {

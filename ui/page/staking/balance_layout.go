@@ -76,7 +76,7 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 }
 
 func (pg *Page) layoutIconAndText(gtx C, title string, val string, col color.NRGBA) D {
-	return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+	return layout.Inset{Right: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -86,12 +86,12 @@ func (pg *Page) layoutIconAndText(gtx C, title string, val string, col color.NRG
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				txt := pg.Theme.Label(values.TextSize12, title)
+				txt := pg.Theme.Label(values.TextSize14, title)
 				txt.Color = pg.Theme.Color.GrayText2
 				return txt.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				txt := pg.Theme.Label(values.TextSize12, val)
+				txt := pg.Theme.Label(values.TextSize14, val)
 				txt.Color = pg.Theme.Color.GrayText2
 				return txt.Layout(gtx)
 			}),
