@@ -189,11 +189,11 @@ func (pg *VerifyMessagePage) HandleUserInteractions() {
 			if err != nil || !valid {
 				pg.verifyMessage.Text = "Invalid signature or message"
 				pg.verifyMessage.Color = pg.Theme.Color.Danger
-				pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Icons.NavigationCancel)
+				pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
 				return
 			}
 
-			pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Icons.ActionCheck)
+			pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheck)
 			pg.verifyMessageStatus.Color = pg.Theme.Color.Success
 			pg.verifyMessage.Text = "Valid signature"
 			pg.verifyMessage.Color = pg.Theme.Color.Success

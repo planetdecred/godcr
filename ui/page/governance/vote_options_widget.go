@@ -28,8 +28,8 @@ func newInputVoteOptions(l *load.Load, label string) *inputVoteOptionsWidgets {
 		activeBg:  l.Theme.Color.Green50,
 		dotColor:  l.Theme.Color.Green500,
 		input:     l.Theme.Editor(new(widget.Editor), ""),
-		increment: l.Theme.IconButton(l.Icons.ContentAdd),
-		decrement: l.Theme.IconButton(l.Icons.ContentRemove),
+		increment: l.Theme.IconButton(l.Theme.Icons.ContentAdd),
+		decrement: l.Theme.IconButton(l.Theme.Icons.ContentRemove),
 		max:       l.Theme.Button("MAX"),
 	}
 	i.max.Background = l.Theme.Color.Surface

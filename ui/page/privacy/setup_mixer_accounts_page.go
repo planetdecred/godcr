@@ -41,10 +41,10 @@ func NewSetupMixerAccountsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Setup
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
-	pg.autoSetupIcon = decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
+	pg.autoSetupIcon = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
 	pg.autoSetupIcon.Color = pg.Theme.Color.Success
 
-	pg.nextIcon = decredmaterial.NewIcon(pg.Icons.NavigationArrowForward)
+	pg.nextIcon = decredmaterial.NewIcon(pg.Theme.Icons.NavigationArrowForward)
 	pg.nextIcon.Color = pg.Theme.Color.Gray1
 
 	pg.autoSetupClickable = pg.Theme.NewClickable(true)
@@ -90,7 +90,7 @@ func (pg *SetupMixerAccountsPage) Layout(gtx layout.Context) layout.Dimensions {
 								layout.Rigid(func(gtx C) D {
 									txt := pg.Theme.Body1("Two dedicated accounts will be set up to use the mixer:")
 									txt.Alignment = text.Start
-									ic := decredmaterial.NewIcon(pg.Icons.ImageBrightness1)
+									ic := decredmaterial.NewIcon(pg.Theme.Icons.ImageBrightness1)
 									ic.Color = pg.Theme.Color.Gray1
 									return layout.Inset{Top: values.MarginPadding16, Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical, Alignment: layout.Start}.Layout(gtx,
@@ -199,7 +199,7 @@ func (pg *SetupMixerAccountsPage) manualSetupLayout(gtx C) D {
 		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(pg.Icons.EditIcon.Layout24dp),
+					layout.Rigid(pg.Theme.Icons.EditIcon.Layout24dp),
 					layout.Rigid(func(gtx C) D {
 						autoSetupText := pg.Theme.H6("Manual setup")
 						txt := pg.Theme.Body2("For wallets that have enabled privacy before.")

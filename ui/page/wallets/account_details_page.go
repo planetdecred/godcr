@@ -51,7 +51,7 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		backButton:    l.Theme.IconButton(l.Icons.NavigationArrowBack),
+		backButton:    l.Theme.IconButton(l.Theme.Icons.NavigationArrowBack),
 		renameAccount: l.Theme.NewClickable(false),
 	}
 
@@ -140,7 +140,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			ExtraItem: pg.renameAccount,
 			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
-					edit := pg.Icons.EditIcon
+					edit := pg.Theme.Icons.EditIcon
 					return layout.E.Layout(gtx, edit.Layout24dp)
 				})
 			},
@@ -157,9 +157,9 @@ func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimen
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 
-						accountIcon := pg.Icons.AccountIcon
+						accountIcon := pg.Theme.Icons.AccountIcon
 						if pg.account.Number == load.MaxInt32 {
-							accountIcon = pg.Icons.ImportedAccountIcon
+							accountIcon = pg.Theme.Icons.ImportedAccountIcon
 						}
 
 						m := values.MarginPadding10

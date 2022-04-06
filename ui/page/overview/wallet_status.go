@@ -18,15 +18,15 @@ func (pg *AppOverviewPage) initWalletStatusWidgets() {
 	pg.toggleSyncDetails.Color = pg.Theme.Color.Primary
 	pg.toggleSyncDetails.Inset = layout.Inset{}
 
-	pg.syncedIcon = decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
+	pg.syncedIcon = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
 	pg.syncedIcon.Color = pg.Theme.Color.Success
 
-	pg.syncingIcon = pg.Icons.SyncingIcon
+	pg.syncingIcon = pg.Theme.Icons.SyncingIcon
 
-	pg.notSyncedIcon = decredmaterial.NewIcon(pg.Icons.NavigationCancel)
+	pg.notSyncedIcon = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
 	pg.notSyncedIcon.Color = pg.Theme.Color.Danger
 
-	pg.walletStatusIcon = decredmaterial.NewIcon(pg.Icons.ImageBrightness1)
+	pg.walletStatusIcon = decredmaterial.NewIcon(pg.Theme.Icons.ImageBrightness1)
 	pg.autoSyncSwitch = pg.Theme.Switch()
 }
 

@@ -33,7 +33,7 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 		rescan:       l.Theme.NewClickable(false),
 		deleteWallet: l.Theme.NewClickable(false),
 
-		chevronRightIcon: decredmaterial.NewIcon(l.Icons.ChevronRight),
+		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)

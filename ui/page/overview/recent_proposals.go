@@ -11,7 +11,7 @@ import (
 )
 
 func (pg *AppOverviewPage) initializeProposalsWidget() *AppOverviewPage {
-	pg.toProposals = pg.Theme.TextAndIconButton(values.String(values.StrSeeAll), pg.Icons.NavigationArrowForward)
+	pg.toProposals = pg.Theme.TextAndIconButton(values.String(values.StrSeeAll), pg.Theme.Icons.NavigationArrowForward)
 	pg.toProposals.Color = pg.Theme.Color.Primary
 	pg.toProposals.BackgroundColor = pg.Theme.Color.Surface
 

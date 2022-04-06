@@ -14,7 +14,7 @@ import (
 func (pg *AppOverviewPage) initSyncDetailsWidgets() {
 	pg.walletSyncList = &layout.List{Axis: layout.Vertical}
 	pg.syncClickable = pg.Theme.NewClickable(true)
-	pg.cachedIcon = decredmaterial.NewIcon(pg.Icons.Cached)
+	pg.cachedIcon = decredmaterial.NewIcon(pg.Theme.Icons.Cached)
 
 	pg.sync = pg.Theme.Label(values.MarginPadding14, values.String(values.StrReconnect))
 	pg.sync.TextSize = values.TextSize14

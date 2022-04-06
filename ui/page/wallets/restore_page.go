@@ -87,7 +87,7 @@ func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 	pg.resetSeedFields.Font.Weight = text.Medium
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
-	pg.backButton.Icon = pg.Icons.ContentClear
+	pg.backButton.Icon = pg.Theme.Icons.ContentClear
 
 	for i := 0; i <= numberOfSeeds; i++ {
 		widgetEditor := new(widget.Editor)

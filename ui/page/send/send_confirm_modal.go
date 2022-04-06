@@ -148,7 +148,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					icon := scm.Icons.SendIcon
+					icon := scm.Theme.Icons.SendIcon
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Top: values.MarginPadding2, Right: values.MarginPadding16}.Layout(gtx, icon.Layout24dp)
@@ -175,7 +175,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							icon := decredmaterial.NewIcon(scm.Icons.NavigationArrowForward)
+							icon := decredmaterial.NewIcon(scm.Theme.Icons.NavigationArrowForward)
 							icon.Color = scm.Theme.Color.Gray1
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 								return icon.Layout(gtx, values.MarginPadding15)
@@ -250,7 +250,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					icon := decredmaterial.NewIcon(scm.Icons.ActionInfo)
+					icon := decredmaterial.NewIcon(scm.Theme.Icons.ActionInfo)
 					icon.Color = scm.Theme.Color.Gray1
 					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 						return icon.Layout(gtx, values.MarginPadding20)

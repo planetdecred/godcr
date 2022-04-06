@@ -98,7 +98,7 @@ func (pg *SetupPrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimens
 							return layout.Inset{
 								Bottom: values.MarginPadding24,
 							}.Layout(gtx, func(gtx C) D {
-								return pg.Icons.PrivacySetup.LayoutSize(gtx, values.MarginPadding280)
+								return pg.Theme.Icons.PrivacySetup.LayoutSize(gtx, values.MarginPadding280)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {

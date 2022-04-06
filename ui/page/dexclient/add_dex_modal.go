@@ -120,7 +120,7 @@ func (md *addDexModal) Handle() {
 
 			newCreateWalletModal(md.Load,
 				&walletInfoWidget{
-					image:    components.CoinImageBySymbol(&md.Load.Icons, feeAssetName),
+					image:    components.CoinImageBySymbol(md.Load, feeAssetName),
 					coinName: feeAssetName,
 					coinID:   feeAsset.ID,
 				},

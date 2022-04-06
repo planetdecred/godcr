@@ -57,8 +57,8 @@ func newStakingModal(l *load.Load) *stakingModal {
 		cancelPurchase:   l.Theme.OutlineButton("Cancel"),
 		stakeBtn:         l.Theme.Button("Stake"),
 		modal:            *l.Theme.ModalFloatTitle(),
-		increment:        l.Theme.IconButton(l.Icons.ContentAdd),
-		decrement:        l.Theme.IconButton(l.Icons.ContentRemove),
+		increment:        l.Theme.IconButton(l.Theme.Icons.ContentAdd),
+		decrement:        l.Theme.IconButton(l.Theme.Icons.ContentRemove),
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
 		materialLoader:   material.Loader(l.Theme.Base),
 	}
@@ -140,7 +140,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 					return layout.Center.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								ic := tp.Icons.NewStakeIcon
+								ic := tp.Theme.Icons.NewStakeIcon
 								return ic.Layout48dp(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {

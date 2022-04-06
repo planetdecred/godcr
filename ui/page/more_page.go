@@ -29,7 +29,7 @@ func NewMorePage(l *load.Load) *MorePage {
 	morePageListItems := []morePageHandler{
 		{
 			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.SettingsIcon,
+			image:     l.Theme.Icons.SettingsIcon,
 			page:      SettingsPageID,
 			action: func() {
 				l.ChangeFragment(NewSettingsPage(l))
@@ -37,7 +37,7 @@ func NewMorePage(l *load.Load) *MorePage {
 		},
 		{
 			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.SecurityIcon,
+			image:     l.Theme.Icons.SecurityIcon,
 			page:      SecurityToolsPageID,
 			action: func() {
 				l.ChangeFragment(NewSecurityToolsPage(l))
@@ -45,7 +45,7 @@ func NewMorePage(l *load.Load) *MorePage {
 		},
 		{
 			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.HelpIcon,
+			image:     l.Theme.Icons.HelpIcon,
 			page:      HelpPageID,
 			action: func() {
 				l.ChangeFragment(NewHelpPage(l))
@@ -53,7 +53,7 @@ func NewMorePage(l *load.Load) *MorePage {
 		},
 		{
 			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.AboutIcon,
+			image:     l.Theme.Icons.AboutIcon,
 			page:      AboutPageID,
 			action: func() {
 				l.ChangeFragment(NewAboutPage(l))
@@ -61,7 +61,7 @@ func NewMorePage(l *load.Load) *MorePage {
 		},
 		{
 			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.DebugIcon,
+			image:     l.Theme.Icons.DebugIcon,
 			page:      DebugPageID,
 			action: func() {
 				l.ChangeFragment(NewDebugPage(l))

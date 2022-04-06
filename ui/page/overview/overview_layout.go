@@ -105,7 +105,7 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 		checkBox: l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
 	}
 
-	pg.toMixer = l.Theme.IconButton(l.Icons.NavigationArrowForward)
+	pg.toMixer = l.Theme.IconButton(l.Theme.Icons.NavigationArrowForward)
 	pg.toMixer.Size = values.MarginPadding24
 	pg.toMixer.Inset = layout.UniformInset(values.MarginPadding4)
 

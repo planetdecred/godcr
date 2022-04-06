@@ -87,7 +87,7 @@ func NewMainPage(l *load.Load) *MainPage {
 		Load: l,
 	}
 
-	mp.hideBalanceItem.hideBalanceButton = mp.Theme.IconButton(mp.Icons.ConcealIcon)
+	mp.hideBalanceItem.hideBalanceButton = mp.Theme.IconButton(mp.Theme.Icons.ConcealIcon)
 	mp.hideBalanceItem.hideBalanceButton.Size = unit.Dp(19)
 	mp.hideBalanceItem.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
 	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
@@ -131,13 +131,13 @@ func (mp *MainPage) initNavItems() {
 		AppBarNavItems: []components.NavHandler{
 			{
 				Clickable: mp.Theme.NewClickable(true),
-				Image:     mp.Icons.SendIcon,
+				Image:     mp.Theme.Icons.SendIcon,
 				Title:     values.String(values.StrSend),
 				PageID:    send.PageID,
 			},
 			{
 				Clickable: mp.Theme.NewClickable(true),
-				Image:     mp.Icons.ReceiveIcon,
+				Image:     mp.Theme.Icons.ReceiveIcon,
 				Title:     values.String(values.StrReceive),
 				PageID:    ReceivePageID,
 			},
@@ -150,57 +150,57 @@ func (mp *MainPage) initNavItems() {
 		DrawerNavItems: []components.NavHandler{
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.OverviewIcon,
-				ImageInactive: mp.Icons.OverviewIconInactive,
+				Image:         mp.Theme.Icons.OverviewIcon,
+				ImageInactive: mp.Theme.Icons.OverviewIconInactive,
 				Title:         values.String(values.StrOverview),
 				PageID:        overview.OverviewPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.TransactionsIcon,
-				ImageInactive: mp.Icons.TransactionsIconInactive,
+				Image:         mp.Theme.Icons.TransactionsIcon,
+				ImageInactive: mp.Theme.Icons.TransactionsIconInactive,
 				Title:         values.String(values.StrTransactions),
 				PageID:        transaction.TransactionsPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.WalletIcon,
-				ImageInactive: mp.Icons.WalletIconInactive,
+				Image:         mp.Theme.Icons.WalletIcon,
+				ImageInactive: mp.Theme.Icons.WalletIconInactive,
 				Title:         values.String(values.StrWallets),
 				PageID:        wallets.WalletPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.StakeIcon,
-				ImageInactive: mp.Icons.StakeIconInactive,
+				Image:         mp.Theme.Icons.StakeIcon,
+				ImageInactive: mp.Theme.Icons.StakeIconInactive,
 				Title:         values.String(values.StrStaking),
 				PageID:        staking.OverviewPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.GovernanceActiveIcon,
-				ImageInactive: mp.Icons.GovernanceInactiveIcon,
+				Image:         mp.Theme.Icons.GovernanceActiveIcon,
+				ImageInactive: mp.Theme.Icons.GovernanceInactiveIcon,
 				Title:         "Governance",
 				PageID:        governance.GovernancePageID,
 			},
 			// Temp disabling. Will uncomment after release
 			// {
 			// 	Clickable:     mp.Theme.NewClickable(true),
-			// 	Image:         mp.Icons.DexIcon,
-			// 	ImageInactive: mp.Icons.DexIconInactive,
+			// 	Image:         mp.Theme.Icons.DexIcon,
+			// 	ImageInactive: mp.Theme.Icons.DexIconInactive,
 			// 	Title:         values.String(values.StrDex),
 			// 	PageID:        dexclient.MarketPageID,
 			// },
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.MoreIcon,
-				ImageInactive: mp.Icons.MoreIconInactive,
+				Image:         mp.Theme.Icons.MoreIcon,
+				ImageInactive: mp.Theme.Icons.MoreIconInactive,
 				Title:         values.String(values.StrMore),
 				PageID:        MorePageID,
 			},
 		},
-		MinimizeNavDrawerButton: mp.Theme.IconButton(mp.Icons.NavigationArrowBack),
-		MaximizeNavDrawerButton: mp.Theme.IconButton(mp.Icons.NavigationArrowForward),
+		MinimizeNavDrawerButton: mp.Theme.IconButton(mp.Theme.Icons.NavigationArrowBack),
+		MaximizeNavDrawerButton: mp.Theme.IconButton(mp.Theme.Icons.NavigationArrowForward),
 	}
 }
 
@@ -622,7 +622,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 			Left: values.MarginPadding5,
 		}.Layout(gtx, func(gtx C) D {
 			return mp.refreshExchangeRateBtn.Layout(gtx, func(gtx C) D {
-				return mp.Icons.Restore.Layout16dp(gtx)
+				return mp.Theme.Icons.Restore.Layout16dp(gtx)
 			})
 		})
 	case len(mp.totalBalanceUSD) > 0:
@@ -687,14 +687,9 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 									Orientation: layout.Horizontal,
 								}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										img := mp.Icons.Logo
-										if mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
-											img = mp.Icons.LogoDarkMode
-										}
-
 										return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
 											func(gtx C) D {
-												return img.Layout24dp(gtx)
+												return mp.Theme.Icons.Logo.Layout24dp(gtx)
 											})
 									}),
 									layout.Rigid(func(gtx C) D {
@@ -708,10 +703,10 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 									}),
 									layout.Rigid(func(gtx C) D {
 										mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Hide Balance")
-										mp.hideBalanceItem.hideBalanceButton.Icon = mp.Icons.RevealIcon
+										mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
 										if mp.isBalanceHidden {
 											mp.hideBalanceItem.tooltipLabel.Text = "Show Balance"
-											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Icons.ConcealIcon
+											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
 										}
 										return layout.Inset{
 											Top:  values.MarginPadding1,

@@ -33,10 +33,7 @@ type Theme struct {
 	Color  *values.Color
 	Styles *values.WidgetStyles
 
-	Icon struct {
-		ContentCreate *widget.Icon
-		ContentAdd    *widget.Icon
-	}
+	Icons                 *Icons
 	TextSize              unit.Value
 	checkBoxCheckedIcon   *widget.Icon
 	checkBoxUncheckedIcon *widget.Icon
@@ -58,6 +55,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 		Shaper:   text.NewCache(fontCollection),
 		Base:     material.NewTheme(fontCollection),
 		Color:    &values.Color{},
+		Icons:    &Icons{},
 		Styles:   values.DefaultWidgetStyles(),
 		TextSize: values.TextSize16,
 	}
@@ -77,9 +75,12 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 
 func (t *Theme) SwitchDarkMode(isDarkModeOn bool, decredIcons map[string]image.Image) {
 	t.Color.DefualtThemeColors()
+	t.Icons.DefaultIcons()
+
 	expandIcon := "expand_icon"
 	collapseIcon := "collapse_icon"
 	if isDarkModeOn {
+		t.Icons.DarkModeIcons()
 		t.Color.DarkThemeColors() // override defaults with dark themed colors
 		expandIcon = "expand_dm"
 		collapseIcon = "collapse_dm"

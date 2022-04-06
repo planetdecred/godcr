@@ -120,7 +120,7 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 											Axis: layout.Horizontal,
 										}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return pg.Icons.ActionInfo.Layout(gtx, pg.Theme.Color.Gray1)
+												return pg.Theme.Icons.ActionInfo.Layout(gtx, pg.Theme.Color.Gray1)
 											}),
 											layout.Rigid(func(gtx C) D {
 												txt := `<span style="text-color: grayText2">

@@ -31,7 +31,7 @@ func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 				layout.Expanded(func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return pg.Icons.GovernanceActiveIcon.LayoutSize(gtx, values.MarginPadding150)
+							return pg.Theme.Icons.GovernanceActiveIcon.LayoutSize(gtx, values.MarginPadding150)
 						}),
 						layout.Rigid(func(gtx C) D {
 							txt := pg.Theme.Label(values.MarginPadding24, "How does Governance Work?")

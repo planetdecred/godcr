@@ -50,7 +50,7 @@ func signMessageInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func privacyInfo(l *load.Load) []layout.Widget {
-	ic := decredmaterial.NewIcon(l.Icons.ImageBrightness1)
+	ic := decredmaterial.NewIcon(l.Theme.Icons.ImageBrightness1)
 	ic.Color = l.Theme.Color.Gray1
 	return []layout.Widget{
 		func(gtx C) D {
@@ -128,7 +128,7 @@ func allowUnspendUnmixedAcct(l *load.Load) []layout.Widget {
 		func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					ic := decredmaterial.NewIcon(l.Icons.ActionInfo)
+					ic := decredmaterial.NewIcon(l.Theme.Icons.ActionInfo)
 					ic.Color = l.Theme.Color.GrayText1
 					return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 						return ic.Layout(gtx, values.MarginPadding18)

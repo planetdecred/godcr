@@ -194,7 +194,7 @@ func (pg *Page) layoutTabs(gtx C) D {
 
 func (pg *Page) layoutPageTopNav(gtx C) D {
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Rigid(pg.Icons.GovernanceActiveIcon.Layout24dp),
+		layout.Rigid(pg.Theme.Icons.GovernanceActiveIcon.Layout24dp),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
 				Left: values.MarginPadding20,

@@ -60,10 +60,10 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 			List: layout.List{Axis: layout.Vertical},
 		},
 	}
-	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Icons.SearchIcon, true)
+	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Theme.Icons.SearchIcon, true)
 	pg.searchEditor.Editor.SingleLine, pg.searchEditor.Editor.Submit, pg.searchEditor.Bordered = true, true, false
 
-	pg.updatedIcon = decredmaterial.NewIcon(pg.Icons.NavigationCheck)
+	pg.updatedIcon = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCheck)
 	pg.updatedIcon.Color = pg.Theme.Color.Success
 
 	pg.syncButton = new(widget.Clickable)
@@ -309,7 +309,7 @@ func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
 
 func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
 	// TODO: use decredmaterial clickable
-	return material.Clickable(gtx, pg.syncButton, pg.Icons.Restore.Layout24dp)
+	return material.Clickable(gtx, pg.syncButton, pg.Theme.Icons.Restore.Layout24dp)
 }
 
 func (pg *ProposalsPage) layoutSectionHeader(gtx C) D {

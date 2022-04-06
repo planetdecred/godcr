@@ -340,7 +340,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 
 									durationLayout := layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, l.Icons.TimerIcon.Layout12dp)
+											return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, l.Theme.Icons.TimerIcon.Layout12dp)
 										}),
 										layout.Rigid(txt.Layout),
 									)
@@ -468,7 +468,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 										Left:  values.MarginPadding4,
 										Right: values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
-										ic := decredmaterial.NewIcon(l.Icons.ImageBrightness1)
+										ic := decredmaterial.NewIcon(l.Theme.Icons.ImageBrightness1)
 										return ic.Layout(gtx, values.MarginPadding5)
 									})
 								}),
@@ -607,7 +607,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 															Left:  values.MarginPadding8,
 															Right: values.MarginPadding4,
 														}.Layout(gtx, func(gtx C) D {
-															ic := l.Icons.TimerIcon
+															ic := l.Theme.Icons.TimerIcon
 															return ic.Layout12dp(gtx)
 														})
 													}),

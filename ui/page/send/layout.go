@@ -33,9 +33,9 @@ func (pg *Page) initLayoutWidgets() {
 	pg.nextButton.SetEnabled(false)
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
-	pg.backButton.Icon = pg.Icons.ContentClear
+	pg.backButton.Icon = pg.Theme.Icons.ContentClear
 
-	pg.moreOption = pg.Theme.IconButton(pg.Icons.NavMoreIcon)
+	pg.moreOption = pg.Theme.IconButton(pg.Theme.Icons.NavMoreIcon)
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
 	pg.retryExchange = pg.Theme.Button("Retry")
@@ -254,7 +254,7 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 						layout.Flexed(0.1, func(gtx C) D {
 							// TODO: needs to be centered vertically
 							return layout.Center.Layout(gtx, func(gtx C) D {
-								icon := pg.Icons.CurrencySwapIcon
+								icon := pg.Theme.Icons.CurrencySwapIcon
 								return icon.Layout24dp(gtx)
 							})
 						}),

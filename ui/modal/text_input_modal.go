@@ -156,7 +156,7 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 		l := func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					img := decredmaterial.NewIcon(tm.Icons.ActionInfo)
+					img := decredmaterial.NewIcon(tm.Theme.Icons.ActionInfo)
 					img.Color = tm.Theme.Color.Gray1
 					inset := layout.Inset{Right: values.MarginPadding4}
 					return inset.Layout(gtx, func(gtx C) D {

@@ -32,7 +32,7 @@ func NewStartPage(l *load.Load) load.Page {
 
 		loading: true,
 
-		decredSymbol:  l.Icons.DecredSymbolIcon,
+		decredSymbol:  l.Theme.Icons.DecredSymbolIcon,
 		createButton:  l.Theme.Button("Create a new wallet"),
 		restoreButton: l.Theme.Button("Restore an existing wallet"),
 	}

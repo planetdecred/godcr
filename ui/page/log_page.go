@@ -45,7 +45,7 @@ func NewLogPage(l *load.Load) *LogPage {
 		copyLog: l.Theme.NewClickable(true),
 	}
 
-	pg.copyIcon = pg.Icons.CopyIcon
+	pg.copyIcon = pg.Theme.Icons.CopyIcon
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 	pg.watchLogs()

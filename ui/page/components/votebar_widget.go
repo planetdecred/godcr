@@ -55,8 +55,8 @@ func NewVoteBar(l *load.Load) *VoteBar {
 		noColor:       l.Theme.Color.Danger,
 		passTooltip:   l.Theme.Tooltip(),
 		quorumTooltip: l.Theme.Tooltip(),
-		infoIcon:      decredmaterial.NewIcon(l.Icons.ActionInfo),
-		legendIcon:    decredmaterial.NewIcon(l.Icons.ImageBrightness1),
+		infoIcon:      decredmaterial.NewIcon(l.Theme.Icons.ActionInfo),
+		legendIcon:    decredmaterial.NewIcon(l.Theme.Icons.ImageBrightness1),
 	}
 	vb.infoIcon.Color = l.Theme.Color.Gray1
 

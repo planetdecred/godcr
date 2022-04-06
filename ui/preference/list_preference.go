@@ -61,7 +61,7 @@ func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defau
 	}
 
 	lp.cancelButton, _ = components.SubpageHeaderButtons(l)
-	lp.cancelButton.Icon = l.Icons.ContentClear
+	lp.cancelButton.Icon = l.Theme.Icons.ContentClear
 
 	return &lp
 }
