@@ -12,6 +12,8 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
+
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type ProgressBarStyle struct {
@@ -22,8 +24,38 @@ type ProgressBarStyle struct {
 	material.ProgressBarStyle
 }
 
+type ProgressBarItem struct {
+	Value   float32
+	Color   color.NRGBA
+	SubText string
+}
+
+// MultiLayerProgressBar shows the percentage of the mutiple progress layer
+// against the total/expected progress.
+type MultiLayerProgressBar struct {
+	t *Theme
+
+	items  []ProgressBarItem
+	Radius CornerRadius
+	Height unit.Value
+	Width  float32
+	total  float32
+}
+
 func (t *Theme) ProgressBar(progress int) ProgressBarStyle {
 	return ProgressBarStyle{ProgressBarStyle: material.ProgressBar(t.Base, float32(progress)/100)}
+}
+
+func (t *Theme) MultiLayerProgressBar(total float32, items []ProgressBarItem) *MultiLayerProgressBar {
+	mp := &MultiLayerProgressBar{
+		t: t,
+
+		total:  total,
+		Height: values.MarginPadding8,
+		items:  items,
+	}
+
+	return mp
 }
 
 // This achieves a progress bar using linear layouts.
@@ -96,7 +128,64 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-// clamp1 limits v to range [0..1].
+// TODO: Allow more than just 2 layers and make it dynamic
+func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
+	r := float32(gtx.Px(values.MarginPadding0))
+	if mp.Width <= 0 {
+		mp.Width = float32(gtx.Constraints.Max.X)
+	}
+
+	// progressScale represent the different progress bar layers
+	progressScale := func(width float32, color color.NRGBA) layout.Dimensions {
+		d := image.Point{X: int(width), Y: gtx.Px(mp.Height)}
+
+		defer clip.RRect{
+			Rect: f32.Rectangle{Max: f32.Point{X: width, Y: float32(gtx.Px(mp.Height))}},
+			NE:   r, NW: r, SE: r, SW: r,
+		}.Push(gtx.Ops).Pop()
+
+		paint.ColorOp{Color: color}.Add(gtx.Ops)
+		paint.PaintOp{}.Add(gtx.Ops)
+
+		return layout.Dimensions{
+			Size: d,
+		}
+	}
+
+	calProgressWidth := func(progress float32) float32 {
+		val := (progress / mp.total) * 100
+		return (mp.Width / 100) * val
+	}
+
+	// This takes only 2 layers
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			width := calProgressWidth(mp.items[0].Value)
+			if width == 0 {
+				return D{}
+			}
+			return progressScale(width, mp.items[0].Color)
+		}),
+		layout.Rigid(func(gtx C) D {
+			width := calProgressWidth(mp.items[1].Value)
+			if width == 0 {
+				return D{}
+			}
+			return progressScale(width, mp.items[1].Color)
+		}),
+	)
+}
+
+func (mp *MultiLayerProgressBar) Layout(gtx C, labelWdg layout.Widget) D {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(labelWdg),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, mp.progressBarLayout)
+		}),
+	)
+}
+
+// clamp1 limits mp.to range [0..1].
 func clamp1(v float32) float32 {
 	if v >= 1 {
 		return 1

@@ -720,3 +720,27 @@ func CoinImageBySymbol(icons *load.Icons, coinName string) *decredmaterial.Image
 	}
 	return nil
 }
+
+func CalculateTotalWalletsBalance(l *load.Load) (dcrutil.Amount, dcrutil.Amount, error) {
+	totalBalance := int64(0)
+	spandableBalance := int64(0)
+
+	wallets := l.WL.SortedWalletList()
+	if len(wallets) == 0 {
+		return 0, 0, nil
+	}
+
+	for _, wallet := range wallets {
+		accountsResult, err := wallet.GetAccountsRaw()
+		if err != nil {
+			return 0, 0, err
+		}
+
+		for _, account := range accountsResult.Acc {
+			totalBalance += account.TotalBalance
+			spandableBalance += account.Balance.Spendable
+		}
+	}
+
+	return dcrutil.Amount(totalBalance), dcrutil.Amount(spandableBalance), nil
+}
