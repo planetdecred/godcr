@@ -225,7 +225,13 @@ func (win *Window) displayWindow(evt system.FrameEvent) {
 
 	// Draw the window's UI components into an op.Ops.
 	gtx := layout.NewContext(&op.Ops{}, evt)
-	win.drawWindowUI(gtx)
+
+	if win.currentPage != nil {
+		win.drawWindowUI(gtx)
+	} else {
+		win.currentPage = page.NewStartPage(win.load)
+		win.currentPage.OnNavigatedTo()
+	}
 
 	// Render the window's UI components on screen.
 	evt.Frame(gtx.Ops)

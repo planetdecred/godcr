@@ -19,7 +19,6 @@ const StartPageID = "start_page"
 type startPage struct {
 	*load.Load
 
-	decredSymbol  *decredmaterial.Image
 	createButton  decredmaterial.Button
 	restoreButton decredmaterial.Button
 
@@ -28,11 +27,9 @@ type startPage struct {
 
 func NewStartPage(l *load.Load) load.Page {
 	sp := &startPage{
-		Load: l,
-
+		Load:    l,
 		loading: true,
 
-		decredSymbol:  l.Theme.Icons.DecredSymbolIcon,
 		createButton:  l.Theme.Button("Create a new wallet"),
 		restoreButton: l.Theme.Button("Restore an existing wallet"),
 	}
@@ -93,11 +90,13 @@ func (sp *startPage) unlock() {
 }
 
 func (sp *startPage) openWallets(password string) error {
-	err := sp.WL.MultiWallet.OpenWallets([]byte(password))
-	if err != nil {
-		log.Info("Error opening wallet:", err)
-		// show err dialog
-		return err
+	if sp.WL.MultiWallet.OpenedWalletsCount() <= 0 {
+		err := sp.WL.MultiWallet.OpenWallets([]byte(password))
+		if err != nil {
+			log.Info("Error opening wallet:", err)
+			// show err dialog
+			return err
+		}
 	}
 
 	sp.ChangeWindowPage(NewMainPage(sp.Load), false)
@@ -182,7 +181,7 @@ func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Center.Layout(gtx, func(gtx C) D {
-						return sp.decredSymbol.LayoutSize(gtx, values.MarginPadding150)
+						return sp.Theme.Icons.DecredSymbolIcon.LayoutSize(gtx, values.MarginPadding150)
 					})
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {

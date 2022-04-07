@@ -6,11 +6,9 @@ F// The load package contains data structures that are shared by components in t
 package load
 
 import (
-	// "golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/text/message"
 
 	"gioui.org/io/key"
-	// "gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/assets"

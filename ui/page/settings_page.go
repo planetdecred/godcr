@@ -416,7 +416,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 
 	if pg.isDarkModeOn.Changed() {
 		pg.wal.SaveConfigValueForKey(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())
-		pg.RefreshTheme()
+		pg.ReloadApp()
 	}
 
 	if pg.spendUnconfirmed.Changed() {
