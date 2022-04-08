@@ -435,13 +435,6 @@ func (pg *Page) HandleUserInteractions() {
 	// if destination switch is equal to Address
 	if pg.sendDestination.sendToAddress {
 		if pg.sendDestination.validate() {
-			// Enable max amount if max button is clicked
-			if pg.amount.IsMaxClicked() {
-				pg.amount.setError("")
-				pg.amount.SendMax = true
-				pg.amount.amountChanged()
-			}
-
 			if currencyValue != values.USDExchangeValue {
 				if len(pg.amount.dcrAmountEditor.Editor.Text()) == 0 {
 					pg.amount.SendMax = false
@@ -451,13 +444,6 @@ func (pg *Page) HandleUserInteractions() {
 					pg.amount.usdAmountEditor.Editor.SetText("")
 					pg.amount.SendMax = false
 				}
-			}
-		}
-
-		if len(pg.sendDestination.destinationAddressEditor.Editor.Text()) == 0 {
-			if pg.amount.IsMaxClicked() {
-				pg.Toast.NotifyError("Set destination address")
-				pg.amount.SendMax = false
 			}
 		}
 	} else {
@@ -471,12 +457,6 @@ func (pg *Page) HandleUserInteractions() {
 				pg.amount.SendMax = false
 			}
 		}
-
-		if pg.amount.IsMaxClicked() {
-			pg.amount.setError("")
-			pg.amount.SendMax = true
-			pg.amount.amountChanged()
-		}
 	}
 
 	if len(pg.amount.dcrAmountEditor.Editor.Text()) > 0 && pg.sourceAccountSelector.Changed() {
@@ -484,9 +464,10 @@ func (pg *Page) HandleUserInteractions() {
 		pg.validateAndConstructTxAmountOnly()
 	}
 
-	if pg.sendDestination.sendToAddress && pg.amount.SendMax && len(pg.sendDestination.destinationAddressEditor.Editor.Text()) == 0 {
-		pg.amount.dcrAmountEditor.Editor.SetText("")
-		pg.amount.SendMax = false
+	if pg.amount.IsMaxClicked() {
+		pg.amount.setError("")
+		pg.amount.SendMax = true
+		pg.amount.amountChanged()
 	}
 }
 
