@@ -136,7 +136,7 @@ func NewSendPage(l *load.Load) *Page {
 	}
 
 	pg.amount.amountChanged = func() {
-		pg.validateAndConstructTx()
+		pg.validateAndConstructTxAmountOnly()
 	}
 
 	pg.initLayoutWidgets()
@@ -211,9 +211,17 @@ func (pg *Page) fetchExchangeRate() {
 
 func (pg *Page) validateAndConstructTx() {
 	if pg.validate() {
-		pg.constructTx()
+		pg.constructTx(false)
 	} else {
 		pg.clearEstimates()
+	}
+}
+
+func (pg *Page) validateAndConstructTxAmountOnly() {
+	if !pg.sendDestination.validate() && pg.amount.amountIsValid() {
+		pg.constructTx(true)
+	} else {
+		pg.validateAndConstructTx()
 	}
 }
 
@@ -226,13 +234,13 @@ func (pg *Page) validate() bool {
 	return validForSending
 }
 
-func (pg *Page) constructTx() {
-	destinationAddress, err := pg.sendDestination.destinationAddress()
+func (pg *Page) constructTx(useDefaultParams bool) {
+	destinationAddress, err := pg.sendDestination.destinationAddress(useDefaultParams)
 	if err != nil {
 		pg.feeEstimationError(err.Error())
 		return
 	}
-	destinationAccount := pg.sendDestination.destinationAccount()
+	destinationAccount := pg.sendDestination.destinationAccount(useDefaultParams)
 
 	amountAtom, SendMax, err := pg.amount.validAmount()
 	if err != nil {
@@ -473,7 +481,7 @@ func (pg *Page) HandleUserInteractions() {
 
 	if len(pg.amount.dcrAmountEditor.Editor.Text()) > 0 && pg.sourceAccountSelector.Changed() {
 		pg.amount.validateDCRAmount()
-		pg.validateAndConstructTx()
+		pg.validateAndConstructTxAmountOnly()
 	}
 
 	if pg.sendDestination.sendToAddress && pg.amount.SendMax && len(pg.sendDestination.destinationAddressEditor.Editor.Text()) == 0 {
