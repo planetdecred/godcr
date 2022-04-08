@@ -27,7 +27,7 @@ func newSendDestination(l *load.Load) *destination {
 		Load: l,
 	}
 
-	dst.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), "Destination address")
+	dst.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), "Destination Address")
 	dst.destinationAddressEditor.Editor.SingleLine = true
 	dst.destinationAddressEditor.Editor.SetText("")
 
