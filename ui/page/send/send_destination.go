@@ -27,7 +27,7 @@ func newSendDestination(l *load.Load) *destination {
 		Load: l,
 	}
 
-	dst.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), "Address")
+	dst.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), "Destination Address")
 	dst.destinationAddressEditor.Editor.SingleLine = true
 	dst.destinationAddressEditor.Editor.SetText("")
 
@@ -51,7 +51,14 @@ func newSendDestination(l *load.Load) *destination {
 	return dst
 }
 
-func (dst *destination) destinationAddress() (string, error) {
+func (dst *destination) destinationAddress(useDefaultParams bool) (string, error) {
+	destinationAccount := dst.destinationAccountSelector.SelectedAccount()
+	wal := dst.WL.MultiWallet.WalletWithID(destinationAccount.WalletID)
+
+	if useDefaultParams {
+		return wal.CurrentAddress(destinationAccount.Number)
+	}
+
 	if dst.sendToAddress {
 		valid, address := dst.validateDestinationAddress()
 		if valid {
@@ -61,13 +68,14 @@ func (dst *destination) destinationAddress() (string, error) {
 		return "", fmt.Errorf("invalid address")
 	}
 
-	destinationAccount := dst.destinationAccountSelector.SelectedAccount()
-	wal := dst.WL.MultiWallet.WalletWithID(destinationAccount.WalletID)
-
 	return wal.CurrentAddress(destinationAccount.Number)
 }
 
-func (dst *destination) destinationAccount() *dcrlibwallet.Account {
+func (dst *destination) destinationAccount(useDefaultParams bool) *dcrlibwallet.Account {
+	if useDefaultParams {
+		return dst.destinationAccountSelector.SelectedAccount()
+	}
+
 	if dst.sendToAddress {
 		return nil
 	}

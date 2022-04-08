@@ -136,7 +136,7 @@ func NewSendPage(l *load.Load) *Page {
 	}
 
 	pg.amount.amountChanged = func() {
-		pg.validateAndConstructTx()
+		pg.validateAndConstructTxAmountOnly()
 	}
 
 	pg.initLayoutWidgets()
@@ -211,9 +211,17 @@ func (pg *Page) fetchExchangeRate() {
 
 func (pg *Page) validateAndConstructTx() {
 	if pg.validate() {
-		pg.constructTx()
+		pg.constructTx(false)
 	} else {
 		pg.clearEstimates()
+	}
+}
+
+func (pg *Page) validateAndConstructTxAmountOnly() {
+	if !pg.sendDestination.validate() && pg.amount.amountIsValid() {
+		pg.constructTx(true)
+	} else {
+		pg.validateAndConstructTx()
 	}
 }
 
@@ -226,13 +234,13 @@ func (pg *Page) validate() bool {
 	return validForSending
 }
 
-func (pg *Page) constructTx() {
-	destinationAddress, err := pg.sendDestination.destinationAddress()
+func (pg *Page) constructTx(useDefaultParams bool) {
+	destinationAddress, err := pg.sendDestination.destinationAddress(useDefaultParams)
 	if err != nil {
 		pg.feeEstimationError(err.Error())
 		return
 	}
-	destinationAccount := pg.sendDestination.destinationAccount()
+	destinationAccount := pg.sendDestination.destinationAccount(useDefaultParams)
 
 	amountAtom, SendMax, err := pg.amount.validAmount()
 	if err != nil {
@@ -427,13 +435,6 @@ func (pg *Page) HandleUserInteractions() {
 	// if destination switch is equal to Address
 	if pg.sendDestination.sendToAddress {
 		if pg.sendDestination.validate() {
-			// Enable max amount if max button is clicked
-			if pg.amount.IsMaxClicked() {
-				pg.amount.setError("")
-				pg.amount.SendMax = true
-				pg.amount.amountChanged()
-			}
-
 			if currencyValue != values.USDExchangeValue {
 				if len(pg.amount.dcrAmountEditor.Editor.Text()) == 0 {
 					pg.amount.SendMax = false
@@ -443,13 +444,6 @@ func (pg *Page) HandleUserInteractions() {
 					pg.amount.usdAmountEditor.Editor.SetText("")
 					pg.amount.SendMax = false
 				}
-			}
-		}
-
-		if len(pg.sendDestination.destinationAddressEditor.Editor.Text()) == 0 {
-			if pg.amount.IsMaxClicked() {
-				pg.Toast.NotifyError("Set destination address")
-				pg.amount.SendMax = false
 			}
 		}
 	} else {
@@ -463,22 +457,17 @@ func (pg *Page) HandleUserInteractions() {
 				pg.amount.SendMax = false
 			}
 		}
-
-		if pg.amount.IsMaxClicked() {
-			pg.amount.setError("")
-			pg.amount.SendMax = true
-			pg.amount.amountChanged()
-		}
 	}
 
 	if len(pg.amount.dcrAmountEditor.Editor.Text()) > 0 && pg.sourceAccountSelector.Changed() {
 		pg.amount.validateDCRAmount()
-		pg.validateAndConstructTx()
+		pg.validateAndConstructTxAmountOnly()
 	}
 
-	if pg.sendDestination.sendToAddress && pg.amount.SendMax && len(pg.sendDestination.destinationAddressEditor.Editor.Text()) == 0 {
-		pg.amount.dcrAmountEditor.Editor.SetText("")
-		pg.amount.SendMax = false
+	if pg.amount.IsMaxClicked() {
+		pg.amount.setError("")
+		pg.amount.SendMax = true
+		pg.amount.amountChanged()
 	}
 }
 
