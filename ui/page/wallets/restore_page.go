@@ -62,8 +62,8 @@ type Restore struct {
 
 	seedEditors        seedEditors
 	keyEvent           chan *key.Event
-	seedEditorTracker  int
-	caretCoordXTracker float32
+	seedEditorTracker  int     // stores the current focus index of seed editors
+	caretCoordXTracker float32 //stores the caret coord on the X-axis
 }
 
 func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
@@ -572,6 +572,7 @@ func (pg *Restore) HandleUserInteractions() {
 
 }
 
+// check if seed editor has changed
 func (pg *Restore) seedEditorChanged() bool {
 	focus := pg.seedEditors.focusIndex
 	if pg.seedEditorTracker != focus {
@@ -586,6 +587,7 @@ func (pg *Restore) seedEditorChanged() bool {
 	return false
 }
 
+// Check if caret cordinates on the x-axis has changed
 func (pg *Restore) caretCoordXChanged() bool {
 	focus := pg.seedEditors.focusIndex
 	if focus == -1 {
