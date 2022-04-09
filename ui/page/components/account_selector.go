@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"gioui.org/io/event"
 	"gioui.org/layout"
@@ -157,7 +158,7 @@ func (as *AccountSelector) SelectedAccount() *dcrlibwallet.Account {
 	return as.selectedAccount
 }
 
-func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
+func (as *AccountSelector) Layout(gtx C) D {
 	as.Handle()
 
 	return decredmaterial.LinearLayout{
@@ -286,8 +287,10 @@ type AccountSelectorModal struct {
 
 	currentSelectedAccount *dcrlibwallet.Account
 	selectedWallet         *dcrlibwallet.Wallet
+	filteredWallet         []*dcrlibwallet.Wallet
 	accounts               map[int][]*selectorAccount // key = wallet id
 	eventQueue             event.Queue
+	walletMu               sync.Mutex
 
 	dialogTitle string
 
@@ -324,9 +327,17 @@ func (asm *AccountSelectorModal) OnResume() {
 }
 
 func (asm *AccountSelectorModal) setupWalletAccounts() {
+	wals := make([]*dcrlibwallet.Wallet, 0)
 	walletAccounts := make(map[int][]*selectorAccount)
+
 	for _, wal := range asm.WL.SortedWalletList() {
+		if wal.IsWatchingOnlyWallet() {
+			continue
+		}
+
 		if asm.selectedWallet == nil {
+			wals = append(wals, wal)
+
 			accountsResult, err := wal.GetAccountsRaw()
 			if err != nil {
 				fmt.Println("Error getting accounts:", err)
@@ -362,6 +373,7 @@ func (asm *AccountSelectorModal) setupWalletAccounts() {
 			}
 		}
 	}
+	asm.filteredWallet = wals
 	asm.accounts = walletAccounts
 }
 
@@ -416,10 +428,14 @@ func (asm *AccountSelectorModal) accountSelected(callback func(*dcrlibwallet.Acc
 	return asm
 }
 
-func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
+func (asm *AccountSelectorModal) Layout(gtx C) D {
 	asm.eventQueue = gtx
 
-	wallAcctGroup := func(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+	asm.walletMu.Lock()
+	wallets := asm.filteredWallet
+	asm.walletMu.Unlock()
+
+	wallAcctGroup := func(gtx C, title string, body layout.Widget) D {
 		return layout.Inset{
 			Bottom: values.MarginPadding10,
 		}.Layout(gtx, func(gtx C) D {
@@ -444,7 +460,7 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 									return asm.walletInfoButton.Layout(gtx)
 								})
 							}
-							return layout.Dimensions{}
+							return D{}
 						}),
 					)
 				}),
@@ -475,7 +491,6 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 						})
 					}
 
-					wallets := asm.WL.SortedWalletList()
 					return asm.walletsList.Layout(gtx, len(wallets), func(gtx C, windex int) D {
 						wal := wallets[windex]
 						return wallAcctGroup(gtx, wal.Name, func(gtx C) D {
@@ -494,10 +509,10 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 						}
 						return inset.Layout(gtx, func(gtx C) D {
 							// return page.walletInfoPopup(gtx)
-							return layout.Dimensions{}
+							return D{}
 						})
 					}
-					return layout.Dimensions{}
+					return D{}
 				}),
 			)
 		},
@@ -506,7 +521,7 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	return asm.modal.Layout(gtx, w)
 }
 
-func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account *selectorAccount) layout.Dimensions {
+func (asm *AccountSelectorModal) walletAccountLayout(gtx C, account *selectorAccount) D {
 	accountIcon := asm.Icons.AccountIcon
 
 	return decredmaterial.LinearLayout{
@@ -549,7 +564,7 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account
 				Top:   values.MarginPadding10,
 				Left:  values.MarginPadding10,
 			}
-			sections := func(gtx layout.Context) layout.Dimensions {
+			sections := func(gtx C) D {
 				return layout.E.Layout(gtx, func(gtx C) D {
 					return inset.Layout(gtx, func(gtx C) D {
 						ic := decredmaterial.NewIcon(asm.Icons.NavigationCheck)
@@ -563,12 +578,12 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account
 				account.WalletID == asm.currentSelectedAccount.WalletID {
 				return sections(gtx)
 			}
-			return layout.Dimensions{}
+			return D{}
 		}),
 	)
 }
 
-func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dimensions {
+func (asm *AccountSelectorModal) walletInfoPopup(gtx C) D {
 	title := "Some accounts are hidden."
 	desc := "Some accounts are disabled by StakeShuffle settings to protect your privacy."
 	card := asm.Theme.Card()
