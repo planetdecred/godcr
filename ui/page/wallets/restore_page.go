@@ -378,10 +378,9 @@ func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) 
 					})
 				})
 			})
-		} else {
-			pg.suggestions = nil
-			return D{}
 		}
+		pg.suggestions = nil
+		return D{}
 	})
 	op.Defer(gtx.Ops, m.Stop())
 }
@@ -501,7 +500,7 @@ func (pg *Restore) HandleUserInteractions() {
 	select {
 	case evt := <-pg.keyEvent:
 		if evt.Name == key.NameTab && evt.State == key.Press {
-			if len(pg.suggestions) == 1 {
+			if len(pg.suggestions) > 0 {
 				focus := pg.seedEditors.focusIndex
 				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[0])
 				pg.seedClicked = true
@@ -545,6 +544,10 @@ func (pg *Restore) HandleUserInteractions() {
 	pg.editorSeedsEventsHandler()
 	pg.onSuggestionSeedsClicked()
 	pg.suggestionSeedEffect()
+
+	if pg.seedEditorChanged() {
+		pg.suggestions = nil
+	}
 
 }
 
