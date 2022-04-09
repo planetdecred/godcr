@@ -145,7 +145,8 @@ func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	pg.resetSeedFields.SetEnabled(pg.updateSeedResetBtn())
-	pg.validateSeed.SetEnabled(pg.validateSeeds())
+	seedValid, _ := pg.validateSeeds()
+	pg.validateSeed.SetEnabled(seedValid)
 
 	return components.UniformPadding(gtx, body)
 }
@@ -408,20 +409,40 @@ func (pg *Restore) updateSeedResetBtn() bool {
 	return false
 }
 
-func (pg *Restore) validateSeeds() bool {
-	pg.seedPhrase = ""
-	for i, editor := range pg.seedEditors.editors {
-		if editor.Edit.Editor.Text() == "" {
-			pg.seedEditors.editors[i].Edit.HintColor = pg.Theme.Color.Danger
-			return false
+func (pg *Restore) validateSeeds() (bool, string) {
+	focus := pg.seedEditors.focusIndex
+	seedMatchCounter := 0
+	seedPhraseStore := ""
+	for j := 0; j < len(pg.allSuggestions); j++ {
+		if focus != -1 {
+			if pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.Text() == pg.allSuggestions[j] {
+				seedMatchCounter = 1
+			}
 		}
-
-		pg.seedPhrase += editor.Edit.Editor.Text() + " "
 	}
 
-	if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
-		pg.Toast.NotifyError("invalid seed phrase")
-		return false
+	for i, editor := range pg.seedEditors.editors {
+		if editor.Edit.Editor.Text() == "" || seedMatchCounter == 0 {
+			pg.seedEditors.editors[i].Edit.HintColor = pg.Theme.Color.Danger
+			return false, ""
+		}
+
+		seedPhraseStore += editor.Edit.Editor.Text() + " "
+	}
+
+	return true, seedPhraseStore
+}
+
+func (pg *Restore) verifySeeds() bool {
+	isValid, seedphrase := pg.validateSeeds()
+	pg.seedPhrase = ""
+
+	if isValid {
+		pg.seedPhrase = seedphrase
+		if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
+			pg.Toast.NotifyError("invalid seed phrase")
+			return false
+		}
 	}
 
 	return true
@@ -456,7 +477,7 @@ func (pg *Restore) HandleUserInteractions() {
 	}
 
 	for pg.validateSeed.Clicked() {
-		if !pg.validateSeeds() {
+		if !pg.verifySeeds() {
 			return
 		}
 
