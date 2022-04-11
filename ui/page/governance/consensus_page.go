@@ -57,7 +57,7 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		syncButton:          new(widget.Clickable),
+		syncButton: new(widget.Clickable),
 
 		redirectIcon:        l.Theme.Icons.RedirectIcon,
 		viewVotingDashboard: l.Theme.NewClickable(true),
@@ -147,7 +147,7 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 													clipboard.WriteOp{Text: host}.Add(gtx.Ops)
 													pg.Toast.Notify("URL copied")
 												}
-												return pg.copyRedirectURL.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
+												return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
 											})
 										}),
 									)

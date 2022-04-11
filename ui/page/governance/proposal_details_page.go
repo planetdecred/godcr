@@ -160,7 +160,7 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 														clipboard.WriteOp{Text: host}.Add(gtx.Ops)
 														pg.Toast.Notify("URL copied")
 													}
-													return pg.copyRedirectURL.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
+													return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
 												})
 											})
 										}),
