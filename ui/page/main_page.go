@@ -298,6 +298,42 @@ func (mp *MainPage) updateBalance() {
 	}
 }
 
+func (mp *MainPage) CalculateTotalWalletsBalance() (dcrutil.Amount, error) {
+	totalBalance := int64(0)
+	wallets := mp.WL.SortedWalletList()
+	if len(wallets) == 0 {
+		return 0, nil
+	}
+
+	var txHashMap = make(map[string]int64)
+
+	for _, wallet := range wallets {
+		accountsResult, err := wallet.GetAccountsRaw()
+		if err != nil {
+			return 0, err
+		}
+
+		for _, account := range accountsResult.Acc {
+
+			unspentOutput, err := wallet.UnspentOutputs(account.Number)
+			if err != nil {
+				return 0, err
+			}
+
+			for _, output := range unspentOutput {
+				txHashMap[string(output.TransactionHash)] = output.Amount
+			}
+
+		}
+	}
+
+	for _, bal := range txHashMap {
+		totalBalance += bal
+	}
+
+	return dcrutil.Amount(totalBalance), nil
+}
+
 func (mp *MainPage) StartSyncing() {
 	for _, wal := range mp.WL.SortedWalletList() {
 		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
