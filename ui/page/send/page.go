@@ -144,6 +144,12 @@ func NewSendPage(l *load.Load) *Page {
 	return pg
 }
 
+// RestyleWidgets restyles select widgets to match the current theme. This is
+// especially necessary when the dark mode setting is changed.
+func (pg *Page) RestyleWidgets() {
+	pg.amount.styleWidgets()
+}
+
 // ID is a unique string that identifies the page and may be used
 // to differentiate this page from other pages.
 // Part of the load.Page interface.
