@@ -370,6 +370,7 @@ func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) 
 	m := op.Record(gtx.Ops)
 	inset.Layout(gtx, func(gtx C) D {
 		if !pg.seedEditorChanged() && pg.caretCoordXChanged() {
+			fmt.Println(pg.selected)
 			border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
 			return border.Layout(gtx, func(gtx C) D {
 				return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
@@ -568,6 +569,7 @@ func (pg *Restore) HandleUserInteractions() {
 
 	if pg.seedEditorChanged() {
 		pg.suggestions = nil
+		pg.selected = 0
 	}
 
 }
