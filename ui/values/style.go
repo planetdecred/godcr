@@ -31,8 +31,6 @@ type ClickableStyle struct {
 // WidgetStyles is a collection of various widget styles.
 type WidgetStyles struct {
 	SwitchStyle            *SwitchStyle
-	SwitchButtonTextStyle  *SwitchStyle
-	ButtonColorStyle       *ColorStyle
 	IconButtonColorStyle   *ColorStyle
 	CollapsibleStyle       *ColorStyle
 	ClickableStyle         *ClickableStyle
@@ -44,8 +42,6 @@ type WidgetStyles struct {
 func DefaultWidgetStyles() *WidgetStyles {
 	return &WidgetStyles{
 		SwitchStyle:            &SwitchStyle{},
-		SwitchButtonTextStyle:  &SwitchStyle{},
-		ButtonColorStyle:       &ColorStyle{},
 		IconButtonColorStyle:   &ColorStyle{},
 		CollapsibleStyle:       &ColorStyle{},
 		ClickableStyle:         &ClickableStyle{},

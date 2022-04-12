@@ -80,7 +80,6 @@ func (t *Theme) SwitchDarkMode(isDarkModeOn bool, decredIcons map[string]image.I
 	t.Color.DefualtThemeColors()
 	expandIcon := "expand_icon"
 	collapseIcon := "collapse_icon"
-		fmt.Println("isDarkModeOn ",isDarkModeOn)
 	if isDarkModeOn {
 		fmt.Println("in theme 1")
 		t.Color.DarkThemeColors() // override defaults with dark themed colors
@@ -102,23 +101,10 @@ func (t *Theme) updateStyles(isDarkModeOn bool) {
 	t.Styles.SwitchStyle.ActiveColor = t.Color.Primary
 	t.Styles.SwitchStyle.InactiveColor = t.Color.Gray3
 	t.Styles.SwitchStyle.ThumbColor = t.Color.White
-	t.Styles.SwitchStyle.ActiveTextColor = color.NRGBA{}
-	t.Styles.SwitchStyle.InactiveTextColor = color.NRGBA{}
-
-	// update SwitchButtonText style colors
-	t.Styles.SwitchButtonTextStyle.ActiveColor = t.Color.Surface
-	t.Styles.SwitchButtonTextStyle.InactiveColor = color.NRGBA{}
-	t.Styles.SwitchButtonTextStyle.ThumbColor = color.NRGBA{}
-	t.Styles.SwitchButtonTextStyle.ActiveTextColor = t.Color.GrayText1
-	t.Styles.SwitchButtonTextStyle.InactiveTextColor = t.Color.Text
 
 	// update icon button style colors
 	t.Styles.IconButtonColorStyle.Background = color.NRGBA{}
 	t.Styles.IconButtonColorStyle.Foreground = t.Color.Gray1
-
-	// // update button style colors
-	// t.Styles.ButtonColorStyle.Background = t.Color.Primary
-	// t.Styles.ButtonColorStyle.Foreground = color.NRGBA{}
 
 	// update Collapsible widget style colors
 	t.Styles.CollapsibleStyle.Background = t.Color.Surface

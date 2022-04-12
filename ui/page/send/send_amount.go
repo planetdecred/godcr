@@ -42,6 +42,7 @@ func newSendAmount(l *load.Load) *sendAmount {
 	sa.dcrAmountEditor.Editor.SetText("")
 	sa.dcrAmountEditor.HasCustomButton = true
 	sa.dcrAmountEditor.Editor.SingleLine = true
+
 	sa.dcrAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
 	sa.dcrAmountEditor.CustomButton.Text = "Max"
 	sa.dcrAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
@@ -50,6 +51,7 @@ func newSendAmount(l *load.Load) *sendAmount {
 	sa.usdAmountEditor.Editor.SetText("")
 	sa.usdAmountEditor.HasCustomButton = true
 	sa.usdAmountEditor.Editor.SingleLine = true
+
 	sa.usdAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
 	sa.usdAmountEditor.CustomButton.Text = "Max"
 	sa.usdAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
@@ -63,9 +65,11 @@ func newSendAmount(l *load.Load) *sendAmount {
 func (sa *sendAmount) styleWidgets() {
 	sa.dcrAmountEditor.CustomButton.Background = sa.Theme.Color.Gray1
 	sa.dcrAmountEditor.CustomButton.Color = sa.Theme.Color.Surface
+	sa.dcrAmountEditor.EditorStyle.Color = sa.Theme.Color.Text
 
 	sa.usdAmountEditor.CustomButton.Background = sa.Theme.Color.Gray1
 	sa.usdAmountEditor.CustomButton.Color = sa.Theme.Color.Surface
+	sa.usdAmountEditor.EditorStyle.Color = sa.Theme.Color.Text
 }
 
 func (sa *sendAmount) setExchangeRate(exchangeRate float64) {

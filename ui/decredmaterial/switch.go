@@ -32,11 +32,12 @@ type SwitchItem struct {
 }
 
 type SwitchButtonText struct {
-	t        *Theme
-	style    *values.SwitchStyle
-	items    []SwitchItem
-	selected int
-	changed  bool
+	t                                  *Theme
+	ActiveTextColor, InactiveTextColor color.NRGBA
+	Active, Inactive                   color.NRGBA
+	items                              []SwitchItem
+	selected                           int
+	changed                            bool
 }
 
 func (t *Theme) Switch() *Switch {
@@ -50,14 +51,14 @@ func (t *Theme) SwitchButtonText(i []SwitchItem) *SwitchButtonText {
 	sw := &SwitchButtonText{
 		t:     t,
 		items: make([]SwitchItem, len(i)+1),
-		style: t.Styles.SwitchButtonTextStyle,
 	}
+	sw.Active, sw.Inactive = sw.t.Color.Surface, color.NRGBA{}
+	sw.ActiveTextColor, sw.InactiveTextColor = sw.t.Color.GrayText1, sw.t.Color.Text
 
 	for index := range i {
 		i[index].button = t.Button(i[index].Text)
 		i[index].button.HighlightColor = t.Color.SurfaceHighlight
-		i[index].button.Color = sw.style.InactiveTextColor
-		i[index].button.ChangeColorStyle(&values.ColorStyle{Background: sw.style.ActiveColor, Foreground: color.NRGBA{}})
+		i[index].button.Background, i[index].button.Color = sw.Inactive, sw.InactiveTextColor
 		i[index].button.TextSize = unit.Sp(14)
 		sw.items[index+1] = i[index]
 	}
@@ -81,12 +82,12 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 		Y: float32(trackHeight),
 	}}
 
-	activeColor, inactiveColor, thumbColor := s.style.ActiveColor, s.style.InactiveColor, s.style.ThumbColor
+	activeColor, InactiveColor, thumbColor := s.style.ActiveColor, s.style.InactiveColor, s.style.ThumbColor
 	if s.disabled {
-		activeColor, inactiveColor, thumbColor = Disabled(activeColor), Disabled(inactiveColor), Disabled(thumbColor)
+		activeColor, InactiveColor, thumbColor = Disabled(activeColor), Disabled(InactiveColor), Disabled(thumbColor)
 	}
 
-	col := inactiveColor
+	col := InactiveColor
 	if s.IsChecked() {
 		col = activeColor
 	}
@@ -211,12 +212,11 @@ func (s *SwitchButtonText) handleClickEvent() {
 		}
 
 		if s.selected == index {
-			// s.items[s.selected].button.Background = s.style.ActiveColor
-			s.items[s.selected].button.ChangeColorStyle(&values.ColorStyle{Background: s.style.ActiveColor, Foreground: color.NRGBA{}})
-			s.items[s.selected].button.Color = s.style.ActiveTextColor
+			s.items[s.selected].button.Background = s.Active
+			s.items[s.selected].button.Color = s.ActiveTextColor
 		} else {
-			s.items[index].button.ChangeColorStyle(&values.ColorStyle{Background: s.style.InactiveColor, Foreground: color.NRGBA{}})/* = s.style.InactiveColor*/
-			s.items[index].button.Color = s.style.InactiveTextColor
+			s.items[index].button.Background = s.Inactive
+			s.items[index].button.Color = s.InactiveTextColor
 		}
 	}
 }
