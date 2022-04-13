@@ -41,24 +41,42 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 	var backgroundColor color.NRGBA
 
 	switch agenda.Status {
-	case dcrlibwallet.AgendaStatusFinished:
+	case dcrlibwallet.AgendaStatusFinished.String():
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabel.Color = l.Theme.Color.GreenText
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
 		statusIcon.Color = l.Theme.Color.Green500
 		backgroundColor = l.Theme.Color.Green50
-	case dcrlibwallet.AgendaStatusInProgress:
+	case dcrlibwallet.AgendaStatusLockedIn.String():
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
+		statusLabel.Color = l.Theme.Color.GreenText
+		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCheck)
+		statusIcon.Color = l.Theme.Color.Green500
+		backgroundColor = l.Theme.Color.Green50
+	case dcrlibwallet.AgendaStatusFailed.String():
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
+		statusLabel.Color = l.Theme.Color.Text
+		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCancel)
+		statusIcon.Color = l.Theme.Color.GrayText1
+		backgroundColor = l.Theme.Color.Gray2
+	case dcrlibwallet.AgendaStatusInProgress.String():
 		clr := l.Theme.Color.Primary
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabel.Color = clr
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
 		statusIcon.Color = clr
 		backgroundColor = l.Theme.Color.LightBlue
-	case dcrlibwallet.AgendaStatusUpcoming:
+	case dcrlibwallet.AgendaStatusUpcoming.String():
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabel.Color = l.Theme.Color.Text
 		statusIcon = decredmaterial.NewIcon(l.Icons.PlayIcon)
 		statusIcon.Color = l.Theme.Color.DeepBlue
+		backgroundColor = l.Theme.Color.Gray2
+	default:
+		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
+		statusLabel.Color = l.Theme.Color.Text
+		statusIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
+		statusIcon.Color = l.Theme.Color.GrayText1
 		backgroundColor = l.Theme.Color.Gray2
 	}
 
@@ -101,10 +119,9 @@ func layoutAgendaDetails(l *load.Load, data string) layout.Widget {
 
 func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Px(unit.Dp(150)), gtx.Px(unit.Dp(200))
-	if item.Agenda.Status == dcrlibwallet.AgendaStatusFinished {
-		item.VoteButton.Background = l.Theme.Color.Gray3
-		item.VoteButton.SetEnabled(false)
-	} else {
+	item.VoteButton.Background = l.Theme.Color.Gray3
+	item.VoteButton.SetEnabled(false)
+	if item.Agenda.Status == dcrlibwallet.AgendaStatusUpcoming.String() || item.Agenda.Status == dcrlibwallet.AgendaStatusInProgress.String() {
 		item.VoteButton.Background = l.Theme.Color.Primary
 		item.VoteButton.SetEnabled(true)
 	}
