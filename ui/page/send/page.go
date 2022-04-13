@@ -166,7 +166,7 @@ func (pg *Page) ID() string {
 func (pg *Page) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.sourceAccountSelector.ListenForTxNotifications(pg.ctx)
-
+	pg.amount.styleWidgets()
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount(nil)
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()
@@ -179,6 +179,13 @@ func (pg *Page) OnNavigatedTo() {
 		pg.usdExchangeSet = false
 	}
 	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
+}
+
+// OnDarkModeChanged is triggered whenever the dark mode setting is changed
+// to enable restyling UI elements where necessary.
+// Satisfies the load.DarkModeChangeHandler interface.
+func (pg *Page) OnDarkModeChanged(isDarkModeOn bool) {
+	pg.amount.styleWidgets()
 }
 
 func (pg *Page) fetchExchangeRate() {

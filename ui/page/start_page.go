@@ -90,14 +90,14 @@ func (sp *startPage) unlock() {
 }
 
 func (sp *startPage) openWallets(password string) error {
-	if sp.WL.MultiWallet.OpenedWalletsCount() <= 0 {
-		err := sp.WL.MultiWallet.OpenWallets([]byte(password))
-		if err != nil {
-			log.Info("Error opening wallet:", err)
-			// show err dialog
-			return err
-		}
+	// if sp.WL.MultiWallet.OpenedWalletsCount() <= 0 {
+	err := sp.WL.MultiWallet.OpenWallets([]byte(password))
+	if err != nil {
+		log.Info("Error opening wallet:", err)
+		// show err dialog
+		return err
 	}
+	// }
 
 	sp.ChangeWindowPage(NewMainPage(sp.Load), false)
 	return nil

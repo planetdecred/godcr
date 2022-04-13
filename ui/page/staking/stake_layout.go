@@ -3,7 +3,6 @@ package staking
 import (
 	"gioui.org/layout"
 
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -33,13 +32,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								return layout.Inset{
 									Left:  values.MarginPadding8,
 									Right: values.MarginPadding4,
-								}.Layout(gtx, func(gtx C) D {
-									ic := pg.Theme.Icons.TimerIcon
-									if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
-										ic = pg.Theme.Icons.TimerDarkMode
-									}
-									return ic.Layout12dp(gtx)
-								})
+								}.Layout(gtx, pg.Theme.Icons.TimerIcon.Layout12dp)
 							}),
 							layout.Rigid(func(gtx C) D {
 								secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()

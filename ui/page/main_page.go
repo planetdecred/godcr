@@ -234,6 +234,7 @@ func (mp *MainPage) OnNavigatedTo() {
 	}
 
 	mp.updateBalance()
+
 }
 
 func (mp *MainPage) setLanguageSetting() {
@@ -350,7 +351,9 @@ func (mp *MainPage) OnDarkModeChanged(isDarkModeOn bool) {
 		currentPage.OnDarkModeChanged(isDarkModeOn)
 	}
 
-	mp.sendPage.RestyleWidgets()
+	mp.initNavItems()
+
+	mp.drawerNav.DrawerToggled(false)
 }
 
 // HandleUserInteractions is called just before Layout() to determine
