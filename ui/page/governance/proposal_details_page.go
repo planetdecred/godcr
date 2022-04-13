@@ -47,7 +47,6 @@ type ProposalDetails struct {
 	successIcon   *widget.Icon
 
 	redirectIcon *decredmaterial.Image
-	downloadIcon *decredmaterial.Image
 	copyIcon     *decredmaterial.Image
 
 	viewInPoliteiaBtn *decredmaterial.Clickable
@@ -73,7 +72,6 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 			List: layout.List{Axis: layout.Vertical},
 		},
 		redirectIcon:      l.Theme.Icons.RedirectIcon,
-		downloadIcon:      l.Theme.Icons.DownloadIcon,
 		proposalItems:     make(map[string]proposalItemWidgets),
 		rejectedIcon:      l.Theme.Icons.NavigationCancel,
 		successIcon:       l.Theme.Icons.ActionCheckCircle,

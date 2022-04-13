@@ -74,11 +74,14 @@ type MainPage struct {
 	refreshExchangeRateBtn *decredmaterial.Clickable
 
 	// page state variables
+	dcrUsdtBittrex load.DCRUSDTBittrex
+	totalBalance   dcrutil.Amount
+
 	usdExchangeSet         bool
 	isFetchingExchangeRate bool
-	dcrUsdtBittrex         load.DCRUSDTBittrex
 	isBalanceHidden        bool
-	totalBalance           dcrutil.Amount
+	isNavExpanded          bool
+	setNavExpanded         func()
 	totalBalanceUSD        string
 }
 
@@ -112,7 +115,9 @@ func NewMainPage(l *load.Load) *MainPage {
 	// Show a seed backup prompt if necessary.
 	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 
-	mp.drawerNav.DrawerToggled(false)
+	mp.setNavExpanded = func() {
+		mp.drawerNav.DrawerToggled(mp.isNavExpanded)
+	}
 
 	return mp
 }
@@ -209,6 +214,7 @@ func (mp *MainPage) initNavItems() {
 // the page is displayed.
 // Part of the load.Page interface.
 func (mp *MainPage) OnNavigatedTo() {
+	mp.setNavExpanded()
 	mp.setLanguageSetting()
 
 	mp.ctx, mp.ctxCancel = context.WithCancel(context.TODO())
@@ -352,8 +358,7 @@ func (mp *MainPage) OnDarkModeChanged(isDarkModeOn bool) {
 	}
 
 	mp.initNavItems()
-
-	mp.drawerNav.DrawerToggled(false)
+	mp.setNavExpanded()
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -374,11 +379,13 @@ func (mp *MainPage) HandleUserInteractions() {
 	mp.appBarNav.CurrentPage = mp.currentPageID()
 
 	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
-		mp.drawerNav.DrawerToggled(true)
+		mp.isNavExpanded = true
+		mp.setNavExpanded()
 	}
 
 	for mp.drawerNav.MaximizeNavDrawerButton.Button.Clicked() {
-		mp.drawerNav.DrawerToggled(false)
+		mp.isNavExpanded = false
+		mp.setNavExpanded()
 	}
 
 	for i, item := range mp.appBarNav.AppBarNavItems {

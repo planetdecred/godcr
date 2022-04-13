@@ -247,15 +247,17 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.exchangeRate != -1 && pg.usdExchangeSet {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					return layout.Flex{
+						Axis:      layout.Horizontal,
+						Alignment: layout.Middle,
+					}.Layout(gtx,
 						layout.Flexed(0.45, func(gtx C) D {
 							return pg.amount.dcrAmountEditor.Layout(gtx)
 						}),
 						layout.Flexed(0.1, func(gtx C) D {
-							// TODO: needs to be centered vertically
 							return layout.Center.Layout(gtx, func(gtx C) D {
 								icon := pg.Theme.Icons.CurrencySwapIcon
-								return icon.Layout24dp(gtx)
+								return icon.Layout12dp(gtx)
 							})
 						}),
 						layout.Flexed(0.45, func(gtx C) D {

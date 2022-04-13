@@ -54,7 +54,7 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 					},
 					{
 						Value:   float32(locked.ToCoin()),
-						Color:   pg.Theme.Color.PrimaryHighlight,
+						Color:   pg.Theme.Color.Primary,
 						SubText: "Locked",
 					},
 				}
