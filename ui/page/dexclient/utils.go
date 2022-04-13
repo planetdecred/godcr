@@ -20,7 +20,7 @@ const (
 	strAppPassword              = "App Password"
 	strConfirmPassword          = "Confirm Password"
 	strWalletPassword           = "Wallet Password"
-	strSellectAccountForDex     = "Select DCR account to use with DEX"
+	strSelectAccountForDex      = "Select DCR account to use with DEX"
 	strWaitingConfirms          = "Waiting for confirmations..."
 	strDexAddr                  = "DEX Address"
 	strSubmit                   = "Submit"

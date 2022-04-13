@@ -101,13 +101,13 @@ func (amd *assetSelectorModal) Layout(gtx layout.Context) D {
 func (amd *assetSelectorModal) assetsInfoLayout() layout.Widget {
 	return func(gtx C) D {
 		listFeeAsset := sortFeeAsset(amd.dexServer.RegFees)
-		var childrens = make([]layout.FlexChild, 0, len(listFeeAsset))
+		feeAssetWidgets := make([]layout.FlexChild, len(listFeeAsset))
 
 		for i := 0; i < len(listFeeAsset); i++ {
 			feeAsset := listFeeAsset[i]
 			asset := amd.Dexc().Core().SupportedAssets()[feeAsset.ID]
 
-			childrens = append(childrens, layout.Rigid(func(gtx C) D {
+			feeAssetWidgets[i] = layout.Rigid(func(gtx C) D {
 				return amd.listFeeAssetClickable[feeAsset.ID].Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Inset{
@@ -118,7 +118,7 @@ func (amd *assetSelectorModal) assetsInfoLayout() layout.Widget {
 					}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								ic := components.CoinImageBySymbol(&amd.Icons, asset.Symbol)
+								ic := components.CoinImageBySymbol(amd.Load, asset.Symbol)
 								ic.Scale = .35
 								return ic.Layout(gtx)
 							}),
@@ -146,16 +146,16 @@ func (amd *assetSelectorModal) assetsInfoLayout() layout.Widget {
 						)
 					})
 				})
-			}))
+			})
 		}
 
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, childrens...)
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, feeAssetWidgets...)
 	}
 }
 
 func (amd *assetSelectorModal) marketInfoLayout(feeAsset *core.FeeAsset) layout.Widget {
 	return func(gtx C) D {
-		childrens := []layout.FlexChild{
+		wdgs := []layout.FlexChild{
 			layout.Rigid(amd.Theme.Label(values.TextSize12, strMarket).Layout),
 		}
 
@@ -170,12 +170,12 @@ func (amd *assetSelectorModal) marketInfoLayout(feeAsset *core.FeeAsset) layout.
 			mkt := mkt
 			var ic *decredmaterial.Image
 			if excludeBase := feeAsset.ID == mkt.BaseID; excludeBase {
-				ic = components.CoinImageBySymbol(&amd.Icons, dex.BipIDSymbol(mkt.QuoteID))
+				ic = components.CoinImageBySymbol(amd.Load, dex.BipIDSymbol(mkt.QuoteID))
 			} else {
-				ic = components.CoinImageBySymbol(&amd.Icons, dex.BipIDSymbol(mkt.BaseID))
+				ic = components.CoinImageBySymbol(amd.Load, dex.BipIDSymbol(mkt.BaseID))
 			}
 			ic.Scale = .11
-			childrens = append(childrens, layout.Rigid(func(gtx C) D {
+			wdgs = append(wdgs, layout.Rigid(func(gtx C) D {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, ic.Layout)
@@ -188,7 +188,7 @@ func (amd *assetSelectorModal) marketInfoLayout(feeAsset *core.FeeAsset) layout.
 			}))
 		}
 
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, childrens...)
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, wdgs...)
 	}
 }
 
@@ -202,7 +202,7 @@ func (amd *assetSelectorModal) marketSummaryLayout() layout.Widget {
 				)
 			}),
 			layout.Rigid(func(gtx C) D {
-				childrens := []layout.FlexChild{
+				wdgs := []layout.FlexChild{
 					layout.Rigid(amd.Theme.Label(values.TextSize12, strMarket).Layout),
 				}
 				for _, mkt := range amd.dexServer.Markets {
@@ -210,10 +210,10 @@ func (amd *assetSelectorModal) marketSummaryLayout() layout.Widget {
 						continue
 					}
 					mkt := mkt
-					baseIc := components.CoinImageBySymbol(&amd.Icons, dex.BipIDSymbol(mkt.BaseID))
-					quoteIc := components.CoinImageBySymbol(&amd.Icons, dex.BipIDSymbol(mkt.QuoteID))
+					baseIc := components.CoinImageBySymbol(amd.Load, dex.BipIDSymbol(mkt.BaseID))
+					quoteIc := components.CoinImageBySymbol(amd.Load, dex.BipIDSymbol(mkt.QuoteID))
 					baseIc.Scale, quoteIc.Scale = .11, .11
-					childrens = append(childrens, layout.Rigid(func(gtx C) D {
+					wdgs = append(wdgs, layout.Rigid(func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
@@ -232,7 +232,7 @@ func (amd *assetSelectorModal) marketSummaryLayout() layout.Widget {
 						)
 					}))
 				}
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx, childrens...)
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx, wdgs...)
 			}),
 			layout.Rigid(amd.lotSizeLayout()),
 		)
@@ -241,7 +241,7 @@ func (amd *assetSelectorModal) marketSummaryLayout() layout.Widget {
 
 func (amd *assetSelectorModal) lotSizeLayout() layout.Widget {
 	return func(gtx C) D {
-		childrens := []layout.FlexChild{
+		wdgs := []layout.FlexChild{
 			layout.Rigid(amd.Theme.Label(values.TextSize12, strLotSize).Layout),
 		}
 
@@ -255,9 +255,9 @@ func (amd *assetSelectorModal) lotSizeLayout() layout.Widget {
 			}
 			baseUnitInfo := asset.Info.UnitInfo
 			txt := fmt.Sprintf("%s %s", formatAmount(mkt.LotSize, &baseUnitInfo), baseUnitInfo.Conventional.Unit)
-			childrens = append(childrens, layout.Rigid(amd.Theme.Label(values.TextSize10, strings.ToUpper(txt)).Layout))
+			wdgs = append(wdgs, layout.Rigid(amd.Theme.Label(values.TextSize10, strings.ToUpper(txt)).Layout))
 		}
 
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, childrens...)
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, wdgs...)
 	}
 }
