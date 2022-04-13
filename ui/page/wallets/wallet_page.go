@@ -597,7 +597,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 			var children []layout.FlexChild
 			children = append(children, layout.Rigid(func(gtx C) D {
-				return listItem.collapsible.Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleMore)
+				return listItem.collapsible.Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleMore, listItem.wal.ID)
 			}))
 
 			if listItem.wal.IsAccountMixerActive() {
