@@ -78,7 +78,6 @@ func (amd *assetSelectorModal) Handle() {
 	for assetID, cl := range amd.listFeeAssetClickable {
 		if cl.Clicked() {
 			amd.onAssetSelected(amd.Dexc().Core().SupportedAssets()[assetID])
-			amd.Dismiss()
 			return
 		}
 	}

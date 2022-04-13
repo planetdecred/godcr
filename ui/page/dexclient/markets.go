@@ -28,20 +28,17 @@ type Page struct {
 	*load.Load
 	ctx       context.Context
 	ctxCancel context.CancelFunc
-	dexServer *core.Exchange
 
 	loginBtn       decredmaterial.Button
 	initializeBtn  decredmaterial.Button
 	addDexBtn      decredmaterial.Button
 	syncBtn        decredmaterial.Button
-	shouldStartDex bool
 	materialLoader material.LoaderStyle
 }
 
 func NewMarketPage(l *load.Load) *Page {
 	pg := &Page{
 		Load:           l,
-		shouldStartDex: l.Dexc().Core() == nil,
 		loginBtn:       l.Theme.Button(strLogin),
 		initializeBtn:  l.Theme.Button(strStartUseDex),
 		addDexBtn:      l.Theme.Button(strAddADex),
@@ -73,14 +70,15 @@ func (pg *Page) Layout(gtx C) D {
 			return pg.pageSections(gtx, pg.welcomeLayout(&pg.initializeBtn))
 		case !pg.Dexc().IsLoggedIn():
 			return pg.pageSections(gtx, pg.welcomeLayout(&pg.loginBtn))
-		case pg.dexServer == nil:
+		case pg.dexServer() == nil:
 			return pg.pageSections(gtx, pg.welcomeLayout(&pg.addDexBtn))
 		default:
-			if !pg.dexServer.Connected {
+			d := pg.dexServer()
+			if !d.Connected {
 				return pg.pageSections(gtx,
-					pg.Theme.Label(values.TextSize16, fmt.Sprintf(nStrConnHostError, pg.dexServer.Host)).Layout)
+					pg.Theme.Label(values.TextSize16, fmt.Sprintf(nStrConnHostError, d.Host)).Layout)
 			}
-			if pg.dexServer.PendingFee != nil {
+			if d.PendingFee != nil {
 				return pg.pageSections(gtx, pg.registrationStatusLayout())
 			}
 
@@ -110,7 +108,7 @@ func (pg *Page) welcomeLayout(button *decredmaterial.Button) layout.Widget {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					if pg.shouldStartDex {
+					if pg.Dexc().Core() == nil {
 						return layout.Center.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = 50
 							return pg.materialLoader.Layout(gtx)
@@ -131,10 +129,11 @@ func (pg *Page) registrationStatusLayout() layout.Widget {
 		txtLabel := func(txt string) layout.Widget {
 			return pg.Theme.Label(values.TextSize14, txt).Layout
 		}
-		reqConfirms, currentConfs := pg.dexServer.Fee.Confs, pg.dexServer.PendingFee.Confs
+		d := pg.dexServer()
+		reqConfirms, currentConfs := d.Fee.Confs, d.PendingFee.Confs
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(txtLabel(strWaitingConfirms)),
-			layout.Rigid(txtLabel(fmt.Sprintf(nStrConfirmationsStatus, pg.dexServer.Host, reqConfirms))),
+			layout.Rigid(txtLabel(fmt.Sprintf(nStrConfirmationsStatus, d.Host, reqConfirms))),
 			layout.Rigid(txtLabel(fmt.Sprintf("%d/%d", currentConfs, reqConfirms))),
 		)
 	}
@@ -151,9 +150,6 @@ func (pg *Page) OnNavigatedTo() {
 		return
 	}
 	go pg.readNotifications()
-	if pg.Dexc().IsLoggedIn() {
-		pg.setDefaultDexServer()
-	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -197,12 +193,11 @@ func (pg *Page) HandleUserInteractions() {
 					// Check if there is no dex registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
 						newAddDexModal(pg.Load).WithAppPassword(password).
-							OnDexAdded(func(dexServer *core.Exchange) {
-								pg.setDexServer(dexServer)
+							OnDexAdded(func() {
+								pg.RefreshWindow()
 							}).Show()
 						return
 					}
-					pg.setDefaultDexServer()
 				}()
 				return false
 			}).Show()
@@ -230,8 +225,8 @@ func (pg *Page) HandleUserInteractions() {
 					if len(pg.Dexc().DEXServers()) == 0 {
 						newAddDexModal(pg.Load).
 							WithAppPassword(password).
-							OnDexAdded(func(dexServer *core.Exchange) {
-								pg.setDexServer(dexServer)
+							OnDexAdded(func() {
+								pg.RefreshWindow()
 							}).Show()
 						return
 					}
@@ -241,17 +236,14 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.addDexBtn.Button.Clicked() {
-		newAddDexModal(pg.Load).OnDexAdded(func(dexServer *core.Exchange) {
-			pg.setDexServer(dexServer)
+		newAddDexModal(pg.Load).OnDexAdded(func() {
+			pg.RefreshWindow()
 		}).Show()
 	}
-
 }
 
 func (pg *Page) startDexClient() {
 	_, err := pg.WL.MultiWallet.StartDexClient()
-	pg.shouldStartDex = false
-
 	if err != nil {
 		pg.Toast.NotifyError(err.Error())
 		return
@@ -274,28 +266,17 @@ func (pg *Page) readNotifications() {
 				pg.Toast.NotifyError(n.Details())
 			}
 
-			if pg.dexServer != nil {
-				dexServer, found := pg.Dexc().DEXServers()[pg.dexServer.Host]
-				if found {
-					pg.setDexServer(dexServer)
-				}
-			}
-
 		case <-pg.ctx.Done():
 			return
 		}
 	}
 }
 
-func (pg *Page) setDefaultDexServer() {
+// dexServer return first Dex
+func (pg *Page) dexServer() *core.Exchange {
 	exchanges := sortServers(pg.Dexc().DEXServers())
 	if len(exchanges) == 0 {
-		return
+		return nil
 	}
-	pg.setDexServer(exchanges[0])
-}
-
-func (pg *Page) setDexServer(sv *core.Exchange) {
-	pg.dexServer = sv
-	pg.RefreshWindow()
+	return exchanges[0]
 }

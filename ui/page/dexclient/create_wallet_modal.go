@@ -39,7 +39,8 @@ type createWalletModal struct {
 	isSending             bool
 	dexClientPassword     string
 	isRegisterAction      bool
-	walletCreated         func(md *createWalletModal)
+	walletCreated         func()
+	cancelClicked         func()
 }
 
 type walletInfoWidget struct {
@@ -48,7 +49,7 @@ type walletInfoWidget struct {
 	coinID   uint32
 }
 
-func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, appPass string, walletCreated func(md *createWalletModal)) *createWalletModal {
+func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, appPass string) *createWalletModal {
 	md := &createWalletModal{
 		Load:              l,
 		modal:             l.Theme.ModalFloatTitle(),
@@ -58,7 +59,6 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, appPass stri
 		cancelBtn:         l.Theme.OutlineButton(values.String(values.StrCancel)),
 		materialLoader:    material.Loader(material.NewTheme(gofont.Collection())),
 		walletInfoWidget:  wallInfo,
-		walletCreated:     walletCreated,
 		dexClientPassword: appPass,
 	}
 	md.submitBtn.SetEnabled(false)
@@ -109,6 +109,16 @@ func (md *createWalletModal) SetRegisterAction(registerAction bool) *createWalle
 	return md
 }
 
+func (md *createWalletModal) CancelClicked(clicked func()) *createWalletModal {
+	md.cancelClicked = clicked
+	return md
+}
+
+func (md *createWalletModal) WalletCreated(walletCreated func()) *createWalletModal {
+	md.walletCreated = walletCreated
+	return md
+}
+
 func (md *createWalletModal) validateInputs(isRequiredWalletPassword bool) (bool, string, string) {
 	appPass := md.dexClientPassword
 	if appPass == "" {
@@ -135,13 +145,13 @@ func (md *createWalletModal) Handle() {
 	canSubmit, appPass, walletPass := md.validateInputs(isRequiredWalletPassword)
 
 	if isWalletPasswordSubmit, _ := decredmaterial.HandleEditorEvents(md.walletPassword.Editor); isWalletPasswordSubmit {
-		if md.dexClientPassword != "" && canSubmit {
+		if canSubmit {
 			if isRequiredWalletPassword {
 				md.doCreateWallet([]byte(appPass), []byte(walletPass))
 			} else {
 				md.doCreateWallet([]byte(appPass), nil)
 			}
-		} else {
+		} else if md.dexClientPassword == "" {
 			md.appPassword.Editor.Focus()
 		}
 	}
@@ -157,6 +167,7 @@ func (md *createWalletModal) Handle() {
 
 	if md.cancelBtn.Button.Clicked() && !md.isSending {
 		md.Dismiss()
+		md.cancelClicked()
 	}
 }
 
@@ -201,7 +212,7 @@ func (md *createWalletModal) doCreateWallet(appPass, walletPass []byte) {
 		}
 
 		md.Dismiss()
-		md.walletCreated(md)
+		md.walletCreated()
 	}()
 }
 
