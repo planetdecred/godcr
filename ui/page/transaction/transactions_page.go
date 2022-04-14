@@ -139,7 +139,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 								// return "No transactions yet" text if there are no transactions
 								if len(wallTxs) == 0 {
 									padding := values.MarginPadding16
-									txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
+									txt := pg.Theme.Body1(values.String(values.StrNoTransactions))
 									txt.Color = pg.Theme.Color.GrayText3
 									gtx.Constraints.Min.X = gtx.Constraints.Max.X
 									return layout.Center.Layout(gtx, func(gtx C) D {

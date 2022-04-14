@@ -63,7 +63,7 @@ func (pg *AppOverviewPage) recentTransactionsSection(gtx layout.Context) layout.
 				}),
 				layout.Rigid(func(gtx C) D {
 					if len(pg.transactions) == 0 {
-						message := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
+						message := pg.Theme.Body1(values.String(values.StrNoTransactions))
 						message.Color = pg.Theme.Color.GrayText3
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.Center.Layout(gtx, func(gtx C) D {
