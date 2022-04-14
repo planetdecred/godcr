@@ -64,6 +64,7 @@ type Restore struct {
 	keyEvent           chan *key.Event
 	seedEditorTracker  int     // stores the current focus index of seed editors
 	caretCoordXTracker float32 //stores the caret coord on the X-axis
+	caretPosition      int     // current caret position
 }
 
 func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
@@ -569,8 +570,13 @@ func (pg *Restore) HandleUserInteractions() {
 	if pg.seedEditorChanged() {
 		pg.suggestions = nil
 		pg.selected = 0
+		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
+		pg.caretPosition = caretPos
 	}
 
+	if pg.caretPositionChanged() {
+		pg.selected = 0
+	}
 }
 
 // check if seed editor has changed
@@ -596,6 +602,22 @@ func (pg *Restore) caretCoordXChanged() bool {
 	}
 
 	return pg.caretCoordXTracker != pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretCoords().X
+}
+
+func (pg *Restore) caretPositionChanged() bool {
+	focus := pg.seedEditors.focusIndex
+	if !pg.seedEditorChanged() {
+		if focus == -1 {
+			return false
+		}
+		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
+		if pg.caretPosition != caretPos {
+			pg.caretPosition = caretPos
+			return true
+		}
+	}
+
+	return false
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
