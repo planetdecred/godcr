@@ -45,6 +45,8 @@ func NewGovernancePage(l *load.Load) *Page {
 		tabCategoryList:       l.Theme.NewClickableList(layout.Horizontal),
 	}
 
+	pg.tabCategoryList.IsHoverable = false
+
 	pg.initSplashScreenWidgets()
 
 	return pg
@@ -155,18 +157,18 @@ func (pg *Page) layoutTabs(gtx C) D {
 						Bottom: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
 						return layout.Center.Layout(gtx, func(gtx C) D {
-							return layout.Flex{}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									lbl := pg.Theme.Label(values.TextSize16, governanceTabTitles[i])
-									lbl.Color = pg.Theme.Color.GrayText1
-									if pg.selectedCategoryIndex == i {
-										lbl.Color = pg.Theme.Color.Primary
-										dims = lbl.Layout(gtx)
-									}
+							// return layout.Flex{}.Layout(gtx,
+							// 	layout.Rigid(func(gtx C) D {
+							lbl := pg.Theme.Label(values.TextSize16, governanceTabTitles[i])
+							lbl.Color = pg.Theme.Color.GrayText1
+							if pg.selectedCategoryIndex == i {
+								lbl.Color = pg.Theme.Color.Primary
+								dims = lbl.Layout(gtx)
+							}
 
-									return lbl.Layout(gtx)
-								}),
-							)
+							return lbl.Layout(gtx)
+							// 	}),
+							// )
 						})
 					})
 				}),
