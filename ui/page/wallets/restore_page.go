@@ -569,7 +569,6 @@ func (pg *Restore) HandleUserInteractions() {
 
 	if pg.seedEditorChanged() {
 		pg.suggestions = nil
-		pg.selected = 0
 		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
 		pg.caretPosition = caretPos
 	}
