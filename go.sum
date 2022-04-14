@@ -473,8 +473,6 @@ github.com/dlclark/regexp2 v1.4.1-0.20201116162257-a2a8dda75c91/go.mod h1:2pZnwu
 github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf/go.mod h1:eEKB0N0r5NX/I1kEveEz05bcu8tLC/8azJZsviup8Sk=
 github.com/dop251/goja v0.0.0-20211011172007-d99e4b8cbf48/go.mod h1:R9ET47fwRVRPZnOGvHxxhuZcbrMCuiqOz3Rlrh4KSnk=
 github.com/dop251/goja_nodejs v0.0.0-20210225215109-d91c329300e7/go.mod h1:hn7BA7c8pLvoGndExHudxTDKZ84Pyvv+90pbBjbTz0Y=
-github.com/dreacot/dcrlibwallet v1.6.1-0.20220413224710-65562e7583c6 h1:We2s7E8/Wj7GvUNOVp7h6SWN8bDzz+l4muyn71hcxwM=
-github.com/dreacot/dcrlibwallet v1.6.1-0.20220413224710-65562e7583c6/go.mod h1:d65xdeAh2Z9tm6WDdcAtrjO6Cph4WJDS6uDq6JVNHmM=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
@@ -915,6 +913,8 @@ github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6JUPA=
 github.com/pkg/term v0.0.0-20180730021639-bffc007b7fd5/go.mod h1:eCbImbZ95eXtAUIbLAuAVnBnwf83mjf6QIVH8SHYwqQ=
+github.com/planetdecred/dcrlibwallet v1.6.2-0.20220414074738-62281e38109a h1:doO14vqlC/HX9Mm6gHyEMxz5zk5VdpNYoL6Adg494Ko=
+github.com/planetdecred/dcrlibwallet v1.6.2-0.20220414074738-62281e38109a/go.mod h1:d65xdeAh2Z9tm6WDdcAtrjO6Cph4WJDS6uDq6JVNHmM=
 github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-20220223161805-c736f970653d h1:egC6nx+qP3QMwKQhA+JdJReKV9NhG17Ag+3oCVCsj3c=
 github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-20220223161805-c736f970653d/go.mod h1:jO4RP2rgqom8CLgl3rMwZ4cGzmalJqBkKjHgVS812lM=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
