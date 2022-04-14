@@ -145,7 +145,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 		e.TitleLabel.Text = e.Hint
 	}
 
-	e.LineColor = e.t.Color.Gray2
+	e.LineColor, e.TitleLabel.Color = e.t.Color.Gray2, e.t.Color.GrayText3
 	if e.Editor.Focused() {
 		e.TitleLabel.Text = e.Hint
 		e.TitleLabel.Color, e.LineColor = e.t.Color.Primary, e.t.Color.Primary

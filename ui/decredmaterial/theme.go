@@ -3,7 +3,6 @@
 package decredmaterial
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 
@@ -81,7 +80,6 @@ func (t *Theme) SwitchDarkMode(isDarkModeOn bool, decredIcons map[string]image.I
 	expandIcon := "expand_icon"
 	collapseIcon := "collapse_icon"
 	if isDarkModeOn {
-		fmt.Println("in theme 1")
 		t.Color.DarkThemeColors() // override defaults with dark themed colors
 		expandIcon = "expand_dm"
 		collapseIcon = "collapse_dm"

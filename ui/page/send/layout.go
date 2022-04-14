@@ -46,9 +46,9 @@ func (pg *Page) initLayoutWidgets() {
 		Top:    values.MarginPadding5,
 		Right:  values.MarginPadding8,
 		Bottom: values.MarginPadding5,
-		Left:   values.MarginPadding8}
-	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
-	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
+		Left:   values.MarginPadding8,
+	}
+
 	pg.moreItems = pg.getMoreItem()
 }
 
@@ -120,7 +120,9 @@ func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
 	inset.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding130)
 		return pg.shadowBox.Layout(gtx, func(gtx C) D {
-			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+			optionsMenuCard := decredmaterial.Card{Color: pg.Theme.Color.Surface}
+			optionsMenuCard.Radius = decredmaterial.Radius(5)
+			return optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.moreItems), func(gtx C, i int) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {

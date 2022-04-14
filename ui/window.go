@@ -145,7 +145,7 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	}
 
 	// DarkModeSettingChanged checks if any page or any
-	// modal
+	// modal implements the DarkModeChangeHandler
 	l.DarkModeSettingChanged = func(isDarkModeOn bool) {
 		if page, ok := win.currentPage.(load.DarkModeChangeHandler); ok {
 			page.OnDarkModeChanged(isDarkModeOn)

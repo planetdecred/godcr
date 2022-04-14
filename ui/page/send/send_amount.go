@@ -88,7 +88,6 @@ func (sa *sendAmount) setAmount(amount int64) {
 
 		sa.usdSendMaxChangeEvent = true
 		sa.usdAmountEditor.Editor.SetText(fmt.Sprintf("%.2f", usdAmount))
-
 	}
 }
 
