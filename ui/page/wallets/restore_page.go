@@ -60,11 +60,8 @@ type Restore struct {
 	seedClicked  bool
 	isLastEditor bool
 
-	seedEditors        seedEditors
-	keyEvent           chan *key.Event
-	seedEditorTracker  int     // stores the current focus index of seed editors
-	caretCoordXTracker float32 //stores the caret coord on the X-axis
-	caretPosition      int     // current caret position
+	seedEditors seedEditors
+	keyEvent    chan *key.Event
 }
 
 func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
@@ -123,7 +120,6 @@ func (pg *Restore) ID() string {
 // Part of the load.Page interface.
 func (pg *Restore) OnNavigatedTo() {
 	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
-	pg.seedEditorTracker = 0
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -311,11 +307,6 @@ func (pg *Restore) editorSeedsEventsHandler() {
 			case widget.ChangeEvent:
 				seedEvent(i, text)
 
-				pg.suggestions = pg.suggestionSeeds(text)
-				pg.seedMenu = pg.seedMenu[:len(pg.suggestions)]
-				for k, s := range pg.suggestions {
-					pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
-				}
 			case widget.SubmitEvent:
 				if i != numberOfSeeds {
 					pg.seedEditors.editors[i+1].Edit.Editor.Focus()
@@ -370,19 +361,15 @@ func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) 
 
 	m := op.Record(gtx.Ops)
 	inset.Layout(gtx, func(gtx C) D {
-		if !pg.seedEditorChanged() && pg.caretCoordXChanged() {
-			border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
-			return border.Layout(gtx, func(gtx C) D {
-				return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.seedMenu), func(gtx C, i int) D {
-						return layout.UniformInset(values.MarginPadding0).Layout(gtx, pg.seedMenu[i].button.Layout)
-					})
+		border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
+		return border.Layout(gtx, func(gtx C) D {
+			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.seedMenu), func(gtx C, i int) D {
+					return layout.UniformInset(values.MarginPadding0).Layout(gtx, pg.seedMenu[i].button.Layout)
 				})
 			})
-		}
-		pg.suggestions = nil
-		return D{}
+		})
 	})
 	op.Defer(gtx.Ops, m.Stop())
 }
@@ -473,6 +460,15 @@ func switchSeedEditors(editors []decredmaterial.RestoreEditor) {
 // displayed.
 // Part of the load.Page interface.
 func (pg *Restore) HandleUserInteractions() {
+	focus := pg.seedEditors.focusIndex
+	if focus != -1 {
+		pg.suggestions = pg.suggestionSeeds(pg.seedEditors.editors[focus].Edit.Editor.Text())
+		pg.seedMenu = pg.seedMenu[:len(pg.suggestions)]
+		for k, s := range pg.suggestions {
+			pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
+		}
+	}
+
 	for pg.backButton.Button.Clicked() {
 		pg.PopWindowPage()
 	}
@@ -566,57 +562,6 @@ func (pg *Restore) HandleUserInteractions() {
 	pg.editorSeedsEventsHandler()
 	pg.onSuggestionSeedsClicked()
 	pg.suggestionSeedEffect()
-
-	if pg.seedEditorChanged() {
-		pg.suggestions = nil
-		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
-		pg.caretPosition = caretPos
-	}
-
-	if pg.caretPositionChanged() {
-		pg.selected = 0
-	}
-}
-
-// check if seed editor has changed
-func (pg *Restore) seedEditorChanged() bool {
-	focus := pg.seedEditors.focusIndex
-	if pg.seedEditorTracker != focus {
-		if focus == -1 {
-			return false
-		}
-		pg.seedEditorTracker = focus
-		pg.caretCoordXTracker = pg.seedEditors.editors[focus].Edit.Editor.CaretCoords().X
-		return true
-	}
-
-	return false
-}
-
-// Check if caret cordinates on the x-axis has changed
-func (pg *Restore) caretCoordXChanged() bool {
-	focus := pg.seedEditors.focusIndex
-	if focus == -1 {
-		return false
-	}
-
-	return pg.caretCoordXTracker != pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretCoords().X
-}
-
-func (pg *Restore) caretPositionChanged() bool {
-	focus := pg.seedEditors.focusIndex
-	if !pg.seedEditorChanged() {
-		if focus == -1 {
-			return false
-		}
-		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
-		if pg.caretPosition != caretPos {
-			pg.caretPosition = caretPos
-			return true
-		}
-	}
-
-	return false
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
