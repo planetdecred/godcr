@@ -14,9 +14,10 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
-	"github.com/planetdecred/godcr/ui/page/overview"
+	// "github.com/planetdecred/godcr/ui/page/overview"
 	tpage "github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 type (
@@ -28,6 +29,7 @@ const OverviewPageID = "staking"
 
 type Page struct {
 	*load.Load
+
 	list *widget.List
 
 	ctx       context.Context // page context
@@ -66,6 +68,12 @@ func NewStakingPage(l *load.Load) *Page {
 	pg.initLiveStakeWidget()
 	pg.loadPageData()
 
+	//disable staking btn is wallet is not synced
+	pg.stakeBtn.SetEnabled(pg.WL.MultiWallet.IsSynced())
+
+	//disable auto ticket purchase is wallet is not synced
+	pg.autoPurchase.SetEnabled(!pg.WL.MultiWallet.IsSynced())
+
 	return pg
 }
 
@@ -85,32 +93,29 @@ func (pg *Page) OnNavigatedTo() {
 	// canceled in OnNavigatedFrom().
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
+	// set up auto ticekt buyer wallets
 	pg.setTBWallet()
-	ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
-	if err != nil {
-		pg.ticketPrice = "0 DCR"
-		bestBlock := pg.WL.MultiWallet.GetBestBlock()
-		activationHeight := pg.WL.MultiWallet.DCP0001ActivationBlockHeight()
-		if bestBlock.Height < activationHeight {
-			modal.NewInfoModal(pg.Load).
-				Title("Staking notification").
-				SetupWithTemplate(modal.TicketPriceErrorTemplate).
-				SetContentAlignment(layout.Center, layout.Center).
-				NegativeButton(values.String(values.StrCancel), func() {}).
-				PositiveButton("Go to Overview", func() {
-					pg.ChangeFragment(overview.NewOverviewPage(pg.Load))
-				}).
-				Show()
-		} else {
-			pg.Toast.NotifyError("Unable to fetch ticket price: " + err.Error())
-		}
-	} else {
-		pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
-	}
+
+	pg.fetchTicketPrice()
 
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
 
 	pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+}
+
+// fetch ticket price only when the wallet is synced
+func (pg *Page) fetchTicketPrice() {
+	if pg.WL.MultiWallet.IsSyncing() {
+		pg.ticketPrice = "Loading price"
+	} else {
+		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
+		if err != nil && pg.WL.MultiWallet.IsSynced() {
+			pg.ticketPrice = "Not available"
+			pg.Toast.NotifyError("wallet not synced")
+		} else {
+			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
+		}
+	}
 }
 
 func (pg *Page) setTBWallet() {
@@ -232,21 +237,7 @@ func (pg *Page) titleRow(gtx C, leftWidget, rightWidget func(C) D) D {
 // displayed.
 // Part of the load.Page interface.
 func (pg *Page) HandleUserInteractions() {
-	if pg.stakeBtn.Clicked() {
-		newStakingModal(pg.Load).
-			TicketPurchased(func() {
-				align := layout.Center
-				successIcon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
-				successIcon.Color = pg.Theme.Color.Success
-				info := modal.NewInfoModal(pg.Load).
-					Icon(successIcon).
-					Title("Ticket(s) Confirmed").
-					SetContentAlignment(align, align).
-					PositiveButton("Back to staking", func() {})
-				pg.ShowModal(info)
-				pg.loadPageData()
-			}).Show()
-	}
+	pg.fetchTicketPrice()
 
 	if pg.toTickets.Button.Clicked() {
 		pg.ChangeFragment(newListPage(pg.Load))
