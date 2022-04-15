@@ -134,7 +134,7 @@ const (
 	StrDisconnect                  = "disconnect"
 	StrSyncingProgress             = "syncingProgress"
 	StrBlockHeaderFetched          = "blockHeaderFetched"
-	StrNoTransactionsYet           = "noTransactionsYet"
+	StrNoTransactions              = "noTransactions"
 	StrCancel                      = "cancel"
 	StrAppTitle                    = "appTitle"
 	StrSeeAll                      = "seeAll"
