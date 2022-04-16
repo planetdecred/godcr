@@ -288,7 +288,7 @@ func HandleEditorEvents(editors ...*widget.Editor) (bool, bool) {
 func SwitchEditors(keyEvent chan *key.Event, editors ...*widget.Editor) {
 	select {
 	case event := <-keyEvent:
-		if event.Name == key.NameTab && event.State == key.Press {
+		if event.Name == key.NameTab && event.Modifiers != key.ModShift && event.State == key.Press {
 			for i := 0; i < len(editors); i++ {
 				if editors[i].Focused() {
 					if i == len(editors)-1 {
