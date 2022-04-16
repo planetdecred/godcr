@@ -492,7 +492,7 @@ func (pg *Restore) HandleUserInteractions() {
 	// handle key events
 	select {
 	case evt := <-pg.keyEvent:
-		if evt.Name == key.NameTab && evt.State == key.Press {
+		if evt.Name == key.NameTab && evt.Modifiers != key.ModShift && evt.State == key.Press {
 			if len(pg.suggestions) == 1 {
 				focus := pg.seedEditors.focusIndex
 				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[0])
@@ -500,6 +500,17 @@ func (pg *Restore) HandleUserInteractions() {
 				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
 			switchSeedEditors(pg.seedEditors.editors)
+		}
+		if evt.Name == key.NameTab && evt.Modifiers == key.ModShift && evt.State == key.Press {
+			for i := 0; i < len(pg.seedEditors.editors); i++ {
+				if pg.seedEditors.editors[i].Edit.Editor.Focused() {
+					if i == 0 {
+						pg.seedEditors.editors[len(pg.seedEditors.editors)-1].Edit.Editor.Focus()
+					} else {
+						pg.seedEditors.editors[i-1].Edit.Editor.Focus()
+					}
+				}
+			}
 		}
 		if evt.Name == key.NameUpArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
 			pg.selected--
