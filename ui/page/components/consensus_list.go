@@ -57,7 +57,7 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabel.Color = l.Theme.Color.Text
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavigationCancel)
-		statusIcon.Color = l.Theme.Color.GrayText1
+		statusIcon.Color = l.Theme.Color.Gray1
 		backgroundColor = l.Theme.Color.Gray2
 	case dcrlibwallet.AgendaStatusInProgress.String():
 		clr := l.Theme.Color.Primary
@@ -76,7 +76,7 @@ func layoutAgendaStatus(gtx C, l *load.Load, agenda dcrlibwallet.Agenda) D {
 		statusLabel = l.Theme.Label(values.MarginPadding14, agenda.Status)
 		statusLabel.Color = l.Theme.Color.Text
 		statusIcon = decredmaterial.NewIcon(l.Icons.NavMoreIcon)
-		statusIcon.Color = l.Theme.Color.GrayText1
+		statusIcon.Color = l.Theme.Color.Gray1
 		backgroundColor = l.Theme.Color.Gray2
 	}
 
