@@ -111,13 +111,19 @@ func (c *Collapsible) IsExpanded() bool {
 	return c.isExpanded
 }
 
-func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) D, more func(C)) layout.Dimensions {
-	for c.button.Clicked() {
-		c.isExpanded = !c.isExpanded
+var rememberExpand map[int]bool
+
+func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) D, more func(C), rowID int) layout.Dimensions {
+	if rememberExpand == nil {
+		rememberExpand = make(map[int]bool)
+	}
+
+	if c.button.Clicked() {
+		rememberExpand[rowID] = !rememberExpand[rowID]
 	}
 
 	icon := c.collapsedIcon
-	if c.isExpanded {
+	if rememberExpand[rowID] {
 		icon = c.expandedIcon
 	}
 
@@ -148,7 +154,7 @@ func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) 
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				if c.isExpanded {
+				if rememberExpand[rowID] {
 					return body(gtx)
 				}
 				return D{}
