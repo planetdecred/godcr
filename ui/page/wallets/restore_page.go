@@ -60,8 +60,10 @@ type Restore struct {
 	seedClicked  bool
 	isLastEditor bool
 
-	seedEditors seedEditors
-	keyEvent    chan *key.Event
+	seedEditors       seedEditors
+	keyEvent          chan *key.Event
+	caretPosition     int // current caret position
+	seedEditorTracker int // stores the current focus index of seed editors
 }
 
 func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
@@ -562,6 +564,46 @@ func (pg *Restore) HandleUserInteractions() {
 	pg.editorSeedsEventsHandler()
 	pg.onSuggestionSeedsClicked()
 	pg.suggestionSeedEffect()
+
+	if pg.seedEditorChanged() {
+		pg.suggestions = nil
+		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
+		pg.caretPosition = caretPos
+	}
+
+	if pg.caretPositionChanged() {
+		pg.selected = 0
+	}
+
+}
+
+func (pg *Restore) caretPositionChanged() bool {
+	focus := pg.seedEditors.focusIndex
+	if !pg.seedEditorChanged() {
+		if focus == -1 {
+			return false
+		}
+		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
+		if pg.caretPosition != caretPos {
+			pg.caretPosition = caretPos
+			return true
+		}
+	}
+
+	return false
+}
+
+func (pg *Restore) seedEditorChanged() bool {
+	focus := pg.seedEditors.focusIndex
+	if pg.seedEditorTracker != focus {
+		if focus == -1 {
+			return false
+		}
+		pg.seedEditorTracker = focus
+		return true
+	}
+
+	return false
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
