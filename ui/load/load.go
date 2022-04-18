@@ -83,13 +83,17 @@ type Load struct {
 	SubscribeKeyEvent   func(eventChan chan *key.Event, pageID string) // Widgets call this function to recieve key events.
 	UnsubscribeKeyEvent func(pageID string) error
 	ReloadApp           func()
+
+	DarkModeSettingChanged func(bool)
 }
 
 func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)
+	l.DarkModeSettingChanged(isDarkModeOn)
 	l.RefreshWindow()
 }
+
 func (l *Load) Dexc() *dcrlibwallet.DexClient {
 	return l.WL.MultiWallet.DexClient()
 }

@@ -38,3 +38,12 @@ type Modal interface {
 	Show()
 	Handle()
 }
+
+// DarkModeChangeHandler defines a method that can be implemented by pages and
+// modals to watch for real-time changes to the dark mode setting and modify
+// widget appearance accordingly.
+type DarkModeChangeHandler interface {
+	// OnDarkModeChanged is triggered whenever the dark mode setting is changed
+	// to enable restyling UI elements where necessary.
+	OnDarkModeChanged(bool)
+}

@@ -51,15 +51,12 @@ type Theme struct {
 	collapseIcon          *Image
 
 	dropDownMenus []*DropDown
-
-	DarkMode bool
 }
 
 func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image, isDarkModeOn bool) *Theme {
 	t := &Theme{
 		Shaper:   text.NewCache(fontCollection),
 		Base:     material.NewTheme(fontCollection),
-		DarkMode: isDarkModeOn,
 		Color:    &values.Color{},
 		Styles:   values.DefaultWidgetStyles(),
 		TextSize: values.TextSize16,
@@ -106,6 +103,10 @@ func (t *Theme) updateStyles(isDarkModeOn bool) {
 	// update icon button style colors
 	t.Styles.IconButtonColorStyle.Background = color.NRGBA{}
 	t.Styles.IconButtonColorStyle.Foreground = t.Color.Gray1
+
+	// update Collapsible widget style colors
+	t.Styles.CollapsibleStyle.Background = t.Color.Surface
+	t.Styles.CollapsibleStyle.Foreground = color.NRGBA{}
 
 	// update clickable colors
 	t.Styles.ClickableStyle.Color = t.Color.SurfaceHighlight

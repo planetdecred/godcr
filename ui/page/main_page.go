@@ -338,6 +338,21 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 		}).Show()
 }
 
+// OnDarkModeChanged is triggered whenever the dark mode setting is changed
+// to enable restyling UI elements where necessary.
+// Satisfies the load.DarkModeChangeHandler interface.
+func (mp *MainPage) OnDarkModeChanged(isDarkModeOn bool) {
+	// TODO: currentPage will likely be the Settings page when this method
+	// is called. If that page implements the DarkModeChangeHandler interface,
+	// the following code will trigger the OnDarkModeChanged method of that
+	// page.
+	if currentPage, ok := mp.currentPage.(load.DarkModeChangeHandler); ok {
+		currentPage.OnDarkModeChanged(isDarkModeOn)
+	}
+
+	mp.sendPage.RestyleWidgets()
+}
+
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are

@@ -111,7 +111,6 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		TitleLabel:   t.Body2(""),
 		IsTitleLabel: true,
 		Bordered:     true,
-		LineColor:    t.Color.Gray2,
 
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
@@ -146,6 +145,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 		e.TitleLabel.Text = e.Hint
 	}
 
+	e.LineColor, e.TitleLabel.Color = e.t.Color.Gray2, e.t.Color.GrayText3
 	if e.Editor.Focused() {
 		e.TitleLabel.Text = e.Hint
 		e.TitleLabel.Color, e.LineColor = e.t.Color.Primary, e.t.Color.Primary

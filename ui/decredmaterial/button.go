@@ -61,6 +61,7 @@ func (t *Theme) Button(txt string) Button {
 		Bottom: values.MarginPadding10,
 		Left:   values.MarginPadding16,
 	}
+
 	return Button{
 		ButtonStyle:        buttonStyle,
 		label:              t.Label(values.TextSize16, txt),

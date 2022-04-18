@@ -7,9 +7,11 @@ import (
 // SwitchStyle defines display properties that may be used to style a
 // Switch widget.
 type SwitchStyle struct {
-	ActiveColor   color.NRGBA
-	InactiveColor color.NRGBA
-	ThumbColor    color.NRGBA
+	ActiveColor       color.NRGBA
+	InactiveColor     color.NRGBA
+	ThumbColor        color.NRGBA
+	ActiveTextColor   color.NRGBA
+	InactiveTextColor color.NRGBA
 }
 
 // ColorStyle defines backgorund and foreground colors that may be used to
@@ -30,6 +32,7 @@ type ClickableStyle struct {
 type WidgetStyles struct {
 	SwitchStyle            *SwitchStyle
 	IconButtonColorStyle   *ColorStyle
+	CollapsibleStyle       *ColorStyle
 	ClickableStyle         *ClickableStyle
 	DropdownClickableStyle *ClickableStyle
 }
@@ -40,6 +43,7 @@ func DefaultWidgetStyles() *WidgetStyles {
 	return &WidgetStyles{
 		SwitchStyle:            &SwitchStyle{},
 		IconButtonColorStyle:   &ColorStyle{},
+		CollapsibleStyle:       &ColorStyle{},
 		ClickableStyle:         &ClickableStyle{},
 		DropdownClickableStyle: &ClickableStyle{},
 	}

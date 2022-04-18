@@ -2,9 +2,11 @@ package send
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 
 	"gioui.org/widget"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -131,4 +133,11 @@ func (dst *destination) handle() {
 			}
 		}
 	}
+}
+
+// styleWidgets sets the appropriate colors for the destination widgets.
+func (dst *destination) styleWidgets() {
+	dst.accountSwitch.Active, dst.accountSwitch.Inactive = dst.Theme.Color.Surface, color.NRGBA{}
+	dst.accountSwitch.ActiveTextColor, dst.accountSwitch.InactiveTextColor = dst.Theme.Color.GrayText1, dst.Theme.Color.Text
+	dst.destinationAddressEditor.EditorStyle.Color = dst.Theme.Color.Text
 }
