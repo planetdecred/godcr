@@ -157,8 +157,6 @@ func (pg *Page) layoutTabs(gtx C) D {
 						Bottom: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
 						return layout.Center.Layout(gtx, func(gtx C) D {
-							// return layout.Flex{}.Layout(gtx,
-							// 	layout.Rigid(func(gtx C) D {
 							lbl := pg.Theme.Label(values.TextSize16, governanceTabTitles[i])
 							lbl.Color = pg.Theme.Color.GrayText1
 							if pg.selectedCategoryIndex == i {
@@ -167,8 +165,6 @@ func (pg *Page) layoutTabs(gtx C) D {
 							}
 
 							return lbl.Layout(gtx)
-							// 	}),
-							// )
 						})
 					})
 				}),

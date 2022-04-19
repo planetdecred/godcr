@@ -164,9 +164,10 @@ func (pg *Page) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
+	pg.RestyleWidgets()
+
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.sourceAccountSelector.ListenForTxNotifications(pg.ctx)
-	pg.amount.styleWidgets()
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount(nil)
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()

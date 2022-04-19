@@ -225,7 +225,6 @@ func (win *Window) displayWindow(evt system.FrameEvent) {
 
 	// Draw the window's UI components into an op.Ops.
 	gtx := layout.NewContext(&op.Ops{}, evt)
-
 	win.drawWindowUI(gtx)
 
 	// Render the window's UI components on screen.
