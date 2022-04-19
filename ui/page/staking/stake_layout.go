@@ -38,6 +38,10 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
 								txt := pg.Theme.Label(values.TextSize14, nextTicketRemaining(int(secs)))
 								txt.Color = pg.Theme.Color.GrayText2
+
+								if pg.WL.MultiWallet.IsSyncing() {
+									txt.Text = "Syncing"
+								}
 								return txt.Layout(gtx)
 							}),
 						)

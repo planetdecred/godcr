@@ -17,7 +17,7 @@ import (
 	// "github.com/planetdecred/godcr/ui/page/overview"
 	tpage "github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
+	// "github.com/planetdecred/godcr/wallet"
 )
 
 type (
@@ -68,12 +68,6 @@ func NewStakingPage(l *load.Load) *Page {
 	pg.initLiveStakeWidget()
 	pg.loadPageData()
 
-	//disable staking btn is wallet is not synced
-	pg.stakeBtn.SetEnabled(pg.WL.MultiWallet.IsSynced())
-
-	//disable auto ticket purchase is wallet is not synced
-	pg.autoPurchase.SetEnabled(!pg.WL.MultiWallet.IsSynced())
-
 	return pg
 }
 
@@ -101,6 +95,8 @@ func (pg *Page) OnNavigatedTo() {
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
 
 	pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+
+	pg.setStakingButtons()
 }
 
 // fetch ticket price only when the wallet is synced
@@ -109,13 +105,21 @@ func (pg *Page) fetchTicketPrice() {
 		pg.ticketPrice = "Loading price"
 	} else {
 		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
-		if err != nil && pg.WL.MultiWallet.IsSynced() {
+		if err != nil && !pg.WL.MultiWallet.IsSynced() {
 			pg.ticketPrice = "Not available"
 			pg.Toast.NotifyError("wallet not synced")
 		} else {
 			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
 		}
 	}
+}
+
+func (pg *Page) setStakingButtons() {
+	//disable staking btn is wallet is not synced
+	pg.stakeBtn.SetEnabled(pg.WL.MultiWallet.IsSynced())
+
+	//disable auto ticket purchase is wallet is not synced
+	pg.autoPurchase.SetEnabled(!pg.WL.MultiWallet.IsSynced())
 }
 
 func (pg *Page) setTBWallet() {
@@ -237,7 +241,7 @@ func (pg *Page) titleRow(gtx C, leftWidget, rightWidget func(C) D) D {
 // displayed.
 // Part of the load.Page interface.
 func (pg *Page) HandleUserInteractions() {
-	pg.fetchTicketPrice()
+	pg.setStakingButtons()
 
 	if pg.toTickets.Button.Clicked() {
 		pg.ChangeFragment(newListPage(pg.Load))
@@ -274,6 +278,15 @@ func (pg *Page) HandleUserInteractions() {
 		}
 
 		pg.ticketBuyerSettingsModal()
+	}
+
+	secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
+	if secs <= 0 {
+		pg.fetchTicketPrice()
+	}
+
+	if pg.WL.MultiWallet.IsSynced() {
+		pg.fetchTicketPrice()
 	}
 }
 
