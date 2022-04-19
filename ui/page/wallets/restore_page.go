@@ -62,6 +62,7 @@ type Restore struct {
 
 	seedEditors       seedEditors
 	keyEvent          chan *key.Event
+	onChangeCaretPos  int // caret position when seed editor is switched
 	caretPosition     int // current caret position
 	seedEditorTracker int // stores the current focus index of seed editors
 }
@@ -362,16 +363,21 @@ func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) 
 	}
 
 	m := op.Record(gtx.Ops)
+	_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
 	inset.Layout(gtx, func(gtx C) D {
 		border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
-		return border.Layout(gtx, func(gtx C) D {
-			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.seedMenu), func(gtx C, i int) D {
-					return layout.UniformInset(values.MarginPadding0).Layout(gtx, pg.seedMenu[i].button.Layout)
+		if !pg.seedEditorChanged() && pg.onChangeCaretPos != caretPos {
+			pg.onChangeCaretPos = -1
+			return border.Layout(gtx, func(gtx C) D {
+				return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.seedMenu), func(gtx C, i int) D {
+						return layout.UniformInset(values.MarginPadding0).Layout(gtx, pg.seedMenu[i].button.Layout)
+					})
 				})
 			})
-		})
+		}
+		return D{}
 	})
 	op.Defer(gtx.Ops, m.Stop())
 }
@@ -466,8 +472,10 @@ func (pg *Restore) HandleUserInteractions() {
 	if focus != -1 {
 		pg.suggestions = pg.suggestionSeeds(pg.seedEditors.editors[focus].Edit.Editor.Text())
 		pg.seedMenu = pg.seedMenu[:len(pg.suggestions)]
-		for k, s := range pg.suggestions {
-			pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
+		if !pg.seedEditorChanged() {
+			for k, s := range pg.suggestions {
+				pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
+			}
 		}
 	}
 
@@ -569,6 +577,7 @@ func (pg *Restore) HandleUserInteractions() {
 		pg.suggestions = nil
 		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
 		pg.caretPosition = caretPos
+		pg.onChangeCaretPos = caretPos
 	}
 
 	if pg.caretPositionChanged() {
