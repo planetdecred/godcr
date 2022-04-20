@@ -93,6 +93,15 @@ func (pg *Page) stakePriceSection(gtx C) D {
 					return pg.stakeBtn.Layout(gtx)
 				})
 			}),
+			layout.Rigid(func(gtx C) D {
+				if pg.WL.MultiWallet.IsSynced() {
+					return D{}
+				}
+
+				notSynced := pg.Theme.Label(values.TextSize10, "Wallets not synced")
+				notSynced.Color = pg.Theme.Color.Danger
+				return layout.Center.Layout(gtx, notSynced.Layout)
+			}),
 		)
 	})
 }

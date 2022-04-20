@@ -14,10 +14,8 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
-	// "github.com/planetdecred/godcr/ui/page/overview"
 	tpage "github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/values"
-	// "github.com/planetdecred/godcr/wallet"
 )
 
 type (
@@ -247,7 +245,7 @@ func (pg *Page) HandleUserInteractions() {
 		newStakingModal(pg.Load).
 			TicketPurchased(func() {
 				align := layout.Center
-				successIcon := decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
+				successIcon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
 				successIcon.Color = pg.Theme.Color.Success
 				info := modal.NewInfoModal(pg.Load).
 					Icon(successIcon).
