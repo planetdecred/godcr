@@ -96,7 +96,7 @@ func (pg *Page) OnNavigatedTo() {
 
 	pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
 
-	pg.setStakingButtons()
+	pg.setStakingButtonsState()
 }
 
 // fetch ticket price only when the wallet is synced
@@ -114,7 +114,7 @@ func (pg *Page) fetchTicketPrice() {
 	}
 }
 
-func (pg *Page) setStakingButtons() {
+func (pg *Page) setStakingButtonsState() {
 	//disable staking btn is wallet is not synced
 	pg.stakeBtn.SetEnabled(pg.WL.MultiWallet.IsSynced())
 
@@ -241,7 +241,23 @@ func (pg *Page) titleRow(gtx C, leftWidget, rightWidget func(C) D) D {
 // displayed.
 // Part of the load.Page interface.
 func (pg *Page) HandleUserInteractions() {
-	pg.setStakingButtons()
+	pg.setStakingButtonsState()
+
+	if pg.stakeBtn.Clicked() {
+		newStakingModal(pg.Load).
+			TicketPurchased(func() {
+				align := layout.Center
+				successIcon := decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
+				successIcon.Color = pg.Theme.Color.Success
+				info := modal.NewInfoModal(pg.Load).
+					Icon(successIcon).
+					Title("Ticket(s) Confirmed").
+					SetContentAlignment(align, align).
+					PositiveButton("Back to staking", func() {})
+				pg.ShowModal(info)
+				pg.loadPageData()
+			}).Show()
+	}
 
 	if pg.toTickets.Button.Clicked() {
 		pg.ChangeFragment(newListPage(pg.Load))
