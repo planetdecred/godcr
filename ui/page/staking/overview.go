@@ -236,7 +236,7 @@ func (pg *Page) HandleUserInteractions() {
 		newStakingModal(pg.Load).
 			TicketPurchased(func() {
 				align := layout.Center
-				successIcon := decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
+				successIcon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
 				successIcon.Color = pg.Theme.Color.Success
 				info := modal.NewInfoModal(pg.Load).
 					Icon(successIcon).

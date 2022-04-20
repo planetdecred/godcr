@@ -50,7 +50,7 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
-	pg.backButton.Icon = l.Icons.ContentClear
+	pg.backButton.Icon = l.Theme.Icons.ContentClear
 
 	pg.actionButton.Font.Weight = text.Medium
 

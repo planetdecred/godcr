@@ -13,7 +13,7 @@ import (
 )
 
 func (pg *Page) initLiveStakeWidget() *Page {
-	pg.toTickets = pg.Theme.TextAndIconButton("See All", pg.Icons.NavigationArrowForward)
+	pg.toTickets = pg.Theme.TextAndIconButton("See All", pg.Theme.Icons.NavigationArrowForward)
 	pg.toTickets.Color = pg.Theme.Color.Primary
 	pg.toTickets.BackgroundColor = color.NRGBA{}
 
@@ -31,9 +31,9 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 					title.Color = pg.Theme.Color.GrayText2
 					return pg.titleRow(gtx, title.Layout, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							pg.stakingCountIcon(pg.Icons.TicketUnminedIcon, pg.ticketOverview.Unmined),
-							pg.stakingCountIcon(pg.Icons.TicketImmatureIcon, pg.ticketOverview.Immature),
-							pg.stakingCountIcon(pg.Icons.TicketLiveIcon, pg.ticketOverview.Live),
+							pg.stakingCountIcon(pg.Theme.Icons.TicketUnminedIcon, pg.ticketOverview.Unmined),
+							pg.stakingCountIcon(pg.Theme.Icons.TicketImmatureIcon, pg.ticketOverview.Immature),
+							pg.stakingCountIcon(pg.Theme.Icons.TicketLiveIcon, pg.ticketOverview.Live),
 							layout.Rigid(func(gtx C) D {
 								if len(pg.liveTickets) > 0 {
 									return pg.toTickets.Layout(gtx)
@@ -97,12 +97,12 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 			}),
 			layout.Rigid(func(gtx C) D {
 				wdgs := []layout.Widget{
-					pg.ticketRecordIconCount(pg.Icons.TicketUnminedIcon, pg.ticketOverview.Unmined, "Unmined"),
-					pg.ticketRecordIconCount(pg.Icons.TicketImmatureIcon, pg.ticketOverview.Immature, "Immature"),
-					pg.ticketRecordIconCount(pg.Icons.TicketLiveIcon, pg.ticketOverview.Live, "Live"),
-					pg.ticketRecordIconCount(pg.Icons.TicketVotedIcon, pg.ticketOverview.Voted, "Voted"),
-					pg.ticketRecordIconCount(pg.Icons.TicketExpiredIcon, pg.ticketOverview.Expired, "Expired"),
-					pg.ticketRecordIconCount(pg.Icons.TicketRevokedIcon, pg.ticketOverview.Revoked, "Revoked"),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketUnminedIcon, pg.ticketOverview.Unmined, "Unmined"),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketImmatureIcon, pg.ticketOverview.Immature, "Immature"),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketLiveIcon, pg.ticketOverview.Live, "Live"),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketVotedIcon, pg.ticketOverview.Voted, "Voted"),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketExpiredIcon, pg.ticketOverview.Expired, "Expired"),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketRevokedIcon, pg.ticketOverview.Revoked, "Revoked"),
 				}
 
 				return decredmaterial.GridWrap{
@@ -133,7 +133,7 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								ic := pg.Icons.StakeyIcon
+								ic := pg.Theme.Icons.StakeyIcon
 								return layout.Inset{Right: values.MarginPadding6}.Layout(gtx, ic.Layout24dp)
 							}),
 							layout.Rigid(func(gtx C) D {

@@ -40,7 +40,7 @@ func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Backu
 	bi.viewSeedBtn.Font.Weight = text.Medium
 
 	bi.backButton, _ = components.SubpageHeaderButtons(l)
-	bi.backButton.Icon = l.Icons.ContentClear
+	bi.backButton.Icon = l.Theme.Icons.ContentClear
 
 	bi.checkBoxes = []decredmaterial.CheckBoxStyle{
 		l.Theme.CheckBox(new(widget.Bool), "The 33-word seed word is EXTREMELY IMPORTANT."),

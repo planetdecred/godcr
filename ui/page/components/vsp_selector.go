@@ -105,7 +105,7 @@ func (v *VSPSelector) Layout(gtx layout.Context) layout.Dimensions {
 										Left: values.MarginPadding15,
 									}
 									return inset.Layout(gtx, func(gtx C) D {
-										ic := decredmaterial.NewIcon(v.Icons.DropDownIcon)
+										ic := decredmaterial.NewIcon(v.Theme.Icons.DropDownIcon)
 										ic.Color = v.Theme.Color.Gray1
 										return ic.Layout(gtx, values.MarginPadding20)
 									})
@@ -246,7 +246,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 								if v.selectedVSP == nil || v.selectedVSP.Host != vsps[i].Host {
 									return layout.Dimensions{}
 								}
-								ic := decredmaterial.NewIcon(v.Icons.NavigationCheck)
+								ic := decredmaterial.NewIcon(v.Theme.Icons.NavigationCheck)
 								return ic.Layout(gtx, values.MarginPadding20)
 							}),
 						)

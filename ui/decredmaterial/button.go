@@ -20,6 +20,7 @@ import (
 
 type Button struct {
 	material.ButtonStyle
+	th                 *Theme
 	label              Label
 	clickable          *widget.Clickable
 	isEnabled          bool
@@ -63,13 +64,12 @@ func (t *Theme) Button(txt string) Button {
 	}
 
 	return Button{
-		ButtonStyle:        buttonStyle,
-		label:              t.Label(values.TextSize16, txt),
-		clickable:          clickable,
-		disabledBackground: t.Color.Gray3,
-		disabledTextColor:  t.Color.Surface,
-		HighlightColor:     t.Color.PrimaryHighlight,
-		isEnabled:          true,
+		th:             t,
+		ButtonStyle:    buttonStyle,
+		label:          t.Label(values.TextSize16, txt),
+		clickable:      clickable,
+		HighlightColor: t.Color.PrimaryHighlight,
+		isEnabled:      true,
 	}
 }
 
@@ -122,6 +122,11 @@ func (b *Button) SetEnabled(enabled bool) {
 	b.isEnabled = enabled
 }
 
+func (b *Button) setDisabledColors() {
+	b.disabledBackground = b.th.Color.Gray3
+	b.disabledTextColor = b.th.Color.Surface
+}
+
 func (b *Button) Enabled() bool {
 	return b.isEnabled
 }
@@ -143,6 +148,7 @@ func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 		return b.Inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			textColor := b.Color
 			if !b.Enabled() {
+				b.setDisabledColors()
 				textColor = b.disabledTextColor
 			}
 
@@ -172,6 +178,7 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 
 			background := b.Background
 			if !b.Enabled() {
+				b.setDisabledColors()
 				background = b.disabledBackground
 			} else if b.clickable.Hovered() {
 				background = Hovered(b.Background)

@@ -118,8 +118,8 @@ func NewWalletPage(l *load.Load) *WalletPage {
 		openPopupIndex:           -1,
 		shadowBox:                l.Theme.Shadow(),
 		separator:                l.Theme.Separator(),
-		addAcctIcon:              decredmaterial.NewIcon(l.Icons.ContentAdd),
-		backupAcctIcon:           decredmaterial.NewIcon(l.Icons.NavigationArrowForward),
+		addAcctIcon:              decredmaterial.NewIcon(l.Theme.Icons.ContentAdd),
+		backupAcctIcon:           decredmaterial.NewIcon(l.Theme.Icons.NavigationArrowForward),
 	}
 
 	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(24)
@@ -132,15 +132,15 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
 	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
 
-	pg.walletIcon = pg.Icons.WalletIcon
+	pg.walletIcon = pg.Theme.Icons.WalletIcon
 
-	pg.walletAlertIcon = pg.Icons.WalletAlertIcon
+	pg.walletAlertIcon = pg.Theme.Icons.WalletAlertIcon
 
-	pg.nextIcon = decredmaterial.NewIcon(pg.Icons.NavigationArrowForward)
+	pg.nextIcon = decredmaterial.NewIcon(pg.Theme.Icons.NavigationArrowForward)
 	pg.nextIcon.Color = pg.Theme.Color.Primary
 
 	pg.initializeFloatingMenu()
-	pg.watchOnlyWalletIcon = pg.Icons.WatchOnlyWalletIcon
+	pg.watchOnlyWalletIcon = pg.Theme.Icons.WatchOnlyWalletIcon
 
 	return pg
 }
@@ -193,7 +193,7 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 			listItem.moreButton = pg.Theme.IconButtonWithStyle(
 				decredmaterial.IconButtonStyle{
 					Button: new(widget.Clickable),
-					Icon:   pg.Icons.NavigationMore,
+					Icon:   pg.Theme.Icons.NavigationMore,
 					Size:   values.MarginPadding25,
 					Inset:  layout.UniformInset(values.MarginPadding0),
 				},
@@ -845,9 +845,9 @@ func (pg *WalletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 }
 
 func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwallet.Account) layout.Dimensions {
-	accountIcon := pg.Icons.AccountIcon
+	accountIcon := pg.Theme.Icons.AccountIcon
 	if account.Number == load.MaxInt32 {
-		accountIcon = pg.Icons.ImportedAccountIcon
+		accountIcon = pg.Theme.Icons.ImportedAccountIcon
 		if account.TotalBalance == 0 {
 			return D{}
 		}
@@ -1041,7 +1041,7 @@ func (pg *WalletPage) layoutAddWalletSection(gtx layout.Context) layout.Dimensio
 				return D{}
 			}),
 			layout.Rigid(func(gtx C) D {
-				icon := pg.Icons.NewWalletIcon
+				icon := pg.Theme.Icons.NewWalletIcon
 
 				return decredmaterial.LinearLayout{
 					Width:      decredmaterial.WrapContent,

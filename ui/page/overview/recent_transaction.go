@@ -16,7 +16,7 @@ func (pg *AppOverviewPage) initRecentTxWidgets() {
 		BottomRight: values.MarginPadding14.V,
 		BottomLeft:  values.MarginPadding14.V,
 	}
-	pg.toTransactions = pg.Theme.TextAndIconButton(values.String(values.StrSeeAll), pg.Icons.NavigationArrowForward)
+	pg.toTransactions = pg.Theme.TextAndIconButton(values.String(values.StrSeeAll), pg.Theme.Icons.NavigationArrowForward)
 	pg.toTransactions.Color = pg.Theme.Color.Primary
 	pg.toTransactions.BackgroundColor = pg.Theme.Color.Surface
 }

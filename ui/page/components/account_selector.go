@@ -169,7 +169,7 @@ func (as *AccountSelector) Layout(gtx C) D {
 		Clickable: as.openSelectorDialog,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			accountIcon := as.Icons.AccountIcon
+			accountIcon := as.Theme.Icons.AccountIcon
 			inset := layout.Inset{
 				Right: values.MarginPadding8,
 			}
@@ -216,7 +216,7 @@ func (as *AccountSelector) Layout(gtx C) D {
 							Left: values.MarginPadding15,
 						}
 						return inset.Layout(gtx, func(gtx C) D {
-							ic := decredmaterial.NewIcon(as.Icons.DropDownIcon)
+							ic := decredmaterial.NewIcon(as.Theme.Icons.DropDownIcon)
 							ic.Color = as.Theme.Color.Gray1
 							return ic.Layout(gtx, values.MarginPadding20)
 						})
@@ -314,7 +314,7 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 		isCancelable:           true,
 	}
 
-	asm.walletInfoButton = l.Theme.IconButton(asm.Icons.ActionInfo)
+	asm.walletInfoButton = l.Theme.IconButton(asm.Theme.Icons.ActionInfo)
 	asm.walletInfoButton.Size = values.MarginPadding15
 	asm.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
@@ -522,7 +522,7 @@ func (asm *AccountSelectorModal) Layout(gtx C) D {
 }
 
 func (asm *AccountSelectorModal) walletAccountLayout(gtx C, account *selectorAccount) D {
-	accountIcon := asm.Icons.AccountIcon
+	accountIcon := asm.Theme.Icons.AccountIcon
 
 	return decredmaterial.LinearLayout{
 		Width:     decredmaterial.MatchParent,
@@ -567,7 +567,7 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx C, account *selectorAcc
 			sections := func(gtx C) D {
 				return layout.E.Layout(gtx, func(gtx C) D {
 					return inset.Layout(gtx, func(gtx C) D {
-						ic := decredmaterial.NewIcon(asm.Icons.NavigationCheck)
+						ic := decredmaterial.NewIcon(asm.Theme.Icons.NavigationCheck)
 						ic.Color = asm.Theme.Color.Gray1
 						return ic.Layout(gtx, values.MarginPadding20)
 					})

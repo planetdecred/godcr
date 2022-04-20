@@ -88,13 +88,13 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *SecurityToolsPage) message() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, pg.Icons.VerifyMessageIcon, pg.verifyMessage, "Verify Message")
+		return pg.pageSections(gtx, pg.Theme.Icons.VerifyMessageIcon, pg.verifyMessage, "Verify Message")
 	}
 }
 
 func (pg *SecurityToolsPage) address() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, pg.Icons.LocationPinIcon, pg.validateAddress, "Validate Address")
+		return pg.pageSections(gtx, pg.Theme.Icons.LocationPinIcon, pg.validateAddress, "Validate Address")
 	}
 }
 

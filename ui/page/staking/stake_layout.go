@@ -3,7 +3,6 @@ package staking
 import (
 	"gioui.org/layout"
 
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -33,13 +32,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								return layout.Inset{
 									Left:  values.MarginPadding8,
 									Right: values.MarginPadding4,
-								}.Layout(gtx, func(gtx C) D {
-									ic := pg.Icons.TimerIcon
-									if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
-										ic = pg.Icons.TimerDarkMode
-									}
-									return ic.Layout12dp(gtx)
-								})
+								}.Layout(gtx, pg.Theme.Icons.TimerIcon.Layout12dp)
 							}),
 							layout.Rigid(func(gtx C) D {
 								secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
@@ -53,9 +46,9 @@ func (pg *Page) stakePriceSection(gtx C) D {
 					rightWg := func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								icon := pg.Icons.SettingsActiveIcon
+								icon := pg.Theme.Icons.SettingsActiveIcon
 								if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
-									icon = pg.Icons.SettingsInactiveIcon
+									icon = pg.Theme.Icons.SettingsInactiveIcon
 								}
 								return pg.autoPurchaseSettings.Layout(gtx, icon.Layout24dp)
 							}),
@@ -77,7 +70,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 				return layout.Inset{
 					Bottom: values.MarginPadding8,
 				}.Layout(gtx, func(gtx C) D {
-					ic := pg.Icons.NewStakeIcon
+					ic := pg.Theme.Icons.NewStakeIcon
 					return layout.Center.Layout(gtx, ic.Layout48dp)
 				})
 			}),

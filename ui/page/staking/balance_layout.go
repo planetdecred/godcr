@@ -54,7 +54,7 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 					},
 					{
 						Value:   float32(locked.ToCoin()),
-						Color:   pg.Theme.Color.PrimaryHighlight,
+						Color:   pg.Theme.Color.Primary,
 						SubText: "Locked",
 					},
 				}
@@ -80,7 +80,7 @@ func (pg *Page) layoutIconAndText(gtx C, title string, val string, col color.NRG
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-					ic := decredmaterial.NewIcon(pg.Icons.ImageBrightness1)
+					ic := decredmaterial.NewIcon(pg.Theme.Icons.ImageBrightness1)
 					ic.Color = col
 					return ic.Layout(gtx, values.MarginPadding8)
 				})

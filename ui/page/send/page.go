@@ -149,7 +149,6 @@ func NewSendPage(l *load.Load) *Page {
 func (pg *Page) RestyleWidgets() {
 	pg.amount.styleWidgets()
 	pg.sendDestination.styleWidgets()
-	pg.nextButton.SetEnabled(pg.validate())
 }
 
 // ID is a unique string that identifies the page and may be used
@@ -164,9 +163,10 @@ func (pg *Page) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
+	pg.RestyleWidgets()
+
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.sourceAccountSelector.ListenForTxNotifications(pg.ctx)
-
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount(nil)
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()
@@ -179,6 +179,13 @@ func (pg *Page) OnNavigatedTo() {
 		pg.usdExchangeSet = false
 	}
 	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
+}
+
+// OnDarkModeChanged is triggered whenever the dark mode setting is changed
+// to enable restyling UI elements where necessary.
+// Satisfies the load.DarkModeChangeHandler interface.
+func (pg *Page) OnDarkModeChanged(isDarkModeOn bool) {
+	pg.amount.styleWidgets()
 }
 
 func (pg *Page) fetchExchangeRate() {

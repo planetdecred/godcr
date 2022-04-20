@@ -61,7 +61,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 		},
 		info:           l.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo))),
 		copy:           l.Theme.Button("Copy"),
-		more:           l.Theme.IconButton(l.Icons.NavMoreIcon),
+		more:           l.Theme.IconButton(l.Theme.Icons.NavMoreIcon),
 		newAddr:        l.Theme.Button("Generate new address"),
 		receiveAddress: l.Theme.Label(values.TextSize20, ""),
 		card:           l.Theme.Card(),
@@ -92,7 +92,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.receiveAddress.MaxLines = 1
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
-	pg.backButton.Icon = pg.Icons.ContentClear
+	pg.backButton.Icon = pg.Theme.Icons.ContentClear
 
 	pg.selector = components.NewAccountSelector(pg.Load, nil).
 		Title("Receiving account").

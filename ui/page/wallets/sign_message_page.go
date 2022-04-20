@@ -53,7 +53,7 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 
 	errorLabel := l.Theme.Caption("")
 	errorLabel.Color = l.Theme.Color.Danger
-	copyIcon := l.Icons.CopyIcon
+	copyIcon := l.Theme.Icons.CopyIcon
 
 	pg := &SignMessagePage{
 		Load:   l,

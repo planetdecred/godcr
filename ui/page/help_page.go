@@ -78,7 +78,7 @@ func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *HelpPage) document() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, pg.Icons.DocumentationIcon, pg.documentation, "Documentation")
+		return pg.pageSections(gtx, pg.Theme.Icons.DocumentationIcon, pg.documentation, "Documentation")
 	}
 }
 

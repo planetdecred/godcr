@@ -123,7 +123,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 											)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return layout.Center.Layout(gtx, pg.Icons.ArrowDownIcon.Layout24dp)
+											return layout.Center.Layout(gtx, pg.Theme.Icons.ArrowDownIcon.Layout24dp)
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,

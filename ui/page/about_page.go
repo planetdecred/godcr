@@ -45,7 +45,7 @@ func NewAboutPage(l *load.Load) *AboutPage {
 		license:          l.Theme.Body1("License"),
 		licenseRow:       l.Theme.NewClickable(true),
 		shadowBox:        l.Theme.Shadow(),
-		chevronRightIcon: decredmaterial.NewIcon(l.Icons.ChevronRight),
+		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
 	}
 
 	pg.licenseRow.Radius = decredmaterial.CornerRadius{

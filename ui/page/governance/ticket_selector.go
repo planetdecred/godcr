@@ -95,7 +95,7 @@ func (ts *ticketSelector) Layout(gtx layout.Context) layout.Dimensions {
 								Left: values.MarginPadding15,
 							}
 							return inset.Layout(gtx, func(gtx C) D {
-								ic := decredmaterial.NewIcon(ts.Icons.DropDownIcon)
+								ic := decredmaterial.NewIcon(ts.Theme.Icons.DropDownIcon)
 								ic.Color = ts.Theme.Color.Gray1
 								return ic.Layout(gtx, values.MarginPadding20)
 							})
@@ -201,7 +201,7 @@ func (tsm *ticketSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 								if tsm.selectedTicket != nil || tsm.selectedTicket != listTickets[i] {
 									return layout.Dimensions{}
 								}
-								ic := decredmaterial.NewIcon(tsm.Icons.NavigationCheck)
+								ic := decredmaterial.NewIcon(tsm.Theme.Icons.NavigationCheck)
 								return ic.Layout(gtx, values.MarginPadding20)
 							}),
 						)

@@ -102,7 +102,6 @@ func (win *Window) NewLoad() (*load.Load, error) {
 
 	l := &load.Load{
 		Theme: th,
-		Icons: load.IconSet(),
 
 		WL: &load.WalletLoad{
 			MultiWallet:     win.wallet.GetMultiWallet(),

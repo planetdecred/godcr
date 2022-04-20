@@ -112,14 +112,10 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 						}),
 						layout.Rigid(func(gtx C) D {
 							if item.Proposal.Category == dcrlibwallet.ProposalCategoryActive {
-								ic := l.Icons.TimerIcon
-								if l.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
-									ic = l.Icons.TimerDarkMode
-								}
 								return layout.Inset{
 									Right: values.MarginPadding4,
 									Top:   values.MarginPadding3,
-								}.Layout(gtx, ic.Layout12dp)
+								}.Layout(gtx, l.Theme.Icons.TimerIcon.Layout12dp)
 							}
 							return D{}
 						}),
@@ -134,7 +130,7 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 									rect.Max.Y = 20
 									layoutInfoTooltip(gtx, rect, *item)
 
-									infoIcon := decredmaterial.NewIcon(l.Icons.ActionInfo)
+									infoIcon := decredmaterial.NewIcon(l.Theme.Icons.ActionInfo)
 									infoIcon.Color = l.Theme.Color.GrayText2
 									return infoIcon.Layout(gtx, values.MarginPadding20)
 								})

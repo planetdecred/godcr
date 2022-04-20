@@ -92,11 +92,11 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		wallet:               l.WL.MultiWallet.WalletWithID(transaction.WalletID),
 		rebroadcast:          rebroadcast,
 		rebroadcastClickable: l.Theme.NewClickable(true),
-		rebroadcastIcon:      l.Icons.Rebroadcast,
+		rebroadcastIcon:      l.Theme.Icons.Rebroadcast,
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
-	pg.dot = decredmaterial.NewIcon(l.Icons.ImageBrightness1)
+	pg.dot = decredmaterial.NewIcon(l.Theme.Icons.ImageBrightness1)
 	pg.dot.Color = l.Theme.Color.Gray1
 
 	return pg
@@ -481,7 +481,7 @@ func (pg *TxDetailsPage) associatedTicket(gtx C) D {
 						return pg.Theme.Label(values.TextSize16, "View associated ticket").Layout(gtx)
 					}),
 					layout.Flexed(1, func(gtx C) D {
-						icon := pg.Icons.Next
+						icon := pg.Theme.Icons.Next
 						return layout.E.Layout(gtx, icon.Layout24dp)
 					}),
 				)
@@ -710,7 +710,7 @@ func (pg *TxDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(pg.Theme.Body1(values.String(values.StrViewOnDcrdata)).Layout),
 			layout.Rigid(func(gtx C) D {
-				redirect := pg.Icons.RedirectIcon
+				redirect := pg.Theme.Icons.RedirectIcon
 				return pg.toDcrdata.Layout(gtx, redirect.Layout24dp)
 			}),
 		)
@@ -807,11 +807,11 @@ func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transac
 
 	if components.TxConfirmations(l, *transaction) > 1 {
 		txn.status.Text = components.FormatDateOrTime(transaction.Timestamp)
-		txn.confirmationIcons = l.Icons.ConfirmIcon
+		txn.confirmationIcons = l.Theme.Icons.ConfirmIcon
 	} else {
 		txn.status.Text = "pending"
 		txn.status.Color = l.Theme.Color.GrayText2
-		txn.confirmationIcons = l.Icons.PendingIcon
+		txn.confirmationIcons = l.Theme.Icons.PendingIcon
 	}
 
 	var ticketSpender *dcrlibwallet.Transaction

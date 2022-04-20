@@ -80,7 +80,7 @@ func (pg *BackupSuccessPage) Layout(gtx C) D {
 					Direction:   layout.Center,
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						successIcon := decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
+						successIcon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
 						return successIcon.Layout(gtx, values.MarginPadding64)
 					}),
 					layout.Rigid(func(gtx C) D {

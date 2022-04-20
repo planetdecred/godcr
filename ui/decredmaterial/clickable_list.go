@@ -13,6 +13,7 @@ type ClickableList struct {
 	selectedItem    int
 	DividerHeight   unit.Value
 	IsShadowEnabled bool
+	IsHoverable     bool
 }
 
 func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
@@ -22,6 +23,7 @@ func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
 		List: layout.List{
 			Axis: axis,
 		},
+		IsHoverable: true,
 	}
 
 	return click
@@ -39,7 +41,7 @@ func (cl *ClickableList) handleClickables(count int) {
 
 		cl.clickables = make([]*Clickable, count)
 		for i := 0; i < count; i++ {
-			clickable := cl.theme.NewClickable(true)
+			clickable := cl.theme.NewClickable(cl.IsHoverable)
 			cl.clickables[i] = clickable
 		}
 	}

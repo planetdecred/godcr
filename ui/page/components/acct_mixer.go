@@ -28,7 +28,7 @@ func mixerInfoStatusTextLayout(gtx C, l *load.Load, mixerActive bool) D {
 						return layout.Dimensions{}
 					}
 
-					return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, l.Icons.AlertGray.Layout16dp)
+					return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, l.Theme.Icons.AlertGray.Layout16dp)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return subtxt.Layout(gtx)
@@ -47,7 +47,7 @@ func MixerInfoLayout(gtx C, l *load.Load, mixerActive bool, button layout.Widget
 					return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								ic := l.Icons.Mixer
+								ic := l.Theme.Icons.Mixer
 								return ic.Layout24dp(gtx)
 							}),
 							layout.Flexed(1, func(gtx C) D {

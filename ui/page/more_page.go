@@ -2,10 +2,10 @@ package page
 
 import (
 	"gioui.org/layout"
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page/components"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -26,57 +26,59 @@ type MorePage struct {
 }
 
 func NewMorePage(l *load.Load) *MorePage {
-	morePageListItems := []morePageHandler{
-		{
-			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.SettingsIcon,
-			page:      SettingsPageID,
-			action: func() {
-				l.ChangeFragment(NewSettingsPage(l))
-			},
-		},
-		{
-			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.SecurityIcon,
-			page:      SecurityToolsPageID,
-			action: func() {
-				l.ChangeFragment(NewSecurityToolsPage(l))
-			},
-		},
-		{
-			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.HelpIcon,
-			page:      HelpPageID,
-			action: func() {
-				l.ChangeFragment(NewHelpPage(l))
-			},
-		},
-		{
-			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.AboutIcon,
-			page:      AboutPageID,
-			action: func() {
-				l.ChangeFragment(NewAboutPage(l))
-			},
-		},
-		{
-			clickable: l.Theme.NewClickable(true),
-			image:     l.Icons.DebugIcon,
-			page:      DebugPageID,
-			action: func() {
-				l.ChangeFragment(NewDebugPage(l))
-			},
-		},
-	}
-
 	pg := &MorePage{
-		container:         layout.Flex{Axis: layout.Vertical},
-		morePageListItems: morePageListItems,
-		Load:              l,
-		shadowBox:         l.Theme.Shadow(),
+		container: layout.Flex{Axis: layout.Vertical},
+		Load:      l,
+		shadowBox: l.Theme.Shadow(),
 	}
+	pg.initPageItems()
 
 	return pg
+}
+
+func (pg *MorePage) initPageItems() {
+	pg.morePageListItems = []morePageHandler{
+		{
+			clickable: pg.Theme.NewClickable(true),
+			image:     pg.Theme.Icons.SettingsIcon,
+			page:      SettingsPageID,
+			action: func() {
+				pg.ChangeFragment(NewSettingsPage(pg.Load))
+			},
+		},
+		{
+			clickable: pg.Theme.NewClickable(true),
+			image:     pg.Theme.Icons.SecurityIcon,
+			page:      SecurityToolsPageID,
+			action: func() {
+				pg.ChangeFragment(NewSecurityToolsPage(pg.Load))
+			},
+		},
+		{
+			clickable: pg.Theme.NewClickable(true),
+			image:     pg.Theme.Icons.HelpIcon,
+			page:      HelpPageID,
+			action: func() {
+				pg.ChangeFragment(NewHelpPage(pg.Load))
+			},
+		},
+		{
+			clickable: pg.Theme.NewClickable(true),
+			image:     pg.Theme.Icons.AboutIcon,
+			page:      AboutPageID,
+			action: func() {
+				pg.ChangeFragment(NewAboutPage(pg.Load))
+			},
+		},
+		{
+			clickable: pg.Theme.NewClickable(true),
+			image:     pg.Theme.Icons.DebugIcon,
+			page:      DebugPageID,
+			action: func() {
+				pg.ChangeFragment(NewDebugPage(pg.Load))
+			},
+		},
+	}
 }
 
 // ID is a unique string that identifies the page and may be used
@@ -91,7 +93,7 @@ func (pg *MorePage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *MorePage) OnNavigatedTo() {
-
+	pg.initPageItems() //re-initialize the nav options to reflect the changes if theme was changed.
 }
 
 // HandleUserInteractions is called just before Layout() to determine

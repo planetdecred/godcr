@@ -119,7 +119,7 @@ func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
 			return as.openSelectorDialog.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						accountIcon := as.Icons.AccountIcon
+						accountIcon := as.Theme.Icons.AccountIcon
 						return layout.Inset{
 							Right: values.MarginPadding8,
 						}.Layout(gtx, accountIcon.Layout24dp)
@@ -134,7 +134,7 @@ func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
 										Left: values.MarginPadding15,
 									}
 									return inset.Layout(gtx, func(gtx C) D {
-										ic := decredmaterial.NewIcon(as.Icons.DropDownIcon)
+										ic := decredmaterial.NewIcon(as.Theme.Icons.DropDownIcon)
 										return ic.Layout(gtx, values.MarginPadding20)
 									})
 								}),
@@ -284,7 +284,7 @@ func (asm *WalletSelectorModal) walletAccountLayout(gtx layout.Context, wallet *
 						return layout.Inset{
 							Right: values.MarginPadding18,
 						}.Layout(gtx, func(gtx C) D {
-							accountIcon := asm.Icons.AccountIcon
+							accountIcon := asm.Theme.Icons.AccountIcon
 							return accountIcon.Layout24dp(gtx)
 						})
 					}),
@@ -316,7 +316,7 @@ func (asm *WalletSelectorModal) walletAccountLayout(gtx layout.Context, wallet *
 						sections := func(gtx layout.Context) layout.Dimensions {
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return inset.Layout(gtx, func(gtx C) D {
-									ic := decredmaterial.NewIcon(asm.Icons.NavigationCheck)
+									ic := decredmaterial.NewIcon(asm.Theme.Icons.NavigationCheck)
 									return ic.Layout(gtx, values.MarginPadding20)
 								})
 							})

@@ -55,7 +55,7 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 	pg.actionButton.Font.Weight = text.Medium
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
-	pg.backButton.Icon = l.Icons.ContentClear
+	pg.backButton.Icon = l.Theme.Icons.ContentClear
 
 	return pg
 }

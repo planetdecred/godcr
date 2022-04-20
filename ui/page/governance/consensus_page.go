@@ -57,13 +57,14 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		syncButton:          new(widget.Clickable),
-		redirectIcon:        l.Icons.RedirectIcon,
-		viewVotingDashboard: l.Theme.NewClickable(false),
+		syncButton: new(widget.Clickable),
+
+		redirectIcon:        l.Theme.Icons.RedirectIcon,
+		viewVotingDashboard: l.Theme.NewClickable(true),
 		copyRedirectURL:     l.Theme.NewClickable(false),
 	}
 
-	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Icons.SearchIcon, true)
+	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Theme.Icons.SearchIcon, true)
 	pg.searchEditor.Editor.SingleLine, pg.searchEditor.Editor.Submit, pg.searchEditor.Bordered = true, true, false
 
 	_, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -146,7 +147,7 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 													clipboard.WriteOp{Text: host}.Add(gtx.Ops)
 													pg.Toast.Notify("URL copied")
 												}
-												return pg.copyRedirectURL.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
+												return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
 											})
 										}),
 									)
@@ -342,7 +343,7 @@ func (pg *ConsensusPage) layoutSyncSection(gtx C) D {
 	if pg.isSyncing {
 		return pg.layoutIsSyncingSection(gtx)
 	} else if pg.syncCompleted {
-		updatedIcon := decredmaterial.NewIcon(pg.Icons.NavigationCheck)
+		updatedIcon := decredmaterial.NewIcon(pg.Theme.Icons.NavigationCheck)
 		updatedIcon.Color = pg.Theme.Color.Success
 		return updatedIcon.Layout(gtx, values.MarginPadding20)
 	}
@@ -360,5 +361,5 @@ func (pg *ConsensusPage) layoutIsSyncingSection(gtx C) D {
 
 func (pg *ConsensusPage) layoutStartSyncSection(gtx C) D {
 	// TODO: use decredmaterial clickable
-	return material.Clickable(gtx, pg.syncButton, pg.Icons.Restore.Layout24dp)
+	return material.Clickable(gtx, pg.syncButton, pg.Theme.Icons.Restore.Layout24dp)
 }

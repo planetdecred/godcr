@@ -47,7 +47,6 @@ type ProposalDetails struct {
 	successIcon   *widget.Icon
 
 	redirectIcon *decredmaterial.Image
-	downloadIcon *decredmaterial.Image
 	copyIcon     *decredmaterial.Image
 
 	viewInPoliteiaBtn *decredmaterial.Clickable
@@ -72,12 +71,11 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 		scrollbarList: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		redirectIcon:      l.Icons.RedirectIcon,
-		downloadIcon:      l.Icons.DownloadIcon,
+		redirectIcon:      l.Theme.Icons.RedirectIcon,
 		proposalItems:     make(map[string]proposalItemWidgets),
-		rejectedIcon:      l.Icons.NavigationCancel,
-		successIcon:       l.Icons.ActionCheckCircle,
-		viewInPoliteiaBtn: l.Theme.NewClickable(false),
+		rejectedIcon:      l.Theme.Icons.NavigationCancel,
+		successIcon:       l.Theme.Icons.ActionCheckCircle,
+		viewInPoliteiaBtn: l.Theme.NewClickable(true),
 		copyRedirectURL:   l.Theme.NewClickable(false),
 		voteBar:           components.NewVoteBar(l),
 	}
@@ -160,7 +158,7 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 														clipboard.WriteOp{Text: host}.Add(gtx.Ops)
 														pg.Toast.Notify("URL copied")
 													}
-													return pg.copyRedirectURL.Layout(gtx, pg.Icons.CopyIcon.Layout24dp)
+													return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
 												})
 											})
 										}),
@@ -363,9 +361,9 @@ func (pg *ProposalDetails) layoutNormalTitle(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								if proposal.Category == dcrlibwallet.ProposalCategoryActive {
-									ic := pg.Icons.TimerIcon
+									ic := pg.Theme.Icons.TimerIcon
 									if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
-										ic = pg.Icons.TimerDarkMode
+										ic = pg.Theme.Icons.TimerDarkMode
 									}
 									return layout.Inset{
 										Right: values.MarginPadding4,

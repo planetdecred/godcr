@@ -58,7 +58,7 @@ type SettingsPage struct {
 }
 
 func NewSettingsPage(l *load.Load) *SettingsPage {
-	chevronRightIcon := l.Icons.ChevronRight
+	chevronRightIcon := l.Theme.Icons.ChevronRight
 
 	pg := &SettingsPage{
 		Load: l,
