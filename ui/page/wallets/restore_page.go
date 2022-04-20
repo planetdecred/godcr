@@ -60,11 +60,11 @@ type Restore struct {
 	seedClicked  bool
 	isLastEditor bool
 
-	seedEditors       seedEditors
-	keyEvent          chan *key.Event
-	onChangeCaretPos  int // caret position when seed editor is switched
-	caretPosition     int // current caret position
-	seedEditorTracker int // stores the current focus index of seed editors
+	seedEditors              seedEditors
+	keyEvent                 chan *key.Event
+	nextcurrentCaretPosition int // caret position when seed editor is switched
+	currentCaretPosition     int // current caret position
+	selectedSeedEditor       int // stores the current focus index of seed editors
 }
 
 func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
@@ -366,8 +366,8 @@ func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) 
 	_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
 	inset.Layout(gtx, func(gtx C) D {
 		border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
-		if !pg.seedEditorChanged() && pg.onChangeCaretPos != caretPos {
-			pg.onChangeCaretPos = -1
+		if !pg.seedEditorChanged() && pg.nextcurrentCaretPosition != caretPos {
+			pg.nextcurrentCaretPosition = -1
 			return border.Layout(gtx, func(gtx C) D {
 				return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -408,7 +408,7 @@ func (pg *Restore) updateSeedResetBtn() bool {
 func (pg *Restore) validateSeeds() (bool, string) {
 	focus := pg.seedEditors.focusIndex
 	seedMatchCounter := 0
-	seedPhraseStore := ""
+	seedPhrase := ""
 	for j := 0; j < len(pg.allSuggestions); j++ {
 		if focus != -1 {
 			if pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.Text() == pg.allSuggestions[j] {
@@ -423,10 +423,10 @@ func (pg *Restore) validateSeeds() (bool, string) {
 			return false, ""
 		}
 
-		seedPhraseStore += editor.Edit.Editor.Text() + " "
+		seedPhrase += editor.Edit.Editor.Text() + " "
 	}
 
-	return true, seedPhraseStore
+	return true, seedPhrase
 }
 
 func (pg *Restore) verifySeeds() bool {
@@ -576,25 +576,24 @@ func (pg *Restore) HandleUserInteractions() {
 	if pg.seedEditorChanged() {
 		pg.suggestions = nil
 		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
-		pg.caretPosition = caretPos
-		pg.onChangeCaretPos = caretPos
+		pg.currentCaretPosition = caretPos
+		pg.nextcurrentCaretPosition = caretPos
 	}
 
-	if pg.caretPositionChanged() {
+	if pg.currentCaretPositionChanged() {
 		pg.selected = 0
 	}
-
 }
 
-func (pg *Restore) caretPositionChanged() bool {
+func (pg *Restore) currentCaretPositionChanged() bool {
 	focus := pg.seedEditors.focusIndex
 	if !pg.seedEditorChanged() {
 		if focus == -1 {
 			return false
 		}
 		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
-		if pg.caretPosition != caretPos {
-			pg.caretPosition = caretPos
+		if pg.currentCaretPosition != caretPos {
+			pg.currentCaretPosition = caretPos
 			return true
 		}
 	}
@@ -604,11 +603,11 @@ func (pg *Restore) caretPositionChanged() bool {
 
 func (pg *Restore) seedEditorChanged() bool {
 	focus := pg.seedEditors.focusIndex
-	if pg.seedEditorTracker != focus {
+	if pg.selectedSeedEditor != focus {
 		if focus == -1 {
 			return false
 		}
-		pg.seedEditorTracker = focus
+		pg.selectedSeedEditor = focus
 		return true
 	}
 
