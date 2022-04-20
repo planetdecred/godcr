@@ -46,9 +46,10 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				if len(pg.liveTickets) == 0 {
-					noLiveStake := pg.Theme.Label(values.TextSize16, "No active tickets.")
+					noLiveStake := pg.Theme.Label(values.TextSize16, "No active tickets")
 					noLiveStake.Color = pg.Theme.Color.GrayText3
-					return noLiveStake.Layout(gtx)
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.Center.Layout(gtx, noLiveStake.Layout)
 				}
 				return pg.ticketsLive.Layout(gtx, len(pg.liveTickets), func(gtx C, index int) D {
 					return ticketListLayout(gtx, pg.Load, pg.liveTickets[index], index, true)
