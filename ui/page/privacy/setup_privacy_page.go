@@ -155,8 +155,16 @@ func (pg *SetupPrivacyPage) HandleUserInteractions() {
 		if err != nil {
 			log.Error(err)
 		}
-		// We are using 2 here because of imported wallet.
-		if accounts.Count <= 2 {
+
+		walCount := accounts.Count
+		// Filter out imported account.
+		for _, v := range accounts.Acc {
+			if v.Number == dcrlibwallet.ImportedAccountNumber {
+				walCount--
+			}
+		}
+
+		if walCount <= 1 {
 			go showModalSetupMixerInfo(&sharedModalConf{
 				Load:   pg.Load,
 				wallet: pg.wallet,
