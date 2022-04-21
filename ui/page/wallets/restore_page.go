@@ -60,8 +60,11 @@ type Restore struct {
 	seedClicked  bool
 	isLastEditor bool
 
-	seedEditors seedEditors
-	keyEvent    chan *key.Event
+	seedEditors              seedEditors
+	keyEvent                 chan *key.Event
+	nextcurrentCaretPosition int // caret position when seed editor is switched
+	currentCaretPosition     int // current caret position
+	selectedSeedEditor       int // stores the current focus index of seed editors
 }
 
 func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
@@ -142,7 +145,8 @@ func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	pg.resetSeedFields.SetEnabled(pg.updateSeedResetBtn())
-	pg.validateSeed.SetEnabled(pg.validateSeeds())
+	seedValid, _ := pg.validateSeeds()
+	pg.validateSeed.SetEnabled(seedValid)
 
 	return components.UniformPadding(gtx, body)
 }
@@ -306,11 +310,6 @@ func (pg *Restore) editorSeedsEventsHandler() {
 			case widget.ChangeEvent:
 				seedEvent(i, text)
 
-				pg.suggestions = pg.suggestionSeeds(text)
-				pg.seedMenu = pg.seedMenu[:len(pg.suggestions)]
-				for k, s := range pg.suggestions {
-					pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
-				}
 			case widget.SubmitEvent:
 				if i != numberOfSeeds {
 					pg.seedEditors.editors[i+1].Edit.Editor.Focus()
@@ -364,16 +363,21 @@ func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) 
 	}
 
 	m := op.Record(gtx.Ops)
+	_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
 	inset.Layout(gtx, func(gtx C) D {
 		border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
-		return border.Layout(gtx, func(gtx C) D {
-			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.seedMenu), func(gtx C, i int) D {
-					return layout.UniformInset(values.MarginPadding0).Layout(gtx, pg.seedMenu[i].button.Layout)
+		if !pg.seedEditorChanged() && pg.nextcurrentCaretPosition != caretPos {
+			pg.nextcurrentCaretPosition = -1
+			return border.Layout(gtx, func(gtx C) D {
+				return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.seedMenu), func(gtx C, i int) D {
+						return layout.UniformInset(values.MarginPadding0).Layout(gtx, pg.seedMenu[i].button.Layout)
+					})
 				})
 			})
-		})
+		}
+		return D{}
 	})
 	op.Defer(gtx.Ops, m.Stop())
 }
@@ -401,20 +405,40 @@ func (pg *Restore) updateSeedResetBtn() bool {
 	return false
 }
 
-func (pg *Restore) validateSeeds() bool {
-	pg.seedPhrase = ""
-	for i, editor := range pg.seedEditors.editors {
-		if editor.Edit.Editor.Text() == "" {
-			pg.seedEditors.editors[i].Edit.HintColor = pg.Theme.Color.Danger
-			return false
+func (pg *Restore) validateSeeds() (bool, string) {
+	focus := pg.seedEditors.focusIndex
+	seedMatchCounter := 0
+	seedPhrase := ""
+	for j := 0; j < len(pg.allSuggestions); j++ {
+		if focus != -1 {
+			if pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.Text() == pg.allSuggestions[j] {
+				seedMatchCounter = 1
+			}
 		}
-
-		pg.seedPhrase += editor.Edit.Editor.Text() + " "
 	}
 
-	if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
-		pg.Toast.NotifyError("invalid seed phrase")
-		return false
+	for i, editor := range pg.seedEditors.editors {
+		if editor.Edit.Editor.Text() == "" || seedMatchCounter == 0 {
+			pg.seedEditors.editors[i].Edit.HintColor = pg.Theme.Color.Danger
+			return false, ""
+		}
+
+		seedPhrase += editor.Edit.Editor.Text() + " "
+	}
+
+	return true, seedPhrase
+}
+
+func (pg *Restore) verifySeeds() bool {
+	isValid, seedphrase := pg.validateSeeds()
+	pg.seedPhrase = ""
+
+	if isValid {
+		pg.seedPhrase = seedphrase
+		if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
+			pg.Toast.NotifyError("invalid seed phrase")
+			return false
+		}
 	}
 
 	return true
@@ -444,12 +468,23 @@ func switchSeedEditors(editors []decredmaterial.RestoreEditor) {
 // displayed.
 // Part of the load.Page interface.
 func (pg *Restore) HandleUserInteractions() {
+	focus := pg.seedEditors.focusIndex
+	if focus != -1 {
+		pg.suggestions = pg.suggestionSeeds(pg.seedEditors.editors[focus].Edit.Editor.Text())
+		pg.seedMenu = pg.seedMenu[:len(pg.suggestions)]
+		if !pg.seedEditorChanged() {
+			for k, s := range pg.suggestions {
+				pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
+			}
+		}
+	}
+
 	for pg.backButton.Button.Clicked() {
 		pg.PopWindowPage()
 	}
 
 	for pg.validateSeed.Clicked() {
-		if !pg.validateSeeds() {
+		if !pg.verifySeeds() {
 			return
 		}
 
@@ -493,11 +528,11 @@ func (pg *Restore) HandleUserInteractions() {
 	select {
 	case evt := <-pg.keyEvent:
 		if evt.Name == key.NameTab && evt.Modifiers != key.ModShift && evt.State == key.Press {
-			if len(pg.suggestions) == 1 {
+			if len(pg.suggestions) > 0 {
 				focus := pg.seedEditors.focusIndex
-				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[0])
+				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[pg.selected])
 				pg.seedClicked = true
-				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
+				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[pg.selected]), -1)
 			}
 			switchSeedEditors(pg.seedEditors.editors)
 		}
@@ -538,6 +573,45 @@ func (pg *Restore) HandleUserInteractions() {
 	pg.onSuggestionSeedsClicked()
 	pg.suggestionSeedEffect()
 
+	if pg.seedEditorChanged() {
+		pg.suggestions = nil
+		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
+		pg.currentCaretPosition = caretPos
+		pg.nextcurrentCaretPosition = caretPos
+	}
+
+	if pg.currentCaretPositionChanged() {
+		pg.selected = 0
+	}
+}
+
+func (pg *Restore) currentCaretPositionChanged() bool {
+	focus := pg.seedEditors.focusIndex
+	if !pg.seedEditorChanged() {
+		if focus == -1 {
+			return false
+		}
+		_, caretPos := pg.seedEditors.editors[pg.seedEditors.focusIndex].Edit.Editor.CaretPos()
+		if pg.currentCaretPosition != caretPos {
+			pg.currentCaretPosition = caretPos
+			return true
+		}
+	}
+
+	return false
+}
+
+func (pg *Restore) seedEditorChanged() bool {
+	focus := pg.seedEditors.focusIndex
+	if pg.selectedSeedEditor != focus {
+		if focus == -1 {
+			return false
+		}
+		pg.selectedSeedEditor = focus
+		return true
+	}
+
+	return false
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
