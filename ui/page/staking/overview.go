@@ -104,6 +104,7 @@ func (pg *Page) fetchTicketPrice() {
 	} else {
 		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
 		if err != nil && !pg.WL.MultiWallet.IsSynced() {
+			log.Error(err)
 			pg.ticketPrice = "Not available"
 			pg.Toast.NotifyError("wallet not synced")
 		} else {
@@ -113,10 +114,10 @@ func (pg *Page) fetchTicketPrice() {
 }
 
 func (pg *Page) setStakingButtonsState() {
-	//disable staking btn is wallet is not synced
+	//disable staking btn is wallet if not synced
 	pg.stakeBtn.SetEnabled(pg.WL.MultiWallet.IsSynced())
 
-	//disable auto ticket purchase is wallet is not synced
+	//disable auto ticket purchase if wallet is not synced
 	pg.autoPurchase.SetEnabled(!pg.WL.MultiWallet.IsSynced())
 }
 

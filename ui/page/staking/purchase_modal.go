@@ -274,15 +274,17 @@ func (tp *stakingModal) canPurchase() bool {
 		return false
 	}
 
+	// this is needed to generate the transaction fees before calculating
+	// tottal ticket cost
+	if tp.vspSelector.SelectedVSP() == nil {
+		return false
+	}
+
 	tp.calculateTotals()
 
 	accountBalance := tp.accountSelector.SelectedAccount().Balance.Spendable
 	if accountBalance < tp.totalCost || tp.balanceLessCost < 0 {
 		tp.balanceError = "Insufficient funds"
-		return false
-	}
-
-	if tp.vspSelector.SelectedVSP() == nil {
 		return false
 	}
 
