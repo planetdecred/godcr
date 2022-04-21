@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -12,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 const SetupPrivacyPageID = "SetupPrivacy"
@@ -151,8 +153,68 @@ func (pg *SetupPrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimens
 // Part of the load.Page interface.
 func (pg *SetupPrivacyPage) HandleUserInteractions() {
 	if pg.toPrivacySetup.Clicked() {
-		pg.ChangeFragment(NewSetupMixerAccountsPage(pg.Load, pg.wallet))
+		accounts, err := pg.wallet.GetAccountsRaw()
+		if err != nil {
+			log.Error(err)
+		}
+		// We are using 2 here because of imported wallet.
+		if accounts.Count <= 2 {
+			pg.showModalSetupMixerInfo()
+		} else {
+			pg.ChangeFragment(NewSetupMixerAccountsPage(pg.Load, pg.wallet))
+		}
 	}
+}
+
+func (pg *SetupPrivacyPage) showModalSetupMixerInfo() {
+	info := modal.NewInfoModal(pg.Load).
+		Title("Set up mixer by creating two needed accounts").
+		SetupWithTemplate(modal.SetupMixerInfoTemplate).
+		NegativeButton(values.String(values.StrCancel), func() {}).
+		PositiveButton("Begin setup", func() {
+			pg.showModalSetupMixerAcct()
+		})
+	pg.ShowModal(info)
+}
+
+func (pg *SetupPrivacyPage) showModalSetupMixerAcct() {
+	accounts, _ := pg.wallet.GetAccountsRaw()
+	txt := "There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup."
+	for _, acct := range accounts.Acc {
+		if acct.Name == "mixed" || acct.Name == "unmixed" {
+			alert := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.AlertError)))
+			alert.Color = pg.Theme.Color.DeepBlue
+			info := modal.NewInfoModal(pg.Load).
+				Icon(alert).
+				Title("Account name is taken").
+				Body(txt).
+				PositiveButton("Go back & rename", func() {
+					pg.PopFragment()
+				})
+			pg.ShowModal(info)
+			return
+		}
+	}
+
+	modal.NewPasswordModal(pg.Load).
+		Title("Confirm to create needed accounts").
+		NegativeButton("Cancel", func() {}).
+		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+			go func() {
+				err := pg.wallet.CreateMixerAccounts("mixed", "unmixed", password)
+				if err != nil {
+					pm.SetError(err.Error())
+					pm.SetLoading(false)
+					return
+				}
+				pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
+				pm.Dismiss()
+
+				pg.ChangeFragment(NewAccountMixerPage(pg.Load, pg.wallet))
+			}()
+
+			return false
+		}).Show()
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
