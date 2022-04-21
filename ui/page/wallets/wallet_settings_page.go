@@ -224,7 +224,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 				Body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
 					" blockchain for transactions").
 				NegativeButton(values.String(values.StrCancel), func() {}).
-				PositiveButton(values.String(values.StrRescan), func() {
+				PositiveButton(values.String(values.StrRescan), func(isChecked bool) {
 					err := pg.WL.MultiWallet.RescanBlocks(pg.wallet.ID)
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrNotConnected {
@@ -253,7 +253,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 			Body(warningMsg).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
-			PositiveButton(values.String(values.StrRemove), func() {
+			PositiveButton(values.String(values.StrRemove), func(isChecked bool) {
 				walletDeleted := func() {
 					if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
 						pg.Toast.Notify("Wallet removed")
@@ -299,7 +299,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 		info := modal.NewInfoModal(pg.Load).
 			Title("Spending password").
 			Body("A spending password helps secure your wallet transactions.").
-			PositiveButton("Got it", func() {})
+			PositiveButton("Got it", func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 }

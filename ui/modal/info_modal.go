@@ -29,14 +29,15 @@ type InfoModal struct {
 	customWidget   layout.Widget
 
 	positiveButtonText    string
-	positiveButtonClicked func()
+	positiveButtonClicked func(isChecked bool)
 	btnPositve            decredmaterial.Button
 
 	negativeButtonText    string
 	negativeButtonClicked func()
 	btnNegative           decredmaterial.Button
 
-	checkbox decredmaterial.CheckBoxStyle
+	checkbox      decredmaterial.CheckBoxStyle
+	mustBeChecked bool
 
 	titleAlignment, btnAlignment layout.Direction
 
@@ -99,8 +100,9 @@ func (in *InfoModal) Icon(icon *decredmaterial.Icon) *InfoModal {
 	return in
 }
 
-func (in *InfoModal) CheckBox(checkbox decredmaterial.CheckBoxStyle) *InfoModal {
+func (in *InfoModal) CheckBox(checkbox decredmaterial.CheckBoxStyle, mustBeChecked bool) *InfoModal {
 	in.checkbox = checkbox
+	in.mustBeChecked = mustBeChecked // determine if the checkbox must be selected to proceed
 	return in
 }
 
@@ -114,7 +116,7 @@ func (in *InfoModal) Body(subtitle string) *InfoModal {
 	return in
 }
 
-func (in *InfoModal) PositiveButton(text string, clicked func()) *InfoModal {
+func (in *InfoModal) PositiveButton(text string, clicked func(isChecked bool)) *InfoModal {
 	in.positiveButtonText = text
 	in.positiveButtonClicked = clicked
 	return in
@@ -171,7 +173,7 @@ func (in *InfoModal) dismissModalOnEnterKey() {
 		for {
 			event := <-in.keyEvent
 			if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press {
-				in.DismissModal(in)
+				in.btnPositve.Click()
 				in.RefreshWindow()
 			}
 		}
@@ -181,7 +183,12 @@ func (in *InfoModal) dismissModalOnEnterKey() {
 func (in *InfoModal) Handle() {
 	for in.btnPositve.Clicked() {
 		in.DismissModal(in)
-		in.positiveButtonClicked()
+		isChecked := false
+		if in.checkbox.CheckBox != nil {
+			isChecked = in.checkbox.CheckBox.Value
+		}
+
+		in.positiveButtonClicked(isChecked)
 	}
 
 	for in.btnNegative.Clicked() {
@@ -194,7 +201,9 @@ func (in *InfoModal) Handle() {
 	}
 
 	if in.checkbox.CheckBox != nil {
-		in.btnNegative.SetEnabled(in.checkbox.CheckBox.Value)
+		if in.mustBeChecked {
+			in.btnNegative.SetEnabled(in.checkbox.CheckBox.Value)
+		}
 	}
 }
 

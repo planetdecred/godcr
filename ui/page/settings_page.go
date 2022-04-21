@@ -381,7 +381,7 @@ func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
 		Body(msg).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-		PositiveButton("Remove", func() {
+		PositiveButton("Remove", func(isChecked bool) {
 			pg.WL.MultiWallet.DeleteUserConfigValueForKey(key)
 		})
 	pg.ShowModal(info)
@@ -434,7 +434,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 				Body("Are you sure you want to disable governance? This will clear all available proposals").
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-				PositiveButton("Disable", func() {
+				PositiveButton("Disable", func(isChecked bool) {
 					if pg.WL.MultiWallet.Politeia.IsSyncing() {
 						go pg.WL.MultiWallet.Politeia.StopSync()
 					}
@@ -472,7 +472,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		info := modal.NewInfoModal(pg.Load).
 			Title("Set up startup password").
 			Body("Startup password helps protect your wallet from unauthorized access.").
-			PositiveButton("Got it", func() {})
+			PositiveButton("Got it", func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 

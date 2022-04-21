@@ -246,7 +246,7 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 				Title("Cancel mixer?").
 				Body("Are you sure you want to cancel mixer action?").
 				NegativeButton("No", func() {}).
-				PositiveButton("Yes", func() {
+				PositiveButton("Yes", func(isChecked bool) {
 					pg.toggleMixer.SetChecked(false)
 					go pg.WL.MultiWallet.StopAccountMixer(pg.wallet.ID)
 				})

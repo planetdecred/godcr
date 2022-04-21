@@ -368,7 +368,7 @@ func (pg *Page) HandleUserInteractions() {
 		info := modal.NewInfoModal(pg.Load).
 			Title("Send DCR").
 			Body("Input or scan the destination wallet address and input the amount to send funds.").
-			PositiveButton("Got it", func() {})
+			PositiveButton("Got it", func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 

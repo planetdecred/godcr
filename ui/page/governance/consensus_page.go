@@ -117,7 +117,7 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 			Title("Consensus changes").
 			Body("On-chain voting for upgrading the Decred network consensus rules.").
 			SetCancelable(true).
-			PositiveButton("Got it", func() {}).Show()
+			PositiveButton("Got it", func(isChecked bool) {}).Show()
 	}
 
 	for pg.viewVotingDashboard.Clicked() {
@@ -167,7 +167,7 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 					}),
 				)
 			}).
-			PositiveButton("Got it", func() {})
+			PositiveButton("Got it", func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 

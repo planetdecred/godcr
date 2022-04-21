@@ -179,7 +179,7 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 					}),
 				)
 			}).
-			PositiveButton("Got it", func() {})
+			PositiveButton("Got it", func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 }

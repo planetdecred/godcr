@@ -252,7 +252,7 @@ func (pg *Page) HandleUserInteractions() {
 					Icon(successIcon).
 					Title("Ticket(s) Confirmed").
 					SetContentAlignment(align, align).
-					PositiveButton("Back to staking", func() {})
+					PositiveButton("Back to staking", func(isChecked bool) {})
 				pg.ShowModal(info)
 				pg.loadPageData()
 			}).Show()
