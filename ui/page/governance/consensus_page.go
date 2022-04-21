@@ -226,21 +226,22 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 							Top: values.MarginPadding60,
 						}.Layout(gtx, pg.layoutContent)
 					}),
-					layout.Expanded(func(gtx C) D {
-						gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					// layout.Expanded(func(gtx C) D {
+					// 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
+					// 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-						card := pg.Theme.Card()
-						card.Radius = decredmaterial.Radius(8)
-						return card.Layout(gtx, func(gtx C) D {
-							return layout.Inset{
-								Left:   values.MarginPadding10,
-								Right:  values.MarginPadding10,
-								Top:    values.MarginPadding2,
-								Bottom: values.MarginPadding2,
-							}.Layout(gtx, pg.searchEditor.Layout)
-						})
-					}),
+					//TODO: temp removal till after V1
+					// card := pg.Theme.Card()
+					// card.Radius = decredmaterial.Radius(8)
+					// return card.Layout(gtx, func(gtx C) D {
+					// 	return layout.Inset{
+					// 		Left:   values.MarginPadding10,
+					// 		Right:  values.MarginPadding10,
+					// 		Top:    values.MarginPadding2,
+					// 		Bottom: values.MarginPadding2,
+					// 	}.Layout(gtx, pg.searchEditor.Layout)
+					// })
+					// }),
 					layout.Expanded(func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.E.Layout(gtx, func(gtx C) D {
