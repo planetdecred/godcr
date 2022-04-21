@@ -441,6 +441,19 @@ func (pg *Restore) verifySeeds() bool {
 		}
 	}
 
+	// Compare seed with existing wallets seed. On positive match abort,
+	// import to prevent duplicate wallet. seedMatch == walled.ID if there is a match.
+	seedMatch, err := pg.WL.MultiWallet.WalletWithSeed(pg.seedPhrase)
+	if err != nil {
+		log.Error(err)
+		return false
+	}
+
+	if seedMatch != -1 {
+		pg.Toast.NotifyError("A wallet with an identical seed already exists.")
+		return false
+	}
+
 	return true
 }
 
