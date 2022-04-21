@@ -38,6 +38,10 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
 								txt := pg.Theme.Label(values.TextSize14, nextTicketRemaining(int(secs)))
 								txt.Color = pg.Theme.Color.GrayText2
+
+								if pg.WL.MultiWallet.IsSyncing() {
+									txt.Text = "Syncing"
+								}
 								return txt.Layout(gtx)
 							}),
 						)
@@ -88,6 +92,15 @@ func (pg *Page) stakePriceSection(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
 					return pg.stakeBtn.Layout(gtx)
 				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				if pg.WL.MultiWallet.IsSynced() {
+					return D{}
+				}
+
+				notSynced := pg.Theme.Label(values.TextSize10, "Wallets not synced")
+				notSynced.Color = pg.Theme.Color.Danger
+				return layout.Center.Layout(gtx, notSynced.Layout)
 			}),
 		)
 	})
