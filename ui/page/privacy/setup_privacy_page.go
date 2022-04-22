@@ -151,7 +151,27 @@ func (pg *SetupPrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimens
 // Part of the load.Page interface.
 func (pg *SetupPrivacyPage) HandleUserInteractions() {
 	if pg.toPrivacySetup.Clicked() {
-		pg.ChangeFragment(NewSetupMixerAccountsPage(pg.Load, pg.wallet))
+		accounts, err := pg.wallet.GetAccountsRaw()
+		if err != nil {
+			log.Error(err)
+		}
+
+		walCount := accounts.Count
+		// Filter out imported account.
+		for _, v := range accounts.Acc {
+			if v.Number == dcrlibwallet.ImportedAccountNumber {
+				walCount--
+			}
+		}
+
+		if walCount <= 1 {
+			go showModalSetupMixerInfo(&sharedModalConf{
+				Load:   pg.Load,
+				wallet: pg.wallet,
+			})
+		} else {
+			pg.ChangeFragment(NewSetupMixerAccountsPage(pg.Load, pg.wallet))
+		}
 	}
 }
 

@@ -19,6 +19,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/governance"
 	"github.com/planetdecred/godcr/ui/page/overview"
+	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/page/transaction"
 	walletPage "github.com/planetdecred/godcr/ui/page/wallets"
@@ -75,6 +76,7 @@ func init() {
 	walletPage.UseLogger(winLog)
 	overview.UseLogger(winLog)
 	staking.UseLogger(winLog)
+	privacy.UseLogger(winLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
