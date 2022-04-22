@@ -275,7 +275,7 @@ func (tp *stakingModal) canPurchase() bool {
 	}
 
 	// this is needed to generate the transaction fees before calculating
-	// tottal ticket cost
+	// total ticket cost
 	if tp.vspSelector.SelectedVSP() == nil {
 		return false
 	}
