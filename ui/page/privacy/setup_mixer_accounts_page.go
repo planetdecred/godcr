@@ -2,6 +2,7 @@ package privacy
 
 import (
 	"context"
+	"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -268,8 +269,14 @@ func (pg *SetupMixerAccountsPage) showModalSetupMixerAcct(movefundsChecked bool)
 					return
 				}
 				pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
+
 				if movefundsChecked {
-					//todo
+					err := pg.moveFundsFromDefaultToUnmixed(password)
+					if err != nil {
+						log.Error(err)
+						pg.Toast.NotifyError(fmt.Sprintf("Error moving funds: %s", err.Error()))
+					}
+
 				}
 
 				pm.Dismiss()
@@ -279,6 +286,52 @@ func (pg *SetupMixerAccountsPage) showModalSetupMixerAcct(movefundsChecked bool)
 
 			return false
 		}).Show()
+}
+
+func (pg *SetupMixerAccountsPage) moveFundsFromDefaultToUnmixed(password string) error {
+	acc, err := pg.wallet.GetAccountsRaw()
+	if err != nil {
+		return err
+	}
+
+	// get the first account in the wallet as this is the default
+	sourceAccount := acc.Acc[0]
+	destinationAccount := pg.wallet.UnmixedAccountNumber()
+
+	destinationAddress, err := pg.wallet.CurrentAddress(destinationAccount)
+	if err != nil {
+		return err
+	}
+
+	unsignedTx, err := pg.WL.MultiWallet.NewUnsignedTx(sourceAccount.WalletID, sourceAccount.Number)
+	if err != nil {
+		return err
+	}
+
+	// get tx fees
+	feeAndSize, err := unsignedTx.EstimateFeeAndSize()
+	if err != nil {
+		return err
+	}
+
+	// calculate max amount to be sent
+	amountAtom := sourceAccount.Balance.Spendable - feeAndSize.Fee.AtomValue
+	err = unsignedTx.AddSendDestination(destinationAddress, amountAtom, true)
+	if err != nil {
+		return err
+	}
+
+	// send fund
+	go func() {
+		_, err := unsignedTx.Broadcast([]byte(password))
+		if err != nil {
+			err = err
+			return
+		}
+		pg.Toast.Notify("Transaction sent!")
+	}()
+
+	return err
 }
 
 // HandleUserInteractions is called just before Layout() to determine
