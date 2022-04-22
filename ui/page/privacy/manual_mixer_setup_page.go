@@ -175,13 +175,28 @@ func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
 		NegativeButton("Cancel", func() {}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-				err := pg.wallet.SetAccountMixerConfig(pg.mixedAccountSelector.SelectedAccount().Number, pg.unmixedAccountSelector.SelectedAccount().Number, password)
+				mixedAcctNumber := pg.mixedAccountSelector.SelectedAccount().Number
+				unmixedAcctNumber := pg.unmixedAccountSelector.SelectedAccount().Number
+				err := pg.wallet.SetAccountMixerConfig(mixedAcctNumber, unmixedAcctNumber, password)
 				if err != nil {
 					pm.SetError(err.Error())
 					pm.SetLoading(false)
 					return
 				}
 				pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
+
+				// rename mixed account
+				err = pg.wallet.RenameAccount(mixedAcctNumber, "mixed")
+				if err != nil {
+					log.Error(err)
+				}
+
+				// rename unmixed account
+				err = pg.wallet.RenameAccount(unmixedAcctNumber, "unmixed")
+				if err != nil {
+					log.Error(err)
+				}
+
 				pm.Dismiss()
 
 				pg.ChangeFragment(NewAccountMixerPage(pg.Load, pg.wallet))
