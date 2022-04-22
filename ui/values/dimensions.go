@@ -59,6 +59,7 @@ var (
 	MarginPaddingMinus90  = unit.Dp(-90)
 	MarginPaddingMinus100 = unit.Dp(-100)
 	MarginPadding100      = unit.Dp(100)
+	MarginPadding110      = unit.Dp(110)
 	MarginPadding120      = unit.Dp(120)
 	MarginPadding130      = unit.Dp(130)
 	MarginPadding140      = unit.Dp(140)
