@@ -215,6 +215,12 @@ func (pg *ManualMixerSetupPage) HandleUserInteractions() {
 	if pg.toPrivacySetup.Clicked() {
 		go pg.showModalSetupMixerAcct()
 	}
+
+	if pg.mixedAccountSelector.SelectedAccount().Number == pg.unmixedAccountSelector.SelectedAccount().Number {
+		pg.toPrivacySetup.SetEnabled(false)
+	} else {
+		pg.toPrivacySetup.SetEnabled(true)
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
