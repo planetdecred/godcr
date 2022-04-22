@@ -238,6 +238,28 @@ func (pg *SetupMixerAccountsPage) showModalSetupMixerInfo() {
 	pg.ShowModal(info)
 }
 
+func (pg *SetupMixerAccountsPage) showInfoModal(title, body, btnText string, isError, alignCenter bool) {
+	icon := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.AlertError)))
+	icon.Color = pg.Theme.Color.DeepBlue
+	if !isError {
+		icon = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
+		icon.Color = pg.Theme.Color.Success
+	}
+
+	info := modal.NewInfoModal(pg.Load).
+		Icon(icon).
+		Title(title).
+		Body(body).
+		PositiveButton(btnText, func(isChecked bool) {})
+
+	if alignCenter {
+		align := layout.Center
+		info.SetContentAlignment(align, align)
+	}
+
+	pg.ShowModal(info)
+}
+
 func (pg *SetupMixerAccountsPage) showModalSetupMixerAcct(movefundsChecked bool) {
 	accounts, _ := pg.wallet.GetAccountsRaw()
 	txt := "There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup."
@@ -274,9 +296,9 @@ func (pg *SetupMixerAccountsPage) showModalSetupMixerAcct(movefundsChecked bool)
 					err := pg.moveFundsFromDefaultToUnmixed(password)
 					if err != nil {
 						log.Error(err)
-						pg.Toast.NotifyError(fmt.Sprintf("Error moving funds: %s", err.Error()))
+						txt := fmt.Sprintf("Error moving funds: %s.\n%s", err.Error(), "Auto funds transfer has been skipped. Move funds to unmixed account manually from the send page.")
+						pg.showInfoModal("Move funds to unmixed account", txt, "Got it", true, false)
 					}
-
 				}
 
 				pm.Dismiss()
@@ -288,6 +310,8 @@ func (pg *SetupMixerAccountsPage) showModalSetupMixerAcct(movefundsChecked bool)
 		}).Show()
 }
 
+// moveFundsFromDefaultToUnmixed moves funds from the default wallet account to the
+// newly created unmixed account
 func (pg *SetupMixerAccountsPage) moveFundsFromDefaultToUnmixed(password string) error {
 	acc, err := pg.wallet.GetAccountsRaw()
 	if err != nil {
@@ -322,14 +346,12 @@ func (pg *SetupMixerAccountsPage) moveFundsFromDefaultToUnmixed(password string)
 	}
 
 	// send fund
-	go func() {
-		_, err := unsignedTx.Broadcast([]byte(password))
-		if err != nil {
-			err = err
-			return
-		}
-		pg.Toast.Notify("Transaction sent!")
-	}()
+	_, err = unsignedTx.Broadcast([]byte(password))
+	if err != nil {
+		return err
+	}
+
+	pg.showInfoModal("Transaction sent!", "", "Got it", false, true)
 
 	return err
 }
