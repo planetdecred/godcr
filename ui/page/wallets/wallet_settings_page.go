@@ -53,7 +53,7 @@ func (pg *WalletSettingsPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *WalletSettingsPage) OnNavigatedTo() {
-	pg.wallet.ClearMixerConfig()
+
 }
 
 // Layout draws the page UI components into the provided layout context

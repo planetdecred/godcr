@@ -2,10 +2,10 @@ package privacy
 
 import (
 	"context"
-	"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -30,14 +30,12 @@ type SetupMixerAccountsPage struct {
 	autoSetupClickable      *decredmaterial.Clickable
 	manualSetupClickable    *decredmaterial.Clickable
 	autoSetupIcon, nextIcon *decredmaterial.Icon
-	checkBox                decredmaterial.CheckBoxStyle
 }
 
 func NewSetupMixerAccountsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SetupMixerAccountsPage {
 	pg := &SetupMixerAccountsPage{
-		Load:     l,
-		wallet:   wallet,
-		checkBox: l.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
+		Load:   l,
+		wallet: wallet,
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -226,136 +224,6 @@ func (pg *SetupMixerAccountsPage) manualSetupLayout(gtx C) D {
 	})
 }
 
-func (pg *SetupMixerAccountsPage) showModalSetupMixerInfo() {
-	info := modal.NewInfoModal(pg.Load).
-		Title("Set up mixer by creating two needed accounts").
-		SetupWithTemplate(modal.SetupMixerInfoTemplate).
-		CheckBox(pg.checkBox, false).
-		NegativeButton(values.String(values.StrCancel), func() {}).
-		PositiveButton("Begin setup", func(movefundsChecked bool) {
-			pg.showModalSetupMixerAcct(movefundsChecked)
-		})
-	pg.ShowModal(info)
-}
-
-func (pg *SetupMixerAccountsPage) showInfoModal(title, body, btnText string, isError, alignCenter bool) {
-	icon := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.AlertError)))
-	icon.Color = pg.Theme.Color.DeepBlue
-	if !isError {
-		icon = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
-		icon.Color = pg.Theme.Color.Success
-	}
-
-	info := modal.NewInfoModal(pg.Load).
-		Icon(icon).
-		Title(title).
-		Body(body).
-		PositiveButton(btnText, func(isChecked bool) {})
-
-	if alignCenter {
-		align := layout.Center
-		info.SetContentAlignment(align, align)
-	}
-
-	pg.ShowModal(info)
-}
-
-func (pg *SetupMixerAccountsPage) showModalSetupMixerAcct(movefundsChecked bool) {
-	accounts, _ := pg.wallet.GetAccountsRaw()
-	txt := "There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup."
-	for _, acct := range accounts.Acc {
-		if acct.Name == "mixed" || acct.Name == "unmixed" {
-			alert := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.AlertError)))
-			alert.Color = pg.Theme.Color.DeepBlue
-			info := modal.NewInfoModal(pg.Load).
-				Icon(alert).
-				Title("Account name is taken").
-				Body(txt).
-				PositiveButton("Go back & rename", func(isChecked bool) {
-					pg.PopFragment()
-				})
-			pg.ShowModal(info)
-			return
-		}
-	}
-
-	modal.NewPasswordModal(pg.Load).
-		Title("Confirm to create needed accounts").
-		NegativeButton("Cancel", func() {}).
-		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
-			go func() {
-				err := pg.wallet.CreateMixerAccounts("mixed", "unmixed", password)
-				if err != nil {
-					pm.SetError(err.Error())
-					pm.SetLoading(false)
-					return
-				}
-				pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
-
-				if movefundsChecked {
-					err := pg.moveFundsFromDefaultToUnmixed(password)
-					if err != nil {
-						log.Error(err)
-						txt := fmt.Sprintf("Error moving funds: %s.\n%s", err.Error(), "Auto funds transfer has been skipped. Move funds to unmixed account manually from the send page.")
-						pg.showInfoModal("Move funds to unmixed account", txt, "Got it", true, false)
-					}
-				}
-
-				pm.Dismiss()
-
-				pg.ChangeFragment(NewAccountMixerPage(pg.Load, pg.wallet))
-			}()
-
-			return false
-		}).Show()
-}
-
-// moveFundsFromDefaultToUnmixed moves funds from the default wallet account to the
-// newly created unmixed account
-func (pg *SetupMixerAccountsPage) moveFundsFromDefaultToUnmixed(password string) error {
-	acc, err := pg.wallet.GetAccountsRaw()
-	if err != nil {
-		return err
-	}
-
-	// get the first account in the wallet as this is the default
-	sourceAccount := acc.Acc[0]
-	destinationAccount := pg.wallet.UnmixedAccountNumber()
-
-	destinationAddress, err := pg.wallet.CurrentAddress(destinationAccount)
-	if err != nil {
-		return err
-	}
-
-	unsignedTx, err := pg.WL.MultiWallet.NewUnsignedTx(sourceAccount.WalletID, sourceAccount.Number)
-	if err != nil {
-		return err
-	}
-
-	// get tx fees
-	feeAndSize, err := unsignedTx.EstimateFeeAndSize()
-	if err != nil {
-		return err
-	}
-
-	// calculate max amount to be sent
-	amountAtom := sourceAccount.Balance.Spendable - feeAndSize.Fee.AtomValue
-	err = unsignedTx.AddSendDestination(destinationAddress, amountAtom, true)
-	if err != nil {
-		return err
-	}
-
-	// send fund
-	_, err = unsignedTx.Broadcast([]byte(password))
-	if err != nil {
-		return err
-	}
-
-	pg.showInfoModal("Transaction sent!", "", "Got it", false, true)
-
-	return err
-}
-
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
@@ -363,9 +231,10 @@ func (pg *SetupMixerAccountsPage) moveFundsFromDefaultToUnmixed(password string)
 // Part of the load.Page interface.
 func (pg *SetupMixerAccountsPage) HandleUserInteractions() {
 	if pg.autoSetupClickable.Clicked() {
-		go showModalSetupMixerInfo(&sharedModalConf{
-			Load:   pg.Load,
-			wallet: pg.wallet,
+		showModalSetupMixerInfo(&sharedModalConf{
+			Load:     pg.Load,
+			wallet:   pg.wallet,
+			checkBox: pg.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
 		})
 	}
 
