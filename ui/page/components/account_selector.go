@@ -138,6 +138,28 @@ func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibw
 	return errors.New("no valid account found")
 }
 
+// SelectValidAccountExcept selects a valid account from the selectedWallet
+// except the account with accountID.
+func (as *AccountSelector) SelectValidAccountExcept(selectedWallet *dcrlibwallet.Wallet, accountID int32) error {
+	if selectedWallet != nil {
+		accountsResult, err := selectedWallet.GetAccountsRaw()
+		if err != nil {
+			return err
+		}
+
+		accounts := accountsResult.Acc
+		for _, account := range accounts {
+			if as.accountIsValid(account) && account.Number != accountID {
+				as.SetSelectedAccount(account)
+				as.callback(account)
+				return nil
+			}
+		}
+	}
+
+	return errors.New("no valid account found")
+}
+
 func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
 	wal := as.multiWallet.WalletWithID(account.WalletID)
 
