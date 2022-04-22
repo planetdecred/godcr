@@ -122,7 +122,7 @@ func NewWalletPage(l *load.Load) *WalletPage {
 		backupAcctIcon:           decredmaterial.NewIcon(l.Theme.Icons.NavigationArrowForward),
 	}
 
-	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(24)
+	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(10)
 
 	pg.separator.Color = l.Theme.Color.Gray2
 
@@ -440,8 +440,8 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	body := func(gtx C) D {
-		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
-			layout.Expanded(func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Flexed(0.85, func(gtx C) D {
 				return pg.Theme.List(pg.container).Layout(gtx, len(pageContent), func(gtx C, i int) D {
 					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 						defer pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops).Pop()
@@ -450,10 +450,16 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			}),
-			layout.Stacked(func(gtx C) D {
-				return layout.Inset{Right: values.MarginPadding50}.Layout(gtx, func(gtx C) D {
-					return pg.layoutAddWalletSection(gtx)
-				})
+			layout.Flexed(0.15, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Flexed(1, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+								return pg.layoutAddWalletSection(gtx)
+							})
+						})
+					}),
+				)
 			}),
 		)
 	}
@@ -1006,10 +1012,10 @@ func (pg *WalletPage) checkMixerSection(gtx layout.Context, listItem *walletList
 }
 
 func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding56)
+	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding110)
 	inset := layout.Inset{
-		Top:  unit.Dp(-100),
-		Left: unit.Dp(-130),
+		Top:  unit.Dp(-130),
+		Left: unit.Dp(-80),
 	}
 
 	return inset.Layout(gtx, func(gtx C) D {
@@ -1041,16 +1047,23 @@ func (pg *WalletPage) layoutAddWalletSection(gtx layout.Context) layout.Dimensio
 				return D{}
 			}),
 			layout.Rigid(func(gtx C) D {
-				icon := pg.Theme.Icons.NewWalletIcon
-
 				return decredmaterial.LinearLayout{
 					Width:      decredmaterial.WrapContent,
 					Height:     decredmaterial.WrapContent,
 					Padding:    layout.UniformInset(values.MarginPadding12),
-					Background: pg.Theme.Color.Gray4,
+					Background: pg.Theme.Color.Surface,
 					Clickable:  pg.openAddWalletPopupButton,
+					Shadow:     pg.shadowBox,
 					Border:     decredmaterial.Border{Radius: pg.openAddWalletPopupButton.Radius},
-				}.Layout2(gtx, icon.Layout24dp)
+				}.Layout(gtx,
+					layout.Rigid(pg.Theme.Icons.NewWalletIcon.Layout24dp),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Left: values.MarginPadding4,
+							Top:  values.MarginPadding2,
+						}.Layout(gtx, pg.Theme.Body2("Add wallet").Layout)
+					}),
+				)
 			}),
 		)
 	})
