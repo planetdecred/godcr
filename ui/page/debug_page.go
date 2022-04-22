@@ -170,7 +170,7 @@ func (pg *DebugPage) resetDexData() {
 		Title("Confirm DEX Client Reset").
 		Body("You may need to restart godcr before you can use the DEX again. Proceed?").
 		NegativeButton(values.String(values.StrCancel), func() {}).
-		PositiveButton("Reset DEX Client", func() {
+		PositiveButton("Reset DEX Client", func(isChecked bool) {
 			if pg.Dexc().Reset() {
 				pg.Toast.Notify("DEX client data reset complete.")
 			} else {

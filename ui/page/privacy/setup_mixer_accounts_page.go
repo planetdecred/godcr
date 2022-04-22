@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -230,9 +231,10 @@ func (pg *SetupMixerAccountsPage) manualSetupLayout(gtx C) D {
 // Part of the load.Page interface.
 func (pg *SetupMixerAccountsPage) HandleUserInteractions() {
 	if pg.autoSetupClickable.Clicked() {
-		go showModalSetupMixerInfo(&sharedModalConf{
-			Load:   pg.Load,
-			wallet: pg.wallet,
+		showModalSetupMixerInfo(&sharedModalConf{
+			Load:     pg.Load,
+			wallet:   pg.wallet,
+			checkBox: pg.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
 		})
 	}
 

@@ -183,7 +183,7 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 			Title("Proposals").
 			Body("Off-chain voting for development and marketing initiatives funded by the Decred treasury.").
 			SetCancelable(true).
-			PositiveButton("Got it", func() {}).Show()
+			PositiveButton("Got it", func(isChecked bool) {}).Show()
 	}
 
 	if pg.syncCompleted {

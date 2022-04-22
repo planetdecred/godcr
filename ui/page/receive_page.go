@@ -363,7 +363,7 @@ func (pg *ReceivePage) HandleUserInteractions() {
 		info := modal.NewInfoModal(pg.Load).
 			Title("Receive DCR").
 			Body("Each time you receive a payment, a new address is generated to protect your privacy.").
-			PositiveButton("Got it", func() {})
+			PositiveButton("Got it", func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 

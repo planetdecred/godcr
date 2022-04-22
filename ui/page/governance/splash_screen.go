@@ -73,6 +73,6 @@ func (pg *Page) showInfoModal() {
 	info := modal.NewInfoModal(pg.Load).
 		Title("Governance").
 		Body("Proposals and politeia notifications can be enabled or disabled from the settings page.").
-		PositiveButton("Got it", func() {})
+		PositiveButton("Got it", func(isChecked bool) {})
 	pg.ShowModal(info)
 }

@@ -229,12 +229,12 @@ func (pg *AppOverviewPage) showBackupInfo() {
 		SetupWithTemplate(modal.WalletBackupInfoTemplate).
 		SetCancelable(false).
 		SetContentAlignment(layout.W, layout.Center).
-		CheckBox(pg.checkBox).
+		CheckBox(pg.checkBox, true).
 		NegativeButton("Backup later", func() {
 			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
 		}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
-		PositiveButton("Backup now", func() {
+		PositiveButton("Backup now", func(isChecked bool) {
 			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
 			pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
 		}).Show()

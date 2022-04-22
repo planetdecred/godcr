@@ -1207,7 +1207,7 @@ func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 		Body("You can restore this wallet from seed word after it is deleted.").
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
-		PositiveButton(values.String(values.StrRemove), func() {
+		PositiveButton(values.String(values.StrRemove), func(isChecked bool) {
 			go func() {
 				err := pg.WL.MultiWallet.DeleteBadWallet(badWalletID)
 				if err != nil {

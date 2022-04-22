@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -166,8 +167,9 @@ func (pg *SetupPrivacyPage) HandleUserInteractions() {
 
 		if walCount <= 1 {
 			go showModalSetupMixerInfo(&sharedModalConf{
-				Load:   pg.Load,
-				wallet: pg.wallet,
+				Load:     pg.Load,
+				wallet:   pg.wallet,
+				checkBox: pg.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
 			})
 		} else {
 			pg.ChangeFragment(NewSetupMixerAccountsPage(pg.Load, pg.wallet))
