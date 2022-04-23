@@ -400,7 +400,7 @@ func (mp *MainPage) HandleUserInteractions() {
 				if mp.receivePage == nil {
 					mp.receivePage = NewReceivePage(mp.Load)
 				}
-				pg = mp.receivePage
+				pg = NewReceivePage(mp.Load)
 			}
 
 			if pg.ID() == mp.currentPageID() {
