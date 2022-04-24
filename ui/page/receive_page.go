@@ -137,6 +137,15 @@ func (pg *ReceivePage) OnNavigatedTo() {
 	pg.selector.ListenForTxNotifications(pg.ctx)
 	pg.selector.SelectFirstWalletValidAccount(nil) // Want to reset the user's selection everytime this page appears?
 	// might be better to track the last selection in a variable and reselect it.
+	selectedWallet := pg.multiWallet.WalletWithID(pg.selector.SelectedAccount().WalletID)
+	currentAddress, err := selectedWallet.CurrentAddress(pg.selector.SelectedAccount().Number)
+	if err != nil {
+		log.Errorf("Error getting current address: %v", err)
+	} else {
+		pg.currentAddress = currentAddress
+	}
+
+	pg.generateQRForAddress()
 }
 
 func (pg *ReceivePage) generateQRForAddress() {
