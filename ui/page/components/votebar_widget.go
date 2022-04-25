@@ -42,7 +42,6 @@ type VoteBar struct {
 	passTooltip   *decredmaterial.Tooltip
 	quorumTooltip *decredmaterial.Tooltip
 
-	//infoIcon    *decredmaterial.Icon
 	legendIcon    *decredmaterial.Icon
 	newInfoButton decredmaterial.IconButton
 }
@@ -57,11 +56,10 @@ func NewVoteBar(l *load.Load) *VoteBar {
 		noColor:       l.Theme.Color.Danger,
 		passTooltip:   l.Theme.Tooltip(),
 		quorumTooltip: l.Theme.Tooltip(),
-		//infoIcon:      decredmaterial.NewIcon(l.Theme.Icons.ActionInfo),
 		legendIcon:    decredmaterial.NewIcon(l.Theme.Icons.ImageBrightness1),
 		newInfoButton: l.Theme.IconButton(l.Theme.Icons.ActionInfo),
 	}
-	//vb.infoIcon.Color = l.Theme.Color.Gray1
+	vb.newInfoButton.Inset = layout.Inset{}
 
 	return vb
 }
@@ -215,11 +213,7 @@ func (v *VoteBar) Layout(gtx C) D {
 							}),
 							layout.Flexed(1, func(gtx C) D {
 								return layout.E.Layout(gtx, func(gtx C) D {
-									//return v.layoutInfo(gtx)
-									if v.newInfoButton.Button.Clicked() {
-										v.infoButtonModal()
-									}
-									return layout.Inset{}.Layout(gtx, v.newInfoButton.Layout)
+									return v.layoutInfo(gtx)
 								})
 							}),
 						)
@@ -241,7 +235,7 @@ func (v *VoteBar) infoButtonModal() {
 	text5 := fmt.Sprintf("Token:   %s", v.token)
 	bodyText := fmt.Sprintf("%s\n %v\n %s\n %s\n %s", text1, text2, text3, text4, text5)
 	modal.NewInfoModal(v.Load).
-		Title("").
+		Title("Vote title").
 		Body(bodyText).
 		SetCancelable(true).
 		PositiveButton("Got it", func(bool) {}).Show()
@@ -274,68 +268,18 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float
 	})
 }
 
-// func (v *VoteBar) layoutInfo(gtx C) D {
-// 	dims := layout.Flex{}.Layout(gtx,
-// 		layout.Rigid(v.Theme.Body2(fmt.Sprintf("%d Total votes", int(v.totalVotes))).Layout),
-// 		layout.Rigid(func(gtx C) D {
-// 			rect := image.Rectangle{
-// 				Min: gtx.Constraints.Min,
-// 				Max: gtx.Constraints.Max,
-// 			}
-// 			rect.Max.Y = 20
-// 			v.layoutInfoTooltip(gtx, rect)
-// 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-// 				return v.infoIcon.Layout(gtx, values.MarginPadding20)
-// 			})
-// 		}),
-// 	)
+func (v *VoteBar) layoutInfo(gtx C) D {
+	dims := layout.Flex{}.Layout(gtx,
+		layout.Rigid(v.Theme.Body2(fmt.Sprintf("%d Total votes", int(v.totalVotes))).Layout),
+		layout.Rigid(func(gtx C) D {
+			if v.newInfoButton.Button.Clicked() {
+				v.infoButtonModal()
+			}
+			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+				return v.newInfoButton.Layout(gtx)
+			})
+		}),
+	)
 
-// 	return dims
-// }
-
-// func (v *VoteBar) layoutInfoTooltip(gtx C, rect image.Rectangle) {
-// 	inset := layout.Inset{Top: unit.Dp(20), Left: unit.Dp(-180)}
-// 	col := v.Theme.Color.GrayText2
-
-// 	v.quorumTooltip.Layout(gtx, rect, inset, func(gtx C) D {
-// 		gtx.Constraints.Max.X = gtx.Px(unit.Dp(180))
-// 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-// 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 			layout.Rigid(func(gtx C) D {
-// 				totalVotesTooltipLabel := v.Theme.Caption("Total votes")
-// 				totalVotesTooltipLabel.Color = col
-
-// 				totalVotesCountLabel := v.Theme.Caption(fmt.Sprintf("%6.0f", v.totalVotes))
-// 				return EndToEndRow(gtx, totalVotesTooltipLabel.Layout, totalVotesCountLabel.Layout)
-// 			}),
-// 			layout.Rigid(func(gtx C) D {
-// 				quorumRequirementTooltip := v.Theme.Caption("Quorum requirement")
-// 				quorumRequirementTooltip.Color = col
-
-// 				quorumRequirementCount := v.Theme.Caption(fmt.Sprintf("%6.0f", (v.requiredPercentage/100)*v.eligibleVotes))
-// 				return EndToEndRow(gtx, quorumRequirementTooltip.Layout, quorumRequirementCount.Layout)
-// 			}),
-// 			layout.Rigid(func(gtx C) D {
-// 				commentInfo := v.Theme.Caption("Discussions")
-// 				commentInfo.Color = col
-
-// 				commentCount := v.Theme.Caption(fmt.Sprintf("%d comments", v.numComment))
-// 				return EndToEndRow(gtx, commentInfo.Layout, commentCount.Layout)
-// 			}),
-// 			layout.Rigid(func(gtx C) D {
-// 				pub := v.Theme.Caption("Published")
-// 				pub.Color = col
-
-// 				pubDate := v.Theme.Caption(dcrlibwallet.FormatUTCTime(v.publishedAt))
-// 				return EndToEndRow(gtx, pub.Layout, pubDate.Layout)
-// 			}),
-// 			layout.Rigid(func(gtx C) D {
-// 				token := v.Theme.Caption("Token")
-// 				token.Color = col
-
-// 				tokenVal := v.Theme.Caption(v.token)
-// 				return EndToEndRow(gtx, token.Layout, tokenVal.Layout)
-// 			}),
-// 		)
-// 	})
-// }
+	return dims
+}
