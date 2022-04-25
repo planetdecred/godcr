@@ -137,7 +137,9 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		// matchedWalletID == ID of the wallet whose xpub is identical to provided xpub.
 		matchedWalletID, err := cm.WL.MultiWallet.WalletWithXPub(cm.extendedPubKey.Editor.Text())
 		if err != nil {
-			log.Error(err) // Non Fatal error continue.
+			log.Errorf("Error checking xpub: %v", err)
+			cm.Toast.NotifyError("Error checking xpub: " + err.Error()) // Error maybe useful to user.
+			return
 		}
 
 		if matchedWalletID != -1 {
