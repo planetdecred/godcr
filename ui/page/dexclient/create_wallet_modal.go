@@ -97,7 +97,7 @@ func (md *createWalletModal) OnResume() {
 	md.ctx, md.ctxCancel = context.WithCancel(context.TODO())
 	md.sourceAccountSelector.ListenForTxNotifications(md.ctx)
 
-	err := md.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
+	err := md.sourceAccountSelector.SelectFirstWalletValidAccount(nil, -1)
 	if err != nil {
 		md.Toast.NotifyError(err.Error())
 	}

@@ -83,8 +83,8 @@ func (pg *ManualMixerSetupPage) ID() string {
 func (pg *ManualMixerSetupPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.mixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet)
-	pg.unmixedAccountSelector.SelectValidAccountExcept(pg.wallet, pg.mixedAccountSelector.SelectedAccount().Number)
+	pg.mixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet, -1)
+	pg.unmixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet, pg.mixedAccountSelector.SelectedAccount().Number)
 }
 
 // Layout draws the page UI components into the provided layout context
