@@ -917,6 +917,8 @@ github.com/planetdecred/dcrlibwallet v1.6.2-0.20220414074738-62281e38109a h1:doO
 github.com/planetdecred/dcrlibwallet v1.6.2-0.20220414074738-62281e38109a/go.mod h1:d65xdeAh2Z9tm6WDdcAtrjO6Cph4WJDS6uDq6JVNHmM=
 github.com/planetdecred/dcrlibwallet v1.6.2-0.20220422064641-2e5c424c649c h1:+h7RbahsLipRxnTNhCtqVIPqoaIt/iU/fDSx/A0yJ/A=
 github.com/planetdecred/dcrlibwallet v1.6.2-0.20220422064641-2e5c424c649c/go.mod h1:L/S3dlrJLwvXSQijUQ0JEcgR52LDiV2/embkwrvwksc=
+github.com/planetdecred/dcrlibwallet v1.6.2-0.20220425133823-833d52a7cdd5 h1:GEdjcKQA6jHISMufQird5WWscP1WnZMIJo+FGcLD31E=
+github.com/planetdecred/dcrlibwallet v1.6.2-0.20220425133823-833d52a7cdd5/go.mod h1:L/S3dlrJLwvXSQijUQ0JEcgR52LDiV2/embkwrvwksc=
 github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-20220223161805-c736f970653d h1:egC6nx+qP3QMwKQhA+JdJReKV9NhG17Ag+3oCVCsj3c=
 github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-20220223161805-c736f970653d/go.mod h1:jO4RP2rgqom8CLgl3rMwZ4cGzmalJqBkKjHgVS812lM=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
