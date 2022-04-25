@@ -83,8 +83,8 @@ func (pg *ManualMixerSetupPage) ID() string {
 func (pg *ManualMixerSetupPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.mixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet)
-	pg.unmixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet)
+	pg.mixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet, -1)
+	pg.unmixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet, pg.mixedAccountSelector.SelectedAccount().Number)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -214,6 +214,12 @@ func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
 func (pg *ManualMixerSetupPage) HandleUserInteractions() {
 	if pg.toPrivacySetup.Clicked() {
 		go pg.showModalSetupMixerAcct()
+	}
+
+	if pg.mixedAccountSelector.SelectedAccount().Number == pg.unmixedAccountSelector.SelectedAccount().Number {
+		pg.toPrivacySetup.SetEnabled(false)
+	} else {
+		pg.toPrivacySetup.SetEnabled(true)
 	}
 }
 
