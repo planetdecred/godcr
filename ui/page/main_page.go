@@ -408,9 +408,11 @@ func (mp *MainPage) HandleUserInteractions() {
 			}
 
 			if !mp.WL.MultiWallet.IsSynced() {
-				mp.Toast.Notify("Wallet not synced")
-			} else {
 				mp.ChangeFragment(pg)
+			} else if mp.WL.MultiWallet.IsSyncing() {
+				mp.Toast.Notify("Wallet is syncing, please wait")
+			} else {
+				mp.Toast.Notify("Wallet not synced")
 			}
 		}
 	}
