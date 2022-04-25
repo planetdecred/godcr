@@ -3,6 +3,7 @@ package page
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image"
 	"image/color"
 	"time"
@@ -141,6 +142,7 @@ func (pg *ReceivePage) OnNavigatedTo() {
 	currentAddress, err := selectedWallet.CurrentAddress(pg.selector.SelectedAccount().Number)
 	if err != nil {
 		log.Errorf("Error getting current address: %v", err)
+		pg.Toast.NotifyError(fmt.Sprintf("Error getting current address: %v", err))
 	} else {
 		pg.currentAddress = currentAddress
 	}

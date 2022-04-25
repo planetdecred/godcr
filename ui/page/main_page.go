@@ -407,10 +407,8 @@ func (mp *MainPage) HandleUserInteractions() {
 				continue
 			}
 
-			if !mp.WL.MultiWallet.IsConnectedToDecredNetwork() {
-				mp.Toast.Notify("Connect to the decred network and wait for sync to complete")
-			} else if mp.WL.MultiWallet.IsSyncing() {
-				mp.Toast.Notify("Wait for sync to complete")
+			if !mp.WL.MultiWallet.IsSynced() {
+				mp.Toast.Notify("Wallet not synced")
 			} else {
 				mp.ChangeFragment(pg)
 			}
