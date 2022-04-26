@@ -133,6 +133,20 @@ func (cm *CreateWatchOnlyModal) Handle() {
 			return
 		}
 
+		// Check if there are existing wallets with identical Xpub.
+		// matchedWalletID == ID of the wallet whose xpub is identical to provided xpub.
+		matchedWalletID, err := cm.WL.MultiWallet.WalletWithXPub(cm.extendedPubKey.Editor.Text())
+		if err != nil {
+			log.Errorf("Error checking xpub: %v", err)
+			cm.Toast.NotifyError("Error checking xpub: " + err.Error()) // Error maybe useful to user.
+			return
+		}
+
+		if matchedWalletID != -1 {
+			cm.Toast.NotifyError("A wallet with an identical extended public key already exists.")
+			return
+		}
+
 		cm.SetLoading(true)
 		if cm.callback(cm.walletName.Editor.Text(), cm.extendedPubKey.Editor.Text(), cm) {
 			cm.Dismiss()

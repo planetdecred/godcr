@@ -15,6 +15,7 @@ import (
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/governance"
@@ -77,6 +78,7 @@ func init() {
 	overview.UseLogger(winLog)
 	staking.UseLogger(winLog)
 	privacy.UseLogger(winLog)
+	modal.UseLogger(winLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
