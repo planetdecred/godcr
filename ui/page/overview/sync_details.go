@@ -9,6 +9,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 func (pg *AppOverviewPage) initSyncDetailsWidgets() {
@@ -152,7 +153,14 @@ func (pg *AppOverviewPage) walletSyncRow(gtx C, inset layout.Inset) D {
 			layout.Rigid(func(gtx C) D {
 				completedSteps := pg.Theme.Body2(values.StringF(values.StrSyncSteps, pg.syncStep))
 				completedSteps.Color = pg.Theme.Color.GrayText2
-				headersFetched := pg.Theme.Body1(values.StringF(values.StrFetchingBlockHeaders, pg.headerFetchProgress))
+
+				headersFetched := pg.Theme.Body1(values.StringF(values.StrFetchingBlockHeaders, pg.stepFetchProgress))
+				if pg.syncStep == wallet.AddressDiscoveryStep {
+					headersFetched.Text = values.StringF(values.StrDiscoveringWalletAddress, pg.stepFetchProgress)
+				} else if pg.syncStep == wallet.AddressDiscoveryStep {
+					headersFetched.Text = values.StringF(values.StrRescanningHeaders, pg.stepFetchProgress)
+				}
+
 				return inset.Layout(gtx, func(gtx C) D {
 					return components.EndToEndRow(gtx, completedSteps.Layout, headersFetched.Layout)
 				})

@@ -37,7 +37,7 @@ const (
 	// HeadersFetchProgress indicates a headers fetch signal
 	HeadersFetchProgress
 
-	// HeadersFetchProgress indicates an address discovery signal
+	// AddressDiscoveryProgress indicates an address discovery signal
 	AddressDiscoveryProgress
 
 	// HeadersRescanProgress indicates an address rescan signal

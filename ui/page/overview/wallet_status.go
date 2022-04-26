@@ -15,6 +15,7 @@ func (pg *AppOverviewPage) initWalletStatusWidgets() {
 	pg.toggleSyncDetails = pg.Theme.Button(values.String(values.StrShowDetails))
 	pg.toggleSyncDetails.TextSize = values.TextSize16
 	pg.toggleSyncDetails.Background = color.NRGBA{}
+	pg.toggleSyncDetails.HighlightColor = color.NRGBA{}
 	pg.toggleSyncDetails.Color = pg.Theme.Color.Primary
 	pg.toggleSyncDetails.Inset = layout.Inset{}
 

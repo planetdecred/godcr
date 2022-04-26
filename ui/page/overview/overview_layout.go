@@ -86,8 +86,9 @@ type AppOverviewPage struct {
 	syncDetailsVisibility bool
 
 	remainingSyncTime    string
+	syncStepLabel        string
 	headersToFetchOrScan int32
-	headerFetchProgress  int32
+	stepFetchProgress    int32
 	syncProgress         int
 	syncStep             int
 }
@@ -368,7 +369,7 @@ func (pg *AppOverviewPage) listenForNotifications() {
 				// when the next UI invalidation occurs.
 				switch t := n.ProgressReport.(type) {
 				case *dcrlibwallet.HeadersFetchProgressReport:
-					pg.headerFetchProgress = t.HeadersFetchProgress
+					pg.stepFetchProgress = t.HeadersFetchProgress
 					pg.headersToFetchOrScan = t.TotalHeadersToFetch
 					pg.syncProgress = int(t.TotalSyncProgress)
 					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
@@ -377,11 +378,13 @@ func (pg *AppOverviewPage) listenForNotifications() {
 					pg.syncProgress = int(t.TotalSyncProgress)
 					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.AddressDiscoveryStep
+					pg.stepFetchProgress = t.AddressDiscoveryProgress
 				case *dcrlibwallet.HeadersRescanProgressReport:
 					pg.headersToFetchOrScan = t.TotalHeadersToScan
 					pg.syncProgress = int(t.TotalSyncProgress)
 					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.RescanHeadersStep
+					pg.stepFetchProgress = t.RescanProgress
 				}
 
 				// We only care about sync state changes here, to

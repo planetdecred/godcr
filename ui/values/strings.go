@@ -121,6 +121,8 @@ const (
 	StrUnlock                      = "unlock"
 	StrWalletStatus                = "walletStatus"
 	StrFetchingBlockHeaders        = "fetchingBlockHeaders"
+	StrDiscoveringWalletAddress    = "discoveringWalletAddress"
+	StrRescanningHeaders           = "rescanningHeaders"
 	StrSyncingState                = "syncingState"
 	StrResumeAccountDiscoveryTitle = "resumeAccountDiscoveryTitle"
 	StrHideDetails                 = "hideDetails"
