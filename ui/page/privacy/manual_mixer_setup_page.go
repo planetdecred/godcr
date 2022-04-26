@@ -221,6 +221,13 @@ func (pg *ManualMixerSetupPage) HandleUserInteractions() {
 	} else {
 		pg.toPrivacySetup.SetEnabled(true)
 	}
+
+	// Disable set up button if either mixed or unmixed account is the default account.
+	if pg.mixedAccountSelector.SelectedAccount().Number == dcrlibwallet.DefaultAccountNum ||
+		pg.unmixedAccountSelector.SelectedAccount().Number == dcrlibwallet.DefaultAccountNum {
+		pg.toPrivacySetup.SetEnabled(false)
+	}
+
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
