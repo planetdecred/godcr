@@ -90,7 +90,7 @@ func (tp *stakingModal) OnResume() {
 
 	tp.accountSelector.ListenForTxNotifications(tp.ctx)
 
-	err := tp.accountSelector.SelectFirstWalletValidAccount(nil, -1)
+	err := tp.accountSelector.SelectFirstWalletValidAccount(nil, []int32{})
 	if err != nil {
 		tp.Toast.NotifyError(err.Error())
 	}
