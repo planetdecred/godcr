@@ -235,7 +235,7 @@ func (v *VoteBar) infoButtonModal() {
 	text5 := fmt.Sprintf("Token:   %s", v.token)
 	bodyText := fmt.Sprintf("%s\n %v\n %s\n %s\n %s", text1, text2, text3, text4, text5)
 	modal.NewInfoModal(v.Load).
-		Title("Vote title").
+		Title("Proposal vote details").
 		Body(bodyText).
 		SetCancelable(true).
 		PositiveButton("Got it", func(bool) {}).Show()
