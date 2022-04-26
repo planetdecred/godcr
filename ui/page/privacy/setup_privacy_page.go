@@ -158,9 +158,9 @@ func (pg *SetupPrivacyPage) HandleUserInteractions() {
 		}
 
 		walCount := accounts.Count
-		// Filter out imported account.
+		// Filter out imported account and default account.
 		for _, v := range accounts.Acc {
-			if v.Number == dcrlibwallet.ImportedAccountNumber {
+			if v.Number == dcrlibwallet.ImportedAccountNumber || v.Number == dcrlibwallet.DefaultAccountNum {
 				walCount--
 			}
 		}
