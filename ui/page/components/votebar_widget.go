@@ -43,7 +43,7 @@ type VoteBar struct {
 	quorumTooltip *decredmaterial.Tooltip
 
 	legendIcon    *decredmaterial.Icon
-	newInfoButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 var voteBarThumbWidth = 2
@@ -57,9 +57,12 @@ func NewVoteBar(l *load.Load) *VoteBar {
 		passTooltip:   l.Theme.Tooltip(),
 		quorumTooltip: l.Theme.Tooltip(),
 		legendIcon:    decredmaterial.NewIcon(l.Theme.Icons.ImageBrightness1),
-		newInfoButton: l.Theme.IconButton(l.Theme.Icons.ActionInfo),
 	}
-	vb.newInfoButton.Inset = layout.Inset{}
+
+	_, vb.infoButton = SubpageHeaderButtons(l)
+	vb.infoButton.Inset = layout.Inset{}
+	vb.infoButton.Size = values.MarginPadding20
+	
 
 	return vb
 }
@@ -272,11 +275,11 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 	dims := layout.Flex{}.Layout(gtx,
 		layout.Rigid(v.Theme.Body2(fmt.Sprintf("%d Total votes", int(v.totalVotes))).Layout),
 		layout.Rigid(func(gtx C) D {
-			if v.newInfoButton.Button.Clicked() {
+			if v.infoButton.Button.Clicked() {
 				v.infoButtonModal()
 			}
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				return v.newInfoButton.Layout(gtx)
+				return v.infoButton.Layout(gtx)
 			})
 		}),
 	)
