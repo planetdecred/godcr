@@ -108,6 +108,7 @@ func (lp *ListPreferenceModal) Handle() {
 		lp.currentValue = lp.optionsRadioGroup.Value
 		lp.wallet.SaveConfigValueForKey(lp.preferenceKey, lp.optionsRadioGroup.Value)
 		lp.updateButtonClicked()
+		lp.RefreshTheme()
 		lp.DismissModal(lp)
 	}
 

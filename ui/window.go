@@ -156,6 +156,18 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		}
 	}
 
+	l.LanguageSettingChanged = func() {
+		if page, ok := win.currentPage.(load.DarkModeChangeHandler); ok {
+			page.OnLanguageChanged()
+		}
+	}
+
+	l.CurrencySettingChanged = func() {
+		if page, ok := win.currentPage.(load.DarkModeChangeHandler); ok {
+			page.OnCurrencyChanged()
+		}
+	}
+
 	return l, nil
 }
 

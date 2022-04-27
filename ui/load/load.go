@@ -51,12 +51,16 @@ type Load struct {
 	ReloadApp           func()
 
 	DarkModeSettingChanged func(bool)
+	LanguageSettingChanged func()
+	CurrencySettingChanged func()
 }
 
 func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)
 	l.DarkModeSettingChanged(isDarkModeOn)
+	l.LanguageSettingChanged()
+	l.CurrencySettingChanged()
 	l.RefreshWindow()
 }
 

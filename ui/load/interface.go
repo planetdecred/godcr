@@ -46,4 +46,6 @@ type DarkModeChangeHandler interface {
 	// OnDarkModeChanged is triggered whenever the dark mode setting is changed
 	// to enable restyling UI elements where necessary.
 	OnDarkModeChanged(bool)
+	OnCurrencyChanged()
+	OnLanguageChanged()
 }

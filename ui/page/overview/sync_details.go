@@ -157,7 +157,7 @@ func (pg *AppOverviewPage) walletSyncRow(gtx C, inset layout.Inset) D {
 				headersFetched := pg.Theme.Body1(values.StringF(values.StrFetchingBlockHeaders, pg.stepFetchProgress))
 				if pg.syncStep == wallet.AddressDiscoveryStep {
 					headersFetched.Text = values.StringF(values.StrDiscoveringWalletAddress, pg.stepFetchProgress)
-				} else if pg.syncStep == wallet.AddressDiscoveryStep {
+				} else if pg.syncStep == wallet.RescanHeadersStep {
 					headersFetched.Text = values.StringF(values.StrRescanningHeaders, pg.stepFetchProgress)
 				}
 
