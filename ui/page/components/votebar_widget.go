@@ -42,7 +42,7 @@ type VoteBar struct {
 	passTooltip   *decredmaterial.Tooltip
 	quorumTooltip *decredmaterial.Tooltip
 
-	legendIcon    *decredmaterial.Icon
+	legendIcon *decredmaterial.Icon
 	infoButton decredmaterial.IconButton
 }
 
@@ -62,7 +62,6 @@ func NewVoteBar(l *load.Load) *VoteBar {
 	_, vb.infoButton = SubpageHeaderButtons(l)
 	vb.infoButton.Inset = layout.Inset{}
 	vb.infoButton.Size = values.MarginPadding20
-	
 
 	return vb
 }
