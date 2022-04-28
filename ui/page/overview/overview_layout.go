@@ -170,7 +170,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 								layout.Rigid(func(gtx C) D {
 									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											t := pg.Theme.Label(values.TextSize14, "Unmixed balance")
+											t := pg.Theme.Label(values.TextSize14, values.String(values.StrUnmixedBalance))
 											t.Color = pg.Theme.Color.GrayText2
 											return t.Layout(gtx)
 										}),
@@ -231,11 +231,11 @@ func (pg *AppOverviewPage) showBackupInfo() {
 		SetCancelable(false).
 		SetContentAlignment(layout.W, layout.Center).
 		CheckBox(pg.checkBox, true).
-		NegativeButton("Backup later", func() {
+		NegativeButton(values.String(values.StrBackupLater), func() {
 			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
 		}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
-		PositiveButton("Backup now", func(isChecked bool) {
+		PositiveButton(values.String(values.StrBackupNow), func(isChecked bool) {
 			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
 			pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
 		}).Show()
