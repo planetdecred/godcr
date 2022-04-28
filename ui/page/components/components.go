@@ -114,29 +114,29 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 
 	if tx.Type == dcrlibwallet.TxTypeRegular {
 		if tx.Direction == dcrlibwallet.TxDirectionSent {
-			txStatus.Title = "Sent"
+			txStatus.Title = values.String(values.StrSent)
 			txStatus.Icon = l.Theme.Icons.SendIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionReceived {
-			txStatus.Title = "Received"
+			txStatus.Title = values.String(values.StrReceived)
 			txStatus.Icon = l.Theme.Icons.ReceiveIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionTransferred {
-			txStatus.Title = "Yourself"
+			txStatus.Title = values.String(values.StrYourself)
 			txStatus.Icon = l.Theme.Icons.Transferred
 		}
 	} else if tx.Type == dcrlibwallet.TxTypeMixed {
-		txStatus.Title = "Mixed"
+		txStatus.Title = values.String(values.StrMixed)
 		txStatus.Icon = l.Theme.Icons.MixedTx
 	} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
 
 		if tx.Type == dcrlibwallet.TxTypeTicketPurchase {
 			if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterUnmined) {
-				txStatus.Title = "Unmined"
+				txStatus.Title = values.String(values.StrUmined)
 				txStatus.Icon = l.Theme.Icons.TicketUnminedIcon
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusUnmined
 				txStatus.Color = l.Theme.Color.LightBlue6
 				txStatus.Background = l.Theme.Color.LightBlue
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
-				txStatus.Title = "Immature"
+				txStatus.Title = values.String(values.StrImmature)
 				txStatus.Icon = l.Theme.Icons.TicketImmatureIcon
 				txStatus.Color = l.Theme.Color.LightBlue6
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusImmature
@@ -145,7 +145,7 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 				txStatus.Background = l.Theme.Color.LightBlue
 			} else if ticketSpender != nil {
 				if ticketSpender.Type == dcrlibwallet.TxTypeVote {
-					txStatus.Title = "Voted"
+					txStatus.Title = values.String(values.StrVoted)
 					txStatus.Icon = l.Theme.Icons.TicketVotedIcon
 					txStatus.Color = l.Theme.Color.Turquoise700
 					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
@@ -153,7 +153,7 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 					txStatus.ProgressTrackColor = l.Theme.Color.Turquoise100
 					txStatus.Background = l.Theme.Color.Success2
 				} else {
-					txStatus.Title = "Revoked"
+					txStatus.Title = values.String(values.StrRevoked)
 					txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
 					txStatus.Color = l.Theme.Color.Orange
 					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
@@ -162,7 +162,7 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 					txStatus.Background = l.Theme.Color.Orange2
 				}
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterLive) {
-				txStatus.Title = "Live"
+				txStatus.Title = values.String(values.StrLive)
 				txStatus.Icon = l.Theme.Icons.TicketLiveIcon
 				txStatus.Color = l.Theme.Color.Primary
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusLive
@@ -170,22 +170,22 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 				txStatus.ProgressTrackColor = l.Theme.Color.LightBlue4
 				txStatus.Background = l.Theme.Color.Primary50
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
-				txStatus.Title = "Expired"
+				txStatus.Title = values.String(values.StrExpired)
 				txStatus.Icon = l.Theme.Icons.TicketExpiredIcon
 				txStatus.Color = l.Theme.Color.GrayText2
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusExpired
 				txStatus.Background = l.Theme.Color.Gray4
 			} else {
-				txStatus.Title = "Purchased"
+				txStatus.Title = values.String(values.StrPurchased)
 				txStatus.Icon = l.Theme.Icons.NewStakeIcon
 				txStatus.Color = l.Theme.Color.Text
 				txStatus.Background = l.Theme.Color.LightBlue
 			}
 		} else if tx.Type == dcrlibwallet.TxTypeVote {
-			txStatus.Title = "Vote"
+			txStatus.Title = values.String(values.StrVote)
 			txStatus.Icon = l.Theme.Icons.TicketVotedIcon
 		} else if tx.Type == dcrlibwallet.TxTypeRevocation {
-			txStatus.Title = "Revocation"
+			txStatus.Title = values.String(values.StrRevocation)
 			txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
 		}
 	}
@@ -202,46 +202,46 @@ func WeekDayHourMinuteCalculator(timestamp int64) string {
 
 	if weeksFromTxn > 0 {
 		if weeksFromTxn == 1 {
-			dateTimeResult = fmt.Sprintf("%d week ago", weeksFromTxn)
+			dateTimeResult = values.StringF(values.StrWeekAgo, weeksFromTxn)
 			return dateTimeResult
 		}
 
-		dateTimeResult = fmt.Sprintf("%d weeks ago", weeksFromTxn)
+		dateTimeResult = values.StringF(values.StrWeeksAgo, weeksFromTxn)
 		return dateTimeResult
 	}
 
 	if daysFromTxn > 0 {
 		if daysFromTxn == 1 {
-			dateTimeResult = fmt.Sprintf("%d day ago", daysFromTxn)
+			dateTimeResult = values.StringF(values.StrDayAgo, daysFromTxn)
 			return dateTimeResult
 		}
 
-		dateTimeResult = fmt.Sprintf("%d days ago", daysFromTxn)
+		dateTimeResult = values.StringF(values.StrDaysAgo, daysFromTxn)
 		return dateTimeResult
 	}
 
 	hoursFromTxn := minutesFromTxn / 60
 	if hoursFromTxn > 0 {
 		if hoursFromTxn == 1 {
-			dateTimeResult = fmt.Sprintf("%d hour ago", hoursFromTxn)
+			dateTimeResult = values.StringF(values.StrHourAgo, hoursFromTxn)
 			return dateTimeResult
 		}
 
-		dateTimeResult = fmt.Sprintf("%d hours ago", hoursFromTxn)
+		dateTimeResult = values.StringF(values.StrHoursAgo, hoursFromTxn)
 		return dateTimeResult
 	}
 
 	if minutesFromTxn > 0 {
 		if minutesFromTxn == 1 {
-			dateTimeResult = fmt.Sprintf("%d minute ago", minutesFromTxn)
+			dateTimeResult = values.StringF(values.StrMinuteAgo, minutesFromTxn)
 			return dateTimeResult
 		}
 
-		dateTimeResult = fmt.Sprintf("%d minutes ago", minutesFromTxn)
+		dateTimeResult = values.StringF(values.StrMinutesAgo, minutesFromTxn)
 		return dateTimeResult
 	}
 
-	dateTimeResult = fmt.Sprintln("Just Now")
+	dateTimeResult = values.String(values.StrJustNow)
 
 	return dateTimeResult
 }
@@ -278,46 +278,46 @@ func DurationAgo(timestamp int64) string {
 						return duration
 					}
 
-					duration = fmt.Sprintln("1 month ago")
+					duration = values.StringF(values.StrMonthAgo, 1)
 					return duration
 				}
 
 				monthDiff := ((txnYearEnd - txnMonth) + (currentYearStart + monthNow)) - 1
 				if dayNow < txnDay {
 					if monthDiff == 1 {
-						duration = fmt.Sprintf("%d month ago", monthDiff)
+						duration = values.StringF(values.StrMonthAgo, monthDiff)
 						return duration
 					}
 
-					duration = fmt.Sprintf("%d months ago", monthDiff)
+					duration = values.StringF(values.StrMonthsAgo, monthDiff)
 					return duration
 				}
 
-				duration = fmt.Sprintf("%d months ago", (txnYearEnd-txnMonth)+(currentYearStart+monthNow))
+				duration = values.StringF(values.StrMonthsAgo, (txnYearEnd-txnMonth)+(currentYearStart+monthNow))
 				return duration
 			}
 			y := (yearNow - txnYear) - 1
 
 			if dayNow < txnDay {
 				if y == 0 {
-					duration := fmt.Sprintln("11 months ago")
+					duration := values.StringF(values.StrMonthsAgo, 11)
 					return duration
 				}
 
 				if y == 1 {
-					duration = fmt.Sprintf("%d year ago", y)
+					duration = values.StringF(values.StrYearAgo, y)
 					return duration
 				}
 
-				duration = fmt.Sprintf("%d years ago", y)
+				duration = values.StringF(values.StrYearsAgo, y)
 				return duration
 			}
 
-			duration = fmt.Sprintf("%d year ago", yearNow-txnYear)
+			duration = values.StringF(values.StrYearAgo, yearNow-txnYear)
 			return duration
 		}
 
-		duration = fmt.Sprintf("%d years ago", yearNow-txnYear)
+		duration = values.StringF(values.StrYearsAgo, yearNow-txnYear)
 		return duration
 	}
 
@@ -328,26 +328,26 @@ func DurationAgo(timestamp int64) string {
 				return duration
 			}
 
-			duration = fmt.Sprintln("1 month ago")
+			duration = values.StringF(values.StrMonthAgo, 1)
 			return duration
 		}
 
 		if dayNow < txnDay {
 			if (monthNow-txnMonth)-1 == 0 {
-				duration := fmt.Sprintln("3 weeks ago")
+				duration := values.StringF(values.StrWeeksAgo, 3)
 				return duration
 			}
 
 			if (monthNow-txnMonth)-1 == 1 {
-				duration = fmt.Sprintf("%d month ago", (monthNow-txnMonth)-1)
+				duration = values.StringF(values.StrMonthAgo, (monthNow-txnMonth)-1)
 				return duration
 			}
 
-			duration = fmt.Sprintf("%d months ago", (monthNow-txnMonth)-1)
+			duration = values.StringF(values.StrMonthsAgo, (monthNow-txnMonth)-1)
 			return duration
 		}
 
-		duration = fmt.Sprintf("%d months ago", monthNow-txnMonth)
+		duration = values.StringF(values.StrMonthsAgo, monthNow-txnMonth)
 		return duration
 	}
 
@@ -482,7 +482,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			status := l.Theme.Body1("pending")
+			status := l.Theme.Body1(values.String(values.StrPending))
 			if TxConfirmations(l, row.Transaction) <= 1 {
 				status.Color = l.Theme.Color.GrayText1
 			} else {
@@ -505,9 +505,9 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
 								var title string
 								if row.Transaction.Type == dcrlibwallet.TxTypeVote {
-									title = "vote"
+									title = values.String(values.StrVote)
 								} else {
-									title = "revoke"
+									title = values.String(values.StrRevoke)
 								}
 
 								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
@@ -573,7 +573,7 @@ func FormatDateOrTime(timestamp int64) string {
 
 			return TimeAgo(timestamp)
 		} else if currentTime.Day()-1 == utcTime.Day() {
-			yesterday := "Yesterday"
+			yesterday := values.String(values.StrYesterday)
 			return yesterday
 		}
 	}
@@ -664,21 +664,21 @@ func TimeFormat(secs int, long bool) string {
 	if secs > 86399 {
 		val = "d"
 		if long {
-			val = " days"
+			val = " " + values.String(values.StrDays)
 		}
 		days := secs / 86400
 		return fmt.Sprintf("%d%s", days, val)
 	} else if secs > 3599 {
 		val = "h"
 		if long {
-			val = " hours"
+			val = " " + values.String(values.StrHours)
 		}
 		hours := secs / 3600
 		return fmt.Sprintf("%d%s", hours, val)
 	} else if secs > 59 {
 		val = "s"
 		if long {
-			val = " mins"
+			val = " " + values.String(values.StrMinutes)
 		}
 		mins := secs / 60
 		return fmt.Sprintf("%d%s", mins, val)
@@ -686,7 +686,7 @@ func TimeFormat(secs int, long bool) string {
 
 	val = "s"
 	if long {
-		val = " secs"
+		val = " " + values.String(values.StrSeconds)
 	}
 	return fmt.Sprintf("%d %s", secs, val)
 }
