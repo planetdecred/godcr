@@ -37,6 +37,7 @@ type seedItemMenu struct {
 
 type Restore struct {
 	*load.Load
+	isRestoring     bool
 	restoreComplete func()
 
 	seedList *layout.List
@@ -61,7 +62,6 @@ type Restore struct {
 	isLastEditor bool
 
 	seedEditors              seedEditors
-	keyEvent                 chan *key.Event
 	nextcurrentCaretPosition int // caret position when seed editor is switched
 	currentCaretPosition     int // current caret position
 	selectedSeedEditor       int // stores the current focus index of seed editors
@@ -73,8 +73,6 @@ func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 		restoreComplete: onRestoreComplete,
 
 		seedList: &layout.List{Axis: layout.Vertical},
-
-		keyEvent: make(chan *key.Event),
 
 		suggestionLimit: 3,
 		openPopupIndex:  -1,
@@ -105,7 +103,6 @@ func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 
 	// set suggestions
 	pg.allSuggestions = dcrlibwallet.PGPWordList()
-	l.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 
 	return pg
 }
@@ -121,9 +118,7 @@ func (pg *Restore) ID() string {
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *Restore) OnNavigatedTo() {
-	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
-}
+func (pg *Restore) OnNavigatedTo() {}
 
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
@@ -501,8 +496,7 @@ func (pg *Restore) HandleUserInteractions() {
 			return
 		}
 
-		pg.Load.UnsubscribeKeyEvent(pg.ID())
-
+		pg.isRestoring = true
 		modal.NewCreatePasswordModal(pg.Load).
 			Title("Enter wallet details").
 			EnableName(true).
@@ -514,6 +508,7 @@ func (pg *Restore) HandleUserInteractions() {
 					if err != nil {
 						m.SetError(components.TranslateErr(err))
 						m.SetLoading(false)
+						pg.isRestoring = false
 						return
 					}
 
@@ -537,51 +532,6 @@ func (pg *Restore) HandleUserInteractions() {
 		pg.seedEditors.focusIndex = -1
 	}
 
-	// handle key events
-	select {
-	case evt := <-pg.keyEvent:
-		if evt.Name == key.NameTab && evt.Modifiers != key.ModShift && evt.State == key.Press {
-			if len(pg.suggestions) > 0 {
-				focus := pg.seedEditors.focusIndex
-				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[pg.selected])
-				pg.seedClicked = true
-				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[pg.selected]), -1)
-			}
-			switchSeedEditors(pg.seedEditors.editors)
-		}
-		if evt.Name == key.NameTab && evt.Modifiers == key.ModShift && evt.State == key.Press {
-			for i := 0; i < len(pg.seedEditors.editors); i++ {
-				if pg.seedEditors.editors[i].Edit.Editor.Focused() {
-					if i == 0 {
-						pg.seedEditors.editors[len(pg.seedEditors.editors)-1].Edit.Editor.Focus()
-					} else {
-						pg.seedEditors.editors[i-1].Edit.Editor.Focus()
-					}
-				}
-			}
-		}
-		if evt.Name == key.NameUpArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
-			pg.selected--
-			if pg.selected < 0 {
-				pg.selected = 0
-			}
-		}
-		if evt.Name == key.NameDownArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
-			pg.selected++
-			if pg.selected >= len(pg.suggestions) {
-				pg.selected = len(pg.suggestions) - 1
-			}
-		}
-		if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && pg.openPopupIndex != -1 && evt.State == key.Press && len(pg.suggestions) != 0 {
-			if pg.seedEditors.focusIndex == -1 && len(pg.suggestions) == 1 {
-				return
-			}
-
-			pg.seedMenu[pg.selected].button.Click()
-		}
-	default:
-	}
-
 	pg.editorSeedsEventsHandler()
 	pg.onSuggestionSeedsClicked()
 	pg.suggestionSeedEffect()
@@ -595,6 +545,53 @@ func (pg *Restore) HandleUserInteractions() {
 
 	if pg.currentCaretPositionChanged() {
 		pg.selected = 0
+	}
+}
+
+// HandleKeyEvent is called when a key is pressed on the current window.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (pg *Restore) HandleKeyEvent(evt *key.Event) {
+	if pg.isRestoring {
+		return
+	}
+	if evt.Name == key.NameTab && evt.Modifiers != key.ModShift && evt.State == key.Press {
+		if len(pg.suggestions) > 0 {
+			focus := pg.seedEditors.focusIndex
+			pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[pg.selected])
+			pg.seedClicked = true
+			pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[pg.selected]), -1)
+		}
+		switchSeedEditors(pg.seedEditors.editors)
+	}
+	if evt.Name == key.NameTab && evt.Modifiers == key.ModShift && evt.State == key.Press {
+		for i := 0; i < len(pg.seedEditors.editors); i++ {
+			if pg.seedEditors.editors[i].Edit.Editor.Focused() {
+				if i == 0 {
+					pg.seedEditors.editors[len(pg.seedEditors.editors)-1].Edit.Editor.Focus()
+				} else {
+					pg.seedEditors.editors[i-1].Edit.Editor.Focus()
+				}
+			}
+		}
+	}
+	if evt.Name == key.NameUpArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
+		pg.selected--
+		if pg.selected < 0 {
+			pg.selected = 0
+		}
+	}
+	if evt.Name == key.NameDownArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
+		pg.selected++
+		if pg.selected >= len(pg.suggestions) {
+			pg.selected = len(pg.suggestions) - 1
+		}
+	}
+	if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && pg.openPopupIndex != -1 && evt.State == key.Press && len(pg.suggestions) != 0 {
+		if pg.seedEditors.focusIndex == -1 && len(pg.suggestions) == 1 {
+			return
+		}
+
+		pg.seedMenu[pg.selected].button.Click()
 	}
 }
 
@@ -634,6 +631,4 @@ func (pg *Restore) seedEditorChanged() bool {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *Restore) OnNavigatedFrom() {
-	pg.Load.UnsubscribeKeyEvent(pg.ID())
-}
+func (pg *Restore) OnNavigatedFrom() {}

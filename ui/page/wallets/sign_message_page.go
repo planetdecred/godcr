@@ -21,7 +21,6 @@ type SignMessagePage struct {
 	*load.Load
 	container layout.List
 	wallet    *dcrlibwallet.Wallet
-	keyEvent  chan *key.Event
 
 	isSigningMessage bool
 	addressIsValid   bool
@@ -72,7 +71,6 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 		copyButton:         l.Theme.Button("Copy"),
 		copySignature:      l.Theme.NewClickable(false),
 		copyIcon:           copyIcon,
-		keyEvent:           make(chan *key.Event),
 	}
 
 	pg.signedMessageLabel.Color = l.Theme.Color.GrayText2
@@ -94,7 +92,6 @@ func (pg *SignMessagePage) ID() string {
 // Part of the load.Page interface.
 func (pg *SignMessagePage) OnNavigatedTo() {
 	pg.addressEditor.Editor.Focus()
-	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -286,9 +283,13 @@ func (pg *SignMessagePage) HandleUserInteractions() {
 				}).Show()
 		}
 	}
+}
 
-	//Switch editors when tab key is pressed
-	decredmaterial.SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.messageEditor.Editor)
+// HandleKeyEvent is called when a key is pressed on the current window.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (pg *SignMessagePage) HandleKeyEvent(evt *key.Event) {
+	// Switch editors when tab key is pressed.
+	decredmaterial.SwitchEditors(evt, pg.addressEditor.Editor, pg.messageEditor.Editor)
 }
 
 func (pg *SignMessagePage) validate() bool {
@@ -352,6 +353,4 @@ func (pg *SignMessagePage) clearForm() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *SignMessagePage) OnNavigatedFrom() {
-	pg.Load.UnsubscribeKeyEvent(pg.ID())
-}
+func (pg *SignMessagePage) OnNavigatedFrom() {}

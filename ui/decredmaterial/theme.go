@@ -287,32 +287,28 @@ func HandleEditorEvents(editors ...*widget.Editor) (bool, bool) {
 	return submit, changed
 }
 
-func SwitchEditors(keyEvent chan *key.Event, editors ...*widget.Editor) {
-	select {
-	case event := <-keyEvent:
-		if event.Name == key.NameTab && event.Modifiers != key.ModShift && event.State == key.Press {
-			for i := 0; i < len(editors); i++ {
-				if editors[i].Focused() {
-					if i == len(editors)-1 {
-						editors[0].Focus()
-					} else {
-						editors[i+1].Focus()
-					}
+func SwitchEditors(event *key.Event, editors ...*widget.Editor) {
+	if event.Name == key.NameTab && event.Modifiers != key.ModShift && event.State == key.Press {
+		for i := 0; i < len(editors); i++ {
+			if editors[i].Focused() {
+				if i == len(editors)-1 {
+					editors[0].Focus()
+				} else {
+					editors[i+1].Focus()
 				}
 			}
 		}
+	}
 
-		if event.Name == key.NameTab && event.Modifiers == key.ModShift && event.State == key.Press {
-			for i := 0; i < len(editors); i++ {
-				if editors[i].Focused() {
-					if i == 0 {
-						editors[len(editors)-1].Focus()
-					} else {
-						editors[i-1].Focus()
-					}
+	if event.Name == key.NameTab && event.Modifiers == key.ModShift && event.State == key.Press {
+		for i := 0; i < len(editors); i++ {
+			if editors[i].Focused() {
+				if i == 0 {
+					editors[len(editors)-1].Focus()
+				} else {
+					editors[i-1].Focus()
 				}
 			}
 		}
-	default:
 	}
 }

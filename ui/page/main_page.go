@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -449,6 +450,16 @@ func (mp *MainPage) HandleUserInteractions() {
 	for mp.hideBalanceItem.hideBalanceButton.Button.Clicked() {
 		mp.isBalanceHidden = !mp.isBalanceHidden
 		mp.WL.MultiWallet.SetBoolConfigValueForKey(load.HideBalanceConfigKey, mp.isBalanceHidden)
+	}
+}
+
+// HandleKeyEvent is called when a key is pressed on the current window.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (mp *MainPage) HandleKeyEvent(evt *key.Event) {
+	if mp.currentPage != nil {
+		if keyEvtHandler, ok := mp.currentPage.(load.KeyEventHandler); ok {
+			keyEvtHandler.HandleKeyEvent(evt)
+		}
 	}
 }
 
