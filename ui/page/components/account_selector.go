@@ -94,9 +94,9 @@ func (as *AccountSelector) Handle() {
 }
 
 // SelectFirstWalletValidAccount selects the first valid account from the
-// first wallet in the SortedWalletList, skipping any account whose number is in filterAccounts slice.
+// first wallet in the SortedWalletList
 // If selectedWallet is not nil, the first account for the selectWallet is selected.
-func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibwallet.Wallet, filterAccounts []int32) error {
+func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibwallet.Wallet) error {
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
 		as.UpdateSelectedAccountBalance()
 		// no need to select account
@@ -111,25 +111,10 @@ func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibw
 
 		accounts := accountsResult.Acc
 		for _, account := range accounts {
-			if len(filterAccounts) > 0 {
-				accFound := false
-				for _, v := range filterAccounts {
-					if account.Number == v {
-						accFound = true
-					}
-				}
-
-				if as.accountIsValid(account) && !accFound {
-					as.SetSelectedAccount(account)
-					as.callback(account)
-					return nil
-				}
-			} else {
-				if as.accountIsValid(account) {
-					as.SetSelectedAccount(account)
-					as.callback(account)
-					return nil
-				}
+			if as.accountIsValid(account) {
+				as.SetSelectedAccount(account)
+				as.callback(account)
+				return nil
 			}
 		}
 	}
@@ -142,25 +127,10 @@ func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibw
 
 		accounts := accountsResult.Acc
 		for _, account := range accounts {
-			if len(filterAccounts) > 0 {
-				accFound := false
-				for _, v := range filterAccounts {
-					if account.Number == v {
-						accFound = true
-					}
-				}
-
-				if as.accountIsValid(account) && !accFound {
-					as.SetSelectedAccount(account)
-					as.callback(account)
-					return nil
-				}
-			} else {
-				if as.accountIsValid(account) {
-					as.SetSelectedAccount(account)
-					as.callback(account)
-					return nil
-				}
+			if as.accountIsValid(account) {
+				as.SetSelectedAccount(account)
+				as.callback(account)
+				return nil
 			}
 		}
 	}
