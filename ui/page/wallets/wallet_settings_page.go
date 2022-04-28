@@ -176,7 +176,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	for pg.changePass.Clicked() {
 		modal.NewPasswordModal(pg.Load).
 			Title(values.String(values.StrChangeSpendingPass)).
-			Hint("Current spending password").
+			Hint(values.String(values.StrCurrentSpendingPassword)).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 				go func() {
@@ -193,8 +193,8 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 					modal.NewCreatePasswordModal(pg.Load).
 						Title(values.String(values.StrChangeSpendingPass)).
 						EnableName(false).
-						PasswordHint("New spending password").
-						ConfirmPasswordHint("Confirm new spending password").
+						PasswordHint(values.String(values.StrNewSpendingPassword)).
+						ConfirmPasswordHint(values.String(values.StrConfirmNewSpendingPassword)).
 						PasswordCreated(func(walletName, newPassword string, m *modal.CreatePasswordModal) bool {
 							go func() {
 								err := pg.WL.MultiWallet.ChangePrivatePassphraseForWallet(pg.wallet.ID, []byte(password),
@@ -204,7 +204,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify("Spending password updated")
+								pg.Toast.Notify(values.String(values.StrSpendingPasswordUpdated))
 								m.Dismiss()
 							}()
 							return false
@@ -221,8 +221,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 		go func() {
 			info := modal.NewInfoModal(pg.Load).
 				Title(values.String(values.StrRescanBlockchain)).
-				Body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
-					" blockchain for transactions").
+				Body(values.String(values.StrRescanInfo)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(values.String(values.StrRescan), func(isChecked bool) {
 					err := pg.WL.MultiWallet.RescanBlocks(pg.wallet.ID)
@@ -244,9 +243,9 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	}
 
 	for pg.deleteWallet.Clicked() {
-		warningMsg := "Make sure to have the seed word backed up before removing the wallet"
+		warningMsg := values.String(values.StrWalletRemoveInfo)
 		if pg.wallet.IsWatchingOnlyWallet() {
-			warningMsg = "The watch-only wallet will be removed from your app"
+			warningMsg = values.String(values.StrWatchOnlyWalletRemoveInfo)
 		}
 		modal.NewInfoModal(pg.Load).
 			Title(values.String(values.StrRemoveWallet)).
@@ -256,7 +255,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 			PositiveButton(values.String(values.StrRemove), func(isChecked bool) {
 				walletDeleted := func() {
 					if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
-						pg.Toast.Notify("Wallet removed")
+						pg.Toast.Notify(values.String(values.StrWalletRemoved))
 						pg.PopFragment()
 					} else {
 						pg.Load.ReloadApp()
@@ -297,9 +296,9 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).
-			Title("Spending password").
-			Body("A spending password helps secure your wallet transactions.").
-			PositiveButton("Got it", func(isChecked bool) {})
+			Title(values.String(values.StrSpendingPassword)).
+			Body(values.String(values.StrSpendingPasswordInfo)).
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 }
