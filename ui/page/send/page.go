@@ -42,7 +42,6 @@ type Page struct {
 	sourceAccountSelector *components.AccountSelector
 	sendDestination       *destination
 	amount                *sendAmount
-	keyEvent              chan *key.Event
 
 	backButton    decredmaterial.IconButton
 	infoButton    decredmaterial.IconButton
@@ -94,7 +93,6 @@ func NewSendPage(l *load.Load) *Page {
 		authoredTxData: &authoredTxData{},
 		shadowBox:      l.Theme.Shadow(),
 		backdrop:       new(widget.Clickable),
-		keyEvent:       make(chan *key.Event),
 	}
 
 	// Source account picker
@@ -174,7 +172,6 @@ func (pg *Page) OnNavigatedTo() {
 	} else {
 		pg.usdExchangeSet = false
 	}
-	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 }
 
 // OnDarkModeChanged is triggered whenever the dark mode setting is changed
@@ -386,7 +383,6 @@ func (pg *Page) HandleUserInteractions() {
 				pg.clearEstimates()
 			}
 
-			pg.Load.UnsubscribeKeyEvent(pg.ID())
 			pg.confirmTxModal.Show()
 		}
 	}
@@ -410,7 +406,6 @@ func (pg *Page) HandleUserInteractions() {
 			if !pg.amount.dcrAmountEditor.Editor.Focused() && !modalShown {
 				pg.amount.dcrAmountEditor.Editor.Focus()
 			}
-			decredmaterial.SwitchEditors(pg.keyEvent, pg.amount.dcrAmountEditor.Editor)
 		default:
 			if pg.sendDestination.accountSwitch.Changed() {
 				if !pg.sendDestination.validate() {
@@ -420,8 +415,6 @@ func (pg *Page) HandleUserInteractions() {
 				}
 
 			}
-
-			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
 		}
 	} else {
 		switch {
@@ -430,7 +423,6 @@ func (pg *Page) HandleUserInteractions() {
 				pg.amount.dcrAmountEditor.Editor.Focus()
 			}
 		case !pg.sendDestination.sendToAddress && (pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()):
-			decredmaterial.SwitchEditors(pg.keyEvent, pg.amount.usdAmountEditor.Editor, pg.amount.dcrAmountEditor.Editor)
 		default:
 			if pg.sendDestination.accountSwitch.Changed() {
 				if !pg.sendDestination.validate() {
@@ -439,7 +431,6 @@ func (pg *Page) HandleUserInteractions() {
 					pg.amount.dcrAmountEditor.Editor.Focus()
 				}
 			}
-			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
 		}
 	}
 
@@ -482,6 +473,32 @@ func (pg *Page) HandleUserInteractions() {
 	}
 }
 
+// HandleKeyEvent is called when a key is pressed on the current window.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (pg *Page) HandleKeyEvent(evt *key.Event) {
+	if pg.confirmTxModal != nil && pg.confirmTxModal.IsShown() {
+		return
+	}
+
+	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	if currencyValue != values.USDExchangeValue {
+		switch {
+		case !pg.sendDestination.sendToAddress:
+			decredmaterial.SwitchEditors(evt, pg.amount.dcrAmountEditor.Editor)
+		default:
+			decredmaterial.SwitchEditors(evt, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+		}
+	} else {
+		switch {
+		case !pg.sendDestination.sendToAddress && !(pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()):
+		case !pg.sendDestination.sendToAddress && (pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()):
+			decredmaterial.SwitchEditors(evt, pg.amount.usdAmountEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+		default:
+			decredmaterial.SwitchEditors(evt, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
+		}
+	}
+}
+
 // OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable
 // features that are irrelevant when the page is NOT displayed.
@@ -490,6 +507,5 @@ func (pg *Page) HandleUserInteractions() {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedFrom() {
-	pg.Load.UnsubscribeKeyEvent(pg.ID())
 	pg.ctxCancel()
 }

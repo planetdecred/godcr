@@ -26,7 +26,6 @@ type CreatePasswordModal struct {
 	passwordEditor        decredmaterial.Editor
 	confirmPasswordEditor decredmaterial.Editor
 	passwordStrength      decredmaterial.ProgressBarStyle
-	keyEvent              chan *key.Event
 
 	isLoading          bool
 	isCancelable       bool
@@ -58,7 +57,6 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		btnPositve:       l.Theme.Button("Confirm"),
 		btnNegative:      l.Theme.OutlineButton("Cancel"),
 		isCancelable:     true,
-		keyEvent:         make(chan *key.Event),
 	}
 
 	cm.btnPositve.Font.Weight = text.Medium
@@ -77,8 +75,6 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 
 	cm.materialLoader = material.Loader(l.Theme.Base)
 
-	l.SubscribeKeyEvent(cm.keyEvent, cm.randomID)
-
 	return cm
 }
 
@@ -94,9 +90,7 @@ func (cm *CreatePasswordModal) OnResume() {
 	}
 }
 
-func (cm *CreatePasswordModal) OnDismiss() {
-	cm.Load.UnsubscribeKeyEvent(cm.randomID)
-}
+func (cm *CreatePasswordModal) OnDismiss() {}
 
 func (cm *CreatePasswordModal) Show() {
 	cm.ShowModal(cm)
@@ -235,10 +229,15 @@ func (cm *CreatePasswordModal) Handle() {
 	}
 
 	computePasswordStrength(&cm.passwordStrength, cm.Theme, cm.passwordEditor.Editor)
+}
+
+// HandleKeyEvent is called when a key is pressed on the current window.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (cm *CreatePasswordModal) HandleKeyEvent(evt *key.Event) {
 	if cm.walletNameEnabled {
-		decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+		decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 	} else {
-		decredmaterial.SwitchEditors(cm.keyEvent, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+		decredmaterial.SwitchEditors(evt, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 	}
 }
 

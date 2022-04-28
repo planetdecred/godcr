@@ -27,7 +27,6 @@ type CreateWatchOnlyModal struct {
 
 	btnPositve  decredmaterial.Button
 	btnNegative decredmaterial.Button
-	keyEvent    chan *key.Event
 
 	randomID string
 
@@ -46,7 +45,6 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 		btnPositve:   l.Theme.Button(values.String(values.StrImport)),
 		btnNegative:  l.Theme.OutlineButton(values.String(values.StrCancel)),
 		isCancelable: true,
-		keyEvent:     make(chan *key.Event),
 	}
 
 	cm.btnPositve.Font.Weight = text.Medium
@@ -71,12 +69,9 @@ func (cm *CreateWatchOnlyModal) ModalID() string {
 
 func (cm *CreateWatchOnlyModal) OnResume() {
 	cm.walletName.Editor.Focus()
-	cm.Load.SubscribeKeyEvent(cm.keyEvent, cm.randomID)
 }
 
-func (cm *CreateWatchOnlyModal) OnDismiss() {
-	cm.Load.UnsubscribeKeyEvent(cm.randomID)
-}
+func (cm *CreateWatchOnlyModal) OnDismiss() {}
 
 func (cm *CreateWatchOnlyModal) Show() {
 	cm.ShowModal(cm)
@@ -165,7 +160,12 @@ func (cm *CreateWatchOnlyModal) Handle() {
 			cm.Dismiss()
 		}
 	}
-	decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.extendedPubKey.Editor)
+}
+
+// HandleKeyEvent is called when a key is pressed on the current window.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (cm *CreateWatchOnlyModal) HandleKeyEvent(evt *key.Event) {
+	decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.extendedPubKey.Editor)
 }
 
 func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {

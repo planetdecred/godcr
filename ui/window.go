@@ -42,7 +42,6 @@ type Window struct {
 	selectedAccount int
 	txAuthor        dcrlibwallet.TxAuthor
 
-	keyEvents             map[string]chan *key.Event
 	walletAcctMixerStatus chan *wallet.AccountMixer
 }
 
@@ -72,7 +71,6 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 		wallet:                wal,
 		walletUnspentOutputs:  new(wallet.UnspentOutputs),
 		walletAcctMixerStatus: make(chan *wallet.AccountMixer),
-		keyEvents:             make(map[string]chan *key.Event),
 	}
 
 	l, err := win.NewLoad()
@@ -100,10 +98,6 @@ func (win *Window) NewLoad() (*load.Load, error) {
 			TxAuthor:       win.txAuthor,
 		},
 
-		Receiver: &load.Receiver{
-			KeyEvents: win.keyEvents,
-		},
-
 		Toast: notification.NewToast(th),
 
 		Printer: message.NewPrinter(language.English),
@@ -114,8 +108,6 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	l.DismissModal = win.dismissModal
 	l.PopWindowPage = win.popPage
 	l.ChangeWindowPage = win.changePage
-	l.SubscribeKeyEvent = win.SubscribeKeyEvent
-	l.UnsubscribeKeyEvent = win.UnsubscribeKeyEvent
 
 	// ReloadApp closes the current page active on the
 	// app window. When the next FrameEvent is received,
@@ -155,21 +147,6 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	return l, nil
 }
 
-// SubscribeKeyEvent subscribes pages for key events.
-func (win *Window) SubscribeKeyEvent(eventChan chan *key.Event, pageID string) {
-	win.keyEvents[pageID] = eventChan
-}
-
-// UnsubscribeKeyEvent unsubscribe a page with {pageID} from receiving key events.
-func (win *Window) UnsubscribeKeyEvent(pageID string) error {
-	if _, ok := win.keyEvents[pageID]; ok {
-		delete(win.keyEvents, pageID)
-		return nil
-	}
-
-	return errors.New("Page not subscribed for key events")
-}
-
 // HandleEvents runs main event handling and page rendering loop.
 func (win *Window) HandleEvents() {
 	for {
@@ -187,14 +164,10 @@ func (win *Window) HandleEvents() {
 			win.displayWindow(evt)
 
 		case key.Event:
-			go func() {
-				for _, c := range win.keyEvents {
-					c <- &evt
-				}
-			}()
+			win.handleKeyEvent(&evt)
 
 		default:
-			log.Tracef("Unhandled window event %+v\n", e)
+			log.Tracef("Unhandled window event %v\n", e)
 		}
 	}
 }
@@ -265,6 +238,17 @@ func (win *Window) drawWindowUI(gtx C) {
 		modals,
 		layout.Stacked(win.load.Toast.Layout),
 	)
+}
+
+func (win *Window) handleKeyEvent(evt *key.Event) {
+	if handler, ok := win.currentPage.(load.KeyEventHandler); ok {
+		handler.HandleKeyEvent(evt)
+	}
+	for _, modal := range win.modals {
+		if handler, ok := modal.(load.KeyEventHandler); ok {
+			handler.HandleKeyEvent(evt)
+		}
+	}
 }
 
 // changePage displays the provided page on the window and optionally adds
