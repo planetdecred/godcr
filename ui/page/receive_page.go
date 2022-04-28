@@ -145,9 +145,8 @@ func (pg *ReceivePage) OnNavigatedTo() {
 		pg.Toast.NotifyError(fmt.Sprintf("Error getting current address: %v", err))
 	} else {
 		pg.currentAddress = currentAddress
+		pg.generateQRForAddress()
 	}
-
-	pg.generateQRForAddress()
 }
 
 func (pg *ReceivePage) generateQRForAddress() {
