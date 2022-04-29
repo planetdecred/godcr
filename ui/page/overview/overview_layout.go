@@ -12,6 +12,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -42,7 +43,10 @@ type walletSyncDetails struct {
 }
 
 type AppOverviewPage struct {
-	*load.Load
+	*app.App
+	changeFragment func(app.Page)
+	toggleSync     func()
+
 	*listeners.SyncProgressListener
 	*listeners.TxAndBlockNotificationListener
 	*listeners.ProposalNotificationListener
@@ -92,20 +96,23 @@ type AppOverviewPage struct {
 	syncStep             int
 }
 
-func NewOverviewPage(l *load.Load) *AppOverviewPage {
+func NewOverviewPage(app *app.App, changeFragment func(app.Page), toggleSync func()) *AppOverviewPage {
 	pg := &AppOverviewPage{
-		Load:       l,
-		allWallets: l.WL.SortedWalletList(),
+		App:            app,
+		changeFragment: changeFragment,
+		toggleSync:     toggleSync,
+
+		allWallets: app.Wallets(),
 
 		listContainer: &layout.List{Axis: layout.Vertical},
 		listMixer:     &layout.List{Axis: layout.Vertical},
 		scrollContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		checkBox: l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
+		checkBox: app.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
 	}
 
-	pg.toMixer = l.Theme.IconButton(l.Theme.Icons.NavigationArrowForward)
+	pg.toMixer = app.Theme.IconButton(app.Theme.Icons.NavigationArrowForward)
 	pg.toMixer.Size = values.MarginPadding24
 	pg.toMixer.Inset = layout.UniformInset(values.MarginPadding4)
 
@@ -147,7 +154,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 				return D{}
 			}
 
-			return components.MixerInfoLayout(gtx, pg.Load, true, pg.toMixer.Layout, func(gtx C) D {
+			return components.MixerInfoLayout(gtx, pg.Theme, true, pg.toMixer.Layout, func(gtx C) D {
 				return pg.listMixer.Layout(gtx, len(pg.mixerWallets), func(gtx C, i int) D {
 					return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 						accounts, _ := pg.mixerWallets[i].GetAccountsRaw()
@@ -158,7 +165,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 							}
 						}
 
-						return components.MixerInfoContentWrapper(gtx, pg.Load, func(gtx C) D {
+						return components.MixerInfoContentWrapper(gtx, pg.Theme, func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									txt := pg.Theme.Label(values.TextSize14, pg.mixerWallets[i].Name)
@@ -174,7 +181,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 											return t.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return components.LayoutBalanceSize(gtx, pg.Load, unmixedBalance, values.TextSize20)
+											return components.LayoutBalanceSize(gtx, pg.Theme, unmixedBalance, values.TextSize20)
 										}),
 									)
 								}),
@@ -190,7 +197,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 			return pg.recentTransactionsSection(gtx)
 		},
 		func(gtx C) D {
-			if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) && len(pg.proposalItems) != 0 {
+			if pg.MultiWallet().ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) && len(pg.proposalItems) != 0 {
 				return pg.recentProposalsSection(gtx)
 			}
 			return D{}
@@ -200,7 +207,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	if pg.WL.MultiWallet.IsSyncing() || pg.WL.MultiWallet.IsRescanning() || pg.WL.MultiWallet.Politeia.IsSyncing() {
+	if pg.MultiWallet().IsSyncing() || pg.MultiWallet().IsRescanning() || pg.MultiWallet().Politeia.IsSyncing() {
 		// Will refresh the overview page every 2 seconds while
 		// sync is active. When sync/rescan is started or ended,
 		// sync is considered inactive and no refresh occurs. A
@@ -225,18 +232,18 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *AppOverviewPage) showBackupInfo() {
-	modal.NewInfoModal(pg.Load).
+	modal.NewInfoModal(pg.App).
 		SetupWithTemplate(modal.WalletBackupInfoTemplate).
 		SetCancelable(false).
 		SetContentAlignment(layout.W, layout.Center).
 		CheckBox(pg.checkBox, true).
 		NegativeButton("Backup later", func() {
-			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
+			pg.MultiWallet().SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
 		}).
-		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+		PositiveButtonStyle(pg.Theme.Color.Primary, pg.Theme.Color.InvText).
 		PositiveButton("Backup now", func(isChecked bool) {
-			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
-			pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
+			pg.MultiWallet().SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
+			pg.changeFragment(wPage.NewWalletPage(pg.App, pg.changeFragment))
 		}).Show()
 }
 
@@ -246,35 +253,35 @@ func (pg *AppOverviewPage) showBackupInfo() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *AppOverviewPage) HandleUserInteractions() {
-	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey)
-	needBackup := pg.WL.MultiWallet.NumWalletsNeedingSeedBackup() > 0
+	backupLater := pg.MultiWallet().ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+	needBackup := pg.MultiWallet().NumWalletsNeedingSeedBackup() > 0
 	if needBackup && !backupLater && !pg.isBackupModalOpened {
 		pg.showBackupInfo()
 		pg.isBackupModalOpened = true
 	}
 
-	autoSync := pg.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey)
+	autoSync := pg.MultiWallet().ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false)
 	pg.autoSyncSwitch.SetChecked(autoSync)
 
 	if pg.toMixer.Button.Clicked() {
 		if len(pg.mixerWallets) == 1 {
-			pg.ChangeFragment(privacy.NewAccountMixerPage(pg.Load, pg.mixerWallets[0]))
+			pg.changeFragment(privacy.NewAccountMixerPage(nil, pg.mixerWallets[0]))
 		}
-		pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
+		pg.changeFragment(wPage.NewWalletPage(pg.App, pg.changeFragment))
 	}
 
 	if pg.syncClickable.Clicked() {
-		if pg.WL.MultiWallet.IsRescanning() {
-			pg.WL.MultiWallet.CancelRescan()
+		if pg.MultiWallet().IsRescanning() {
+			pg.MultiWallet().CancelRescan()
 		} else {
 			// If connected to the Decred network disable button. Prevents multiple clicks.
-			if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+			if pg.MultiWallet().IsConnectedToDecredNetwork() {
 				pg.syncClickable.SetEnabled(false, nil)
 			}
 
 			// On exit update button state.
 			go func() {
-				pg.ToggleSync()
+				pg.toggleSync()
 				if !pg.syncClickable.Enabled() {
 					pg.syncClickable.SetEnabled(true, nil)
 				}
@@ -283,11 +290,11 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 	}
 
 	if pg.toTransactions.Button.Clicked() {
-		pg.ChangeFragment(tPage.NewTransactionsPage(pg.Load))
+		pg.changeFragment(tPage.NewTransactionsPage(pg.App, pg.changeFragment))
 	}
 
 	if clicked, selectedItem := pg.transactionsList.ItemClicked(); clicked {
-		pg.ChangeFragment(tPage.NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
+		pg.changeFragment(tPage.NewTransactionDetailsPage(pg.App, &pg.transactions[selectedItem]))
 	}
 
 	if pg.toggleSyncDetails.Clicked() {
@@ -300,7 +307,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 	}
 
 	for pg.toProposals.Button.Clicked() {
-		pg.ChangeFragment(gPage.NewProposalsPage(pg.Load))
+		pg.changeFragment(gPage.NewProposalsPage(nil))
 	}
 
 	if clicked, selectedItem := pg.proposalsList.ItemClicked(); clicked {
@@ -308,13 +315,12 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 		selectedProposal := pg.proposalItems[selectedItem].Proposal
 		pg.proposalMu.Unlock()
 
-		pg.ChangeFragment(gPage.NewProposalDetailsPage(pg.Load, &selectedProposal))
+		pg.changeFragment(gPage.NewProposalDetailsPage(nil, &selectedProposal))
 	}
 
 	if pg.autoSyncSwitch.Changed() {
-		pg.WL.Wallet.SaveConfigValueForKey(load.AutoSyncConfigKey, pg.autoSyncSwitch.IsChecked())
+		pg.MultiWallet().SaveUserConfigValue(load.AutoSyncConfigKey, pg.autoSyncSwitch.IsChecked())
 	}
-
 }
 
 // listenForNotifications starts a goroutine to watch for sync updates
@@ -337,28 +343,28 @@ func (pg *AppOverviewPage) listenForNotifications() {
 	}
 
 	pg.SyncProgressListener = listeners.NewSyncProgress()
-	err := pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
+	err := pg.MultiWallet().AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
 	if err != nil {
 		log.Errorf("Error adding sync progress listener: %v", err)
 		return
 	}
 
 	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	err = pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, OverviewPageID)
+	err = pg.MultiWallet().AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, OverviewPageID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
 	}
 
 	pg.ProposalNotificationListener = listeners.NewProposalNotificationListener()
-	err = pg.WL.MultiWallet.Politeia.AddNotificationListener(pg.ProposalNotificationListener, OverviewPageID)
+	err = pg.MultiWallet().Politeia.AddNotificationListener(pg.ProposalNotificationListener, OverviewPageID)
 	if err != nil {
 		log.Errorf("Error adding politeia notification listener: %v", err)
 		return
 	}
 
 	pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
-	pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
+	pg.MultiWallet().SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
 
 	go func() {
 		for {
@@ -415,10 +421,10 @@ func (pg *AppOverviewPage) listenForNotifications() {
 					pg.RefreshWindow()
 				}
 			case <-pg.ctx.Done():
-				pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
-				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
-				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(OverviewPageID)
-				pg.WL.MultiWallet.SetBlocksRescanProgressListener(nil)
+				pg.MultiWallet().RemoveSyncProgressListener(OverviewPageID)
+				pg.MultiWallet().RemoveTxAndBlockNotificationListener(OverviewPageID)
+				pg.MultiWallet().Politeia.RemoveNotificationListener(OverviewPageID)
+				pg.MultiWallet().SetBlocksRescanProgressListener(nil)
 
 				close(pg.SyncStatusChan)
 				close(pg.TxAndBlockNotifChan)

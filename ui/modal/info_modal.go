@@ -7,15 +7,16 @@ import (
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 const Info = "info_modal"
 
 type InfoModal struct {
-	*load.Load
+	*app.App
+
 	randomID        string
 	modal           decredmaterial.Modal
 	enterKeyPressed bool
@@ -43,13 +44,18 @@ type InfoModal struct {
 	isCancelable bool
 }
 
-func NewInfoModal(l *load.Load) *InfoModal {
+// func NewInfoModal(app *app.App) *InfoModal {
+func NewInfoModal(dt interface{}) *InfoModal {
+	app, ok := dt.(*app.App)
+	if !ok {
+		panic("want app")
+	}
 	in := &InfoModal{
-		Load:         l,
+		App:          app,
 		randomID:     fmt.Sprintf("%s-%d", Info, decredmaterial.GenerateRandomNumber()),
-		modal:        *l.Theme.ModalFloatTitle(),
-		btnPositve:   l.Theme.OutlineButton("Yes"),
-		btnNegative:  l.Theme.OutlineButton("No"),
+		modal:        *app.Theme.ModalFloatTitle(),
+		btnPositve:   app.Theme.OutlineButton("Yes"),
+		btnNegative:  app.Theme.OutlineButton("No"),
 		isCancelable: true,
 		btnAlignment: layout.E,
 	}
@@ -140,13 +146,13 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 		customTemplate = verifyMessageInfo(in.Theme)
 	case PrivacyInfoTemplate:
 		title = "How to use the mixer?"
-		customTemplate = privacyInfo(in.Load)
+		customTemplate = privacyInfo(in.Theme)
 	case SetupMixerInfoTemplate:
 		customTemplate = setupMixerInfo(in.Theme)
 	case WalletBackupInfoTemplate:
 		customTemplate = backupInfo(in.Theme)
 	case TicketPriceErrorTemplate:
-		customTemplate = ticketPriceErrorInfo(in.Load)
+		customTemplate = ticketPriceErrorInfo(in.MultiWallet(), in.Theme)
 	}
 
 	in.dialogTitle = title

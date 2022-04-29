@@ -16,7 +16,7 @@ import (
 const invalidAmountErr = "Invalid amount" //TODO: use localized strings
 
 type sendAmount struct {
-	*load.Load
+	theme *decredmaterial.Theme
 
 	dcrAmountEditor decredmaterial.Editor
 	usdAmountEditor decredmaterial.Editor
@@ -31,14 +31,14 @@ type sendAmount struct {
 	exchangeRate float64
 }
 
-func newSendAmount(l *load.Load) *sendAmount {
+func newSendAmount(theme *decredmaterial.Theme) *sendAmount {
 
 	sa := &sendAmount{
-		Load:         l,
+		theme:        theme,
 		exchangeRate: -1,
 	}
 
-	sa.dcrAmountEditor = l.Theme.Editor(new(widget.Editor), "Amount (DCR)")
+	sa.dcrAmountEditor = theme.Editor(new(widget.Editor), "Amount (DCR)")
 	sa.dcrAmountEditor.Editor.SetText("")
 	sa.dcrAmountEditor.HasCustomButton = true
 	sa.dcrAmountEditor.Editor.SingleLine = true
@@ -47,7 +47,7 @@ func newSendAmount(l *load.Load) *sendAmount {
 	sa.dcrAmountEditor.CustomButton.Text = "Max"
 	sa.dcrAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
-	sa.usdAmountEditor = l.Theme.Editor(new(widget.Editor), "Amount (USD)")
+	sa.usdAmountEditor = theme.Editor(new(widget.Editor), "Amount (USD)")
 	sa.usdAmountEditor.Editor.SetText("")
 	sa.usdAmountEditor.HasCustomButton = true
 	sa.usdAmountEditor.Editor.SingleLine = true
@@ -63,13 +63,13 @@ func newSendAmount(l *load.Load) *sendAmount {
 
 // styleWidgets sets the appropriate colors for the amount widgets.
 func (sa *sendAmount) styleWidgets() {
-	sa.dcrAmountEditor.CustomButton.Background = sa.Theme.Color.Gray1
-	sa.dcrAmountEditor.CustomButton.Color = sa.Theme.Color.Surface
-	sa.dcrAmountEditor.EditorStyle.Color = sa.Theme.Color.Text
+	sa.dcrAmountEditor.CustomButton.Background = sa.theme.Color.Gray1
+	sa.dcrAmountEditor.CustomButton.Color = sa.theme.Color.Surface
+	sa.dcrAmountEditor.EditorStyle.Color = sa.theme.Color.Text
 
-	sa.usdAmountEditor.CustomButton.Background = sa.Theme.Color.Gray1
-	sa.usdAmountEditor.CustomButton.Color = sa.Theme.Color.Surface
-	sa.usdAmountEditor.EditorStyle.Color = sa.Theme.Color.Text
+	sa.usdAmountEditor.CustomButton.Background = sa.theme.Color.Gray1
+	sa.usdAmountEditor.CustomButton.Color = sa.theme.Color.Surface
+	sa.usdAmountEditor.EditorStyle.Color = sa.theme.Color.Text
 }
 
 func (sa *sendAmount) setExchangeRate(exchangeRate float64) {
@@ -189,19 +189,19 @@ func (sa *sendAmount) handle() {
 	sa.dcrAmountEditor.SetError(sa.amountErrorText)
 
 	if sa.amountErrorText != "" {
-		sa.dcrAmountEditor.LineColor = sa.Theme.Color.Danger
-		sa.usdAmountEditor.LineColor = sa.Theme.Color.Danger
+		sa.dcrAmountEditor.LineColor = sa.theme.Color.Danger
+		sa.usdAmountEditor.LineColor = sa.theme.Color.Danger
 	} else {
-		sa.dcrAmountEditor.LineColor = sa.Theme.Color.Gray2
-		sa.usdAmountEditor.LineColor = sa.Theme.Color.Gray2
+		sa.dcrAmountEditor.LineColor = sa.theme.Color.Gray2
+		sa.usdAmountEditor.LineColor = sa.theme.Color.Gray2
 	}
 
 	if sa.SendMax {
-		sa.dcrAmountEditor.CustomButton.Background = sa.Theme.Color.Primary
-		sa.usdAmountEditor.CustomButton.Background = sa.Theme.Color.Primary
+		sa.dcrAmountEditor.CustomButton.Background = sa.theme.Color.Primary
+		sa.usdAmountEditor.CustomButton.Background = sa.theme.Color.Primary
 	} else if len(sa.dcrAmountEditor.Editor.Text()) < 1 || !sa.SendMax {
-		sa.dcrAmountEditor.CustomButton.Background = sa.Theme.Color.Gray1
-		sa.usdAmountEditor.CustomButton.Background = sa.Theme.Color.Gray1
+		sa.dcrAmountEditor.CustomButton.Background = sa.theme.Color.Gray1
+		sa.usdAmountEditor.CustomButton.Background = sa.theme.Color.Gray1
 	}
 
 	for _, evt := range sa.dcrAmountEditor.Editor.Events() {

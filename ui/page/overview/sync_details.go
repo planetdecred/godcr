@@ -39,7 +39,7 @@ func (pg *AppOverviewPage) connectionPeer(gtx C) D {
 			return connectedPeersInfoLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			connectedPeers := pg.WL.MultiWallet.ConnectedPeers()
+			connectedPeers := pg.MultiWallet().ConnectedPeers()
 			return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, pg.Theme.Body1(fmt.Sprintf("%d", connectedPeers)).Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -53,11 +53,11 @@ func (pg *AppOverviewPage) connectionPeer(gtx C) D {
 // syncStatusTextRow lays out sync status text and sync button.
 func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
 	syncStatusLabel := pg.Theme.H6(values.String(values.StrWalletNotSynced))
-	if pg.WL.MultiWallet.IsSyncing() {
+	if pg.MultiWallet().IsSyncing() {
 		syncStatusLabel.Text = values.String(values.StrSyncingState)
-	} else if pg.WL.MultiWallet.IsRescanning() {
+	} else if pg.MultiWallet().IsRescanning() {
 		syncStatusLabel.Text = "Rescanning blocks"
-	} else if pg.WL.MultiWallet.IsSynced() {
+	} else if pg.MultiWallet().IsSynced() {
 		syncStatusLabel.Text = values.String(values.StrSynced)
 	}
 
@@ -81,7 +81,7 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
 					Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+						if pg.MultiWallet().IsConnectedToDecredNetwork() {
 							return D{}
 						}
 
@@ -91,9 +91,9 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						if pg.WL.MultiWallet.IsRescanning() {
+						if pg.MultiWallet().IsRescanning() {
 							pg.sync.Text = values.String(values.StrCancel)
-						} else if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+						} else if pg.MultiWallet().IsConnectedToDecredNetwork() {
 							pg.sync.Text = values.String(values.StrDisconnect)
 						} else {
 							pg.sync.Text = values.String(values.StrReconnect)
@@ -160,7 +160,7 @@ func (pg *AppOverviewPage) walletSyncRow(gtx C, inset layout.Inset) D {
 			layout.Rigid(func(gtx C) D {
 				connectedPeersTitleLabel := pg.Theme.Body2(values.String(values.StrConnectedPeersCount))
 				connectedPeersTitleLabel.Color = pg.Theme.Color.GrayText2
-				connectedPeers := pg.WL.MultiWallet.ConnectedPeers()
+				connectedPeers := pg.MultiWallet().ConnectedPeers()
 				connectedPeersLabel := pg.Theme.Body1(fmt.Sprintf("%d", connectedPeers))
 				return inset.Layout(gtx, func(gtx C) D {
 					return components.EndToEndRow(gtx, connectedPeersTitleLabel.Layout, connectedPeersLabel.Layout)
@@ -235,7 +235,7 @@ func (pg *AppOverviewPage) rescanDetailsLayout(gtx C, inset layout.Inset) D {
 	if rescanUpdate == nil {
 		return D{}
 	}
-	wal := pg.WL.MultiWallet.WalletWithID(rescanUpdate.WalletID)
+	wal := pg.MultiWallet().WalletWithID(rescanUpdate.WalletID)
 	return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		card := pg.Theme.Card()

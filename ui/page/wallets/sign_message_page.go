@@ -8,8 +8,8 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
@@ -18,7 +18,9 @@ import (
 const SignMessagePageID = "SignMessage"
 
 type SignMessagePage struct {
-	*load.Load
+	*app.App
+	PopFragment func() // TODO: Will crash.
+
 	container layout.List
 	wallet    *dcrlibwallet.Wallet
 
@@ -38,43 +40,43 @@ type SignMessagePage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessagePage {
-	addressEditor := l.Theme.Editor(new(widget.Editor), "Address")
+func NewSignMessagePage(app *app.App, wallet *dcrlibwallet.Wallet) *SignMessagePage {
+	addressEditor := app.Theme.Editor(new(widget.Editor), "Address")
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
-	messageEditor := l.Theme.Editor(new(widget.Editor), "Message")
+	messageEditor := app.Theme.Editor(new(widget.Editor), "Message")
 	messageEditor.Editor.SingleLine, messageEditor.Editor.Submit = true, true
 
-	clearButton := l.Theme.OutlineButton("Clear all")
-	signButton := l.Theme.Button("Sign message")
+	clearButton := app.Theme.OutlineButton("Clear all")
+	signButton := app.Theme.Button("Sign message")
 	clearButton.Font.Weight, signButton.Font.Weight = text.Medium, text.Medium
 	signButton.SetEnabled(false)
 	clearButton.SetEnabled(false)
 
-	errorLabel := l.Theme.Caption("")
-	errorLabel.Color = l.Theme.Color.Danger
-	copyIcon := l.Theme.Icons.CopyIcon
+	errorLabel := app.Theme.Caption("")
+	errorLabel.Color = app.Theme.Color.Danger
+	copyIcon := app.Theme.Icons.CopyIcon
 
 	pg := &SignMessagePage{
-		Load:   l,
+		App:    app,
 		wallet: wallet,
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
 
-		titleLabel:         l.Theme.H5("Sign Message"),
-		signedMessageLabel: l.Theme.Body1(""),
+		titleLabel:         app.Theme.H5("Sign Message"),
+		signedMessageLabel: app.Theme.Body1(""),
 		errorLabel:         errorLabel,
 		addressEditor:      addressEditor,
 		messageEditor:      messageEditor,
 		clearButton:        clearButton,
 		signButton:         signButton,
-		copyButton:         l.Theme.Button("Copy"),
-		copySignature:      l.Theme.NewClickable(false),
+		copyButton:         app.Theme.Button("Copy"),
+		copySignature:      app.Theme.NewClickable(false),
 		copyIcon:           copyIcon,
 	}
 
-	pg.signedMessageLabel.Color = l.Theme.Color.GrayText2
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.signedMessageLabel.Color = app.Theme.Color.GrayText2
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(app.Theme)
 
 	return pg
 }
@@ -98,10 +100,9 @@ func (pg *SignMessagePage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
-
 	body := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			App:        pg.App,
 			Title:      "Sign message",
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
@@ -263,7 +264,7 @@ func (pg *SignMessagePage) HandleUserInteractions() {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()
 
-			modal.NewPasswordModal(pg.Load).
+			modal.NewPasswordModal(pg.Theme, pg.App).
 				Title("Confirm to sign").
 				NegativeButton("Cancel", func() {}).
 				PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
@@ -286,7 +287,7 @@ func (pg *SignMessagePage) HandleUserInteractions() {
 }
 
 // HandleKeyEvent is called when a key is pressed on the current window.
-// Satisfies the load.KeyEventHandler interface for receiving key events.
+// Satisfies the app.KeyEventHandler interface for receiving key events.
 func (pg *SignMessagePage) HandleKeyEvent(evt *key.Event) {
 	// Switch editors when tab key is pressed.
 	decredmaterial.SwitchEditors(evt, pg.addressEditor.Editor, pg.messageEditor.Editor)
@@ -309,7 +310,7 @@ func (pg *SignMessagePage) validateAddress() bool {
 	switch {
 	case !components.StringNotEmpty(address):
 		errorMessage = "Please enter a valid address"
-	case !pg.WL.MultiWallet.IsAddressValid(address):
+	case !pg.MultiWallet().IsAddressValid(address):
 		errorMessage = "Invalid address"
 	case !pg.wallet.HaveAddress(address):
 		errorMessage = "Address not owned by any wallet"

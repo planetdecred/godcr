@@ -163,7 +163,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 }
 
 // HandleKeyEvent is called when a key is pressed on the current window.
-// Satisfies the load.KeyEventHandler interface for receiving key events.
+// Satisfies the app.KeyEventHandler interface for receiving key events.
 func (cm *CreateWatchOnlyModal) HandleKeyEvent(evt *key.Event) {
 	decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.extendedPubKey.Editor)
 }

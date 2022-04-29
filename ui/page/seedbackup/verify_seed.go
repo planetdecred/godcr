@@ -10,8 +10,8 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
@@ -26,7 +26,9 @@ type shuffledSeedWords struct {
 }
 
 type VerifySeedPage struct {
-	*load.Load
+	*app.App
+	changeFragment func(app.Page)
+
 	wallet        *dcrlibwallet.Wallet
 	seed          string
 	multiSeedList []shuffledSeedWords
@@ -37,13 +39,14 @@ type VerifySeedPage struct {
 	list         *widget.List
 }
 
-func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *VerifySeedPage {
+func NewVerifySeedPage(app *app.App, wallet *dcrlibwallet.Wallet, seed string, changeFragment func(app.Page)) *VerifySeedPage {
 	pg := &VerifySeedPage{
-		Load:   l,
-		wallet: wallet,
-		seed:   seed,
+		App:            app,
+		changeFragment: changeFragment,
+		wallet:         wallet,
+		seed:           seed,
 
-		actionButton: l.Theme.Button("Verify"),
+		actionButton: app.Theme.Button("Verify"),
 		seedList:     &layout.List{Axis: layout.Vertical},
 	}
 	pg.list = &widget.List{
@@ -54,8 +57,8 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 
 	pg.actionButton.Font.Weight = text.Medium
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
-	pg.backButton.Icon = l.Theme.Icons.ContentClear
+	pg.backButton, _ = components.SubpageHeaderButtons(app.Theme)
+	pg.backButton.Icon = app.Theme.Icons.ContentClear
 
 	return pg
 }
@@ -153,12 +156,12 @@ func (pg *VerifySeedPage) selectedSeedPhrase() string {
 }
 
 func (pg *VerifySeedPage) verifySeed() {
-	modal.NewPasswordModal(pg.Load).
+	modal.NewPasswordModal(pg.Theme, pg.App).
 		Title("Confirm to verify seed").
 		PositiveButton("Confirm", func(password string, m *modal.PasswordModal) bool {
 			go func() {
 				seed := pg.selectedSeedPhrase()
-				_, err := pg.WL.MultiWallet.VerifySeedForWallet(pg.wallet.ID, seed, []byte(password))
+				_, err := pg.MultiWallet().VerifySeedForWallet(pg.wallet.ID, seed, []byte(password))
 				if err != nil {
 					if err.Error() == dcrlibwallet.ErrInvalid {
 						pg.Toast.NotifyError("Failed to verify. Please go through every word and try again.")
@@ -172,7 +175,7 @@ func (pg *VerifySeedPage) verifySeed() {
 				}
 				m.Dismiss()
 
-				pg.ChangeFragment(NewBackupSuccessPage(pg.Load))
+				pg.changeFragment(NewBackupSuccessPage(pg.Theme))
 			}()
 
 			return false
@@ -215,13 +218,13 @@ func (pg *VerifySeedPage) OnNavigatedFrom() {}
 // Part of the load.Page interface.
 func (pg *VerifySeedPage) Layout(gtx C) D {
 	sp := components.SubPage{
-		Load:       pg.Load,
+		App:        pg.App,
 		Title:      "Verify seed word",
 		SubTitle:   "Step 2/2",
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			promptToExit(pg.Load)
+			promptToExit(pg.App)
 		},
 		Body: func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

@@ -57,11 +57,11 @@ func newListPage(l *load.Load) *ListPage {
 			List: layout.List{Axis: layout.Vertical},
 		},
 	}
-	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
+	pg.backButton, _ = components.SubpageHeaderButtons(pg.Theme)
 
 	pg.orderDropDown = createOrderDropDown(l.Theme)
 	pg.wallets = pg.WL.SortedWalletList()
-	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.StakingDropdownGroup, 0) // first in the set during layout pos 0
+	components.CreateOrUpdateWalletDropDown(pg.Theme, &pg.walletDropDown, pg.wallets, values.StakingDropdownGroup, 0) // first in the set during layout pos 0
 	pg.ticketTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
@@ -180,7 +180,7 @@ func (pg *ListPage) fetchTickets() {
 func (pg *ListPage) Layout(gtx C) D {
 	body := func(gtx C) D {
 		page := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "All tickets",
 			BackButton: pg.backButton,
 			Back: func() {
@@ -256,7 +256,7 @@ func (pg *ListPage) HandleUserInteractions() {
 
 	if clicked, selectedItem := pg.ticketsList.ItemClicked(); clicked {
 		ticketTx := pg.tickets[selectedItem].transaction
-		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, ticketTx))
+		pg.ChangeFragment(tpage.NewTransactionDetailsPage(nil, ticketTx))
 
 		// Check if this ticket is fully registered with a VSP
 		// and log any discrepancies.

@@ -8,15 +8,17 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 const Password = "password_modal"
 
 type PasswordModal struct {
-	*load.Load
+	*decredmaterial.Theme
+	app.Navigator
+
 	randomID string
 	modal    decredmaterial.Modal
 	password decredmaterial.Editor
@@ -40,13 +42,14 @@ type PasswordModal struct {
 	btnNegative           decredmaterial.Button
 }
 
-func NewPasswordModal(l *load.Load) *PasswordModal {
+func NewPasswordModal(theme *decredmaterial.Theme, navigator app.Navigator) *PasswordModal {
 	pm := &PasswordModal{
-		Load:         l,
+		Theme:        theme,
+		Navigator:    navigator,
 		randomID:     fmt.Sprintf("%s-%d", Password, decredmaterial.GenerateRandomNumber()),
-		modal:        *l.Theme.ModalFloatTitle(),
-		btnPositve:   l.Theme.Button("Confirm"),
-		btnNegative:  l.Theme.OutlineButton("Cancel"),
+		modal:        *theme.ModalFloatTitle(),
+		btnPositve:   theme.Button("Confirm"),
+		btnNegative:  theme.OutlineButton("Cancel"),
 		isCancelable: true,
 	}
 
@@ -55,10 +58,10 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm.btnNegative.Font.Weight = text.Medium
 	pm.btnNegative.Margin.Right = values.MarginPadding8
 
-	pm.password = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
+	pm.password = theme.EditorPassword(new(widget.Editor), "Spending password")
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
 
-	pm.materialLoader = material.Loader(l.Theme.Base)
+	pm.materialLoader = material.Loader(theme.Base)
 
 	return pm
 }

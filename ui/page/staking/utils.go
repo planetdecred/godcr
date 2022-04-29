@@ -87,7 +87,7 @@ func stakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newes
 		}
 
 		ticketCopy := tx
-		txStatus := components.TransactionTitleIcon(l, w, &tx, ticketSpender)
+		txStatus := components.TransactionTitleIcon(l.Theme, w, &tx, ticketSpender)
 		confirmations := tx.Confirmations(w.GetBestBlock())
 		var ticketAge string
 
@@ -385,7 +385,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 				Padding:     layout.UniformInset(values.MarginPadding16),
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return components.LayoutBalance(gtx, l, dcrutil.Amount(tx.transaction.Amount).String())
+					return components.LayoutBalance(gtx, l.Theme, dcrutil.Amount(tx.transaction.Amount).String())
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
@@ -543,7 +543,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 								dtime.Color = l.Theme.Color.GrayText3
 
 								return components.EndToEndRow(gtx, func(gtx C) D {
-									return components.LayoutBalance(gtx, l, dcrutil.Amount(ticket.transaction.Amount).String())
+									return components.LayoutBalance(gtx, l.Theme, dcrutil.Amount(ticket.transaction.Amount).String())
 								}, func(gtx C) D {
 									txtLayout := dtime.Layout(gtx)
 									ticketCardTooltip(gtx, txtLayout, ticket.dateTooltip, values.MarginPaddingMinus10, func(gtx C) D {

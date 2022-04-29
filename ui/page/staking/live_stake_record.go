@@ -151,7 +151,7 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 									return txt.Layout(gtx)
 								}
 
-								return components.LayoutBalanceColor(gtx, pg.Load, pg.totalRewards, award)
+								return components.LayoutBalanceColor(gtx, pg.Theme, pg.totalRewards, award)
 							}),
 						)
 					}),

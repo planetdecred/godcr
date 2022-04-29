@@ -57,7 +57,7 @@ func NewUTXOPage(l *load.Load, account *dcrlibwallet.Account) *UTXOPage {
 		selectedAccountID:      account.Number,
 	}
 
-	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
+	pg.backButton, _ = components.SubpageHeaderButtons(pg.Theme)
 	pg.useUTXOButton = l.Theme.Button("OK")
 
 	return pg

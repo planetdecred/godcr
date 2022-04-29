@@ -161,7 +161,7 @@ func (vm *voteModal) sendVotes() {
 	addVotes(dcrlibwallet.VoteBitYes, vm.yesVote.voteCount())
 	addVotes(dcrlibwallet.VoteBitNo, vm.noVote.voteCount())
 
-	modal.NewPasswordModal(vm.Load).
+	modal.NewPasswordModal(vm.Load.Theme, nil).
 		Title("Confirm to vote").
 		NegativeButton("Cancel", func() {
 			vm.isVoting = false

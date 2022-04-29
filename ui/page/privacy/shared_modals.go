@@ -73,7 +73,7 @@ func showModalSetupMixerAcct(conf *sharedModalConf, movefundsChecked bool) {
 		}
 	}
 
-	modal.NewPasswordModal(conf.Load).
+	modal.NewPasswordModal(conf.Load.Theme, nil).
 		Title("Confirm to create needed accounts").
 		NegativeButton("Cancel", func() {}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {

@@ -35,7 +35,7 @@ func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 	pg.verifyMessage.Radius = decredmaterial.Radius(14)
 	pg.validateAddress.Radius = decredmaterial.Radius(14)
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 }
@@ -62,7 +62,7 @@ func (pg *SecurityToolsPage) OnNavigatedTo() {
 func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "Security Tools",
 			BackButton: pg.backButton,
 			Back: func() {

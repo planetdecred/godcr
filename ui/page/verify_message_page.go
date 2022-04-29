@@ -56,7 +56,7 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg.clearBtn = l.Theme.OutlineButton("Clear all")
 	pg.clearBtn.Font.Weight = text.Medium
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 }
@@ -82,7 +82,7 @@ func (pg *VerifyMessagePage) OnNavigatedTo() {
 func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "Verify message",
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
@@ -203,7 +203,7 @@ func (pg *VerifyMessagePage) HandleUserInteractions() {
 }
 
 // HandleKeyEvent is called when a key is pressed on the current window.
-// Satisfies the load.KeyEventHandler interface for receiving key events.
+// Satisfies the app.KeyEventHandler interface for receiving key events.
 func (pg *VerifyMessagePage) HandleKeyEvent(evt *key.Event) {
 	// Switch editors on tab press.
 	decredmaterial.SwitchEditors(evt, pg.addressEditor.Editor, pg.signatureEditor.Editor, pg.messageEditor.Editor)

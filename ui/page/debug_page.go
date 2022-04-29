@@ -61,7 +61,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 	// 	},
 	// })
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 }
@@ -147,7 +147,7 @@ func (pg *DebugPage) layoutDebugItems(gtx C) {
 func (pg *DebugPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "Debug",
 			BackButton: pg.backButton,
 			Back: func() {

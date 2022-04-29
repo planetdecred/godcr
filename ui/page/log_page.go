@@ -47,7 +47,7 @@ func NewLogPage(l *load.Load) *LogPage {
 
 	pg.copyIcon = pg.Theme.Icons.CopyIcon
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 	pg.watchLogs()
 	return pg
 }
@@ -115,7 +115,7 @@ func (pg *LogPage) watchLogs() {
 func (pg *LogPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "Wallet log",
 			BackButton: pg.backButton,
 			Back: func() {

@@ -39,7 +39,7 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 	}
 
 	// Mixed account picker
-	pg.mixedAccountSelector = components.NewAccountSelector(l, wallet).
+	pg.mixedAccountSelector = components.NewAccountSelector(nil, wallet).
 		Title("Mixed account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
@@ -52,7 +52,7 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 		})
 
 	// Unmixed account picker
-	pg.unmixedAccountSelector = components.NewAccountSelector(l, wallet).
+	pg.unmixedAccountSelector = components.NewAccountSelector(nil, wallet).
 		Title("Unmixed account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
@@ -64,7 +64,7 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 			return accountIsValid
 		})
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 }
@@ -93,7 +93,7 @@ func (pg *ManualMixerSetupPage) OnNavigatedTo() {
 func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := components.SubPage{
-			Load:       pg.Load,
+			// App:        pg.App,
 			Title:      "Manual setup",
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
@@ -170,7 +170,7 @@ func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
 		return
 	}
 
-	modal.NewPasswordModal(pg.Load).
+	modal.NewPasswordModal(pg.Load.Theme, nil).
 		Title("Confirm to set mixer accounts").
 		NegativeButton("Cancel", func() {}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {

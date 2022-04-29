@@ -43,7 +43,7 @@ func NewSetupPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SetupPrivac
 		pageContainer:  layout.List{Axis: layout.Vertical},
 		toPrivacySetup: l.Theme.Button("Set up mixer for this wallet"),
 	}
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 
@@ -70,7 +70,7 @@ func (pg *SetupPrivacyPage) OnNavigatedTo() {
 func (pg *SetupPrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "StakeShuffle",
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,

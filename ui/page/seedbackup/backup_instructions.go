@@ -5,8 +5,8 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
@@ -20,8 +20,9 @@ type (
 )
 
 type BackupInstructionsPage struct {
-	*load.Load
-	wallet *dcrlibwallet.Wallet
+	*app.App
+	wallet         *dcrlibwallet.Wallet
+	changeFragment func(app.Page)
 
 	backButton  decredmaterial.IconButton
 	viewSeedBtn decredmaterial.Button
@@ -29,25 +30,26 @@ type BackupInstructionsPage struct {
 	infoList    *layout.List
 }
 
-func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *BackupInstructionsPage {
+func NewBackupInstructionsPage(app *app.App, wallet *dcrlibwallet.Wallet, changeFragment func(app.Page)) *BackupInstructionsPage {
 	bi := &BackupInstructionsPage{
-		Load:   l,
-		wallet: wallet,
+		App:            app,
+		wallet:         wallet,
+		changeFragment: changeFragment,
 
-		viewSeedBtn: l.Theme.Button("View seed phrase"),
+		viewSeedBtn: app.Theme.Button("View seed phrase"),
 	}
 
 	bi.viewSeedBtn.Font.Weight = text.Medium
 
-	bi.backButton, _ = components.SubpageHeaderButtons(l)
-	bi.backButton.Icon = l.Theme.Icons.ContentClear
+	bi.backButton, _ = components.SubpageHeaderButtons(app.Theme)
+	bi.backButton.Icon = app.Theme.Icons.ContentClear
 
 	bi.checkBoxes = []decredmaterial.CheckBoxStyle{
-		l.Theme.CheckBox(new(widget.Bool), "The 33-word seed word is EXTREMELY IMPORTANT."),
-		l.Theme.CheckBox(new(widget.Bool), "seed word is the only way to restore your wallet."),
-		l.Theme.CheckBox(new(widget.Bool), "It is recommended to store your seed word in a physical format (e.g. write down on a paper)."),
-		l.Theme.CheckBox(new(widget.Bool), "It is highly discouraged to store your seed word in any digital format (e.g. screenshot)."),
-		l.Theme.CheckBox(new(widget.Bool), "Anyone with your seed word can steal your funds. DO NOT show it to anyone."),
+		app.Theme.CheckBox(new(widget.Bool), "The 33-word seed word is EXTREMELY IMPORTANT."),
+		app.Theme.CheckBox(new(widget.Bool), "seed word is the only way to restore your wallet."),
+		app.Theme.CheckBox(new(widget.Bool), "It is recommended to store your seed word in a physical format (e.g. write down on a paper)."),
+		app.Theme.CheckBox(new(widget.Bool), "It is highly discouraged to store your seed word in any digital format (e.g. screenshot)."),
+		app.Theme.CheckBox(new(widget.Bool), "Anyone with your seed word can steal your funds. DO NOT show it to anyone."),
 	}
 
 	for i := range bi.checkBoxes {
@@ -83,18 +85,19 @@ func (pg *BackupInstructionsPage) HandleUserInteractions() {
 	for pg.viewSeedBtn.Clicked() {
 		if pg.verifyCheckBoxes() {
 			// TODO: Will repeat the paint cycle, just queue the next fragment to be displayed
-			pg.ChangeFragment(NewSaveSeedPage(pg.Load, pg.wallet))
+			pg.changeFragment(NewSaveSeedPage(pg.App, pg.wallet, pg.changeFragment))
 		}
 	}
-
 }
-func promptToExit(load *load.Load) {
-	modal.NewInfoModal(load).
+
+func promptToExit(app *app.App) {
+	var PopToFragment func(string)
+	modal.NewInfoModal(app).
 		Title("Exit?").
 		Body("Are you sure you want to exit the seed backup process?").
 		NegativeButton("No", func() {}).
 		PositiveButton("Yes", func(isChecked bool) {
-			load.PopToFragment(components.WalletsPageID)
+			PopToFragment(components.WalletsPageID) // TODO: Will crash
 		}).
 		Show()
 }
@@ -113,12 +116,12 @@ func (pg *BackupInstructionsPage) OnNavigatedFrom() {}
 // Part of the load.Page interface.
 func (pg *BackupInstructionsPage) Layout(gtx layout.Context) layout.Dimensions {
 	sp := components.SubPage{
-		Load:       pg.Load,
+		App:        pg.App,
 		Title:      "Keep in mind",
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			promptToExit(pg.Load)
+			promptToExit(pg.App)
 		},
 		Body: func(gtx C) D {
 			return pg.infoList.Layout(gtx, len(pg.checkBoxes), func(gtx C, i int) D {

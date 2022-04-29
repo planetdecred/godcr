@@ -35,7 +35,7 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 		Load: l,
 	}
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 
 	pg.addressEditor = l.Theme.Editor(new(widget.Editor), "Address")
 	pg.addressEditor.Editor.SingleLine = true
@@ -73,7 +73,7 @@ func (pg *ValidateAddressPage) OnNavigatedTo() {
 func (pg *ValidateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "Validate address",
 			BackButton: pg.backButton,
 			Back: func() {

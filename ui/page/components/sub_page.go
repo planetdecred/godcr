@@ -4,14 +4,14 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 type SubPage struct {
-	*load.Load
+	*app.App
 	Title        string
 	SubTitle     string
 	WalletName   string
@@ -27,9 +27,9 @@ type SubPage struct {
 	InfoButton decredmaterial.IconButton
 }
 
-func SubpageHeaderButtons(l *load.Load) (decredmaterial.IconButton, decredmaterial.IconButton) {
-	backButton := l.Theme.IconButton(l.Theme.Icons.NavigationArrowBack)
-	infoButton := l.Theme.IconButton(l.Theme.Icons.ActionInfo)
+func SubpageHeaderButtons(theme *decredmaterial.Theme) (decredmaterial.IconButton, decredmaterial.IconButton) {
+	backButton := theme.IconButton(theme.Icons.NavigationArrowBack)
+	infoButton := theme.IconButton(theme.Icons.ActionInfo)
 
 	m24 := values.MarginPadding24
 	backButton.Size, infoButton.Size = m24, m24
@@ -63,14 +63,14 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(sp.Load.Theme.Label(values.TextSize20, sp.Title).Layout),
+				layout.Rigid(sp.Theme.Label(values.TextSize20, sp.Title).Layout),
 				layout.Rigid(func(gtx C) D {
 					if !StringNotEmpty(sp.SubTitle) {
 						return D{}
 					}
 
-					sub := sp.Load.Theme.Label(values.TextSize14, sp.SubTitle)
-					sub.Color = sp.Load.Theme.Color.GrayText2
+					sub := sp.Theme.Label(values.TextSize14, sp.SubTitle)
+					sub.Color = sp.Theme.Color.GrayText2
 					return sub.Layout(gtx)
 				}),
 			)
@@ -130,7 +130,7 @@ func (sp *SubPage) SplitLayout(gtx layout.Context) layout.Dimensions {
 func (sp *SubPage) EventHandler() {
 	if sp.InfoTemplate != "" {
 		if sp.InfoButton.Button.Clicked() {
-			modal.NewInfoModal(sp.Load).
+			modal.NewInfoModal(sp.App).
 				Title(sp.Title).
 				SetupWithTemplate(sp.InfoTemplate).
 				SetCancelable(true).

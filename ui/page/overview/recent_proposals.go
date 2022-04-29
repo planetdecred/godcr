@@ -20,7 +20,7 @@ func (pg *AppOverviewPage) initializeProposalsWidget() *AppOverviewPage {
 }
 
 func (pg *AppOverviewPage) loadRecentProposals() {
-	proposalItems := components.LoadProposals(dcrlibwallet.ProposalCategoryAll, true, pg.Load)
+	proposalItems := components.LoadProposals(dcrlibwallet.ProposalCategoryAll, true, pg.MultiWallet(), pg.Theme)
 
 	// get only proposals within the last week
 	listItems := make([]*components.ProposalItem, 0)
@@ -66,7 +66,7 @@ func (pg *AppOverviewPage) recentProposalsSection(gtx C) D {
 					return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return components.ProposalsList(gtx, pg.Load, proposalItems[i])
+								return components.ProposalsList(gtx, pg.Theme, proposalItems[i])
 							}),
 							layout.Rigid(pg.Theme.Separator().Layout),
 						)

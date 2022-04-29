@@ -4,15 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
-	"path/filepath"
-	"time"
-
-	"gioui.org/app"
 
 	"github.com/planetdecred/dcrlibwallet"
-	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/app"
 	_ "github.com/planetdecred/godcr/ui/assets"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -38,50 +34,24 @@ func main() {
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
 
-	var buildDate time.Time
-	if BuildEnv == wallet.ProdBuild {
-		buildDate, err = time.Parse(time.RFC3339, BuildDate)
-		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error())
-			return
-		}
-	} else {
-		buildDate = time.Now()
-	}
+	// var buildDate time.Time
+	// if BuildEnv == wallet.ProdBuild {
+	// 	buildDate, err = time.Parse(time.RFC3339, BuildDate)
+	// 	if err != nil {
+	// 		fmt.Printf("Error: %s\n", err.Error())
+	// 		return
+	// 	}
+	// } else {
+	// 	buildDate = time.Now()
+	// }
 
-	var net string
-	switch cfg.Network {
-	case "testnet":
-		net = "testnet3"
-	default:
-		net = cfg.Network
-	}
-
-	logFile := filepath.Join(cfg.LogDir, defaultLogFilename)
-	wal, err := wallet.NewWallet(cfg.HomeDir, net, Version, logFile, buildDate)
+	// logFilePath := filepath.Join(cfg.LogDir, defaultLogFilename)
+	appInstance, err := app.Init(cfg.HomeDir, cfg.Network, Version)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	win, err := ui.CreateWindow(wal)
-	if err != nil {
-		log.Errorf("Could not initialize window: %s\ns", err)
-		return
-	}
-
-	err = wal.InitMultiWallet()
-	if err != nil {
-		log.Errorf("init multiwallet error: %v", err)
-		return
-	}
-
-	go func() {
-		win.HandleEvents() // blocks until the app window is closed
-		wal.Shutdown()
-		os.Exit(0)
-	}()
-
 	// Start the GUI frontend.
-	app.Main()
+	appInstance.Run(page.NewStartPage(appInstance))
 }

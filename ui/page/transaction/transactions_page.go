@@ -7,9 +7,9 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -22,7 +22,9 @@ type (
 )
 
 type TransactionsPage struct {
-	*load.Load
+	*app.App
+	changeFragment func(app.Page)
+
 	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -37,23 +39,24 @@ type TransactionsPage struct {
 	wallets         []*dcrlibwallet.Wallet
 }
 
-func NewTransactionsPage(l *load.Load) *TransactionsPage {
+func NewTransactionsPage(app *app.App, changeFragment func(app.Page)) *TransactionsPage {
 	pg := &TransactionsPage{
-		Load: l,
+		App:            app,
+		changeFragment: changeFragment,
 		container: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		separator:       l.Theme.Separator(),
-		transactionList: l.Theme.NewClickableList(layout.Vertical),
+		separator:       app.Theme.Separator(),
+		transactionList: app.Theme.NewClickableList(layout.Vertical),
 	}
 
 	pg.transactionList.Radius = decredmaterial.Radius(values.MarginPadding14.V)
 	pg.transactionList.IsShadowEnabled = true
 
-	pg.orderDropDown = components.CreateOrderDropDown(l, values.TxDropdownGroup, 1)
-	pg.wallets = pg.WL.SortedWalletList()
-	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
-	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
+	pg.orderDropDown = components.CreateOrderDropDown(app.Theme, values.TxDropdownGroup, 1)
+	pg.wallets = pg.Wallets()
+	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Theme, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
+	pg.txTypeDropDown = app.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: values.String(values.StrAll),
 		},
@@ -156,7 +159,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return components.LayoutTransactionRow(gtx, pg.Load, row)
+											return components.LayoutTransactionRow(gtx, pg.MultiWallet(), pg.Theme, row)
 										}),
 										layout.Rigid(func(gtx C) D {
 											// No divider for last row
@@ -213,7 +216,7 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 	}
 
 	if clicked, selectedItem := pg.transactionList.ItemClicked(); clicked {
-		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
+		pg.changeFragment(NewTransactionDetailsPage(pg.App, &pg.transactions[selectedItem]))
 	}
 	decredmaterial.DisplayOneDropdown(pg.walletDropDown, pg.txTypeDropDown, pg.orderDropDown)
 }
@@ -223,7 +226,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 		return
 	}
 	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, TransactionsPageID)
+	err := pg.MultiWallet().AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, TransactionsPageID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
@@ -242,7 +245,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 					}
 				}
 			case <-pg.ctx.Done():
-				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(TransactionsPageID)
+				pg.MultiWallet().RemoveTxAndBlockNotificationListener(TransactionsPageID)
 				close(pg.TxAndBlockNotifChan)
 				pg.TxAndBlockNotificationListener = nil
 

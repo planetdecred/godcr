@@ -232,7 +232,7 @@ func (cm *CreatePasswordModal) Handle() {
 }
 
 // HandleKeyEvent is called when a key is pressed on the current window.
-// Satisfies the load.KeyEventHandler interface for receiving key events.
+// Satisfies the app.KeyEventHandler interface for receiving key events.
 func (cm *CreatePasswordModal) HandleKeyEvent(evt *key.Event) {
 	if cm.walletNameEnabled {
 		decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)

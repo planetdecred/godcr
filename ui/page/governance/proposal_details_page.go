@@ -77,10 +77,10 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 		successIcon:       l.Theme.Icons.ActionCheckCircle,
 		viewInPoliteiaBtn: l.Theme.NewClickable(true),
 		copyRedirectURL:   l.Theme.NewClickable(false),
-		voteBar:           components.NewVoteBar(l),
+		voteBar:           components.NewVoteBar(l.Theme),
 	}
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 
 	pg.vote = l.Theme.Button("Vote")
 	pg.vote.TextSize = values.TextSize14
@@ -543,7 +543,7 @@ func (pg *ProposalDetails) Layout(gtx C) D {
 
 	body := func(gtx C) D {
 		page := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      components.TruncateString(proposal.Name, 40),
 			BackButton: pg.backButton,
 			Back: func() {

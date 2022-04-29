@@ -145,7 +145,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-									return components.LayoutBalanceSize(gtx, tp.Load, tp.ticketPrice.String(), values.Size28)
+									return components.LayoutBalanceSize(gtx, tp.Theme, tp.ticketPrice.String(), values.Size28)
 								})
 							}),
 						)
@@ -304,7 +304,7 @@ func (tp *stakingModal) Show() {
 }
 
 func (tp *stakingModal) initializeAccountSelector() {
-	tp.accountSelector = components.NewAccountSelector(tp.Load, nil).
+	tp.accountSelector = components.NewAccountSelector(nil, nil).
 		Title("Purchasing account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {

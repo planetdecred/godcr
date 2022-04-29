@@ -32,7 +32,7 @@ func (pg *AppOverviewPage) initWalletStatusWidgets() {
 
 // syncStatusSection lays out content for displaying sync status.
 func (pg *AppOverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensions {
-	syncing, rescanning := pg.WL.MultiWallet.IsSyncing(), pg.WL.MultiWallet.IsRescanning()
+	syncing, rescanning := pg.MultiWallet().IsSyncing(), pg.MultiWallet().IsRescanning()
 	uniform := layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding5}
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		return components.Container{Padding: layout.Inset{
@@ -120,7 +120,7 @@ func (pg *AppOverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions
 	title.Color = pg.Theme.Color.GrayText1
 	statusLabel := pg.Theme.Body1(values.String(values.StrOffline))
 	pg.walletStatusIcon.Color = pg.Theme.Color.Danger
-	if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+	if pg.MultiWallet().IsConnectedToDecredNetwork() {
 		statusLabel.Text = values.String(values.StrOnline)
 		pg.walletStatusIcon.Color = pg.Theme.Color.Success
 	}
@@ -163,12 +163,12 @@ func (pg *AppOverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions
 func (pg *AppOverviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions {
 	syncStatusIcon := pg.notSyncedIcon
 	syncStatusIcon.Color = pg.Theme.Color.Danger
-	if pg.WL.MultiWallet.IsSynced() {
+	if pg.MultiWallet().IsSynced() {
 		syncStatusIcon = pg.syncedIcon
 		syncStatusIcon.Color = pg.Theme.Color.Success
 	}
 	i := layout.Inset{Right: values.MarginPadding16, Top: values.MarginPadding9}
-	if pg.WL.MultiWallet.IsSyncing() {
+	if pg.MultiWallet().IsSyncing() {
 		return i.Layout(gtx, pg.syncingIcon.Layout24dp)
 	}
 	return i.Layout(gtx, func(gtx C) D {
@@ -184,7 +184,7 @@ func (pg *AppOverviewPage) syncDormantContent(gtx layout.Context, uniform layout
 				return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, pg.blockInfoRow)
 			}),
 			layout.Rigid(func(gtx C) D {
-				if pg.WL.MultiWallet.IsSynced() {
+				if pg.MultiWallet().IsSynced() {
 					return pg.connectionPeer(gtx)
 				}
 				latestBlockTitleLabel := pg.Theme.Body1(values.String(values.StrNoConnectedPeer))
@@ -196,7 +196,7 @@ func (pg *AppOverviewPage) syncDormantContent(gtx layout.Context, uniform layout
 }
 
 func (pg *AppOverviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
-	bestBlock := pg.WL.MultiWallet.GetBestBlock()
+	bestBlock := pg.MultiWallet().GetBestBlock()
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			latestBlockTitleLabel := pg.Theme.Body1(values.String(values.StrLastBlockHeight))

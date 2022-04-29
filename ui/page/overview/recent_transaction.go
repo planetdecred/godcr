@@ -22,7 +22,7 @@ func (pg *AppOverviewPage) initRecentTxWidgets() {
 }
 
 func (pg *AppOverviewPage) loadTransactions() {
-	transactions, err := pg.WL.MultiWallet.GetTransactionsRaw(0, 5, dcrlibwallet.TxFilterAll, true)
+	transactions, err := pg.MultiWallet().GetTransactionsRaw(0, 5, dcrlibwallet.TxFilterAll, true)
 	if err != nil {
 		return
 	}
@@ -83,7 +83,7 @@ func (pg *AppOverviewPage) recentTransactionsSection(gtx layout.Context) layout.
 
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return components.LayoutTransactionRow(gtx, pg.Load, row)
+								return components.LayoutTransactionRow(gtx, pg.MultiWallet(), pg.Theme, row)
 							}),
 							layout.Rigid(func(gtx C) D {
 								// No divider for last row

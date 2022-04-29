@@ -83,7 +83,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 					Bottom: values.MarginPadding16,
 				}.Layout(gtx, func(gtx C) D {
 					return layout.Center.Layout(gtx, func(gtx C) D {
-						return components.LayoutBalanceSize(gtx, pg.Load, pg.ticketPrice, values.TextSize28)
+						return components.LayoutBalanceSize(gtx, pg.Theme, pg.ticketPrice, values.TextSize28)
 					})
 				})
 			}),

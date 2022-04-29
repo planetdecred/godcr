@@ -47,7 +47,7 @@ func NewStatPage(l *load.Load) *StatPage {
 		pg.netType = strings.Title(pg.netType)
 	}
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 }
@@ -136,7 +136,7 @@ func (pg *StatPage) layoutStats(gtx C) D {
 func (pg *StatPage) Layout(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "Statistics",
 			BackButton: pg.backButton,
 			Back: func() {

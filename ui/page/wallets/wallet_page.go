@@ -15,6 +15,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -59,18 +60,18 @@ type menuItem struct {
 	text     string
 	id       string
 	button   *decredmaterial.Clickable
-	action   func(*load.Load)
+	action   func()
 	separate bool
 }
 
 type WalletPage struct {
-	*load.Load
+	*app.App
+	changeFragment func(app.Page)
+
 	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 	listLock  sync.Mutex
-
-	multiWallet *dcrlibwallet.MultiWallet
 
 	listItems      []*walletListItem
 	badWalletsList []*badWalletListItem
@@ -103,28 +104,28 @@ type WalletPage struct {
 	hasWatchOnly        bool
 }
 
-func NewWalletPage(l *load.Load) *WalletPage {
+func NewWalletPage(app *app.App, changeFragment func(app.Page)) *WalletPage {
 	pg := &WalletPage{
-		Load:        l,
-		multiWallet: l.WL.MultiWallet,
+		App:            app,
+		changeFragment: changeFragment,
 		container: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
 		walletsList:              layout.List{Axis: layout.Vertical},
-		watchWalletsList:         l.Theme.NewClickableList(layout.Vertical),
-		card:                     l.Theme.Card(),
+		watchWalletsList:         app.Theme.NewClickableList(layout.Vertical),
+		card:                     app.Theme.Card(),
 		backdrop:                 new(widget.Clickable),
-		openAddWalletPopupButton: l.Theme.NewClickable(false),
+		openAddWalletPopupButton: app.Theme.NewClickable(false),
 		openPopupIndex:           -1,
-		shadowBox:                l.Theme.Shadow(),
-		separator:                l.Theme.Separator(),
-		addAcctIcon:              decredmaterial.NewIcon(l.Theme.Icons.ContentAdd),
-		backupAcctIcon:           decredmaterial.NewIcon(l.Theme.Icons.NavigationArrowForward),
+		shadowBox:                app.Theme.Shadow(),
+		separator:                app.Theme.Separator(),
+		addAcctIcon:              decredmaterial.NewIcon(app.Theme.Icons.ContentAdd),
+		backupAcctIcon:           decredmaterial.NewIcon(app.Theme.Icons.NavigationArrowForward),
 	}
 
 	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(10)
 
-	pg.separator.Color = l.Theme.Color.Gray2
+	pg.separator.Color = app.Theme.Color.Gray2
 
 	pg.watchOnlyWalletLabel = pg.Theme.Body1(values.String(values.StrWatchOnlyWallets))
 	pg.watchOnlyWalletLabel.Color = pg.Theme.Color.GrayText2
@@ -164,7 +165,7 @@ func (pg *WalletPage) OnNavigatedTo() {
 }
 
 func (pg *WalletPage) loadWalletAndAccounts() {
-	wallets := pg.WL.SortedWalletList()
+	wallets := pg.Wallets()
 
 	listItems := make([]*walletListItem, 0)
 
@@ -227,7 +228,7 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 }
 
 func (pg *WalletPage) loadBadWallets() {
-	badWallets := pg.WL.MultiWallet.BadWallets()
+	badWallets := pg.MultiWallet().BadWallets()
 	pg.badWalletsList = make([]*badWalletListItem, 0, len(badWallets))
 	for _, badWallet := range badWallets {
 		listItem := &badWalletListItem{
@@ -250,10 +251,10 @@ func (pg *WalletPage) initializeFloatingMenu() {
 		{
 			text:   values.String(values.StrImportExistingWallet),
 			button: pg.Theme.NewClickable(true),
-			action: func(l *load.Load) {
+			action: func() {
 				// The second nil parameter to NewRestorePage will cause the
 				// restore page to pop back to this one after restore completes.
-				l.ChangeWindowPage(NewRestorePage(pg.Load, nil), true)
+				pg.ChangePage(NewRestorePage(nil, nil), true)
 			},
 		},
 		{
@@ -282,7 +283,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			text:     values.String(values.StrViewProperty),
 			button:   pg.Theme.NewClickable(true),
 			separate: true,
-			action:   func(load *load.Load) {},
+			action:   func() {},
 		},
 		{
 			text:     values.String(values.StrStakeShuffle),
@@ -293,12 +294,12 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 		{
 			text:   values.String(values.StrRename),
 			button: pg.Theme.NewClickable(true),
-			action: func(l *load.Load) {
-				textModal := modal.NewTextInputModal(l).
+			action: func() {
+				textModal := modal.NewTextInputModal(pg.App).
 					Hint("Wallet name").
-					PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+					PositiveButtonStyle(pg.Theme.Color.Primary, pg.Theme.Color.InvText).
 					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
-						err := pg.multiWallet.RenameWallet(wal.ID, newName)
+						err := pg.MultiWallet().RenameWallet(wal.ID, newName)
 						if err != nil {
 							pg.Toast.NotifyError(err.Error())
 							return false
@@ -324,13 +325,13 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 		{
 			text:   values.String(values.StrRename),
 			button: pg.Theme.NewClickable(true),
-			action: func(l *load.Load) {
-				textModal := modal.NewTextInputModal(l).
+			action: func() {
+				textModal := modal.NewTextInputModal(pg.App).
 					Hint("Wallet name").
-					PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+					PositiveButtonStyle(pg.Theme.Color.Primary, pg.Theme.Color.InvText).
 					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 						//TODO
-						err := pg.multiWallet.RenameWallet(wal.ID, newName)
+						err := pg.MultiWallet().RenameWallet(wal.ID, newName)
 						if err != nil {
 							pg.Toast.NotifyError(err.Error())
 						} else {
@@ -352,14 +353,14 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 	}
 }
 
-func (pg *WalletPage) showAddWalletModal(l *load.Load) {
-	modal.NewCreatePasswordModal(l).
+func (pg *WalletPage) showAddWalletModal() {
+	modal.NewCreatePasswordModal(nil).
 		Title("Create new wallet").
 		EnableName(true).
 		ShowWalletInfoTip(true).
 		PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
 			go func() {
-				_, err := pg.multiWallet.CreateNewWallet(walletName, password, dcrlibwallet.PassphraseTypePass)
+				_, err := pg.MultiWallet().CreateNewWallet(walletName, password, dcrlibwallet.PassphraseTypePass)
 				if err != nil {
 					m.SetError(err.Error())
 					m.SetLoading(false)
@@ -373,11 +374,11 @@ func (pg *WalletPage) showAddWalletModal(l *load.Load) {
 		}).Show()
 }
 
-func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
-	modal.NewCreateWatchOnlyModal(l).
+func (pg *WalletPage) showImportWatchOnlyWalletModal() {
+	modal.NewCreateWatchOnlyModal(nil).
 		WatchOnlyCreated(func(walletName, extPubKey string, m *modal.CreateWatchOnlyModal) bool {
 			go func() {
-				_, err := pg.multiWallet.CreateWatchOnlyWallet(walletName, extPubKey)
+				_, err := pg.MultiWallet().CreateWatchOnlyWallet(walletName, extPubKey)
 				if err != nil {
 					pg.Toast.NotifyError(err.Error())
 					m.SetError(err.Error())
@@ -889,7 +890,7 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 										layout.Flexed(1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
 												totalBal := dcrutil.Amount(account.TotalBalance).String()
-												return components.LayoutBalance(gtx, pg.Load, totalBal)
+												return components.LayoutBalance(gtx, pg.Theme, totalBal)
 											})
 										}),
 									)
@@ -1101,7 +1102,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 		pg.listLock.Unlock()
 
 		// TODO: find default account using number
-		pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[0]))
+		pg.changeFragment(NewAcctDetailsPage(pg.App, listItem.accounts[0]))
 	}
 
 	pg.listLock.Lock()
@@ -1110,7 +1111,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 
 	for index, listItem := range listItems {
 		if ok, selectedItem := listItem.accountsList.ItemClicked(); ok {
-			pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[selectedItem]))
+			pg.changeFragment(NewAcctDetailsPage(pg.App, listItem.accounts[selectedItem]))
 		}
 
 		if listItem.wal.IsWatchingOnlyWallet() {
@@ -1129,19 +1130,19 @@ func (pg *WalletPage) HandleUserInteractions() {
 
 			for listItem.addAcctClickable.Clicked() {
 				walletID := listItem.wal.ID
-				textModal := modal.NewTextInputModal(pg.Load).
+				textModal := modal.NewTextInputModal(pg.App).
 					Hint("Account name").
 					ShowAccountInfoTip(true).
-					PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+					PositiveButtonStyle(pg.Theme.Color.Primary, pg.Theme.Color.InvText).
 					PositiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.TextInputModal) bool {
 						if accountName != "" {
-							modal.NewPasswordModal(pg.Load).
+							modal.NewPasswordModal(pg.Theme, pg.App).
 								Title(values.String(values.StrCreateNewAccount)).
 								Hint("Spending password").
 								NegativeButton(values.String(values.StrCancel), func() {}).
 								PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 									go func() {
-										wal := pg.multiWallet.WalletWithID(walletID)
+										wal := pg.MultiWallet().WalletWithID(walletID)
 										_, err := wal.CreateNewAccount(accountName, []byte(password)) // TODO
 										if err != nil {
 											pg.Toast.NotifyError(err.Error())
@@ -1165,11 +1166,11 @@ func (pg *WalletPage) HandleUserInteractions() {
 			}
 
 			for listItem.backupAcctClickable.Clicked() {
-				pg.ChangeFragment(seedbackup.NewBackupInstructionsPage(pg.Load, listItem.wal))
+				pg.changeFragment(seedbackup.NewBackupInstructionsPage(pg.App, listItem.wal, pg.changeFragment))
 			}
 
 			for listItem.checkMixerClickable.Clicked() {
-				pg.ChangeFragment(privacy.NewAccountMixerPage(pg.Load, listItem.wal))
+				pg.changeFragment(privacy.NewAccountMixerPage(nil, listItem.wal))
 			}
 		}
 
@@ -1177,15 +1178,15 @@ func (pg *WalletPage) HandleUserInteractions() {
 			if menu.button.Clicked() {
 				switch menu.id {
 				case SignMessagePageID:
-					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal))
+					pg.changeFragment(NewSignMessagePage(pg.App, listItem.wal))
 				case privacy.SetupPrivacyPageID:
-					pg.ChangeFragment(privacy.NewSetupPrivacyPage(pg.Load, listItem.wal))
+					pg.changeFragment(privacy.NewSetupPrivacyPage(nil, listItem.wal))
 				case privacy.AccountMixerPageID:
-					pg.ChangeFragment(privacy.NewAccountMixerPage(pg.Load, listItem.wal))
+					pg.changeFragment(privacy.NewAccountMixerPage(nil, listItem.wal))
 				case WalletSettingsPageID:
-					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal))
+					pg.changeFragment(NewWalletSettingsPage(pg.App, listItem.wal))
 				default:
-					menu.action(pg.Load)
+					menu.action()
 				}
 
 				pg.openPopupIndex = -1
@@ -1202,7 +1203,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 	for index := range pg.addWalletMenu {
 		for pg.addWalletMenu[index].button.Clicked() {
 			pg.isAddWalletMenuOpen = false
-			pg.addWalletMenu[index].action(pg.Load)
+			pg.addWalletMenu[index].action()
 		}
 	}
 
@@ -1215,14 +1216,14 @@ func (pg *WalletPage) HandleUserInteractions() {
 }
 
 func (pg *WalletPage) deleteBadWallet(badWalletID int) {
-	modal.NewInfoModal(pg.Load).
+	modal.NewInfoModal(pg.App).
 		Title(values.String(values.StrRemoveWallet)).
 		Body("You can restore this wallet from seed word after it is deleted.").
 		NegativeButton(values.String(values.StrCancel), func() {}).
-		PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
+		PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
 		PositiveButton(values.String(values.StrRemove), func(isChecked bool) {
 			go func() {
-				err := pg.WL.MultiWallet.DeleteBadWallet(badWalletID)
+				err := pg.MultiWallet().DeleteBadWallet(badWalletID)
 				if err != nil {
 					pg.Toast.NotifyError(err.Error())
 					return
@@ -1239,7 +1240,7 @@ func (pg *WalletPage) listenForTxNotifications() {
 		return
 	}
 	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, WalletPageID)
+	err := pg.MultiWallet().AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, WalletPageID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
@@ -1253,7 +1254,7 @@ func (pg *WalletPage) listenForTxNotifications() {
 				case listeners.BlockAttached:
 					// refresh wallet account and balance on every new block
 					// only if sync is completed.
-					if pg.WL.MultiWallet.IsSynced() {
+					if pg.MultiWallet().IsSynced() {
 						pg.updateAccountBalance()
 						pg.RefreshWindow()
 					}
@@ -1263,7 +1264,7 @@ func (pg *WalletPage) listenForTxNotifications() {
 					pg.RefreshWindow()
 				}
 			case <-pg.ctx.Done():
-				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(WalletPageID)
+				pg.MultiWallet().RemoveTxAndBlockNotificationListener(WalletPageID)
 				close(pg.TxAndBlockNotifChan)
 				pg.TxAndBlockNotificationListener = nil
 
@@ -1278,7 +1279,7 @@ func (pg *WalletPage) updateAccountBalance() {
 	defer pg.listLock.Unlock()
 
 	for _, item := range pg.listItems {
-		wal := pg.WL.MultiWallet.WalletWithID(item.wal.ID)
+		wal := pg.MultiWallet().WalletWithID(item.wal.ID)
 		if wal != nil {
 			accountsResult, err := wal.GetAccountsRaw()
 			if err != nil {

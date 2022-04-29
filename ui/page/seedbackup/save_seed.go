@@ -9,8 +9,8 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
@@ -26,7 +26,9 @@ type saveSeedRow struct {
 }
 
 type SaveSeedPage struct {
-	*load.Load
+	*app.App
+	changeFragment func(app.Page)
+
 	wallet *dcrlibwallet.Wallet
 
 	backButton   decredmaterial.IconButton
@@ -38,19 +40,20 @@ type SaveSeedPage struct {
 	rows     []saveSeedRow
 }
 
-func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
+func NewSaveSeedPage(app *app.App, wallet *dcrlibwallet.Wallet, changeFragment func(app.Page)) *SaveSeedPage {
 	pg := &SaveSeedPage{
-		Load:         l,
-		wallet:       wallet,
-		infoText:     "You will be asked to enter the seed word on the next screen.",
-		actionButton: l.Theme.Button("I have written down all 33 words"),
+		App:            app,
+		changeFragment: changeFragment,
+		wallet:         wallet,
+		infoText:       "You will be asked to enter the seed word on the next screen.",
+		actionButton:   app.Theme.Button("I have written down all 33 words"),
 		seedList: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
 	}
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
-	pg.backButton.Icon = l.Theme.Icons.ContentClear
+	pg.backButton, _ = components.SubpageHeaderButtons(app.Theme)
+	pg.backButton.Icon = app.Theme.Icons.ContentClear
 
 	pg.actionButton.Font.Weight = text.Medium
 
@@ -70,7 +73,7 @@ func (pg *SaveSeedPage) ID() string {
 // Part of the load.Page interface.
 func (pg *SaveSeedPage) OnNavigatedTo() {
 
-	modal.NewPasswordModal(pg.Load).
+	modal.NewPasswordModal(pg.Theme, pg.App).
 		Title("Confirm to show seed").
 		PositiveButton("Confirm", func(password string, m *modal.PasswordModal) bool {
 			go func() {
@@ -105,7 +108,8 @@ func (pg *SaveSeedPage) OnNavigatedTo() {
 			return false
 		}).
 		NegativeButton("Cancel", func() {
-			pg.PopToFragment(components.WalletsPageID)
+			var PopToFragment func(string)
+			PopToFragment(components.WalletsPageID) // TODO: Will crash.
 		}).Show()
 
 }
@@ -117,7 +121,7 @@ func (pg *SaveSeedPage) OnNavigatedTo() {
 // Part of the load.Page interface.
 func (pg *SaveSeedPage) HandleUserInteractions() {
 	for pg.actionButton.Clicked() {
-		pg.ChangeFragment(NewVerifySeedPage(pg.Load, pg.wallet, pg.seed))
+		pg.changeFragment(NewVerifySeedPage(pg.App, pg.wallet, pg.seed, pg.changeFragment))
 	}
 }
 
@@ -135,13 +139,13 @@ func (pg *SaveSeedPage) OnNavigatedFrom() {}
 // Part of the load.Page interface.
 func (pg *SaveSeedPage) Layout(gtx C) D {
 	sp := components.SubPage{
-		Load:       pg.Load,
+		App:        pg.App,
 		Title:      "Write down seed word",
 		SubTitle:   "Step 1/2",
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			promptToExit(pg.Load)
+			promptToExit(pg.App)
 		},
 		Body: func(gtx C) D {
 

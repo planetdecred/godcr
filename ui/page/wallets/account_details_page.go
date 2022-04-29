@@ -9,6 +9,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -19,11 +20,12 @@ import (
 const AccountDetailsPageID = "AccountDetails"
 
 type AcctDetailsPage struct {
-	*load.Load
+	*app.App
+	PopFragment func() // TODO: Will crash
+
 	wallet  *dcrlibwallet.Wallet
 	account *dcrlibwallet.Account
 
-	theme                    *decredmaterial.Theme
 	acctDetailsPageContainer layout.List
 	list                     *widget.List
 	backButton               decredmaterial.IconButton
@@ -40,22 +42,21 @@ type AcctDetailsPage struct {
 	keys             string
 }
 
-func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetailsPage {
+func NewAcctDetailsPage(app *app.App, account *dcrlibwallet.Account) *AcctDetailsPage {
 	pg := &AcctDetailsPage{
-		Load:    l,
-		wallet:  l.WL.MultiWallet.WalletWithID(account.WalletID),
+		App:     app,
+		wallet:  app.MultiWallet().WalletWithID(account.WalletID),
 		account: account,
 
-		theme:                    l.Theme,
 		acctDetailsPageContainer: layout.List{Axis: layout.Vertical},
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		backButton:    l.Theme.IconButton(l.Theme.Icons.NavigationArrowBack),
-		renameAccount: l.Theme.NewClickable(false),
+		backButton:    app.Theme.IconButton(app.Theme.Icons.NavigationArrowBack),
+		renameAccount: app.Theme.NewClickable(false),
 	}
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(app.Theme)
 
 	return pg
 }
@@ -85,7 +86,12 @@ func (pg *AcctDetailsPage) OnNavigatedTo() {
 	pg.votingAuthority = dcrutil.Amount(balance.VotingAuthority).String()
 	pg.immatureStakeGen = dcrutil.Amount(balance.ImmatureStakeGeneration).String()
 
-	pg.hdPath = pg.WL.HDPrefix() + strconv.Itoa(int(pg.account.Number)) + "'"
+	switch pg.MultiWallet().NetType() {
+	case dcrlibwallet.Testnet3:
+		pg.hdPath = dcrlibwallet.TestnetHDPath + strconv.Itoa(int(pg.account.Number)) + "'"
+	case dcrlibwallet.Mainnet:
+		pg.hdPath = dcrlibwallet.MainnetHDPath + strconv.Itoa(int(pg.account.Number)) + "'"
+	}
 
 	ext := pg.account.ExternalKeyCount
 	internal := pg.account.InternalKeyCount
@@ -104,7 +110,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 		func(gtx C) D {
 			m := values.MarginPadding10
 			return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-				return pg.theme.Separator().Layout(gtx)
+				return pg.Theme.Separator().Layout(gtx)
 			})
 		},
 		func(gtx C) D {
@@ -114,7 +120,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	body := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			App:        pg.App,
 			Title:      pg.account.Name,
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
@@ -127,7 +133,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 						Bottom: values.MarginPadding7,
 						Right:  values.MarginPadding2,
 					}.Layout(gtx, func(gtx C) D {
-						return pg.theme.Card().Layout(gtx, func(gtx C) D {
+						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 							return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 								return pg.acctDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
 									return layout.Inset{}.Layout(gtx, widgets[i])
@@ -217,14 +223,14 @@ func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, bal
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				if isTotalBalance {
-					return components.LayoutBalanceSize(gtx, pg.Load, balance, values.TextSize34)
+					return components.LayoutBalanceSize(gtx, pg.Theme, balance, values.TextSize34)
 				}
 
-				return components.LayoutBalance(gtx, pg.Load, balance)
+				return components.LayoutBalance(gtx, pg.Theme, balance)
 			}),
 			layout.Rigid(func(gtx C) D {
-				txt := pg.theme.Body2(balType)
-				txt.Color = pg.theme.Color.GrayText2
+				txt := pg.Theme.Body2(balType)
+				txt.Color = pg.Theme.Color.GrayText2
 				return txt.Layout(gtx)
 			}),
 		)
@@ -264,14 +270,14 @@ func (pg *AcctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightTex
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					leftTextLabel := pg.theme.Label(values.TextSize14, leftText)
-					leftTextLabel.Color = pg.theme.Color.GrayText2
+					leftTextLabel := pg.Theme.Label(values.TextSize14, leftText)
+					leftTextLabel.Color = pg.Theme.Color.GrayText2
 					return leftTextLabel.Layout(gtx)
 				}),
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, pg.theme.Body1(rightText).Layout)
+			return layout.E.Layout(gtx, pg.Theme.Body1(rightText).Layout)
 		}),
 	)
 }
@@ -289,9 +295,9 @@ func (pg *AcctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 // Part of the load.Page interface.
 func (pg *AcctDetailsPage) HandleUserInteractions() {
 	if pg.renameAccount.Clicked() {
-		textModal := modal.NewTextInputModal(pg.Load).
+		textModal := modal.NewTextInputModal(pg.App).
 			Hint("Account name").
-			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+			PositiveButtonStyle(pg.Theme.Color.Primary, pg.Theme.Color.InvText).
 			PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 				err := pg.wallet.RenameAccount(pg.account.Number, newName)
 				if err != nil {

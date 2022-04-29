@@ -12,10 +12,13 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/gen2brain/beeep"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -56,7 +59,8 @@ type NavHandler struct {
 }
 
 type MainPage struct {
-	*load.Load
+	*app.App
+
 	*listeners.SyncProgressListener
 	*listeners.TxAndBlockNotificationListener
 	*listeners.ProposalNotificationListener
@@ -86,9 +90,9 @@ type MainPage struct {
 	totalBalanceUSD        string
 }
 
-func NewMainPage(l *load.Load) *MainPage {
+func NewMainPage(app *app.App) *MainPage {
 	mp := &MainPage{
-		Load: l,
+		App: app,
 	}
 
 	mp.hideBalanceItem.hideBalanceButton = mp.Theme.IconButton(mp.Theme.Icons.ConcealIcon)
@@ -97,30 +101,31 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
 
 	// init shared page functions
-	toggleSync := func() {
-		if mp.WL.MultiWallet.IsConnectedToDecredNetwork() {
-			mp.WL.MultiWallet.CancelSync()
-		} else {
-			mp.StartSyncing()
-		}
-	}
-	l.ToggleSync = toggleSync
-	l.ChangeFragment = mp.changeFragment
-	l.PopFragment = mp.popFragment
-	l.PopToFragment = mp.popToFragment
+	// l.ToggleSync = toggleSync
+	// l.ChangeFragment = mp.changeFragment
+	// l.PopFragment = mp.popFragment
+	// l.PopToFragment = mp.popToFragment
 
 	mp.initNavItems()
 
 	mp.refreshExchangeRateBtn = mp.Theme.NewClickable(true)
 
 	// Show a seed backup prompt if necessary.
-	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+	mp.MultiWallet().SaveUserConfigValue(load.SeedBackupNotificationConfigKey, false)
 
 	mp.setNavExpanded = func() {
 		mp.drawerNav.DrawerToggled(mp.isNavExpanded)
 	}
 
 	return mp
+}
+
+func (mp *MainPage) toggleSync() {
+	if mp.MultiWallet().IsConnectedToDecredNetwork() {
+		mp.MultiWallet().CancelSync()
+	} else {
+		mp.StartSyncing()
+	}
 }
 
 // ID is a unique string that identifies the page and may be used
@@ -132,7 +137,7 @@ func (mp *MainPage) ID() string {
 
 func (mp *MainPage) initNavItems() {
 	mp.appBarNav = components.NavDrawer{
-		Load:        mp.Load,
+		Theme:       mp.Theme,
 		CurrentPage: mp.currentPageID(),
 		AppBarNavItems: []components.NavHandler{
 			{
@@ -151,7 +156,7 @@ func (mp *MainPage) initNavItems() {
 	}
 
 	mp.drawerNav = components.NavDrawer{
-		Load:        mp.Load,
+		Theme:       mp.Theme,
 		CurrentPage: mp.currentPageID(),
 		DrawerNavItems: []components.NavHandler{
 			{
@@ -222,7 +227,7 @@ func (mp *MainPage) OnNavigatedTo() {
 	mp.listenForNotifications()
 
 	if mp.currentPage == nil {
-		mp.currentPage = overview.NewOverviewPage(mp.Load)
+		mp.currentPage = overview.NewOverviewPage(mp.App, mp.changeFragment, mp.toggleSync)
 	}
 	mp.currentPage.OnNavigatedTo()
 
@@ -233,10 +238,10 @@ func (mp *MainPage) OnNavigatedTo() {
 		mp.receivePage.OnNavigatedTo()
 	}
 
-	if mp.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey) {
+	if mp.MultiWallet().ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false) {
 		mp.StartSyncing()
-		if mp.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
-			go mp.WL.MultiWallet.Politeia.Sync()
+		if mp.MultiWallet().ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) {
+			go mp.MultiWallet().Politeia.Sync()
 		}
 	}
 
@@ -245,17 +250,17 @@ func (mp *MainPage) OnNavigatedTo() {
 }
 
 func (mp *MainPage) setLanguageSetting() {
-	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey)
+	langPre := mp.MultiWallet().ReadStringConfigValueForKey(load.LanguagePreferenceKey)
 	if langPre == "" {
-		mp.WL.Wallet.SaveConfigValueForKey(load.LanguagePreferenceKey, values.DefaultLangauge)
+		mp.MultiWallet().SaveUserConfigValue(load.LanguagePreferenceKey, values.DefaultLangauge)
 	}
 	values.SetUserLanguage(langPre)
 }
 
 func (mp *MainPage) updateExchangeSetting() {
-	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	currencyExchangeValue := mp.MultiWallet().ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyExchangeValue == "" {
-		mp.WL.Wallet.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue)
+		mp.MultiWallet().SaveUserConfigValue(dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue)
 	}
 
 	usdExchangeSet := currencyExchangeValue == values.USDExchangeValue
@@ -292,7 +297,7 @@ func (mp *MainPage) fetchExchangeRate() {
 }
 
 func (mp *MainPage) updateBalance() {
-	totalBalance, _, err := components.CalculateTotalWalletsBalance(mp.Load)
+	totalBalance, _, err := mp.TotalBalance()
 	if err == nil {
 		mp.totalBalance = totalBalance
 
@@ -300,21 +305,21 @@ func (mp *MainPage) updateBalance() {
 			usdExchangeRate, err := strconv.ParseFloat(mp.dcrUsdtBittrex.LastTradeRate, 64)
 			if err == nil {
 				balanceInUSD := totalBalance.ToCoin() * usdExchangeRate
-				mp.totalBalanceUSD = load.FormatUSDBalance(mp.Printer, balanceInUSD)
+				mp.totalBalanceUSD = load.FormatUSDBalance(message.NewPrinter(language.English), balanceInUSD) // TODO: Revisit.
 			}
 		}
 	}
 }
 
 func (mp *MainPage) StartSyncing() {
-	for _, wal := range mp.WL.SortedWalletList() {
+	for _, wal := range mp.MultiWallet().AllWallets() {
 		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
 			mp.UnlockWalletForSyncing(wal)
 			return
 		}
 	}
 
-	err := mp.WL.MultiWallet.SpvSync()
+	err := mp.MultiWallet().SpvSync()
 	if err != nil {
 		// show error dialog
 		log.Info("Error starting sync:", err)
@@ -322,13 +327,13 @@ func (mp *MainPage) StartSyncing() {
 }
 
 func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
-	modal.NewPasswordModal(mp.Load).
+	modal.NewPasswordModal(mp.Theme, nil).
 		Title(values.String(values.StrResumeAccountDiscoveryTitle)).
 		Hint("Spending password").
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton(values.String(values.StrUnlock), func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-				err := mp.WL.MultiWallet.UnlockWallet(wal.ID, []byte(password))
+				err := mp.MultiWallet().UnlockWallet(wal.ID, []byte(password))
 				if err != nil {
 					errText := err.Error()
 					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
@@ -394,12 +399,12 @@ func (mp *MainPage) HandleUserInteractions() {
 			var pg load.Page
 			if i == 0 {
 				if mp.sendPage == nil {
-					mp.sendPage = send.NewSendPage(mp.Load)
+					mp.sendPage = send.NewSendPage(mp.App)
 				}
 				pg = mp.sendPage
 			} else {
 				if mp.receivePage == nil {
-					mp.receivePage = NewReceivePage(mp.Load)
+					mp.receivePage = NewReceivePage(mp.App)
 				}
 				pg = mp.receivePage
 			}
@@ -408,7 +413,7 @@ func (mp *MainPage) HandleUserInteractions() {
 				continue
 			}
 
-			mp.ChangeFragment(pg)
+			mp.changeFragment(pg)
 		}
 	}
 
@@ -417,24 +422,24 @@ func (mp *MainPage) HandleUserInteractions() {
 			var pg load.Page
 			switch item.PageID {
 			case overview.OverviewPageID:
-				pg = overview.NewOverviewPage(mp.Load)
+				pg = overview.NewOverviewPage(mp.App, mp.changeFragment, mp.toggleSync)
 			case transaction.TransactionsPageID:
-				pg = transaction.NewTransactionsPage(mp.Load)
+				pg = transaction.NewTransactionsPage(mp.App, mp.changeFragment)
 			case wallets.WalletPageID:
-				pg = wallets.NewWalletPage(mp.Load)
+				pg = wallets.NewWalletPage(mp.App, mp.changeFragment)
 			case staking.OverviewPageID:
-				pg = staking.NewStakingPage(mp.Load)
+				pg = staking.NewStakingPage(nil)
 			case governance.GovernancePageID:
-				pg = governance.NewGovernancePage(mp.Load)
+				pg = governance.NewGovernancePage(nil)
 			case dexclient.MarketPageID:
-				_, err := mp.WL.MultiWallet.StartDexClient() // does nothing if already started
+				_, err := mp.MultiWallet().StartDexClient() // does nothing if already started
 				if err != nil {
 					mp.Toast.NotifyError(fmt.Sprintf("Unable to start DEX client: %v", err))
 				} else {
-					pg = dexclient.NewMarketPage(mp.Load)
+					pg = dexclient.NewMarketPage(nil)
 				}
 			case MorePageID:
-				pg = NewMorePage(mp.Load)
+				pg = NewMorePage(nil)
 			}
 
 			if pg == nil || pg.ID() == mp.currentPageID() {
@@ -446,15 +451,15 @@ func (mp *MainPage) HandleUserInteractions() {
 		}
 	}
 
-	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.HideBalanceConfigKey, false)
+	mp.isBalanceHidden = mp.MultiWallet().ReadBoolConfigValueForKey(load.HideBalanceConfigKey, false)
 	for mp.hideBalanceItem.hideBalanceButton.Button.Clicked() {
 		mp.isBalanceHidden = !mp.isBalanceHidden
-		mp.WL.MultiWallet.SetBoolConfigValueForKey(load.HideBalanceConfigKey, mp.isBalanceHidden)
+		mp.MultiWallet().SetBoolConfigValueForKey(load.HideBalanceConfigKey, mp.isBalanceHidden)
 	}
 }
 
 // HandleKeyEvent is called when a key is pressed on the current window.
-// Satisfies the load.KeyEventHandler interface for receiving key events.
+// Satisfies the app.KeyEventHandler interface for receiving key events.
 func (mp *MainPage) HandleKeyEvent(evt *key.Event) {
 	if mp.currentPage != nil {
 		if keyEvtHandler, ok := mp.currentPage.(load.KeyEventHandler); ok {
@@ -493,7 +498,7 @@ func (mp *MainPage) currentPageID() string {
 	return ""
 }
 
-func (mp *MainPage) changeFragment(page load.Page) {
+func (mp *MainPage) changeFragment(page app.Page) {
 
 	// If Page is the last in back stack return.
 	if mp.currentPageID() == page.ID() {
@@ -677,7 +682,7 @@ func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
 			return hiddenBalanceText.Layout(gtx)
 		})
 	}
-	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
+	return components.LayoutBalance(gtx, mp.Theme, mp.totalBalance.String())
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
@@ -774,8 +779,8 @@ func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 			return
 		}
 
-		if mp.WL.MultiWallet.OpenedWalletsCount() > 1 {
-			wallet := mp.WL.MultiWallet.WalletWithID(t.Transaction.WalletID)
+		if mp.MultiWallet().OpenedWalletsCount() > 1 {
+			wallet := mp.MultiWallet().WalletWithID(t.Transaction.WalletID)
 			if wallet == nil {
 				return
 			}
@@ -785,7 +790,7 @@ func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 
 		initializeBeepNotification(notification)
 	case wallet.Proposal:
-		proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
+		proposalNotification := mp.MultiWallet().ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey, false)
 		if !proposalNotification {
 			return
 		}
@@ -829,21 +834,21 @@ func (mp *MainPage) listenForNotifications() {
 	}
 
 	mp.SyncProgressListener = listeners.NewSyncProgress()
-	err := mp.WL.MultiWallet.AddSyncProgressListener(mp.SyncProgressListener, MainPageID)
+	err := mp.MultiWallet().AddSyncProgressListener(mp.SyncProgressListener, MainPageID)
 	if err != nil {
 		log.Errorf("Error adding sync progress listener: %v", err)
 		return
 	}
 
 	mp.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	err = mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp.TxAndBlockNotificationListener, true, MainPageID)
+	err = mp.MultiWallet().AddTxAndBlockNotificationListener(mp.TxAndBlockNotificationListener, true, MainPageID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
 	}
 
 	mp.ProposalNotificationListener = listeners.NewProposalNotificationListener()
-	err = mp.WL.MultiWallet.Politeia.AddNotificationListener(mp.ProposalNotificationListener, MainPageID)
+	err = mp.MultiWallet().Politeia.AddNotificationListener(mp.ProposalNotificationListener, MainPageID)
 	if err != nil {
 		log.Errorf("Error adding politeia notification listener: %v", err)
 		return
@@ -856,7 +861,7 @@ func (mp *MainPage) listenForNotifications() {
 				switch n.Type {
 				case listeners.NewTransaction:
 					mp.updateBalance()
-					transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
+					transactionNotification := mp.MultiWallet().ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey, false)
 					if transactionNotification {
 						update := wallet.NewTransaction{
 							Transaction: n.Transaction,
@@ -865,7 +870,7 @@ func (mp *MainPage) listenForNotifications() {
 					}
 					mp.RefreshWindow()
 				case listeners.BlockAttached:
-					beep := mp.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+					beep := mp.MultiWallet().ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
 					if beep {
 						err := beeep.Beep(5, 1)
 						if err != nil {
@@ -891,9 +896,9 @@ func (mp *MainPage) listenForNotifications() {
 					mp.RefreshWindow()
 				}
 			case <-mp.ctx.Done():
-				mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
-				mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
-				mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
+				mp.MultiWallet().RemoveSyncProgressListener(MainPageID)
+				mp.MultiWallet().RemoveTxAndBlockNotificationListener(MainPageID)
+				mp.MultiWallet().Politeia.RemoveNotificationListener(MainPageID)
 
 				close(mp.SyncStatusChan)
 				close(mp.TxAndBlockNotifChan)

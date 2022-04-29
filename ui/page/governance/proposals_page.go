@@ -71,12 +71,12 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
 	pg.proposalsList.IsShadowEnabled = true
 
-	_, pg.infoButton = components.SubpageHeaderButtons(l)
+	_, pg.infoButton = components.SubpageHeaderButtons(l.Theme)
 	pg.infoButton.Size = values.MarginPadding20
 
 	// orderDropDown is the first dropdown when page is laid out. Its
 	// position should be 0 for consistent backdrop.
-	pg.orderDropDown = components.CreateOrderDropDown(l, values.ProposalDropdownGroup, 0)
+	pg.orderDropDown = components.CreateOrderDropDown(l.Theme, values.ProposalDropdownGroup, 0)
 	pg.categoryDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: "Under Review",
@@ -126,7 +126,7 @@ func (pg *ProposalsPage) fetchProposals() {
 		proposalFilter = dcrlibwallet.ProposalCategoryAbandoned
 	}
 
-	proposalItems := components.LoadProposals(proposalFilter, newestFirst, pg.Load)
+	proposalItems := components.LoadProposals(proposalFilter, newestFirst, pg.WL.MultiWallet, pg.Theme)
 
 	// group 'In discussion' and 'Active' proposals into under review
 	listItems := make([]*components.ProposalItem, 0)
@@ -272,12 +272,12 @@ func (pg *ProposalsPage) layoutContent(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 						if len(proposalItems) == 0 {
-							return components.LayoutNoProposalsFound(gtx, pg.Load, pg.isSyncing, int32(pg.categoryDropDown.SelectedIndex()))
+							return components.LayoutNoProposalsFound(gtx, pg.Theme, pg.isSyncing, int32(pg.categoryDropDown.SelectedIndex()))
 						}
 						return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return components.ProposalsList(gtx, pg.Load, proposalItems[i])
+									return components.ProposalsList(gtx, pg.Theme, proposalItems[i])
 								}),
 								layout.Rigid(func(gtx C) D {
 									return pg.Theme.Separator().Layout(gtx)

@@ -5,7 +5,6 @@ import (
 	"gioui.org/unit"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -23,7 +22,7 @@ type NavHandler struct {
 }
 
 type NavDrawer struct {
-	*load.Load
+	Theme *decredmaterial.Theme
 
 	AppBarNavItems []NavHandler
 	DrawerNavItems []NavHandler

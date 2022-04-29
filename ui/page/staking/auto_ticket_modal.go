@@ -175,7 +175,7 @@ func (tb *ticketBuyerModal) Dismiss() {
 }
 
 func (tb *ticketBuyerModal) initializeAccountSelector() {
-	tb.accountSelector = components.NewAccountSelector(tb.Load, nil).
+	tb.accountSelector = components.NewAccountSelector(nil, nil).
 		Title("Purchasing account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {

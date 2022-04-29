@@ -53,7 +53,7 @@ func NewAboutPage(l *load.Load) *AboutPage {
 		BottomLeft:  values.MarginPadding14.V,
 	}
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 	col := pg.Theme.Color.GrayText2
 	pg.versionValue.Color = col
 	pg.buildDateValue.Color = col
@@ -89,7 +89,7 @@ func (pg *AboutPage) OnNavigatedTo() {
 func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "About",
 			BackButton: pg.backButton,
 			Back: func() {

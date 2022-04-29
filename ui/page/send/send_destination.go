@@ -8,13 +8,13 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 )
 
 type destination struct {
-	*load.Load
+	*app.App
 
 	addressChanged             func()
 	destinationAddressEditor   decredmaterial.Editor
@@ -24,24 +24,24 @@ type destination struct {
 	accountSwitch *decredmaterial.SwitchButtonText
 }
 
-func newSendDestination(l *load.Load) *destination {
+func newSendDestination(app *app.App) *destination {
 	dst := &destination{
-		Load: l,
+		App: app,
 	}
 
-	dst.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), "Destination Address")
+	dst.destinationAddressEditor = app.Theme.Editor(new(widget.Editor), "Destination Address")
 	dst.destinationAddressEditor.Editor.SingleLine = true
 	dst.destinationAddressEditor.Editor.SetText("")
 
-	dst.accountSwitch = l.Theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
+	dst.accountSwitch = app.Theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
 
 	// Destination account picker
-	dst.destinationAccountSelector = components.NewAccountSelector(dst.Load, nil).
+	dst.destinationAccountSelector = components.NewAccountSelector(dst.App, nil).
 		Title("Receiving account").
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 
 			// Filter out imported account and mixed.
-			wal := dst.Load.WL.MultiWallet.WalletWithID(account.WalletID)
+			wal := dst.MultiWallet().WalletWithID(account.WalletID)
 			if account.Number == components.MaxInt32 ||
 				account.Number == wal.MixedAccountNumber() {
 				return false
@@ -55,7 +55,7 @@ func newSendDestination(l *load.Load) *destination {
 
 func (dst *destination) destinationAddress(useDefaultParams bool) (string, error) {
 	destinationAccount := dst.destinationAccountSelector.SelectedAccount()
-	wal := dst.WL.MultiWallet.WalletWithID(destinationAccount.WalletID)
+	wal := dst.MultiWallet().WalletWithID(destinationAccount.WalletID)
 
 	if useDefaultParams {
 		return wal.CurrentAddress(destinationAccount.Number)
@@ -95,7 +95,7 @@ func (dst *destination) validateDestinationAddress() (bool, string) {
 		return false, address
 	}
 
-	if dst.WL.MultiWallet.IsAddressValid(address) {
+	if dst.MultiWallet().IsAddressValid(address) {
 		dst.destinationAddressEditor.SetError("")
 		return true, address
 	}

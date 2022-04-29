@@ -60,7 +60,7 @@ func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defau
 		modal:             l.Theme.ModalFloatTitle(),
 	}
 
-	lp.cancelButton, _ = components.SubpageHeaderButtons(l)
+	lp.cancelButton, _ = components.SubpageHeaderButtons(l.Theme)
 	lp.cancelButton.Icon = l.Theme.Icons.ContentClear
 
 	return &lp

@@ -30,7 +30,7 @@ func NewHelpPage(l *load.Load) *HelpPage {
 	pg.shadowBox.SetShadowRadius(14)
 
 	pg.documentation.Radius = decredmaterial.Radius(14)
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 }
@@ -56,7 +56,7 @@ func (pg *HelpPage) OnNavigatedTo() {
 func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "Help",
 			SubTitle:   "For more information, please visit the Decred documentation.",
 			BackButton: pg.backButton,

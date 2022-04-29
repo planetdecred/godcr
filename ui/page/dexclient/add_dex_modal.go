@@ -120,7 +120,7 @@ func (md *addDexModal) Handle() {
 
 			newCreateWalletModal(md.Load,
 				&walletInfoWidget{
-					image:    components.CoinImageBySymbol(md.Load, feeAssetName),
+					image:    components.CoinImageBySymbol(md.Theme, feeAssetName),
 					coinName: feeAssetName,
 					coinID:   feeAsset.ID,
 				},
@@ -181,7 +181,7 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 }
 
 func (md *addDexModal) completeRegistration(dex *core.Exchange, feeAssetName string, cert []byte) {
-	modal.NewPasswordModal(md.Load).
+	modal.NewPasswordModal(md.Load.Theme, nil).
 		Title("Confirm Registration").
 		Hint("App password").
 		Description(confirmRegisterModalDesc(dex, feeAssetName)).

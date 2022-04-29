@@ -37,7 +37,7 @@ func NewSetupMixerAccountsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Setup
 		Load:   l,
 		wallet: wallet,
 	}
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l.Theme)
 
 	pg.autoSetupIcon = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
 	pg.autoSetupIcon.Color = pg.Theme.Color.Success
@@ -72,7 +72,7 @@ func (pg *SetupMixerAccountsPage) OnNavigatedTo() {
 func (pg *SetupMixerAccountsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := components.SubPage{
-			Load:       pg.Load,
+			// App:        pg.App,
 			Title:      "Set up needed accounts",
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,

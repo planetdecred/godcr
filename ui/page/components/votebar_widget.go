@@ -15,14 +15,13 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 // VoteBar widget implements voting stat for proposals.
 // VoteBar shows the range/percentage of the yes votes and no votes against the total required.
 type VoteBar struct {
-	*load.Load
+	theme *decredmaterial.Theme
 
 	yesVotes           float32
 	noVotes            float32
@@ -47,18 +46,18 @@ type VoteBar struct {
 
 var voteBarThumbWidth = 2
 
-func NewVoteBar(l *load.Load) *VoteBar {
+func NewVoteBar(theme *decredmaterial.Theme) *VoteBar {
 	vb := &VoteBar{
-		Load: l,
+		theme: theme,
 
-		yesColor:      l.Theme.Color.Success,
-		noColor:       l.Theme.Color.Danger,
-		passTooltip:   l.Theme.Tooltip(),
-		quorumTooltip: l.Theme.Tooltip(),
-		infoIcon:      decredmaterial.NewIcon(l.Theme.Icons.ActionInfo),
-		legendIcon:    decredmaterial.NewIcon(l.Theme.Icons.ImageBrightness1),
+		yesColor:      theme.Color.Success,
+		noColor:       theme.Color.Danger,
+		passTooltip:   theme.Tooltip(),
+		quorumTooltip: theme.Tooltip(),
+		infoIcon:      decredmaterial.NewIcon(theme.Icons.ActionInfo),
+		legendIcon:    decredmaterial.NewIcon(theme.Icons.ImageBrightness1),
 	}
-	vb.infoIcon.Color = l.Theme.Color.Gray1
+	vb.infoIcon.Color = theme.Color.Gray1
 
 	return vb
 }
@@ -143,7 +142,7 @@ func (v *VoteBar) votebarLayout(gtx C) D {
 
 	return layout.Stack{Alignment: layout.W}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			return progressScale(progressBarWidth, v.Theme.Color.Gray2, 1)
+			return progressScale(progressBarWidth, v.theme.Color.Gray2, 1)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{}.Layout(gtx,
@@ -170,7 +169,7 @@ func (v *VoteBar) votesIndicatorTooltip(gtx C, r image.Rectangle, tipPos float32
 	inset := layout.Inset{Left: unit.Dp(insetLeft), Top: values.MarginPadding25}
 	v.passTooltip.Layout(gtx, r, inset, func(gtx C) D {
 		txt := fmt.Sprintf("%d %% Yes votes required for approval", int(v.passPercentage))
-		return v.Theme.Caption(txt).Layout(gtx)
+		return v.theme.Caption(txt).Layout(gtx)
 	})
 }
 
@@ -187,7 +186,7 @@ func (v *VoteBar) requiredYesVotesIndicator(gtx C) D {
 		},
 	}
 	defer clip.Rect(rect).Push(gtx.Ops).Pop()
-	paint.Fill(gtx.Ops, v.Theme.Color.Gray3)
+	paint.Fill(gtx.Ops, v.theme.Color.Gray3)
 	v.votesIndicatorTooltip(gtx, rect, thumbLeftPos)
 
 	return D{
@@ -203,11 +202,11 @@ func (v *VoteBar) Layout(gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								yesLabel := v.Theme.Body1("Yes: ")
+								yesLabel := v.theme.Body1("Yes: ")
 								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes, v.yesColor)
 							}),
 							layout.Rigid(func(gtx C) D {
-								noLabel := v.Theme.Body1("No: ")
+								noLabel := v.theme.Body1("No: ")
 								return v.layoutIconAndText(gtx, noLabel, v.noVotes, v.noColor)
 							}),
 							layout.Flexed(1, func(gtx C) D {
@@ -247,7 +246,7 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float
 				percentageStr := strconv.FormatFloat(float64(percentage), 'f', 1, 64) + "%"
 				countStr := strconv.FormatFloat(float64(count), 'f', 0, 64)
 
-				return v.Theme.Body1(fmt.Sprintf("%s (%s)", countStr, percentageStr)).Layout(gtx)
+				return v.theme.Body1(fmt.Sprintf("%s (%s)", countStr, percentageStr)).Layout(gtx)
 			}),
 		)
 	})
@@ -255,7 +254,7 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float
 
 func (v *VoteBar) layoutInfo(gtx C) D {
 	dims := layout.Flex{}.Layout(gtx,
-		layout.Rigid(v.Theme.Body2(fmt.Sprintf("%d Total votes", int(v.totalVotes))).Layout),
+		layout.Rigid(v.theme.Body2(fmt.Sprintf("%d Total votes", int(v.totalVotes))).Layout),
 		layout.Rigid(func(gtx C) D {
 			rect := image.Rectangle{
 				Min: gtx.Constraints.Min,
@@ -274,45 +273,45 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 
 func (v *VoteBar) layoutInfoTooltip(gtx C, rect image.Rectangle) {
 	inset := layout.Inset{Top: unit.Dp(20), Left: unit.Dp(-180)}
-	col := v.Theme.Color.GrayText2
+	col := v.theme.Color.GrayText2
 
 	v.quorumTooltip.Layout(gtx, rect, inset, func(gtx C) D {
 		gtx.Constraints.Max.X = gtx.Px(unit.Dp(180))
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				totalVotesTooltipLabel := v.Theme.Caption("Total votes")
+				totalVotesTooltipLabel := v.theme.Caption("Total votes")
 				totalVotesTooltipLabel.Color = col
 
-				totalVotesCountLabel := v.Theme.Caption(fmt.Sprintf("%6.0f", v.totalVotes))
+				totalVotesCountLabel := v.theme.Caption(fmt.Sprintf("%6.0f", v.totalVotes))
 				return EndToEndRow(gtx, totalVotesTooltipLabel.Layout, totalVotesCountLabel.Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
-				quorumRequirementTooltip := v.Theme.Caption("Quorum requirement")
+				quorumRequirementTooltip := v.theme.Caption("Quorum requirement")
 				quorumRequirementTooltip.Color = col
 
-				quorumRequirementCount := v.Theme.Caption(fmt.Sprintf("%6.0f", (v.requiredPercentage/100)*v.eligibleVotes))
+				quorumRequirementCount := v.theme.Caption(fmt.Sprintf("%6.0f", (v.requiredPercentage/100)*v.eligibleVotes))
 				return EndToEndRow(gtx, quorumRequirementTooltip.Layout, quorumRequirementCount.Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
-				commentInfo := v.Theme.Caption("Discussions")
+				commentInfo := v.theme.Caption("Discussions")
 				commentInfo.Color = col
 
-				commentCount := v.Theme.Caption(fmt.Sprintf("%d comments", v.numComment))
+				commentCount := v.theme.Caption(fmt.Sprintf("%d comments", v.numComment))
 				return EndToEndRow(gtx, commentInfo.Layout, commentCount.Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
-				pub := v.Theme.Caption("Published")
+				pub := v.theme.Caption("Published")
 				pub.Color = col
 
-				pubDate := v.Theme.Caption(dcrlibwallet.FormatUTCTime(v.publishedAt))
+				pubDate := v.theme.Caption(dcrlibwallet.FormatUTCTime(v.publishedAt))
 				return EndToEndRow(gtx, pub.Layout, pubDate.Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
-				token := v.Theme.Caption("Token")
+				token := v.theme.Caption("Token")
 				token.Color = col
 
-				tokenVal := v.Theme.Caption(v.token)
+				tokenVal := v.theme.Caption(v.token)
 				return EndToEndRow(gtx, token.Layout, tokenVal.Layout)
 			}),
 		)

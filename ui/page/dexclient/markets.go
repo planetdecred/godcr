@@ -193,7 +193,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.login.Button.Clicked() {
-		modal.NewPasswordModal(pg.Load).
+		modal.NewPasswordModal(pg.Load.Theme, nil).
 			Title("Login").
 			Hint("App password").
 			NegativeButton(values.String(values.StrCancel), func() {}).

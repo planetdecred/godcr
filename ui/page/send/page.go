@@ -10,9 +10,12 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/widget"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -33,7 +36,9 @@ type moreItem struct {
 }
 
 type Page struct {
-	*load.Load
+	*app.App
+	PopFragment func() // TODO: Will crash.
+
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -82,27 +87,27 @@ type authoredTxData struct {
 	sendAmountUSD       string
 }
 
-func NewSendPage(l *load.Load) *Page {
+func NewSendPage(app *app.App) *Page {
 	pg := &Page{
-		Load:            l,
-		sendDestination: newSendDestination(l),
-		amount:          newSendAmount(l),
+		App:             app,
+		sendDestination: newSendDestination(app),
+		amount:          newSendAmount(app.Theme),
 
 		exchangeRate: -1,
 
 		authoredTxData: &authoredTxData{},
-		shadowBox:      l.Theme.Shadow(),
+		shadowBox:      app.Theme.Shadow(),
 		backdrop:       new(widget.Clickable),
 	}
 
 	// Source account picker
-	pg.sourceAccountSelector = components.NewAccountSelector(l, nil).
+	pg.sourceAccountSelector = components.NewAccountSelector(app, nil).
 		Title("Sending account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			pg.validateAndConstructTx()
 		}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
-			wal := pg.Load.WL.MultiWallet.WalletWithID(account.WalletID)
+			wal := pg.MultiWallet().WalletWithID(account.WalletID)
 
 			// Imported and watch only wallet accounts are invalid for sending
 			accountIsValid := account.Number != load.MaxInt32 && !wal.IsWatchingOnlyWallet()
@@ -169,7 +174,7 @@ func (pg *Page) OnNavigatedTo() {
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount(nil, -1)
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()
 
-	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	currencyExchangeValue := pg.MultiWallet().ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyExchangeValue == values.USDExchangeValue {
 		pg.usdExchangeSet = true
 		go pg.fetchExchangeRate()
@@ -261,7 +266,7 @@ func (pg *Page) constructTx(useDefaultParams bool) {
 	}
 
 	sourceAccount := pg.sourceAccountSelector.SelectedAccount()
-	unsignedTx, err := pg.WL.MultiWallet.NewUnsignedTx(sourceAccount.WalletID, sourceAccount.Number)
+	unsignedTx, err := pg.MultiWallet().NewUnsignedTx(sourceAccount.WalletID, sourceAccount.Number)
 	if err != nil {
 		pg.feeEstimationError(err.Error())
 		return
@@ -304,12 +309,13 @@ func (pg *Page) constructTx(useDefaultParams bool) {
 	}
 
 	if pg.exchangeRate != -1 && pg.usdExchangeSet {
+		printer := message.NewPrinter(language.English)
 		pg.txFeeUSD = fmt.Sprintf("$%.4f", load.DCRToUSD(pg.exchangeRate, feeAndSize.Fee.DcrValue))
-		pg.totalCostUSD = load.FormatUSDBalance(pg.Printer, load.DCRToUSD(pg.exchangeRate, totalSendingAmount.ToCoin()))
-		pg.balanceAfterSendUSD = load.FormatUSDBalance(pg.Printer, load.DCRToUSD(pg.exchangeRate, balanceAfterSend.ToCoin()))
+		pg.totalCostUSD = load.FormatUSDBalance(printer, load.DCRToUSD(pg.exchangeRate, totalSendingAmount.ToCoin()))
+		pg.balanceAfterSendUSD = load.FormatUSDBalance(printer, load.DCRToUSD(pg.exchangeRate, balanceAfterSend.ToCoin()))
 
 		usdAmount := load.DCRToUSD(pg.exchangeRate, dcrutil.Amount(amountAtom).ToCoin())
-		pg.sendAmountUSD = load.FormatUSDBalance(pg.Printer, usdAmount)
+		pg.sendAmountUSD = load.FormatUSDBalance(printer, usdAmount)
 	}
 
 	pg.txAuthor = unsignedTx
@@ -362,7 +368,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.infoButton.Button.Clicked() {
-		info := modal.NewInfoModal(pg.Load).
+		info := modal.NewInfoModal(pg.App).
 			Title("Send DCR").
 			Body("Input or scan the destination wallet address and input the amount to send funds.").
 			PositiveButton("Got it", func(isChecked bool) {})
@@ -379,7 +385,7 @@ func (pg *Page) HandleUserInteractions() {
 
 	for pg.nextButton.Clicked() {
 		if pg.txAuthor != nil {
-			pg.confirmTxModal = newSendConfirmModal(pg.Load, pg.authoredTxData).SetParent(pg)
+			pg.confirmTxModal = newSendConfirmModal(pg.App, pg.authoredTxData).SetParent(pg)
 			pg.confirmTxModal.exchangeRateSet = pg.exchangeRate != -1 && pg.usdExchangeSet
 
 			pg.confirmTxModal.txSent = func() {
@@ -401,9 +407,9 @@ func (pg *Page) HandleUserInteractions() {
 		}
 	}
 
+	// TODO: Rewrite these widget focusing code.
 	modalShown := pg.confirmTxModal != nil && pg.confirmTxModal.IsShown()
-
-	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	currencyValue := pg.MultiWallet().ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyValue != values.USDExchangeValue {
 		switch {
 		case !pg.sendDestination.sendToAddress:
@@ -417,7 +423,6 @@ func (pg *Page) HandleUserInteractions() {
 				} else {
 					pg.amount.dcrAmountEditor.Editor.Focus()
 				}
-
 			}
 		}
 	} else {
@@ -478,13 +483,13 @@ func (pg *Page) HandleUserInteractions() {
 }
 
 // HandleKeyEvent is called when a key is pressed on the current window.
-// Satisfies the load.KeyEventHandler interface for receiving key events.
+// Satisfies the app.KeyEventHandler interface for receiving key events.
 func (pg *Page) HandleKeyEvent(evt *key.Event) {
 	if pg.confirmTxModal != nil && pg.confirmTxModal.IsShown() {
 		return
 	}
 
-	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	currencyValue := pg.MultiWallet().ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyValue != values.USDExchangeValue {
 		switch {
 		case !pg.sendDestination.sendToAddress:

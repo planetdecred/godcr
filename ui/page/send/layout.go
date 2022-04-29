@@ -32,7 +32,7 @@ func (pg *Page) initLayoutWidgets() {
 	pg.nextButton.Inset = layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15}
 	pg.nextButton.SetEnabled(false)
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Theme)
 	pg.backButton.Icon = pg.Theme.Icons.ContentClear
 
 	pg.moreOption = pg.Theme.IconButton(pg.Theme.Icons.NavMoreIcon)

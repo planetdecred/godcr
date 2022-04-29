@@ -67,11 +67,11 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Theme.Icons.SearchIcon, true)
 	pg.searchEditor.Editor.SingleLine, pg.searchEditor.Editor.Submit, pg.searchEditor.Bordered = true, true, false
 
-	_, pg.infoButton = components.SubpageHeaderButtons(l)
+	_, pg.infoButton = components.SubpageHeaderButtons(l.Theme)
 	pg.infoButton.Size = values.MarginPadding20
 
-	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
-	pg.orderDropDown = components.CreateOrderDropDown(l, values.ConsensusDropdownGroup, 0)
+	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Theme, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
+	pg.orderDropDown = components.CreateOrderDropDown(pg.Theme, values.ConsensusDropdownGroup, 0)
 
 	return pg
 }

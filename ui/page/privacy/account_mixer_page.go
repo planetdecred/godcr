@@ -48,7 +48,7 @@ func NewAccountMixerPage(l *load.Load, wallet *dcrlibwallet.Wallet) *AccountMixe
 		allowUnspendUnmixedAcct: l.Theme.Switch(),
 		dangerZoneCollapsible:   l.Theme.Collapsible(),
 	}
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 }
@@ -83,7 +83,7 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "StakeShuffle",
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
@@ -95,7 +95,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 			Body: func(gtx layout.Context) layout.Dimensions {
 				widgets := []func(gtx C) D{
 					func(gtx C) D {
-						return components.MixerInfoLayout(gtx, pg.Load, pg.wallet.IsAccountMixerActive(),
+						return components.MixerInfoLayout(gtx, pg.Theme, pg.wallet.IsAccountMixerActive(),
 							pg.toggleMixer.Layout, func(gtx C) D {
 								mixedBalance := "0.00"
 								unmixedBalance := "0.00"
@@ -108,7 +108,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 									}
 								}
 
-								return components.MixerInfoContentWrapper(gtx, pg.Load, func(gtx C) D {
+								return components.MixerInfoContentWrapper(gtx, pg.Theme, func(gtx C) D {
 									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
@@ -118,7 +118,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 													return txt.Layout(gtx)
 												}),
 												layout.Rigid(func(gtx C) D {
-													return components.LayoutBalance(gtx, pg.Load, unmixedBalance)
+													return components.LayoutBalance(gtx, pg.Theme, unmixedBalance)
 												}),
 											)
 										}),
@@ -133,7 +133,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 													return t.Layout(gtx)
 												}),
 												layout.Rigid(func(gtx C) D {
-													return components.LayoutBalance(gtx, pg.Load, mixedBalance)
+													return components.LayoutBalance(gtx, pg.Theme, mixedBalance)
 												}),
 											)
 										}),
@@ -262,7 +262,7 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 
 	if pg.allowUnspendUnmixedAcct.Changed() {
 		if pg.allowUnspendUnmixedAcct.IsChecked() {
-			textModal := modal.NewTextInputModal(pg.Load).
+			textModal := modal.NewTextInputModal(nil).
 				SetTextWithTemplate(modal.AllowUnmixedSpendingTemplate).
 				Hint("").
 				PositiveButtonStyle(pg.Load.Theme.Color.Danger, pg.Load.Theme.Color.InvText).
@@ -298,7 +298,7 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 }
 
 func (pg *AccountMixerPage) showModalPasswordStartAccountMixer() {
-	modal.NewPasswordModal(pg.Load).
+	modal.NewPasswordModal(pg.Load.Theme, nil).
 		Title("Confirm to mix account").
 		NegativeButton("Cancel", func() {
 			pg.toggleMixer.SetChecked(false)

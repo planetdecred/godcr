@@ -263,7 +263,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if clicked, selectedItem := pg.ticketsLive.ItemClicked(); clicked {
-		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
+		pg.ChangeFragment(tpage.NewTransactionDetailsPage(nil, pg.liveTickets[selectedItem].transaction))
 	}
 
 	if pg.autoPurchase.Changed() {
@@ -326,7 +326,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 		return
 	}
 
-	modal.NewPasswordModal(pg.Load).
+	modal.NewPasswordModal(pg.Load.Theme, nil).
 		Title("Confirm Automatic Ticket Purchase").
 		SetCancelable(false).
 		UseCustomWidget(func(gtx C) D {

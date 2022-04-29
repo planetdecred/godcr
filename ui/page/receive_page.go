@@ -14,6 +14,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -26,12 +27,12 @@ import (
 const ReceivePageID = "Receive"
 
 type ReceivePage struct {
-	*load.Load
+	*app.App
+	PopFragment func() // TODO: Will crash.
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
-	multiWallet       *dcrlibwallet.MultiWallet
 	pageContainer     layout.List
 	scrollContainer   *widget.List
 	isNewAddr, isInfo bool
@@ -49,22 +50,21 @@ type ReceivePage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func NewReceivePage(l *load.Load) *ReceivePage {
+func NewReceivePage(app *app.App) *ReceivePage {
 	pg := &ReceivePage{
-		Load:        l,
-		multiWallet: l.WL.MultiWallet,
+		App: app,
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
 		scrollContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		info:           l.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo))),
-		copy:           l.Theme.Button("Copy"),
-		more:           l.Theme.IconButton(l.Theme.Icons.NavMoreIcon),
-		newAddr:        l.Theme.Button("Generate new address"),
-		receiveAddress: l.Theme.Label(values.TextSize20, ""),
-		card:           l.Theme.Card(),
+		info:           app.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo))),
+		copy:           app.Theme.Button("Copy"),
+		more:           app.Theme.IconButton(app.Theme.Icons.NavMoreIcon),
+		newAddr:        app.Theme.Button("Generate new address"),
+		receiveAddress: app.Theme.Label(values.TextSize20, ""),
+		card:           app.Theme.Card(),
 		backdrop:       new(widget.Clickable),
 	}
 
@@ -91,13 +91,13 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 
 	pg.receiveAddress.MaxLines = 1
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(app.Theme)
 	pg.backButton.Icon = pg.Theme.Icons.ContentClear
 
-	pg.selector = components.NewAccountSelector(pg.Load, nil).
+	pg.selector = components.NewAccountSelector(pg.App, nil).
 		Title("Receiving account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
-			selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)
+			selectedWallet := pg.MultiWallet().WalletWithID(selectedAccount.WalletID)
 			currentAddress, err := selectedWallet.CurrentAddress(selectedAccount.Number)
 			if err != nil {
 				log.Errorf("Error getting current address: %v", err)
@@ -110,7 +110,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 
 			// Filter out imported account and mixed.
-			wal := pg.multiWallet.WalletWithID(account.WalletID)
+			wal := pg.MultiWallet().WalletWithID(account.WalletID)
 			if account.Number == load.MaxInt32 ||
 				account.Number == wal.MixedAccountNumber() {
 				return false
@@ -360,7 +360,7 @@ func (pg *ReceivePage) HandleUserInteractions() {
 	}
 
 	if pg.infoButton.Button.Clicked() {
-		info := modal.NewInfoModal(pg.Load).
+		info := modal.NewInfoModal(pg.App).
 			Title("Receive DCR").
 			Body("Each time you receive a payment, a new address is generated to protect your privacy.").
 			PositiveButton("Got it", func(isChecked bool) {})
@@ -374,7 +374,7 @@ func (pg *ReceivePage) HandleUserInteractions() {
 
 func (pg *ReceivePage) generateNewAddress() (string, error) {
 	selectedAccount := pg.selector.SelectedAccount()
-	selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)
+	selectedWallet := pg.MultiWallet().WalletWithID(selectedAccount.WalletID)
 
 generateAddress:
 	newAddr, err := selectedWallet.NextAddress(selectedAccount.Number)

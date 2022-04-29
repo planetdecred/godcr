@@ -42,7 +42,7 @@ func NewLicensePage(l *load.Load) *LicensePage {
 			List: layout.List{Axis: layout.Vertical},
 		},
 	}
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 }
@@ -66,7 +66,7 @@ func (pg *LicensePage) OnNavigatedTo() {}
 func (pg *LicensePage) Layout(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "License",
 			BackButton: pg.backButton,
 			Back: func() {

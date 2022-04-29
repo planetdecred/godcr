@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -18,7 +19,7 @@ import (
 const ModalSendConfirm = "send_confirm_modal"
 
 type sendConfirmModal struct {
-	*load.Load
+	*app.App
 	modal *decredmaterial.Modal
 
 	closeConfirmationModalButton decredmaterial.Button
@@ -34,22 +35,22 @@ type sendConfirmModal struct {
 	parent          load.Page // Reference to the page that this modal is shown on.
 }
 
-func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
+func newSendConfirmModal(app *app.App, data *authoredTxData) *sendConfirmModal {
 	scm := &sendConfirmModal{
-		Load:  l,
-		modal: l.Theme.ModalFloatTitle(),
+		App:   app,
+		modal: app.Theme.ModalFloatTitle(),
 
 		authoredTxData: data,
 	}
 
-	scm.closeConfirmationModalButton = l.Theme.OutlineButton("Cancel")
+	scm.closeConfirmationModalButton = app.Theme.OutlineButton("Cancel")
 	scm.closeConfirmationModalButton.Font.Weight = text.Medium
 
-	scm.confirmButton = l.Theme.Button("")
+	scm.confirmButton = app.Theme.Button("")
 	scm.confirmButton.Font.Weight = text.Medium
 	scm.confirmButton.SetEnabled(false)
 
-	scm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
+	scm.passwordEditor = app.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	scm.passwordEditor.Editor.SetText("")
 	scm.passwordEditor.Editor.SingleLine = true
 	scm.passwordEditor.Editor.Submit = true
@@ -156,7 +157,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return components.LayoutBalance(gtx, scm.Load, scm.sendAmount)
+									return components.LayoutBalance(gtx, scm.Theme, scm.sendAmount)
 								}),
 								layout.Flexed(1, func(gtx C) D {
 									if scm.exchangeRateSet {
@@ -198,7 +199,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 											return inset.Layout(gtx, func(gtx C) D {
 												return card.Layout(gtx, func(gtx C) D {
 													return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-														destinationWallet := scm.WL.MultiWallet.WalletWithID(scm.destinationAccount.WalletID)
+														destinationWallet := scm.MultiWallet().WalletWithID(scm.destinationAccount.WalletID)
 														txt := scm.Theme.Caption(destinationWallet.Name)
 														txt.Color = scm.Theme.Color.GrayText1
 														return txt.Layout(gtx)
@@ -221,7 +222,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					sendWallet := scm.WL.MultiWallet.WalletWithID(scm.sourceAccount.WalletID)
+					sendWallet := scm.MultiWallet().WalletWithID(scm.sourceAccount.WalletID)
 					return scm.contentRow(gtx, "Sending from", scm.sourceAccount.Name, sendWallet.Name)
 				}),
 				layout.Rigid(func(gtx C) D {

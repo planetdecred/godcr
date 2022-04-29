@@ -61,7 +61,7 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreate
 	md.appPassword.Editor.SingleLine = true
 	md.appPassword.Editor.SetText("")
 
-	md.sourceAccountSelector = components.NewAccountSelector(md.Load, nil).
+	md.sourceAccountSelector = components.NewAccountSelector(nil, nil).
 		Title("Select DCR account to use with DEX").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {

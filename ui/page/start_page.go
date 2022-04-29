@@ -7,6 +7,7 @@ import (
 	"gioui.org/text"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -17,7 +18,7 @@ import (
 const StartPageID = "start_page"
 
 type startPage struct {
-	*load.Load
+	*app.App
 
 	createButton  decredmaterial.Button
 	restoreButton decredmaterial.Button
@@ -25,13 +26,13 @@ type startPage struct {
 	loading bool
 }
 
-func NewStartPage(l *load.Load) load.Page {
+func NewStartPage(app *app.App) load.Page {
 	sp := &startPage{
-		Load:    l,
+		App:     app,
 		loading: true,
 
-		createButton:  l.Theme.Button("Create a new wallet"),
-		restoreButton: l.Theme.Button("Restore an existing wallet"),
+		createButton:  app.Theme.Button("Create a new wallet"),
+		restoreButton: app.Theme.Button("Restore an existing wallet"),
 	}
 
 	return sp
@@ -49,29 +50,21 @@ func (sp *startPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (sp *startPage) OnNavigatedTo() {
-	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
-
-	// refresh theme now that config is available
-	sp.RefreshTheme()
-
-	if sp.WL.MultiWallet.LoadedWalletsCount() > 0 {
-		if sp.WL.MultiWallet.IsStartupSecuritySet() {
-			sp.unlock()
-		} else {
-			go sp.openWallets("")
-		}
-
-	} else {
+	if sp.MultiWallet().LoadedWalletsCount() == 0 {
 		sp.loading = false
+	} else if sp.MultiWallet().IsStartupSecuritySet() {
+		sp.unlock()
+	} else {
+		go sp.openWallets("")
 	}
 }
 
 func (sp *startPage) unlock() {
-	modal.NewPasswordModal(sp.Load).
+	modal.NewPasswordModal(sp.Theme, nil).
 		Title("Unlock with password").
 		Hint("Startup password").
 		NegativeButton("Exit", func() {
-			sp.WL.MultiWallet.Shutdown()
+			sp.MultiWallet().Shutdown()
 			os.Exit(0)
 		}).
 		PositiveButton("Unlock", func(password string, m *modal.PasswordModal) bool {
@@ -90,14 +83,14 @@ func (sp *startPage) unlock() {
 }
 
 func (sp *startPage) openWallets(password string) error {
-	err := sp.WL.MultiWallet.OpenWallets([]byte(password))
+	err := sp.MultiWallet().OpenWallets([]byte(password))
 	if err != nil {
 		log.Info("Error opening wallet:", err)
 		// show err dialog
 		return err
 	}
 
-	sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+	sp.ChangePage(NewMainPage(sp.App), false)
 	return nil
 }
 
@@ -108,11 +101,11 @@ func (sp *startPage) openWallets(password string) error {
 // Part of the load.Page interface.
 func (sp *startPage) HandleUserInteractions() {
 	for sp.createButton.Clicked() {
-		modal.NewCreatePasswordModal(sp.Load).
+		modal.NewCreatePasswordModal(nil).
 			Title("Create new wallet").
 			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
-					_, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
+					_, err := sp.MultiWallet().CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
 					if err != nil {
 						m.SetError(err.Error())
 						m.SetLoading(false)
@@ -120,7 +113,7 @@ func (sp *startPage) HandleUserInteractions() {
 					}
 					m.Dismiss()
 
-					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+					sp.ChangePage(NewMainPage(sp.App), false)
 				}()
 				return false
 			}).Show()
@@ -128,9 +121,9 @@ func (sp *startPage) HandleUserInteractions() {
 
 	for sp.restoreButton.Clicked() {
 		afterRestore := func() {
-			sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+			sp.ChangePage(NewMainPage(sp.App), false)
 		}
-		sp.ChangeWindowPage(wallets.NewRestorePage(sp.Load, afterRestore), true)
+		sp.ChangePage(wallets.NewRestorePage(nil, afterRestore), true)
 	}
 }
 
@@ -183,8 +176,8 @@ func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 					})
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					netType := sp.WL.Wallet.Net
-					if sp.WL.Wallet.Net == dcrlibwallet.Testnet3 {
+					netType := sp.MultiWallet().NetType()
+					if netType == dcrlibwallet.Testnet3 {
 						netType = "Testnet"
 					}
 					nType := sp.Theme.Label(values.TextSize20, netType)
@@ -194,7 +187,7 @@ func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					if sp.loading {
 						loadStatus := sp.Theme.Label(values.TextSize20, "Loading")
-						if sp.WL.MultiWallet.LoadedWalletsCount() > 0 {
+						if sp.MultiWallet().LoadedWalletsCount() > 0 {
 							loadStatus.Text = "Opening wallets"
 						}
 

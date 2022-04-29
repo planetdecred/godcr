@@ -87,7 +87,7 @@ func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 	pg.resetSeedFields = l.Theme.OutlineButton("Clear all")
 	pg.resetSeedFields.Font.Weight = text.Medium
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l.Theme)
 	pg.backButton.Icon = pg.Theme.Icons.ContentClear
 
 	for i := 0; i <= numberOfSeeds; i++ {
@@ -126,7 +126,7 @@ func (pg *Restore) OnNavigatedTo() {}
 func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      "Restore wallet",
 			BackButton: pg.backButton,
 			Back: func() {

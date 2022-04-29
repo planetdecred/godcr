@@ -97,84 +97,84 @@ func UniformHorizontalPadding(gtx layout.Context, body layout.Widget) layout.Dim
 	}.Layout(gtx, body)
 }
 
-func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, ticketSpender *dcrlibwallet.Transaction) *TxStatus {
+func TransactionTitleIcon(theme *decredmaterial.Theme, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, ticketSpender *dcrlibwallet.Transaction) *TxStatus {
 	var txStatus TxStatus
 
 	if tx.Type == dcrlibwallet.TxTypeRegular {
 		if tx.Direction == dcrlibwallet.TxDirectionSent {
 			txStatus.Title = "Sent"
-			txStatus.Icon = l.Theme.Icons.SendIcon
+			txStatus.Icon = theme.Icons.SendIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionReceived {
 			txStatus.Title = "Received"
-			txStatus.Icon = l.Theme.Icons.ReceiveIcon
+			txStatus.Icon = theme.Icons.ReceiveIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionTransferred {
 			txStatus.Title = "Yourself"
-			txStatus.Icon = l.Theme.Icons.Transferred
+			txStatus.Icon = theme.Icons.Transferred
 		}
 	} else if tx.Type == dcrlibwallet.TxTypeMixed {
 		txStatus.Title = "Mixed"
-		txStatus.Icon = l.Theme.Icons.MixedTx
+		txStatus.Icon = theme.Icons.MixedTx
 	} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
 
 		if tx.Type == dcrlibwallet.TxTypeTicketPurchase {
 			if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterUnmined) {
 				txStatus.Title = "Unmined"
-				txStatus.Icon = l.Theme.Icons.TicketUnminedIcon
+				txStatus.Icon = theme.Icons.TicketUnminedIcon
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusUnmined
-				txStatus.Color = l.Theme.Color.LightBlue6
-				txStatus.Background = l.Theme.Color.LightBlue
+				txStatus.Color = theme.Color.LightBlue6
+				txStatus.Background = theme.Color.LightBlue
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
 				txStatus.Title = "Immature"
-				txStatus.Icon = l.Theme.Icons.TicketImmatureIcon
-				txStatus.Color = l.Theme.Color.LightBlue6
+				txStatus.Icon = theme.Icons.TicketImmatureIcon
+				txStatus.Color = theme.Color.LightBlue6
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusImmature
-				txStatus.ProgressBarColor = l.Theme.Color.LightBlue5
-				txStatus.ProgressTrackColor = l.Theme.Color.LightBlue3
-				txStatus.Background = l.Theme.Color.LightBlue
+				txStatus.ProgressBarColor = theme.Color.LightBlue5
+				txStatus.ProgressTrackColor = theme.Color.LightBlue3
+				txStatus.Background = theme.Color.LightBlue
 			} else if ticketSpender != nil {
 				if ticketSpender.Type == dcrlibwallet.TxTypeVote {
 					txStatus.Title = "Voted"
-					txStatus.Icon = l.Theme.Icons.TicketVotedIcon
-					txStatus.Color = l.Theme.Color.Turquoise700
+					txStatus.Icon = theme.Icons.TicketVotedIcon
+					txStatus.Color = theme.Color.Turquoise700
 					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
-					txStatus.ProgressBarColor = l.Theme.Color.Turquoise300
-					txStatus.ProgressTrackColor = l.Theme.Color.Turquoise100
-					txStatus.Background = l.Theme.Color.Success2
+					txStatus.ProgressBarColor = theme.Color.Turquoise300
+					txStatus.ProgressTrackColor = theme.Color.Turquoise100
+					txStatus.Background = theme.Color.Success2
 				} else {
 					txStatus.Title = "Revoked"
-					txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
-					txStatus.Color = l.Theme.Color.Orange
+					txStatus.Icon = theme.Icons.TicketRevokedIcon
+					txStatus.Color = theme.Color.Orange
 					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
-					txStatus.ProgressBarColor = l.Theme.Color.Danger
-					txStatus.ProgressTrackColor = l.Theme.Color.Orange3
-					txStatus.Background = l.Theme.Color.Orange2
+					txStatus.ProgressBarColor = theme.Color.Danger
+					txStatus.ProgressTrackColor = theme.Color.Orange3
+					txStatus.Background = theme.Color.Orange2
 				}
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterLive) {
 				txStatus.Title = "Live"
-				txStatus.Icon = l.Theme.Icons.TicketLiveIcon
-				txStatus.Color = l.Theme.Color.Primary
+				txStatus.Icon = theme.Icons.TicketLiveIcon
+				txStatus.Color = theme.Color.Primary
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusLive
-				txStatus.ProgressBarColor = l.Theme.Color.Primary
-				txStatus.ProgressTrackColor = l.Theme.Color.LightBlue4
-				txStatus.Background = l.Theme.Color.Primary50
+				txStatus.ProgressBarColor = theme.Color.Primary
+				txStatus.ProgressTrackColor = theme.Color.LightBlue4
+				txStatus.Background = theme.Color.Primary50
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
 				txStatus.Title = "Expired"
-				txStatus.Icon = l.Theme.Icons.TicketExpiredIcon
-				txStatus.Color = l.Theme.Color.GrayText2
+				txStatus.Icon = theme.Icons.TicketExpiredIcon
+				txStatus.Color = theme.Color.GrayText2
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusExpired
-				txStatus.Background = l.Theme.Color.Gray4
+				txStatus.Background = theme.Color.Gray4
 			} else {
 				txStatus.Title = "Purchased"
-				txStatus.Icon = l.Theme.Icons.NewStakeIcon
-				txStatus.Color = l.Theme.Color.Text
-				txStatus.Background = l.Theme.Color.LightBlue
+				txStatus.Icon = theme.Icons.NewStakeIcon
+				txStatus.Color = theme.Color.Text
+				txStatus.Background = theme.Color.LightBlue
 			}
 		} else if tx.Type == dcrlibwallet.TxTypeVote {
 			txStatus.Title = "Vote"
-			txStatus.Icon = l.Theme.Icons.TicketVotedIcon
+			txStatus.Icon = theme.Icons.TicketVotedIcon
 		} else if tx.Type == dcrlibwallet.TxTypeRevocation {
 			txStatus.Title = "Revocation"
-			txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
+			txStatus.Icon = theme.Icons.TicketRevokedIcon
 		}
 	}
 
@@ -346,15 +346,15 @@ func DurationAgo(timestamp int64) string {
 
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
-func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout.Dimensions {
+func LayoutTransactionRow(gtx layout.Context, mw *dcrlibwallet.MultiWallet, theme *decredmaterial.Theme, row TransactionRow) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-	wal := l.WL.MultiWallet.WalletWithID(row.Transaction.WalletID)
+	wal := mw.WalletWithID(row.Transaction.WalletID)
 	var ticketSpender *dcrlibwallet.Transaction
 	if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
 		ticketSpender, _ = wal.TicketSpender(row.Transaction.Hash)
 	}
-	txStatus := TransactionTitleIcon(l, wal, &row.Transaction, ticketSpender)
+	txStatus := TransactionTitleIcon(theme, wal, &row.Transaction, ticketSpender)
 
 	return decredmaterial.LinearLayout{
 		Orientation: layout.Horizontal,
@@ -378,10 +378,10 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
 							amount = "-" + amount
 						}
-						return LayoutBalance(gtx, l, amount)
+						return LayoutBalance(gtx, theme, amount)
 					}
 
-					return l.Theme.Label(values.TextSize18, txStatus.Title).Layout(gtx)
+					return theme.Label(values.TextSize18, txStatus.Title).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return decredmaterial.LinearLayout{
@@ -395,7 +395,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						layout.Rigid(func(gtx C) D {
 							if row.ShowBadge {
 								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-									return WalletLabel(gtx, l, wal.Name)
+									return WalletLabel(gtx, theme, wal.Name)
 								})
 							}
 
@@ -403,7 +403,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						}),
 						layout.Rigid(func(gtx C) D {
 							if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
-								ic := l.Theme.Icons.StakeIconInactive
+								ic := theme.Icons.StakeIconInactive
 								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, ic.Layout12dp)
 							}
 							return D{}
@@ -412,13 +412,13 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							// mix denomination or ticket price
 							if row.Transaction.Type == dcrlibwallet.TxTypeMixed {
 								mixedDenom := dcrutil.Amount(row.Transaction.MixDenomination).String()
-								txt := l.Theme.Label(values.TextSize12, mixedDenom)
-								txt.Color = l.Theme.Color.GrayText2
+								txt := theme.Label(values.TextSize12, mixedDenom)
+								txt.Color = theme.Color.GrayText2
 								return txt.Layout(gtx)
 							} else if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
 								ticketPrice := dcrutil.Amount(row.Transaction.Amount).String()
-								txt := l.Theme.Label(values.TextSize12, ticketPrice)
-								txt.Color = l.Theme.Color.GrayText2
+								txt := theme.Label(values.TextSize12, ticketPrice)
+								txt.Color = theme.Color.GrayText2
 								return txt.Layout(gtx)
 							}
 							return layout.Dimensions{}
@@ -426,8 +426,8 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						layout.Rigid(func(gtx C) D {
 							// Mixed outputs count
 							if row.Transaction.Type == dcrlibwallet.TxTypeMixed && row.Transaction.MixCount > 1 {
-								label := l.Theme.Label(values.TextSize12, fmt.Sprintf("x%d", row.Transaction.MixCount))
-								label.Color = l.Theme.Color.GrayText2
+								label := theme.Label(values.TextSize12, fmt.Sprintf("x%d", row.Transaction.MixCount))
+								label.Color = theme.Color.GrayText2
 								return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, label.Layout)
 							}
 							return layout.Dimensions{}
@@ -446,12 +446,12 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								Alignment:   layout.Middle,
 							}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									label := l.Theme.Label(values.TextSize14, "+")
-									label.Color = l.Theme.Color.Turquoise800
+									label := theme.Label(values.TextSize14, "+")
+									label.Color = theme.Color.Turquoise800
 									return label.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
-									ic := l.Theme.Icons.DecredSymbol2
+									ic := theme.Icons.DecredSymbol2
 
 									return layout.Inset{
 										Left:  values.MarginPadding4,
@@ -459,8 +459,8 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 									}.Layout(gtx, ic.Layout16dp)
 								}),
 								layout.Rigid(func(gtx C) D {
-									label := l.Theme.Label(values.TextSize12, dcrutil.Amount(row.Transaction.VoteReward).String())
-									label.Color = l.Theme.Color.Turquoise800
+									label := theme.Label(values.TextSize12, dcrutil.Amount(row.Transaction.VoteReward).String())
+									label.Color = theme.Color.Turquoise800
 									return label.Layout(gtx)
 								}),
 							)
@@ -470,11 +470,11 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			status := l.Theme.Body1("pending")
-			if TxConfirmations(l, row.Transaction) <= 1 {
-				status.Color = l.Theme.Color.GrayText1
+			status := theme.Body1("pending")
+			if TxConfirmations(mw, row.Transaction) <= 1 {
+				status.Color = theme.Color.GrayText1
 			} else {
-				status.Color = l.Theme.Color.GrayText2
+				status.Color = theme.Color.GrayText2
 				status.Text = FormatDateOrTime(row.Transaction.Timestamp)
 			}
 			return decredmaterial.LinearLayout{
@@ -499,7 +499,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								}
 
 								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-									return WalletLabel(gtx, l, fmt.Sprintf("%dd to %s", row.Transaction.DaysToVoteOrRevoke, title))
+									return WalletLabel(gtx, theme, fmt.Sprintf("%dd to %s", row.Transaction.DaysToVoteOrRevoke, title))
 								})
 							}
 
@@ -519,8 +519,8 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
 								return D{}
 							}
-							duration := l.Theme.Label(values.TextSize12, DurationAgo(row.Transaction.Timestamp))
-							duration.Color = l.Theme.Color.GrayText4
+							duration := theme.Label(values.TextSize12, DurationAgo(row.Transaction.Timestamp))
+							duration.Color = theme.Color.GrayText4
 							return layout.Inset{Left: values.MarginPadding2}.Layout(gtx, duration.Layout)
 						}),
 					)
@@ -528,9 +528,9 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			statusIcon := l.Theme.Icons.ConfirmIcon
-			if TxConfirmations(l, row.Transaction) <= 1 {
-				statusIcon = l.Theme.Icons.PendingIcon
+			statusIcon := theme.Icons.ConfirmIcon
+			if TxConfirmations(mw, row.Transaction) <= 1 {
+				statusIcon = theme.Icons.PendingIcon
 			}
 
 			return layout.Inset{Left: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
@@ -540,12 +540,12 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 	)
 }
 
-func TxConfirmations(l *load.Load, transaction dcrlibwallet.Transaction) int32 {
+// TODO: Refactor
+func TxConfirmations(mw *dcrlibwallet.MultiWallet, transaction dcrlibwallet.Transaction) int32 {
 	if transaction.BlockHeight != -1 {
 		// TODO
-		return (l.WL.MultiWallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
+		return (mw.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
 	}
-
 	return 0
 }
 
@@ -577,17 +577,17 @@ func FormatDateOrTime(timestamp int64) string {
 
 // walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
 //// are transactions from multiple wallets
-func WalletLabel(gtx layout.Context, l *load.Load, walletName string) D {
+func WalletLabel(gtx layout.Context, theme *decredmaterial.Theme, walletName string) D {
 	return decredmaterial.Card{
-		Color: l.Theme.Color.Gray4,
+		Color: theme.Color.Gray4,
 	}.Layout(gtx, func(gtx C) D {
 		return Container{
 			layout.Inset{
 				Left:  values.MarginPadding4,
 				Right: values.MarginPadding4,
 			}}.Layout(gtx, func(gtx C) D {
-			name := l.Theme.Label(values.TextSize12, walletName)
-			name.Color = l.Theme.Color.GrayText2
+			name := theme.Label(values.TextSize12, walletName)
+			name.Color = theme.Color.GrayText2
 			return name.Layout(gtx)
 		})
 	})
@@ -681,9 +681,9 @@ func TimeFormat(secs int, long bool) string {
 
 // createOrUpdateWalletDropDown check for len of wallets to create dropDown,
 // also update the list when create, update, delete a wallet.
-func CreateOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet, grp uint, pos uint) *decredmaterial.DropDown {
+func CreateOrUpdateWalletDropDown(theme *decredmaterial.Theme, dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet, grp uint, pos uint) *decredmaterial.DropDown {
 	var walletDropDownItems []decredmaterial.DropDownItem
-	walletIcon := l.Theme.Icons.WalletIcon
+	walletIcon := theme.Icons.WalletIcon
 	walletIcon.Scale = 1
 	for _, wal := range wallets {
 		item := decredmaterial.DropDownItem{
@@ -692,12 +692,12 @@ func CreateOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, w
 		}
 		walletDropDownItems = append(walletDropDownItems, item)
 	}
-	*dwn = l.Theme.DropDown(walletDropDownItems, grp, pos)
+	*dwn = theme.DropDown(walletDropDownItems, grp, pos)
 	return *dwn
 }
 
-func CreateOrderDropDown(l *load.Load, grp uint, pos uint) *decredmaterial.DropDown {
-	return l.Theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
+func CreateOrderDropDown(theme *decredmaterial.Theme, grp uint, pos uint) *decredmaterial.DropDown {
+	return theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
 		{Text: values.String(values.StrOldest)}}, grp, pos)
 }
 
@@ -711,12 +711,12 @@ func TranslateErr(err error) string {
 }
 
 // CoinImageBySymbol returns image widget for supported asset coins.
-func CoinImageBySymbol(l *load.Load, coinName string) *decredmaterial.Image {
+func CoinImageBySymbol(theme *decredmaterial.Theme, coinName string) *decredmaterial.Image {
 	switch strings.ToLower(coinName) {
 	case "btc":
-		return l.Theme.Icons.BTC
+		return theme.Icons.BTC
 	case "dcr":
-		return l.Theme.Icons.DCR
+		return theme.Icons.DCR
 	}
 	return nil
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -21,16 +20,16 @@ type ProposalItem struct {
 	voteBar      *VoteBar
 }
 
-func ProposalsList(gtx C, l *load.Load, prop *ProposalItem) D {
+func ProposalsList(gtx C, theme *decredmaterial.Theme, prop *ProposalItem) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 		proposal := prop.Proposal
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layoutAuthorAndDate(gtx, l, prop)
+				return layoutAuthorAndDate(gtx, theme, prop)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layoutTitle(gtx, l, proposal)
+				return layoutTitle(gtx, theme, proposal)
 			}),
 			layout.Rigid(func(gtx C) D {
 				if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
@@ -44,42 +43,42 @@ func ProposalsList(gtx C, l *load.Load, prop *ProposalItem) D {
 	})
 }
 
-func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
+func layoutAuthorAndDate(gtx C, theme *decredmaterial.Theme, item *ProposalItem) D {
 	proposal := item.Proposal
-	grayCol := l.Theme.Color.GrayText2
+	grayCol := theme.Color.GrayText2
 
-	nameLabel := l.Theme.Body2(proposal.Username)
+	nameLabel := theme.Body2(proposal.Username)
 	nameLabel.Color = grayCol
 
-	dotLabel := l.Theme.H4(" . ")
+	dotLabel := theme.H4(" . ")
 	dotLabel.Color = grayCol
 
-	versionLabel := l.Theme.Body2("Version " + proposal.Version)
+	versionLabel := theme.Body2("Version " + proposal.Version)
 	versionLabel.Color = grayCol
 
-	stateLabel := l.Theme.Body2(fmt.Sprintf("%v /2", proposal.VoteStatus))
+	stateLabel := theme.Body2(fmt.Sprintf("%v /2", proposal.VoteStatus))
 	stateLabel.Color = grayCol
 
-	timeAgoLabel := l.Theme.Body2(TimeAgo(proposal.Timestamp))
+	timeAgoLabel := theme.Body2(TimeAgo(proposal.Timestamp))
 	timeAgoLabel.Color = grayCol
 
 	var categoryLabel decredmaterial.Label
 	var categoryLabelColor color.NRGBA
 	switch proposal.Category {
 	case dcrlibwallet.ProposalCategoryApproved:
-		categoryLabel = l.Theme.Body2("Approved")
-		categoryLabelColor = l.Theme.Color.Success
+		categoryLabel = theme.Body2("Approved")
+		categoryLabelColor = theme.Color.Success
 	case dcrlibwallet.ProposalCategoryActive:
-		categoryLabel = l.Theme.Body2("Voting")
-		categoryLabelColor = l.Theme.Color.Primary
+		categoryLabel = theme.Body2("Voting")
+		categoryLabelColor = theme.Color.Primary
 	case dcrlibwallet.ProposalCategoryRejected:
-		categoryLabel = l.Theme.Body2("Rejected")
-		categoryLabelColor = l.Theme.Color.Danger
+		categoryLabel = theme.Body2("Rejected")
+		categoryLabelColor = theme.Color.Danger
 	case dcrlibwallet.ProposalCategoryAbandoned:
-		categoryLabel = l.Theme.Body2("Abandoned")
+		categoryLabel = theme.Body2("Abandoned")
 		categoryLabelColor = grayCol
 	case dcrlibwallet.ProposalCategoryPre:
-		categoryLabel = l.Theme.Body2("In discussion")
+		categoryLabel = theme.Body2("In discussion")
 		categoryLabelColor = grayCol
 	}
 	categoryLabel.Color = categoryLabelColor
@@ -115,7 +114,7 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 								return layout.Inset{
 									Right: values.MarginPadding4,
 									Top:   values.MarginPadding3,
-								}.Layout(gtx, l.Theme.Icons.TimerIcon.Layout12dp)
+								}.Layout(gtx, theme.Icons.TimerIcon.Layout12dp)
 							}
 							return D{}
 						}),
@@ -130,8 +129,8 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 									rect.Max.Y = 20
 									layoutInfoTooltip(gtx, rect, *item)
 
-									infoIcon := decredmaterial.NewIcon(l.Theme.Icons.ActionInfo)
-									infoIcon.Color = l.Theme.Color.GrayText2
+									infoIcon := decredmaterial.NewIcon(theme.Icons.ActionInfo)
+									infoIcon.Color = theme.Color.GrayText2
 									return infoIcon.Layout(gtx, values.MarginPadding20)
 								})
 							}
@@ -144,8 +143,8 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 	)
 }
 
-func layoutTitle(gtx C, l *load.Load, proposal dcrlibwallet.Proposal) D {
-	lbl := l.Theme.H6(proposal.Name)
+func layoutTitle(gtx C, theme *decredmaterial.Theme, proposal dcrlibwallet.Proposal) D {
+	lbl := theme.H6(proposal.Name)
 	lbl.Font.Weight = text.SemiBold
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
@@ -174,7 +173,7 @@ func layoutInfoTooltip(gtx C, rect image.Rectangle, item ProposalItem) {
 	})
 }
 
-func LayoutNoProposalsFound(gtx C, l *load.Load, syncing bool, category int32) D {
+func LayoutNoProposalsFound(gtx C, theme *decredmaterial.Theme, syncing bool, category int32) D {
 	var selectedCategory string
 	switch category {
 	case dcrlibwallet.ProposalCategoryApproved:
@@ -188,10 +187,10 @@ func LayoutNoProposalsFound(gtx C, l *load.Load, syncing bool, category int32) D
 	}
 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	text := l.Theme.Body1(fmt.Sprintf("No proposals %s ", selectedCategory))
-	text.Color = l.Theme.Color.GrayText3
+	text := theme.Body1(fmt.Sprintf("No proposals %s ", selectedCategory))
+	text.Color = theme.Color.GrayText3
 	if syncing {
-		text = l.Theme.Body1("Fetching proposals...")
+		text = theme.Body1("Fetching proposals...")
 	}
 
 	return layout.Center.Layout(gtx, func(gtx C) D {
@@ -202,28 +201,28 @@ func LayoutNoProposalsFound(gtx C, l *load.Load, syncing bool, category int32) D
 	})
 }
 
-func LoadProposals(category int32, newestFirst bool, l *load.Load) []*ProposalItem {
+func LoadProposals(category int32, newestFirst bool, mw *dcrlibwallet.MultiWallet, theme *decredmaterial.Theme) []*ProposalItem {
 	proposalItems := make([]*ProposalItem, 0)
 
-	proposals, err := l.WL.MultiWallet.Politeia.GetProposalsRaw(category, 0, 0, newestFirst)
+	proposals, err := mw.Politeia.GetProposalsRaw(category, 0, 0, newestFirst)
 	if err == nil {
 		for i := 0; i < len(proposals); i++ {
 			proposal := proposals[i]
 			item := &ProposalItem{
 				Proposal: proposals[i],
-				voteBar:  NewVoteBar(l),
+				voteBar:  NewVoteBar(theme),
 			}
 
 			if proposal.Category == dcrlibwallet.ProposalCategoryPre {
-				tooltipLabel := l.Theme.Caption("")
-				tooltipLabel.Color = l.Theme.Color.GrayText2
+				tooltipLabel := theme.Caption("")
+				tooltipLabel.Color = theme.Color.GrayText2
 				if proposal.VoteStatus == 1 {
 					tooltipLabel.Text = "Waiting for author to authorize voting"
 				} else if proposal.VoteStatus == 2 {
 					tooltipLabel.Text = "Waiting for admin to trigger the start of voting"
 				}
 
-				item.tooltip = l.Theme.Tooltip()
+				item.tooltip = theme.Tooltip()
 				item.tooltipLabel = tooltipLabel
 			}
 

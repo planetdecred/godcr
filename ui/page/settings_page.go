@@ -88,7 +88,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		currency:            l.Theme.NewClickable(false),
 	}
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l.Theme)
 
 	return pg
 }
@@ -116,7 +116,7 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	body := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			// App: pg.App,
 			Title:      values.String(values.StrSettings),
 			BackButton: pg.backButton,
 			Back: func() {
@@ -477,7 +477,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	}
 
 	for pg.changeStartupPass.Clicked() {
-		modal.NewPasswordModal(pg.Load).
+		modal.NewPasswordModal(pg.Load.Theme, nil).
 			Title("Confirm current startup password").
 			Hint("Current startup password").
 			NegativeButton(values.String(values.StrCancel), func() {}).
@@ -545,7 +545,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 					return false
 				}).Show()
 		} else {
-			modal.NewPasswordModal(pg.Load).
+			modal.NewPasswordModal(pg.Load.Theme, nil).
 				Title(values.String(values.StrConfirmRemoveStartupPass)).
 				Hint("Startup password").
 				NegativeButton(values.String(values.StrCancel), func() {}).
@@ -619,7 +619,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 }
 
 func (pg *SettingsPage) showSPVPeerDialog() {
-	textModal := modal.NewTextInputModal(pg.Load).
+	textModal := modal.NewTextInputModal(nil).
 		Hint("IP address").
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrConfirm), func(ipAddress string, tim *modal.TextInputModal) bool {
@@ -635,7 +635,7 @@ func (pg *SettingsPage) showSPVPeerDialog() {
 }
 
 func (pg *SettingsPage) showUserAgentDialog() {
-	textModal := modal.NewTextInputModal(pg.Load).
+	textModal := modal.NewTextInputModal(nil).
 		Hint("User agent").
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrConfirm), func(userAgent string, tim *modal.TextInputModal) bool {

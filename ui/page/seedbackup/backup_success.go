@@ -4,7 +4,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/text"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -12,15 +11,14 @@ import (
 const BackupSuccessPageID = "backup_success"
 
 type BackupSuccessPage struct {
-	*load.Load
+	theme        *decredmaterial.Theme
 	actionButton decredmaterial.Button
 }
 
-func NewBackupSuccessPage(l *load.Load) *BackupSuccessPage {
+func NewBackupSuccessPage(theme *decredmaterial.Theme) *BackupSuccessPage {
 	pg := &BackupSuccessPage{
-		Load: l,
-
-		actionButton: l.Theme.OutlineButton("Back to Wallets"),
+		theme:        theme,
+		actionButton: theme.OutlineButton("Back to Wallets"),
 	}
 	pg.actionButton.Font.Weight = text.Medium
 
@@ -47,7 +45,8 @@ func (pg *BackupSuccessPage) OnNavigatedTo() {}
 // Part of the load.Page interface.
 func (pg *BackupSuccessPage) HandleUserInteractions() {
 	for pg.actionButton.Clicked() {
-		pg.PopToFragment(components.WalletsPageID)
+		var PopToFragment func(string)
+		PopToFragment(components.WalletsPageID) // TODO: Will crash.
 	}
 }
 
@@ -80,18 +79,18 @@ func (pg *BackupSuccessPage) Layout(gtx C) D {
 					Direction:   layout.Center,
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						successIcon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
+						successIcon := decredmaterial.NewIcon(pg.theme.Icons.ActionCheckCircle)
 						return successIcon.Layout(gtx, values.MarginPadding64)
 					}),
 					layout.Rigid(func(gtx C) D {
-						label := pg.Theme.Label(values.TextSize24, "Your seed word backup is verified")
-						label.Color = pg.Theme.Color.DeepBlue
+						label := pg.theme.Label(values.TextSize24, "Your seed word backup is verified")
+						label.Color = pg.theme.Color.DeepBlue
 
 						return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, label.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
-						label := pg.Theme.Label(values.TextSize16, "Be sure to store your seed word backup in a secure location.")
-						label.Color = pg.Theme.Color.GrayText1
+						label := pg.theme.Label(values.TextSize16, "Be sure to store your seed word backup in a secure location.")
+						label.Color = pg.theme.Color.GrayText1
 
 						return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, label.Layout)
 					}),

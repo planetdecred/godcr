@@ -8,8 +8,8 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -30,15 +30,15 @@ type TextInputModal struct {
 	textCustomTemplate  []layout.Widget
 }
 
-func NewTextInputModal(l *load.Load) *TextInputModal {
+func NewTextInputModal(app *app.App) *TextInputModal {
 	tm := &TextInputModal{
-		InfoModal:    NewInfoModal(l),
+		InfoModal:    NewInfoModal(app),
 		isCancelable: true,
 	}
 
 	tm.randomID = fmt.Sprintf("%s-%d", TextInput, decredmaterial.GenerateRandomNumber())
 
-	tm.textInput = l.Theme.Editor(new(widget.Editor), "Hint")
+	tm.textInput = app.Theme.Editor(new(widget.Editor), "Hint")
 	tm.textInput.Editor.SingleLine, tm.textInput.Editor.Submit = true, true
 
 	return tm
@@ -98,7 +98,7 @@ func (tm *TextInputModal) SetCancelable(min bool) *TextInputModal {
 func (tm *TextInputModal) SetTextWithTemplate(template string) *TextInputModal {
 	switch template {
 	case AllowUnmixedSpendingTemplate:
-		tm.textCustomTemplate = allowUnspendUnmixedAcct(tm.Load)
+		tm.textCustomTemplate = allowUnspendUnmixedAcct(tm.Theme)
 	}
 	return tm
 }

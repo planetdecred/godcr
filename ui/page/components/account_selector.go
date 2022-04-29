@@ -12,19 +12,18 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 const AccoutSelectorID = "AccountSelector"
 
 type AccountSelector struct {
-	*load.Load
+	*app.App
 	*listeners.TxAndBlockNotificationListener
 
-	multiWallet     *dcrlibwallet.MultiWallet
 	selectedAccount *dcrlibwallet.Account
 	selectedWallet  *dcrlibwallet.Wallet
 
@@ -43,13 +42,12 @@ type AccountSelector struct {
 // NewAccountSelector opens up a modal to select the desired account. If a
 // nil value is passed for selectedWallet, then accounts for all wallets
 // are shown, otherwise only accounts for the selectedWallet is shown.
-func NewAccountSelector(l *load.Load, selectedWallet *dcrlibwallet.Wallet) *AccountSelector {
+func NewAccountSelector(app *app.App, selectedWallet *dcrlibwallet.Wallet) *AccountSelector {
 	return &AccountSelector{
-		Load:               l,
-		multiWallet:        l.WL.MultiWallet,
+		App:                app,
 		selectedWallet:     selectedWallet,
 		accountIsValid:     func(*dcrlibwallet.Account) bool { return true },
-		openSelectorDialog: l.Theme.NewClickable(true),
+		openSelectorDialog: app.Theme.NewClickable(true),
 	}
 }
 
@@ -76,7 +74,7 @@ func (as *AccountSelector) Changed() bool {
 
 func (as *AccountSelector) Handle() {
 	for as.openSelectorDialog.Clicked() {
-		as.selectorModal = newAccountSelectorModal(as.Load, as.selectedAccount, as.selectedWallet).
+		as.selectorModal = newAccountSelectorModal(as.App, as.selectedAccount, as.selectedWallet).
 			title(as.dialogTitle).
 			accountValidator(as.accountIsValid).
 			accountSelected(func(account *dcrlibwallet.Account) {
@@ -119,7 +117,7 @@ func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibw
 		}
 	}
 
-	for _, wal := range as.WL.SortedWalletList() {
+	for _, wal := range as.Wallets() {
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
 			return err
@@ -139,7 +137,7 @@ func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibw
 }
 
 func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
-	wal := as.multiWallet.WalletWithID(account.WalletID)
+	wal := as.MultiWallet().WalletWithID(account.WalletID)
 
 	as.selectedAccount = account
 	as.selectedWalletName = wal.Name
@@ -147,7 +145,7 @@ func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
 }
 
 func (as *AccountSelector) UpdateSelectedAccountBalance() {
-	wal := as.multiWallet.WalletWithID(as.SelectedAccount().WalletID)
+	wal := as.MultiWallet().WalletWithID(as.SelectedAccount().WalletID)
 	bal, err := wal.GetAccountBalance(as.SelectedAccount().Number)
 	if err == nil {
 		as.totalBalance = dcrutil.Amount(bal.Total).String()
@@ -232,7 +230,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 		return
 	}
 	as.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	err := as.WL.MultiWallet.AddTxAndBlockNotificationListener(as.TxAndBlockNotificationListener, true, AccoutSelectorID)
+	err := as.MultiWallet().AddTxAndBlockNotificationListener(as.TxAndBlockNotificationListener, true, AccoutSelectorID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
@@ -246,7 +244,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 				case listeners.BlockAttached:
 					// refresh wallet account and balance on every new block
 					// only if sync is completed.
-					if as.WL.MultiWallet.IsSynced() {
+					if as.MultiWallet().IsSynced() {
 						as.UpdateSelectedAccountBalance()
 						if as.selectorModal != nil {
 							as.selectorModal.setupWalletAccounts()
@@ -262,7 +260,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 					as.RefreshWindow()
 				}
 			case <-ctx.Done():
-				as.WL.MultiWallet.RemoveTxAndBlockNotificationListener(AccoutSelectorID)
+				as.MultiWallet().RemoveTxAndBlockNotificationListener(AccoutSelectorID)
 				close(as.TxAndBlockNotifChan)
 				as.TxAndBlockNotificationListener = nil
 				return
@@ -274,7 +272,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 const ModalAccountSelector = "AccountSelectorModal"
 
 type AccountSelectorModal struct {
-	*load.Load
+	*app.App
 
 	accountIsValid func(*dcrlibwallet.Account) bool
 	callback       func(*dcrlibwallet.Account)
@@ -302,10 +300,10 @@ type selectorAccount struct {
 	clickable *decredmaterial.Clickable
 }
 
-func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Account, selectedWallet *dcrlibwallet.Wallet) *AccountSelectorModal {
+func newAccountSelectorModal(app *app.App, currentSelectedAccount *dcrlibwallet.Account, selectedWallet *dcrlibwallet.Wallet) *AccountSelectorModal {
 	asm := &AccountSelectorModal{
-		Load:         l,
-		modal:        *l.Theme.ModalFloatTitle(),
+		App:          app,
+		modal:        *app.Theme.ModalFloatTitle(),
 		walletsList:  layout.List{Axis: layout.Vertical},
 		accountsList: layout.List{Axis: layout.Vertical},
 
@@ -314,7 +312,7 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 		isCancelable:           true,
 	}
 
-	asm.walletInfoButton = l.Theme.IconButton(asm.Theme.Icons.ActionInfo)
+	asm.walletInfoButton = app.Theme.IconButton(asm.Theme.Icons.ActionInfo)
 	asm.walletInfoButton.Size = values.MarginPadding15
 	asm.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
@@ -330,7 +328,7 @@ func (asm *AccountSelectorModal) setupWalletAccounts() {
 	wals := make([]*dcrlibwallet.Wallet, 0)
 	walletAccounts := make(map[int][]*selectorAccount)
 
-	for _, wal := range asm.WL.SortedWalletList() {
+	for _, wal := range asm.Wallets() {
 		if wal.IsWatchingOnlyWallet() {
 			continue
 		}
@@ -545,7 +543,7 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx C, account *selectorAcc
 					acct := asm.Theme.Label(values.TextSize18, account.Name)
 					acct.Color = asm.Theme.Color.Text
 					return EndToEndRow(gtx, acct.Layout, func(gtx C) D {
-						return LayoutBalance(gtx, asm.Load, dcrutil.Amount(account.TotalBalance).String())
+						return LayoutBalance(gtx, asm.Theme, dcrutil.Amount(account.TotalBalance).String())
 					})
 				}),
 				layout.Rigid(func(gtx C) D {

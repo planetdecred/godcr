@@ -19,12 +19,11 @@ const (
 
 // Wallet represents the wallet back end of the app
 type Wallet struct {
-	multi       *dcrlibwallet.MultiWallet
-	Root, Net   string
-	buildDate   time.Time
-	version     string
-	logFile     string
-	startUpTime time.Time
+	multi     *dcrlibwallet.MultiWallet
+	Root, Net string
+	buildDate time.Time
+	version   string
+	logFile   string
 }
 
 // NewWallet initializies an new Wallet instance.
@@ -35,12 +34,11 @@ func NewWallet(root, net, version, logFile string, buildDate time.Time) (*Wallet
 	}
 
 	wal := &Wallet{
-		Root:        root,
-		Net:         net,
-		buildDate:   buildDate,
-		version:     version,
-		logFile:     logFile,
-		startUpTime: time.Now(),
+		Root:      root,
+		Net:       net,
+		buildDate: buildDate,
+		version:   version,
+		logFile:   logFile,
 	}
 
 	return wal, nil
@@ -59,7 +57,7 @@ func (wal *Wallet) LogFile() string {
 }
 
 func (wal *Wallet) StartupTime() time.Time {
-	return wal.startUpTime
+	return time.Time{}
 }
 
 func (wal *Wallet) InitMultiWallet() error {

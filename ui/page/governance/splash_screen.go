@@ -12,7 +12,7 @@ import (
 )
 
 func (pg *Page) initSplashScreenWidgets() {
-	_, pg.splashScreenInfoButton = components.SubpageHeaderButtons(pg.Load)
+	_, pg.splashScreenInfoButton = components.SubpageHeaderButtons(pg.Theme)
 	pg.enableGovernanceBtn = pg.Theme.Button("Fetch proposals")
 }
 

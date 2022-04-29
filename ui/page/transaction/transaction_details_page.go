@@ -11,8 +11,8 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
@@ -30,7 +30,8 @@ type transactionWdg struct {
 }
 
 type TxDetailsPage struct {
-	*load.Load
+	*app.App
+	PopFragment func() // TODO: Will crash until implemented / improved.
 
 	list *widget.List
 
@@ -61,12 +62,12 @@ type TxDetailsPage struct {
 	txDestinationAddress string
 }
 
-func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction) *TxDetailsPage {
-	rebroadcast := l.Theme.Label(values.MarginPadding14, "Rebroadcast")
+func NewTransactionDetailsPage(app *app.App, transaction *dcrlibwallet.Transaction) *TxDetailsPage {
+	rebroadcast := app.Theme.Label(values.MarginPadding14, "Rebroadcast")
 	rebroadcast.TextSize = values.TextSize14
-	rebroadcast.Color = l.Theme.Color.Text
+	rebroadcast.Color = app.Theme.Color.Text
 	pg := &TxDetailsPage{
-		Load: l,
+		App: app,
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -80,24 +81,24 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 			Axis: layout.Vertical,
 		},
 
-		outputsCollapsible: l.Theme.Collapsible(),
-		inputsCollapsible:  l.Theme.Collapsible(),
+		outputsCollapsible: app.Theme.Collapsible(),
+		inputsCollapsible:  app.Theme.Collapsible(),
 
-		associatedTicketClickable: l.Theme.NewClickable(true),
+		associatedTicketClickable: app.Theme.NewClickable(true),
 		hashClickable:             new(widget.Clickable),
 		destAddressClickable:      new(widget.Clickable),
-		toDcrdata:                 l.Theme.NewClickable(true),
+		toDcrdata:                 app.Theme.NewClickable(true),
 
 		transaction:          transaction,
-		wallet:               l.WL.MultiWallet.WalletWithID(transaction.WalletID),
+		wallet:               app.MultiWallet().WalletWithID(transaction.WalletID),
 		rebroadcast:          rebroadcast,
-		rebroadcastClickable: l.Theme.NewClickable(true),
-		rebroadcastIcon:      l.Theme.Icons.Rebroadcast,
+		rebroadcastClickable: app.Theme.NewClickable(true),
+		rebroadcastIcon:      app.Theme.Icons.Rebroadcast,
 	}
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
-	pg.dot = decredmaterial.NewIcon(l.Theme.Icons.ImageBrightness1)
-	pg.dot.Color = l.Theme.Color.Gray1
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Theme)
+	pg.dot = decredmaterial.NewIcon(app.Theme.Icons.ImageBrightness1)
+	pg.dot.Color = app.Theme.Color.Gray1
 
 	return pg
 }
@@ -148,7 +149,7 @@ func (pg *TxDetailsPage) OnNavigatedTo() {
 	}
 
 	pg.getTXSourceAccountAndDirection()
-	pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
+	pg.txnWidgets = initTxnWidgets(pg.MultiWallet(), pg.Theme, pg.transaction)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -159,7 +160,7 @@ func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	body := func(gtx C) D {
 		sp := components.SubPage{
-			Load:       pg.Load,
+			App:        pg.App,
 			Title:      pg.txnWidgets.title,
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
@@ -170,7 +171,7 @@ func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 				}
 				pg.transaction = pg.txBackStack
 				pg.getTXSourceAccountAndDirection()
-				pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
+				pg.txnWidgets = initTxnWidgets(pg.MultiWallet(), pg.Theme, pg.transaction)
 				pg.txBackStack = nil
 				pg.RefreshWindow()
 			},
@@ -250,7 +251,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 					}
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return components.LayoutBalanceSize(gtx, pg.Load, amount, values.TextSize34)
+							return components.LayoutBalanceSize(gtx, pg.Theme, amount, values.TextSize34)
 						}),
 						layout.Rigid(func(gtx C) D {
 							if pg.transaction.Type == dcrlibwallet.TxTypeMixed && pg.transaction.MixCount > 1 {
@@ -313,7 +314,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 						}),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							txt := pg.Theme.Body1("")
-							if pg.txConfirmations() > 1 {
+							if components.TxConfirmations(pg.MultiWallet(), *pg.transaction) > 1 {
 								txt.Text = strings.Title("confirmed")
 								txt.Color = pg.Theme.Color.Success
 							} else {
@@ -333,7 +334,8 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.Body1(values.StringF(values.StrNConfirmations, pg.txConfirmations()))
+							confs := components.TxConfirmations(pg.MultiWallet(), *pg.transaction)
+							txt := pg.Theme.Body1(values.StringF(values.StrNConfirmations, confs))
 							txt.Color = pg.Theme.Color.GrayText2
 							return txt.Layout(gtx)
 						}),
@@ -491,16 +493,6 @@ func (pg *TxDetailsPage) associatedTicket(gtx C) D {
 			return pg.Theme.Separator().Layout(gtx)
 		}),
 	)
-}
-
-//TODO: do this at startup
-func (pg *TxDetailsPage) txConfirmations() int32 {
-	transaction := pg.transaction
-	if transaction.BlockHeight != -1 {
-		return (pg.WL.MultiWallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
-	}
-
-	return 0
 }
 
 func (pg *TxDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
@@ -728,7 +720,11 @@ func (pg *TxDetailsPage) pageSections(gtx layout.Context, body layout.Widget) la
 // Part of the load.Page interface.
 func (pg *TxDetailsPage) HandleUserInteractions() {
 	if pg.toDcrdata.Clicked() {
-		components.GoToURL(pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash))
+		blockExplorerUrl := "https://explorer.dcrdata.org/tx/" + pg.transaction.Hash
+		if pg.MultiWallet().NetType() == dcrlibwallet.Testnet3 {
+			blockExplorerUrl = "https://testnet.dcrdata.org/tx/" + pg.transaction.Hash
+		}
+		components.GoToURL(blockExplorerUrl)
 	}
 
 	for pg.associatedTicketClickable.Clicked() {
@@ -736,7 +732,7 @@ func (pg *TxDetailsPage) HandleUserInteractions() {
 			pg.txBackStack = pg.transaction
 			pg.transaction = pg.ticketSpent
 			pg.getTXSourceAccountAndDirection()
-			pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
+			pg.txnWidgets = initTxnWidgets(pg.MultiWallet(), pg.Theme, pg.transaction)
 			pg.RefreshWindow()
 		}
 	}
@@ -744,7 +740,7 @@ func (pg *TxDetailsPage) HandleUserInteractions() {
 	if pg.rebroadcastClickable.Clicked() {
 		go func() {
 			pg.rebroadcastClickable.SetEnabled(false, nil)
-			if !pg.Load.WL.MultiWallet.IsConnectedToDecredNetwork() {
+			if !pg.MultiWallet().IsConnectedToDecredNetwork() {
 				// if user is not conected to the network, notify the user
 				pg.Toast.NotifyError("Not connected to the decred network")
 				if !pg.rebroadcastClickable.Enabled() {
@@ -795,30 +791,29 @@ func (pg *TxDetailsPage) handleTextCopyEvent(gtx layout.Context) {
 // Part of the load.Page interface.
 func (pg *TxDetailsPage) OnNavigatedFrom() {}
 
-func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transactionWdg {
-
+func initTxnWidgets(mw *dcrlibwallet.MultiWallet, theme *decredmaterial.Theme, transaction *dcrlibwallet.Transaction) transactionWdg {
 	var txn transactionWdg
-	wal := l.WL.MultiWallet.WalletWithID(transaction.WalletID)
+	wal := mw.WalletWithID(transaction.WalletID)
 
 	t := time.Unix(transaction.Timestamp, 0).UTC()
-	txn.time = l.Theme.Body1(t.Format(time.UnixDate))
-	txn.status = l.Theme.Body1("")
-	txn.wallet = l.Theme.Body2(wal.Name)
+	txn.time = theme.Body1(t.Format(time.UnixDate))
+	txn.status = theme.Body1("")
+	txn.wallet = theme.Body2(wal.Name)
 
-	if components.TxConfirmations(l, *transaction) > 1 {
+	if components.TxConfirmations(mw, *transaction) > 1 {
 		txn.status.Text = components.FormatDateOrTime(transaction.Timestamp)
-		txn.confirmationIcons = l.Theme.Icons.ConfirmIcon
+		txn.confirmationIcons = theme.Icons.ConfirmIcon
 	} else {
 		txn.status.Text = "pending"
-		txn.status.Color = l.Theme.Color.GrayText2
-		txn.confirmationIcons = l.Theme.Icons.PendingIcon
+		txn.status.Color = theme.Color.GrayText2
+		txn.confirmationIcons = theme.Icons.PendingIcon
 	}
 
 	var ticketSpender *dcrlibwallet.Transaction
 	if wal.TxMatchesFilter(transaction, dcrlibwallet.TxFilterStaking) {
 		ticketSpender, _ = wal.TicketSpender(transaction.Hash)
 	}
-	txStatus := components.TransactionTitleIcon(l, wal, transaction, ticketSpender)
+	txStatus := components.TransactionTitleIcon(theme, wal, transaction, ticketSpender)
 
 	txn.title = txStatus.Title
 	txn.icon = txStatus.Icon
@@ -826,7 +821,7 @@ func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transac
 	x := len(transaction.Inputs) + len(transaction.Outputs)
 	txn.copyTextButtons = make([]decredmaterial.Button, x)
 	for i := 0; i < x; i++ {
-		btn := l.Theme.OutlineButton("")
+		btn := theme.OutlineButton("")
 		btn.TextSize = values.MarginPadding14
 		btn.Inset = layout.UniformInset(values.MarginPadding0)
 		txn.copyTextButtons[i] = btn
