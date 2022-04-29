@@ -95,7 +95,7 @@ func (tb *ticketBuyerModal) OnResume() {
 	}
 
 	if tb.accountSelector.SelectedAccount() == nil {
-		err := tb.accountSelector.SelectFirstWalletValidAccount(nil, -1)
+		err := tb.accountSelector.SelectFirstWalletValidAccount(nil)
 		if err != nil {
 			tb.Toast.NotifyError(err.Error())
 		}

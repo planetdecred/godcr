@@ -45,10 +45,19 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 			wal := pg.Load.WL.MultiWallet.WalletWithID(account.WalletID)
 
-			// Imported and watch only wallet accounts are invalid to use as a mixed account
-			accountIsValid := account.Number != load.MaxInt32 && !wal.IsWatchingOnlyWallet()
+			var unmixedAccNo int32 = -1
+			if unmixedAcc := pg.unmixedAccountSelector.SelectedAccount(); unmixedAcc != nil {
+				unmixedAccNo = unmixedAcc.Number
+			}
 
-			return accountIsValid
+			// Imported, watch only and default wallet accounts are invalid to use as a mixed account
+			accountIsValid := account.Number != load.MaxInt32 && !wal.IsWatchingOnlyWallet() && account.Number != dcrlibwallet.DefaultAccountNum
+
+			if !accountIsValid || account.Number == unmixedAccNo {
+				return false
+			}
+
+			return true
 		})
 
 	// Unmixed account picker
@@ -58,10 +67,20 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 			wal := pg.Load.WL.MultiWallet.WalletWithID(account.WalletID)
 
-			// Imported and watch only wallet accounts are invalid to use as an unmixed account
-			accountIsValid := account.Number != load.MaxInt32 && !wal.IsWatchingOnlyWallet()
+			var mixedAccNo int32 = -1
+			if mixedAcc := pg.mixedAccountSelector.SelectedAccount(); mixedAcc != nil {
+				mixedAccNo = mixedAcc.Number
+			}
 
-			return accountIsValid
+			// Imported, watch only and default wallet accounts are invalid to use as an unmixed account
+			accountIsValid := account.Number != load.MaxInt32 && !wal.IsWatchingOnlyWallet() && account.Number != dcrlibwallet.DefaultAccountNum
+
+			// Account is invalid if already selected by mixed account selector.
+			if !accountIsValid || account.Number == mixedAccNo {
+				return false
+			}
+
+			return true
 		})
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -83,8 +102,8 @@ func (pg *ManualMixerSetupPage) ID() string {
 func (pg *ManualMixerSetupPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.mixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet, -1)
-	pg.unmixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet, pg.mixedAccountSelector.SelectedAccount().Number)
+	pg.mixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet)
+	pg.unmixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -221,6 +240,13 @@ func (pg *ManualMixerSetupPage) HandleUserInteractions() {
 	} else {
 		pg.toPrivacySetup.SetEnabled(true)
 	}
+
+	// Disable set up button if either mixed or unmixed account is the default account.
+	if pg.mixedAccountSelector.SelectedAccount().Number == dcrlibwallet.DefaultAccountNum ||
+		pg.unmixedAccountSelector.SelectedAccount().Number == dcrlibwallet.DefaultAccountNum {
+		pg.toPrivacySetup.SetEnabled(false)
+	}
+
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from

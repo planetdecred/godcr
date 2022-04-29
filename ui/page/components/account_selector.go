@@ -94,9 +94,9 @@ func (as *AccountSelector) Handle() {
 }
 
 // SelectFirstWalletValidAccount selects the first valid account from the
-// first wallet in the SortedWalletList, skipping any account whose ID is == filter.
+// first wallet in the SortedWalletList
 // If selectedWallet is not nil, the first account for the selectWallet is selected.
-func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibwallet.Wallet, filter int32) error {
+func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibwallet.Wallet) error {
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
 		as.UpdateSelectedAccountBalance()
 		// no need to select account
@@ -111,7 +111,7 @@ func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibw
 
 		accounts := accountsResult.Acc
 		for _, account := range accounts {
-			if as.accountIsValid(account) && account.Number != filter {
+			if as.accountIsValid(account) {
 				as.SetSelectedAccount(account)
 				as.callback(account)
 				return nil
@@ -127,7 +127,7 @@ func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibw
 
 		accounts := accountsResult.Acc
 		for _, account := range accounts {
-			if as.accountIsValid(account) && account.Number != filter {
+			if as.accountIsValid(account) {
 				as.SetSelectedAccount(account)
 				as.callback(account)
 				return nil
