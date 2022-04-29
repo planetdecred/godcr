@@ -39,13 +39,17 @@ type Modal interface {
 	Handle()
 }
 
-// DarkModeChangeHandler defines a method that can be implemented by pages and
+// AppSettingsChangeHandler defines a method that can be implemented by pages and
 // modals to watch for real-time changes to the dark mode setting and modify
 // widget appearance accordingly.
-type DarkModeChangeHandler interface {
+type AppSettingsChangeHandler interface {
 	// OnDarkModeChanged is triggered whenever the dark mode setting is changed
 	// to enable restyling UI elements where necessary.
 	OnDarkModeChanged(bool)
+	// OnCurrencyChanged is triggered whenever the currency setting is changed
+	// to enable app refresh where necessary especially on the main page.
 	OnCurrencyChanged()
+	// OnLanguageChanged is triggered whenever the language setting is changed
+	// to enable UI language update where necessary especially on page Nav
 	OnLanguageChanged()
 }
