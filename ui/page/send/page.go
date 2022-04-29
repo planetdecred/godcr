@@ -183,7 +183,7 @@ func (pg *Page) OnNavigatedTo() {
 
 // OnDarkModeChanged is triggered whenever the dark mode setting is changed
 // to enable restyling UI elements where necessary.
-// Satisfies the load.DarkModeChangeHandler interface.
+// Satisfies the load.AppSettingsChangeHandler interface.
 func (pg *Page) OnDarkModeChanged(isDarkModeOn bool) {
 	pg.amount.styleWidgets()
 }

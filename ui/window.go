@@ -144,15 +144,27 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	}
 
 	// DarkModeSettingChanged checks if any page or any
-	// modal implements the DarkModeChangeHandler
+	// modal implements the AppSettingsChangeHandler
 	l.DarkModeSettingChanged = func(isDarkModeOn bool) {
-		if page, ok := win.currentPage.(load.DarkModeChangeHandler); ok {
+		if page, ok := win.currentPage.(load.AppSettingsChangeHandler); ok {
 			page.OnDarkModeChanged(isDarkModeOn)
 		}
 		for _, modal := range win.modals {
-			if modal, ok := modal.(load.DarkModeChangeHandler); ok {
+			if modal, ok := modal.(load.AppSettingsChangeHandler); ok {
 				modal.OnDarkModeChanged(isDarkModeOn)
 			}
+		}
+	}
+
+	l.LanguageSettingChanged = func() {
+		if page, ok := win.currentPage.(load.AppSettingsChangeHandler); ok {
+			page.OnLanguageChanged()
+		}
+	}
+
+	l.CurrencySettingChanged = func() {
+		if page, ok := win.currentPage.(load.AppSettingsChangeHandler); ok {
+			page.OnCurrencyChanged()
 		}
 	}
 

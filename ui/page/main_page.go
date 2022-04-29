@@ -108,6 +108,8 @@ func NewMainPage(l *load.Load) *MainPage {
 	l.PopFragment = mp.popFragment
 	l.PopToFragment = mp.popToFragment
 
+	mp.setLanguageSetting()
+
 	mp.initNavItems()
 
 	mp.refreshExchangeRateBtn = mp.Theme.NewClickable(true)
@@ -215,7 +217,6 @@ func (mp *MainPage) initNavItems() {
 // Part of the load.Page interface.
 func (mp *MainPage) OnNavigatedTo() {
 	mp.setNavExpanded()
-	mp.setLanguageSetting()
 
 	mp.ctx, mp.ctxCancel = context.WithCancel(context.TODO())
 	mp.listenForNotifications()
@@ -347,18 +348,26 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 
 // OnDarkModeChanged is triggered whenever the dark mode setting is changed
 // to enable restyling UI elements where necessary.
-// Satisfies the load.DarkModeChangeHandler interface.
+// Satisfies the load.AppSettingsChangeHandler interface.
 func (mp *MainPage) OnDarkModeChanged(isDarkModeOn bool) {
 	// TODO: currentPage will likely be the Settings page when this method
-	// is called. If that page implements the DarkModeChangeHandler interface,
+	// is called. If that page implements the AppSettingsChangeHandler interface,
 	// the following code will trigger the OnDarkModeChanged method of that
 	// page.
-	if currentPage, ok := mp.currentPage.(load.DarkModeChangeHandler); ok {
+	if currentPage, ok := mp.currentPage.(load.AppSettingsChangeHandler); ok {
 		currentPage.OnDarkModeChanged(isDarkModeOn)
 	}
 
 	mp.initNavItems()
 	mp.setNavExpanded()
+}
+
+func (mp *MainPage) OnLanguageChanged() {
+	mp.setLanguageSetting()
+}
+
+func (mp *MainPage) OnCurrencyChanged() {
+	mp.updateExchangeSetting()
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -561,7 +570,6 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	mp.updateExchangeSetting() // the setting may have changed, leading to this window refresh, let's check
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
