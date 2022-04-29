@@ -407,7 +407,13 @@ func (mp *MainPage) HandleUserInteractions() {
 				continue
 			}
 
-			mp.ChangeFragment(pg)
+			if mp.WL.MultiWallet.IsSynced() {
+				mp.ChangeFragment(pg)
+			} else if mp.WL.MultiWallet.IsSyncing() {
+				mp.Toast.NotifyError("Wallet is syncing, please wait")
+			} else {
+				mp.Toast.NotifyError("Not connected to the Decred network")
+			}
 		}
 	}
 
