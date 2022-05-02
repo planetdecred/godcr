@@ -3,7 +3,6 @@ package components
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 
 	"gioui.org/io/event"
@@ -340,7 +339,7 @@ func (asm *AccountSelectorModal) setupWalletAccounts() {
 
 			accountsResult, err := wal.GetAccountsRaw()
 			if err != nil {
-				fmt.Println("Error getting accounts:", err)
+				log.Errorf("Error getting accounts:", err)
 				continue
 			}
 
@@ -357,7 +356,7 @@ func (asm *AccountSelectorModal) setupWalletAccounts() {
 		} else if wal.ID == asm.selectedWallet.ID {
 			accountsResult, err := wal.GetAccountsRaw()
 			if err != nil {
-				fmt.Println("Error getting accounts:", err)
+				log.Errorf("Error getting accounts:", err)
 				continue
 			}
 
