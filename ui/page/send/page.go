@@ -112,15 +112,9 @@ func NewSendPage(l *load.Load) *Page {
 			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) {
 				// privacy is enabled for selected wallet
 
-				if pg.sendDestination.sendToAddress {
-					// only mixed can send to address
+				// only mixed accounts can send to address for wallet with privacy setup
+				if pg.sendDestination.accountSwitch.SelectedIndex() == 1 {
 					accountIsValid = account.Number == wal.MixedAccountNumber()
-				} else {
-					// send to account, check if selected destination account belongs to wallet
-					destinationAccount := pg.sendDestination.destinationAccountSelector.SelectedAccount()
-					if destinationAccount.WalletID != account.WalletID {
-						accountIsValid = account.Number == wal.MixedAccountNumber()
-					}
 				}
 			}
 			return accountIsValid
@@ -132,6 +126,8 @@ func NewSendPage(l *load.Load) *Page {
 	})
 
 	pg.sendDestination.addressChanged = func() {
+		// refresh selected account when addressChanged is called
+		pg.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
 		pg.validateAndConstructTx()
 	}
 
@@ -183,7 +179,7 @@ func (pg *Page) OnNavigatedTo() {
 
 // OnDarkModeChanged is triggered whenever the dark mode setting is changed
 // to enable restyling UI elements where necessary.
-// Satisfies the load.AppSettingsChangeHandler interface.
+// Satisfies the load.DarkModeChangeHandler interface.
 func (pg *Page) OnDarkModeChanged(isDarkModeOn bool) {
 	pg.amount.styleWidgets()
 }
