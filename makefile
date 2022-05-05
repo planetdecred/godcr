@@ -1,7 +1,7 @@
 # This how we want to name the binary output
 BINARY=godcr
 
-VERSION="1.0-beta1"
+VERSION="v1.7.0"
 BUILD=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
 # dev or prod
 BuildEnv="prod" 

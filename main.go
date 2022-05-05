@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	Version   string = "1.0-beta1"
+	Version   string = "1.7.0"
 	BuildDate string
 	BuildEnv  = wallet.DevBuild
 )
