@@ -67,19 +67,19 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 	var categoryLabelColor color.NRGBA
 	switch proposal.Category {
 	case dcrlibwallet.ProposalCategoryApproved:
-		categoryLabel = l.Theme.Body2("Approved")
+		categoryLabel = l.Theme.Body2(values.String(values.StrApproved))
 		categoryLabelColor = l.Theme.Color.Success
 	case dcrlibwallet.ProposalCategoryActive:
-		categoryLabel = l.Theme.Body2("Voting")
+		categoryLabel = l.Theme.Body2(values.String(values.StrVoting))
 		categoryLabelColor = l.Theme.Color.Primary
 	case dcrlibwallet.ProposalCategoryRejected:
-		categoryLabel = l.Theme.Body2("Rejected")
+		categoryLabel = l.Theme.Body2(values.String(values.StrRejected))
 		categoryLabelColor = l.Theme.Color.Danger
 	case dcrlibwallet.ProposalCategoryAbandoned:
-		categoryLabel = l.Theme.Body2("Abandoned")
+		categoryLabel = l.Theme.Body2(values.String(values.StrAbandoned))
 		categoryLabelColor = grayCol
 	case dcrlibwallet.ProposalCategoryPre:
-		categoryLabel = l.Theme.Body2("In discussion")
+		categoryLabel = l.Theme.Body2(values.String(values.StrInDiscussion))
 		categoryLabelColor = grayCol
 	}
 	categoryLabel.Color = categoryLabelColor
@@ -178,20 +178,20 @@ func LayoutNoProposalsFound(gtx C, l *load.Load, syncing bool, category int32) D
 	var selectedCategory string
 	switch category {
 	case dcrlibwallet.ProposalCategoryApproved:
-		selectedCategory = "approved"
+		selectedCategory = values.String(values.StrApproved)
 	case dcrlibwallet.ProposalCategoryRejected:
-		selectedCategory = "rejected"
+		selectedCategory = values.String(values.StrRejected)
 	case dcrlibwallet.ProposalCategoryAbandoned:
-		selectedCategory = "abandoned"
+		selectedCategory = values.String(values.StrAbandoned)
 	default:
-		selectedCategory = "under review"
+		selectedCategory = values.String(values.StrUnderReview)
 	}
 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	text := l.Theme.Body1(fmt.Sprintf("No proposals %s ", selectedCategory))
+	text := l.Theme.Body1(values.StringF(values.StrNoProposals, selectedCategory))
 	text.Color = l.Theme.Color.GrayText3
 	if syncing {
-		text = l.Theme.Body1("Fetching proposals...")
+		text = l.Theme.Body1(values.String(values.StrFetchingProposals))
 	}
 
 	return layout.Center.Layout(gtx, func(gtx C) D {
@@ -218,9 +218,9 @@ func LoadProposals(category int32, newestFirst bool, l *load.Load) []*ProposalIt
 				tooltipLabel := l.Theme.Caption("")
 				tooltipLabel.Color = l.Theme.Color.GrayText2
 				if proposal.VoteStatus == 1 {
-					tooltipLabel.Text = "Waiting for author to authorize voting"
+					tooltipLabel.Text = values.String(values.StrWaitingAuthor)
 				} else if proposal.VoteStatus == 2 {
-					tooltipLabel.Text = "Waiting for admin to trigger the start of voting"
+					tooltipLabel.Text = values.String(values.StrWaitingForAdmin)
 				}
 
 				item.tooltip = l.Theme.Tooltip()

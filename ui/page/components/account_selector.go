@@ -134,7 +134,7 @@ func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibw
 		}
 	}
 
-	return errors.New("no valid account found")
+	return errors.New(values.String(values.StrNoValidAccountFound))
 }
 
 func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
@@ -583,6 +583,7 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx C, account *selectorAcc
 }
 
 func (asm *AccountSelectorModal) walletInfoPopup(gtx C) D {
+	// TODO: currently not used.. skipping str localization
 	title := "Some accounts are hidden."
 	desc := "Some accounts are disabled by StakeShuffle settings to protect your privacy."
 	card := asm.Theme.Card()

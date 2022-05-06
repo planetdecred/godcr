@@ -61,7 +61,7 @@ func (v *VSPSelector) SelectedVSP() *dcrlibwallet.VSP {
 func (v *VSPSelector) handle() {
 	if v.showVSPModal.Clicked() {
 		newVSPSelectorModal(v.Load).
-			title("Voting service provider").
+			title(values.String(values.StrVotingServiceProvider)).
 			vspSelected(func(info *dcrlibwallet.VSP) {
 				v.SelectVSP(info.Host)
 			}).
@@ -84,7 +84,7 @@ func (v *VSPSelector) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						if v.selectedVSP == nil {
-							txt := v.Theme.Label(values.TextSize16, "Select VSP...")
+							txt := v.Theme.Label(values.TextSize16, values.String(values.StrSelectVSP))
 							txt.Color = v.Theme.Color.GrayText3
 							return txt.Layout(gtx)
 						}
@@ -140,8 +140,8 @@ func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 	v := &vspSelectorModal{
 		Load: l,
 
-		inputVSP: l.Theme.Editor(new(widget.Editor), "Add a new VSP..."),
-		addVSP:   l.Theme.Button("Save"),
+		inputVSP: l.Theme.Editor(new(widget.Editor), values.String(values.StrAddVSP)),
+		addVSP:   l.Theme.Button(values.String(values.StrSave)),
 		modal:    *l.Theme.ModalFloatTitle(),
 		vspList:  l.Theme.NewClickableList(layout.Vertical),
 	}
@@ -218,9 +218,9 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := v.Theme.Label(values.TextSize14, "Address")
+					txt := v.Theme.Label(values.TextSize14, values.String(values.StrAddress))
 					txt.Color = v.Theme.Color.GrayText2
-					txtFee := v.Theme.Label(values.TextSize14, "Fee")
+					txtFee := v.Theme.Label(values.TextSize14, values.String(values.StrFee))
 					txtFee.Color = v.Theme.Color.GrayText2
 					return EndToEndRow(gtx, txt.Layout, txtFee.Layout)
 				}),
@@ -228,7 +228,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 					// if no vsp loaded, display a no vsp text
 					vsps := v.WL.MultiWallet.KnownVSPs()
 					if len(vsps) == 0 {
-						noVsp := v.Theme.Label(values.TextSize14, "No vsp loaded. Check internet connection and try again.")
+						noVsp := v.Theme.Label(values.TextSize14, values.String(values.StrNoVSPLoaded))
 						noVsp.Color = v.Theme.Color.GrayText2
 						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, noVsp.Layout)
 					}

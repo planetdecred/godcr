@@ -26,7 +26,7 @@ func RetryFunc(retryAttempts int, sleepDur time.Duration, funcDesc string, errFu
 			if i > 1 {
 				sleepDur *= 2
 			}
-			fmt.Printf("waiting %s to retry function %s after error: %v\n", sleepDur, funcDesc, err)
+			log.Errorf("waiting %s to retry function %s after error: %v\n", sleepDur, funcDesc, err)
 			time.Sleep(sleepDur)
 		}
 		err = errFunc()
