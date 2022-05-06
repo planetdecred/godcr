@@ -1,6 +1,7 @@
 package page
 
 import (
+	"fmt"
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -186,10 +187,21 @@ func (pg *VerifyMessagePage) HandleUserInteractions() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
 			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text())
-			if err != nil || !valid {
+			if err != nil {
+				fmt.Println(err.Error())
+				pg.verifyMessage.Text = "Error verifying message: " + err.Error()
+				pg.verifyMessage.Color = pg.Theme.Color.Danger
+				pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
+				pg.verifyMessageStatus.Color = pg.Theme.Color.Danger
+				return
+			}
+			if !valid {
+				fmt.Println(valid)
 				pg.verifyMessage.Text = "Invalid signature or message"
 				pg.verifyMessage.Color = pg.Theme.Color.Danger
 				pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
+				pg.verifyMessageStatus.Color = pg.Theme.Color.Danger
+
 				return
 			}
 
@@ -236,7 +248,7 @@ func (pg *VerifyMessagePage) clearInputs() {
 func (pg *VerifyMessagePage) validateAddress() bool {
 	address := pg.addressEditor.Editor.Text()
 	pg.addressEditor.SetError("")
-	exist, _ := pg.WL.Wallet.HaveAddress(address)
+	// exist, _ := pg.WL.Wallet.HaveAddress(address)
 
 	var valid bool
 	var errorMessage string
@@ -246,8 +258,8 @@ func (pg *VerifyMessagePage) validateAddress() bool {
 		errorMessage = "Please enter a valid address"
 	case !pg.WL.MultiWallet.IsAddressValid(address):
 		errorMessage = "Invalid address"
-	case !exist:
-		errorMessage = "Address not owned by any wallet"
+	// case !exist:
+	// 	errorMessage = "Address not owned by any wallet"
 	default:
 		valid = true
 	}
