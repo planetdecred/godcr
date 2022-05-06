@@ -17,11 +17,10 @@ require (
 	github.com/nxadm/tail v1.4.4
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
-	github.com/planetdecred/dcrlibwallet v1.6.2-0.20220425133823-833d52a7cdd5
+	github.com/planetdecred/dcrlibwallet v1.6.2-0.20220506085405-e0d96c20e909
 	github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-20220425133823-833d52a7cdd5 // indirect
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20210722180016-6781d3edade3
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
-	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
 	golang.org/x/text v0.3.7
 )
