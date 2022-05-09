@@ -239,17 +239,19 @@ func (pg *Restore) inputsGroup(gtx layout.Context, l *layout.List, len, startInd
 
 func (pg *Restore) onSuggestionSeedsClicked() {
 	index := pg.seedEditors.focusIndex
-	for i, b := range pg.seedMenu {
-		for pg.seedMenu[i].button.Clicked() {
-			pg.seedEditors.editors[index].Edit.Editor.SetText(b.text)
-			pg.seedEditors.editors[index].Edit.Editor.MoveCaret(len(b.text), 0)
-			pg.seedClicked = true
-			if index != numberOfSeeds {
-				pg.seedEditors.editors[index+1].Edit.Editor.Focus()
-			}
+	if index != -1 {
+		for i, b := range pg.seedMenu {
+			for pg.seedMenu[i].button.Clicked() {
+				pg.seedEditors.editors[index].Edit.Editor.SetText(b.text)
+				pg.seedEditors.editors[index].Edit.Editor.MoveCaret(len(b.text), 0)
+				pg.seedClicked = true
+				if index != numberOfSeeds {
+					pg.seedEditors.editors[index+1].Edit.Editor.Focus()
+				}
 
-			if index == numberOfSeeds {
-				pg.isLastEditor = true
+				if index == numberOfSeeds {
+					pg.isLastEditor = true
+				}
 			}
 		}
 	}
