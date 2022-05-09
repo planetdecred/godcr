@@ -48,8 +48,9 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		Load:         l,
 		randomID:     fmt.Sprintf("%s-%d", Info, decredmaterial.GenerateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
-		btnPositve:   l.Theme.OutlineButton("Yes"),
-		btnNegative:  l.Theme.OutlineButton("No"),
+		btnPositve:   l.Theme.OutlineButton(values.String(values.StrYes)),
+		btnNegative:  l.Theme.OutlineButton(values.String(values.StrNo)),
+		keyEvent:     make(chan *key.Event),
 		isCancelable: true,
 		btnAlignment: layout.E,
 	}
@@ -132,14 +133,14 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	var customTemplate []layout.Widget
 	switch template {
 	case TransactionDetailsInfoTemplate:
-		title = "How to copy"
+		title = values.String(values.StrHowToCopy)
 		customTemplate = transactionDetailsInfo(in.Theme)
 	case SignMessageInfoTemplate:
 		customTemplate = signMessageInfo(in.Theme)
 	case VerifyMessageInfoTemplate:
 		customTemplate = verifyMessageInfo(in.Theme)
 	case PrivacyInfoTemplate:
-		title = "How to use the mixer?"
+		title = values.String(values.StrUseMixer)
 		customTemplate = privacyInfo(in.Load)
 	case SetupMixerInfoTemplate:
 		customTemplate = setupMixerInfo(in.Theme)

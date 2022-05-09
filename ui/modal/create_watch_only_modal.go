@@ -55,10 +55,10 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 	cm.btnNegative.Font.Weight = text.Medium
 	cm.btnNegative.Margin = layout.Inset{Right: values.MarginPadding8}
 
-	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
+	cm.walletName = l.Theme.Editor(new(widget.Editor), values.String(values.StrWalletName))
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
 
-	cm.extendedPubKey = l.Theme.EditorPassword(new(widget.Editor), "Extended public key")
+	cm.extendedPubKey = l.Theme.EditorPassword(new(widget.Editor), values.String(values.StrExtendedPubKey))
 	cm.extendedPubKey.Editor.Submit = true
 
 	cm.materialLoader = material.Loader(l.Theme.Base)
@@ -132,14 +132,14 @@ func (cm *CreateWatchOnlyModal) Handle() {
 
 	for (cm.btnPositve.Clicked() || isSubmit) && cm.isEnabled {
 		if cm.walletNameEnabled {
-			if !editorsNotEmpty(cm.walletName.Editor) {
-				cm.walletName.SetError("enter wallet name")
-				return
-			}
+		if !editorsNotEmpty(cm.walletName.Editor) {
+			cm.walletName.SetError(values.String(values.StrEnterWalletName))
+			return
 		}
+	}
 
 		if !editorsNotEmpty(cm.extendedPubKey.Editor) {
-			cm.extendedPubKey.SetError("enter a valid extendedPubKey")
+			cm.extendedPubKey.SetError(values.String(values.StrEnterExtendedPubKey))
 			return
 		}
 
@@ -148,12 +148,12 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		matchedWalletID, err := cm.WL.MultiWallet.WalletWithXPub(cm.extendedPubKey.Editor.Text())
 		if err != nil {
 			log.Errorf("Error checking xpub: %v", err)
-			cm.Toast.NotifyError("Error checking xpub: " + err.Error()) // Error maybe useful to user.
+			cm.Toast.NotifyError(values.StringF(values.StrXpubKeyErr, err)) // Error maybe useful to user.
 			return
 		}
 
 		if matchedWalletID != -1 {
-			cm.Toast.NotifyError("A wallet with an identical extended public key already exists.")
+			cm.Toast.NotifyError(values.String(values.StrXpubWalletExist))
 			return
 		}
 

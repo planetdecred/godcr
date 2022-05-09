@@ -45,8 +45,8 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 		Load:         l,
 		randomID:     fmt.Sprintf("%s-%d", Password, decredmaterial.GenerateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
-		btnPositve:   l.Theme.Button("Confirm"),
-		btnNegative:  l.Theme.OutlineButton("Cancel"),
+		btnPositve:   l.Theme.Button(values.String(values.StrConfirm)),
+		btnNegative:  l.Theme.OutlineButton(values.String(values.StrCancel)),
 		isCancelable: true,
 	}
 
@@ -55,7 +55,7 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm.btnNegative.Font.Weight = text.Medium
 	pm.btnNegative.Margin.Right = values.MarginPadding8
 
-	pm.password = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
+	pm.password = l.Theme.EditorPassword(new(widget.Editor), values.String(values.StrSpendingPassword))
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
 
 	pm.materialLoader = material.Loader(l.Theme.Base)
@@ -142,7 +142,7 @@ func (pm *PasswordModal) Handle() {
 	if pm.btnPositve.Button.Clicked() || isSubmit {
 
 		if !editorsNotEmpty(pm.password.Editor) {
-			pm.password.SetError("Enter password")
+			pm.password.SetError(values.String(values.StrEnterSpendingPassword))
 			return
 		}
 

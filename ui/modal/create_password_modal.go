@@ -54,8 +54,8 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		randomID:         fmt.Sprintf("%s-%d", CreateWallet, decredmaterial.GenerateRandomNumber()),
 		modal:            *l.Theme.ModalFloatTitle(),
 		passwordStrength: l.Theme.ProgressBar(0),
-		btnPositve:       l.Theme.Button("Confirm"),
-		btnNegative:      l.Theme.OutlineButton("Cancel"),
+		btnPositve:       l.Theme.Button(values.String(values.StrConfirm)),
+		btnNegative:      l.Theme.OutlineButton(values.String(values.StrCancel)),
 		isCancelable:     true,
 	}
 
@@ -64,13 +64,13 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	cm.btnNegative.Font.Weight = text.Medium
 	cm.btnNegative.Margin = layout.Inset{Right: values.MarginPadding8}
 
-	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
+	cm.walletName = l.Theme.Editor(new(widget.Editor), values.String(values.StrWalletName))
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
 
-	cm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
+	cm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), values.String(values.StrSpendingPassword))
 	cm.passwordEditor.Editor.SingleLine, cm.passwordEditor.Editor.Submit = true, true
 
-	cm.confirmPasswordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
+	cm.confirmPasswordEditor = l.Theme.EditorPassword(new(widget.Editor), values.String(values.StrConfirmSpendingPassword))
 	cm.confirmPasswordEditor.Editor.SingleLine, cm.confirmPasswordEditor.Editor.Submit = true, true
 
 	cm.materialLoader = material.Loader(l.Theme.Base)
@@ -188,18 +188,18 @@ func (cm *CreatePasswordModal) Handle() {
 
 		if cm.walletNameEnabled {
 			if !editorsNotEmpty(cm.walletName.Editor) {
-				cm.walletName.SetError("enter wallet name")
+				cm.walletName.SetError(values.String(values.StrEnterWalletName))
 				return
 			}
 		}
 
 		if !editorsNotEmpty(cm.passwordEditor.Editor) {
-			cm.passwordEditor.SetError("enter spending password")
+			cm.passwordEditor.SetError(values.String(values.StrEnterSpendingPassword))
 			return
 		}
 
 		if !editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
-			cm.confirmPasswordEditor.SetError("confirm spending password")
+			cm.confirmPasswordEditor.SetError(values.String(values.StrConfirmSpendingPassword))
 			return
 		}
 
@@ -250,7 +250,7 @@ func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
 	matching := editors[1]
 
 	if password.Text() != matching.Text() {
-		cm.confirmPasswordEditor.SetError("Passwords do not match")
+		cm.confirmPasswordEditor.SetError(values.String(values.StrPasswordNotMatch))
 		return false
 	}
 
@@ -278,7 +278,7 @@ func (cm *CreatePasswordModal) Layout(gtx C) D {
 	if cm.serverError != "" {
 		// set wallet name editor error if wallet name already exist
 		if cm.serverError == dcrlibwallet.ErrExist && cm.walletNameEnabled {
-			cm.walletName.SetError(fmt.Sprintf("Wallet with name: %s already exist", cm.walletName.Editor.Text()))
+			cm.walletName.SetError(values.StringF(values.StrWalletExist, cm.walletName.Editor.Text()))
 		} else {
 			t := cm.Theme.Body2(cm.serverError)
 			t.Color = cm.Theme.Color.Danger
@@ -298,7 +298,7 @@ func (cm *CreatePasswordModal) Layout(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							if cm.showWalletWarnInfo {
-								txt := cm.Theme.Label(values.MarginPadding12, "This spending password is for the new wallet only")
+								txt := cm.Theme.Label(values.MarginPadding12, values.String(values.StrSpendingPasswordInfo2))
 								txt.Color = cm.Theme.Color.GrayText1
 								return txt.Layout(gtx)
 							}

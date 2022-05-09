@@ -38,7 +38,7 @@ func NewTextInputModal(l *load.Load) *TextInputModal {
 
 	tm.randomID = fmt.Sprintf("%s-%d", TextInput, decredmaterial.GenerateRandomNumber())
 
-	tm.textInput = l.Theme.Editor(new(widget.Editor), "Hint")
+	tm.textInput = l.Theme.Editor(new(widget.Editor), values.String(values.StrHint))
 	tm.textInput.Editor.SingleLine, tm.textInput.Editor.Submit = true, true
 
 	return tm
@@ -164,6 +164,9 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
+					// TODO
+					// text := `<span style="text-color: grayText1">Accounts <span style="font-weight: bold">cannot </span> be deleted once created.</span>`
+
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							txt := tm.Theme.Label(values.MarginPadding16, "Accounts")
