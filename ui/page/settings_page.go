@@ -160,7 +160,7 @@ func (pg *SettingsPage) general() layout.Widget {
 						title:     values.String(values.StrCurrencyConversion),
 						clickable: pg.currency,
 						icon:      pg.chevronRightIcon,
-						label:     pg.Theme.Body2(pg.wal.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
+						label:     pg.Theme.Body2(pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
 					}
 					return pg.clickableRow(gtx, currencyConversionRow)
 				}),
@@ -170,7 +170,7 @@ func (pg *SettingsPage) general() layout.Widget {
 						title:     values.String(values.StrLanguage),
 						clickable: pg.language,
 						icon:      pg.chevronRightIcon,
-						label:     pg.Theme.Body2(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey)),
+						label:     pg.Theme.Body2(pg.WL.MultiWallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey)),
 					}
 					return pg.clickableRow(gtx, languageRow)
 				}),
@@ -395,17 +395,17 @@ func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
 func (pg *SettingsPage) HandleUserInteractions() {
 
 	for pg.language.Clicked() {
-		preference.NewListPreference(pg.WL.Wallet, pg.Load,
+		preference.NewListPreference(pg.Load,
 			load.LanguagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
 			Title(values.StrLanguage).
 			UpdateValues(func() {
-				values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
+				values.SetUserLanguage(pg.WL.MultiWallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
 			}).Show()
 		break
 	}
 
 	for pg.currency.Clicked() {
-		preference.NewListPreference(pg.WL.Wallet, pg.Load,
+		preference.NewListPreference(pg.Load,
 			dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue,
 			values.ArrExchangeCurrencies).
 			Title(values.StrCurrencyConversion).
@@ -415,18 +415,18 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	}
 
 	if pg.isDarkModeOn.Changed() {
-		pg.wal.SaveConfigValueForKey(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())
+		pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())
 		pg.RefreshTheme()
 	}
 
 	if pg.spendUnconfirmed.Changed() {
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.IsChecked())
+		pg.WL.MultiWallet.SaveUserConfigValue(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.IsChecked())
 	}
 
 	if pg.governance.Changed() {
 		if pg.governance.IsChecked() {
 			go pg.WL.MultiWallet.Politeia.Sync()
-			pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, pg.governance.IsChecked())
+			pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, pg.governance.IsChecked())
 			pg.Toast.Notify("Proposals fetching enabled. Check Governance page")
 		} else {
 			info := modal.NewInfoModal(pg.Load).
@@ -438,7 +438,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 					if pg.WL.MultiWallet.Politeia.IsSyncing() {
 						go pg.WL.MultiWallet.Politeia.StopSync()
 					}
-					pg.wal.SaveConfigValueForKey(load.FetchProposalConfigKey, !pg.governance.IsChecked())
+					pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, !pg.governance.IsChecked())
 					pg.WL.MultiWallet.Politeia.ClearSavedProposals()
 					pg.Toast.Notify("Proposals fetching Disabled.")
 				})
@@ -447,11 +447,11 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	}
 
 	if pg.beepNewBlocks.Changed() {
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.IsChecked())
+		pg.WL.MultiWallet.SaveUserConfigValue(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.IsChecked())
 	}
 
 	if pg.proposalNotification.Changed() {
-		pg.wal.SaveConfigValueForKey(load.ProposalNotificationConfigKey, pg.proposalNotification.IsChecked())
+		pg.WL.MultiWallet.SaveUserConfigValue(load.ProposalNotificationConfigKey, pg.proposalNotification.IsChecked())
 		if pg.proposalNotification.IsChecked() {
 			pg.Toast.Notify("Proposal notification enabled")
 		} else {
@@ -460,7 +460,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	}
 
 	if pg.transactionNotification.Changed() {
-		pg.wal.SaveConfigValueForKey(load.TransactionNotificationConfigKey, pg.transactionNotification.IsChecked())
+		pg.WL.MultiWallet.SaveUserConfigValue(load.TransactionNotificationConfigKey, pg.transactionNotification.IsChecked())
 		if pg.transactionNotification.IsChecked() {
 			pg.Toast.Notify("Transaction notification enabled")
 		} else {
@@ -624,7 +624,7 @@ func (pg *SettingsPage) showSPVPeerDialog() {
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrConfirm), func(ipAddress string, tim *modal.TextInputModal) bool {
 			if ipAddress != "" {
-				pg.wal.SaveConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey, ipAddress)
+				pg.WL.MultiWallet.SaveUserConfigValue(dcrlibwallet.SpvPersistentPeerAddressesConfigKey, ipAddress)
 			}
 			return true
 		})
@@ -640,7 +640,7 @@ func (pg *SettingsPage) showUserAgentDialog() {
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrConfirm), func(userAgent string, tim *modal.TextInputModal) bool {
 			if userAgent != "" {
-				pg.wal.SaveConfigValueForKey(dcrlibwallet.UserAgentConfigKey, userAgent)
+				pg.WL.MultiWallet.SaveUserConfigValue(dcrlibwallet.UserAgentConfigKey, userAgent)
 			}
 			return true
 		})
@@ -659,51 +659,51 @@ func (pg *SettingsPage) updateSettingOptions() {
 		pg.isStartupPassword = true
 	}
 
-	isDarkModeOn := pg.wal.ReadBoolConfigValueForKey(load.DarkModeConfigKey)
+	isDarkModeOn := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
 	pg.isDarkModeOn.SetChecked(false)
 	if isDarkModeOn {
 		pg.isDarkModeOn.SetChecked(isDarkModeOn)
 	}
 
-	isSpendUnconfirmed := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey)
+	isSpendUnconfirmed := pg.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false)
 	pg.spendUnconfirmed.SetChecked(false)
 	if isSpendUnconfirmed {
 		pg.spendUnconfirmed.SetChecked(isSpendUnconfirmed)
 	}
 
-	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+	beep := pg.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
 	pg.beepNewBlocks.SetChecked(false)
 	if beep {
 		pg.beepNewBlocks.SetChecked(beep)
 	}
 
-	pg.peerAddr = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
+	pg.peerAddr = pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
 	pg.connectToPeer.SetChecked(false)
 	if pg.peerAddr != "" {
 		pg.peerLabel.Text = pg.peerAddr
 		pg.connectToPeer.SetChecked(true)
 	}
 
-	pg.agentValue = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
+	pg.agentValue = pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
 	pg.userAgent.SetChecked(false)
 	if pg.agentValue != "" {
 		pg.agentLabel.Text = pg.agentValue
 		pg.userAgent.SetChecked(true)
 	}
 
-	governanceSet := pg.wal.ReadBoolConfigValueForKey(load.FetchProposalConfigKey)
+	governanceSet := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false)
 	pg.governance.SetChecked(false)
 	if governanceSet {
 		pg.governance.SetChecked(governanceSet)
 	}
 
-	proposalNotification := pg.wal.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
+	proposalNotification := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey, false)
 	pg.proposalNotification.SetChecked(false)
 	if proposalNotification {
 		pg.proposalNotification.SetChecked(proposalNotification)
 	}
 
-	transactionNotification := pg.wal.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
+	transactionNotification := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey, false)
 	pg.transactionNotification.SetChecked(false)
 	if transactionNotification {
 		pg.transactionNotification.SetChecked(transactionNotification)

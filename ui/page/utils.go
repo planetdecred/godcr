@@ -14,7 +14,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 func translateErr(err error) string {
@@ -45,19 +44,6 @@ func getLockedWallets(wallets []*dcrlibwallet.Wallet) []*dcrlibwallet.Wallet {
 	}
 
 	return walletsLocked
-}
-
-// showBadge loops through a slice of recent transactions and checks if there are transaction from different wallets.
-// It returns true if transactions from different wallets exists and false if they don't
-func showLabel(recentTransactions []wallet.Transaction) bool {
-	var name string
-	for _, t := range recentTransactions {
-		if name != "" && name != t.WalletName {
-			return true
-		}
-		name = t.WalletName
-	}
-	return false
 }
 
 func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {

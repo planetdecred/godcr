@@ -11,15 +11,13 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const ListPreference = "list_preference"
 
 type ListPreferenceModal struct {
 	*load.Load
-	wallet *wallet.Wallet
-	modal  *decredmaterial.Modal
+	modal *decredmaterial.Modal
 
 	optionsRadioGroup *widget.Enum
 	cancelButton      decredmaterial.IconButton
@@ -36,7 +34,7 @@ type ListPreferenceModal struct {
 	updateButtonClicked func()
 }
 
-func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defaultValue string, items map[string]string) *ListPreferenceModal {
+func NewListPreference(l *load.Load, preferenceKey, defaultValue string, items map[string]string) *ListPreferenceModal {
 
 	// sort keys to keep order when refreshed
 	sortedKeys := make([]string, 0)
@@ -48,7 +46,6 @@ func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defau
 
 	lp := ListPreferenceModal{
 		Load:          l,
-		wallet:        wallet,
 		preferenceKey: preferenceKey,
 		defaultValue:  defaultValue,
 		randomID:      fmt.Sprintf("%s-%d", ListPreference, decredmaterial.GenerateRandomNumber()),
@@ -71,7 +68,7 @@ func (lp *ListPreferenceModal) ModalID() string {
 }
 
 func (lp *ListPreferenceModal) OnResume() {
-	initialValue := lp.wallet.ReadStringConfigValueForKey(lp.preferenceKey)
+	initialValue := lp.WL.MultiWallet.ReadStringConfigValueForKey(lp.preferenceKey)
 	if initialValue == "" {
 		initialValue = lp.defaultValue
 	}
@@ -106,7 +103,7 @@ func (lp *ListPreferenceModal) Handle() {
 
 	for lp.optionsRadioGroup.Changed() {
 		lp.currentValue = lp.optionsRadioGroup.Value
-		lp.wallet.SaveConfigValueForKey(lp.preferenceKey, lp.optionsRadioGroup.Value)
+		lp.WL.MultiWallet.SaveUserConfigValue(lp.preferenceKey, lp.optionsRadioGroup.Value)
 		lp.updateButtonClicked()
 		lp.RefreshTheme()
 		lp.DismissModal(lp)
