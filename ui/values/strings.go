@@ -323,6 +323,7 @@ const (
 	StrSeedAlreadyExist          = "seedAlreadyExist"
 	StrWalletRestored            = "walletRestored"
 	StrWalletExist               = "walletExist"
+	StrWalletNotExist = "walletNotExist"
 	StrEnterWalDetails           = "enterWalletDetails"
 	StrCopy                      = "copy"
 	StrHowToCopy                 = "howToCopy"
@@ -387,4 +388,7 @@ const (
 	StrXpubWalletExist           = "xpubWalletExist"
 	StrHint                      = "hint"
 	StrAddAcctWarn               = "addAcctWarn"
+	StrBalToMaintain = "balToMaintain"
+	StrAutoTicketPurchase = "autoTicketPurchase"
+	StrPurchasingAcct = "purchasingAcct"
 )

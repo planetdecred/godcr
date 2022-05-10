@@ -209,6 +209,7 @@ const ES = `
 "invalidSeedPhrase" = "Frase inicial no válida"
 "seedAlreadyExist" = "Ya existe una billetera con una semilla idéntica."
 "walletExist" = "Monedero con nombre: %s ya existe"
+"walletNotExist" = "Monedero con ID: %v no existe"
 "walletRestored" = "Monedero restaurado"
 "enterWalletDetails" = "Ingrese los detalles de la billetera"
 "copy" = "Dupdo"
@@ -275,6 +276,9 @@ const ES = `
 "xpubWalletExist" = "Ya existe una billetera con una clave pública extendida idéntica."
 "hint" = "insinuación"
 "addAcctWarn" = "Las cuentas no se pueden eliminar una vez creadas."
+"balToMaintain" = "Equilibrio a mantener (DCR)"
+"autoTicketPurchase" = "compra de billetes de auto"
+"purchasingAcct" = "cuenta de compras"
 
 
 

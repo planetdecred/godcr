@@ -212,6 +212,7 @@ const EN = `
 "invalidSeedPhrase" = "Invalid seed phrase"
 "seedAlreadyExist" = "A wallet with an identical seed already exists."
 "walletExist" = "Wallet with name: %s already exist"
+"walletNotExist" = "Wallet with ID: %v does not exist"
 "walletRestored" = "Wallet restored"
 "enterWalletDetails" = "Enter wallet details"
 "copy" = "Copy"
@@ -278,4 +279,8 @@ const EN = `
 "xpubWalletExist" = "A wallet with an identical extended public key already exists."
 "hint" = "Hint"
 "addAcctWarn" = "Accounts cannot be deleted once created."
+"balToMaintain" = "Balance to maintain (DCR)"
+"autoTicketPurchase" = "Auto ticket purchase"
+"purchasingAcct" = "Purchasing account"
+
 `

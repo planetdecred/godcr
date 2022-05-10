@@ -183,6 +183,7 @@ const FR = `
 "enterSeedPhrase" = "Entrez votre phrase de départ"
 "invalidSeedPhrase" = "Phrase de départ non valide"
 "walletExist" = "Le portefeuille avec le nom: %s existe déjà"
+"walletNotExist" = "Portefeuille avec ID: %v n'existe pas"
 "seedAlreadyExist" = "Un portefeuille avec une graine identique existe déjà."
 "walletRestored" = "Portefeuille restauré"
 "enterWalletDetails" = "Entrez les détails du portefeuille"
@@ -250,6 +251,9 @@ const FR = `
 "xpubWalletExist" = "Un portefeuille avec une clé publique étendue identique existe déjà."
 "hint" = "indice"
 "addAcctWarn" = "Les comptes ne peuvent pas être supprimés une fois créés."
+"balToMaintain" = "Équilibre à maintenir (DCR)"
+"autoTicketPurchase" = "Achat automatique de billets"
+"purchasingAcct" = "Compte d'achat"
 
 
 `
