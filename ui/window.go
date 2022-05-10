@@ -29,11 +29,6 @@ type Window struct {
 	*app.Window
 
 	wallet               *wallet.Wallet
-	walletTransactions   *wallet.Transactions
-	walletTransaction    *wallet.Transaction
-	walletAccount        *wallet.Account
-	proposals            *wallet.Proposals
-	selectedProposal     *dcrlibwallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
 	load *load.Load
@@ -44,11 +39,8 @@ type Window struct {
 	currentPage   load.Page
 	pageBackStack []load.Page
 
-	signatureResult *wallet.Signature
-
 	selectedAccount int
 	txAuthor        dcrlibwallet.TxAuthor
-	broadcastResult wallet.Broadcast
 
 	keyEvents             map[string]chan *key.Event
 	walletAcctMixerStatus chan *wallet.AccountMixer
@@ -78,10 +70,8 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win := &Window{
 		Window:                app.NewWindow(app.MinSize(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType))),
 		wallet:                wal,
-		walletTransactions:    new(wallet.Transactions),
 		walletUnspentOutputs:  new(wallet.UnspentOutputs),
 		walletAcctMixerStatus: make(chan *wallet.AccountMixer),
-		proposals:             new(wallet.Proposals),
 		keyEvents:             make(map[string]chan *key.Event),
 	}
 
@@ -104,16 +94,10 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		Theme: th,
 
 		WL: &load.WalletLoad{
-			MultiWallet:     win.wallet.GetMultiWallet(),
-			Wallet:          win.wallet,
-			Account:         win.walletAccount,
-			Transactions:    win.walletTransactions,
-			UnspentOutputs:  win.walletUnspentOutputs,
-			BroadcastResult: win.broadcastResult,
-			Proposals:       win.proposals,
-
-			SelectedProposal: win.selectedProposal,
-			TxAuthor:         win.txAuthor,
+			MultiWallet:    win.wallet.GetMultiWallet(),
+			Wallet:         win.wallet,
+			UnspentOutputs: win.walletUnspentOutputs,
+			TxAuthor:       win.txAuthor,
 		},
 
 		Receiver: &load.Receiver{

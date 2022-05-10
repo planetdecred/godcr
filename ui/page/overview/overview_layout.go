@@ -191,7 +191,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 			return pg.recentTransactionsSection(gtx)
 		},
 		func(gtx C) D {
-			if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) && len(pg.proposalItems) != 0 {
+			if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) && len(pg.proposalItems) != 0 {
 				return pg.recentProposalsSection(gtx)
 			}
 			return D{}
@@ -232,11 +232,11 @@ func (pg *AppOverviewPage) showBackupInfo() {
 		SetContentAlignment(layout.W, layout.Center).
 		CheckBox(pg.checkBox, true).
 		NegativeButton("Backup later", func() {
-			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
+			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
 		}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton("Backup now", func(isChecked bool) {
-			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
+			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
 			pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
 		}).Show()
 }
@@ -247,14 +247,14 @@ func (pg *AppOverviewPage) showBackupInfo() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *AppOverviewPage) HandleUserInteractions() {
-	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey)
+	backupLater := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 	needBackup := pg.WL.MultiWallet.NumWalletsNeedingSeedBackup() > 0
 	if needBackup && !backupLater && !pg.isBackupModalOpened {
 		pg.showBackupInfo()
 		pg.isBackupModalOpened = true
 	}
 
-	autoSync := pg.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey)
+	autoSync := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false)
 	pg.autoSyncSwitch.SetChecked(autoSync)
 
 	if pg.toMixer.Button.Clicked() {
@@ -313,7 +313,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 	}
 
 	if pg.autoSyncSwitch.Changed() {
-		pg.WL.Wallet.SaveConfigValueForKey(load.AutoSyncConfigKey, pg.autoSyncSwitch.IsChecked())
+		pg.WL.MultiWallet.SaveUserConfigValue(load.AutoSyncConfigKey, pg.autoSyncSwitch.IsChecked())
 	}
 
 }

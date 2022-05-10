@@ -744,3 +744,20 @@ func CalculateTotalWalletsBalance(l *load.Load) (dcrutil.Amount, dcrutil.Amount,
 
 	return dcrutil.Amount(totalBalance), dcrutil.Amount(spandableBalance), nil
 }
+
+// SecondsToDays takes time in seconds and returns its string equivalent in the format ddhhmm.
+func SecondsToDays(totalTimeLeft int64) string {
+	q, r := divMod(totalTimeLeft, 24*60*60)
+	timeLeft := time.Duration(r) * time.Second
+	if q > 0 {
+		return fmt.Sprintf("%dd%s", q, timeLeft.String())
+	}
+	return timeLeft.String()
+}
+
+// divMod divides a numerator by a denominator and returns its quotient and remainder.
+func divMod(numerator, denominator int64) (quotient, remainder int64) {
+	quotient = numerator / denominator // integer division, decimals are truncated
+	remainder = numerator % denominator
+	return
+}

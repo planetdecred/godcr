@@ -115,7 +115,7 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp.refreshExchangeRateBtn = mp.Theme.NewClickable(true)
 
 	// Show a seed backup prompt if necessary.
-	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+	mp.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, false)
 
 	mp.setNavExpanded = func() {
 		mp.drawerNav.DrawerToggled(mp.isNavExpanded)
@@ -233,9 +233,9 @@ func (mp *MainPage) OnNavigatedTo() {
 		mp.receivePage.OnNavigatedTo()
 	}
 
-	if mp.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey) {
+	if mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false) {
 		mp.StartSyncing()
-		if mp.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
+		if mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) {
 			go mp.WL.MultiWallet.Politeia.Sync()
 		}
 	}
@@ -245,17 +245,17 @@ func (mp *MainPage) OnNavigatedTo() {
 }
 
 func (mp *MainPage) setLanguageSetting() {
-	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey)
+	langPre := mp.WL.MultiWallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey)
 	if langPre == "" {
-		mp.WL.Wallet.SaveConfigValueForKey(load.LanguagePreferenceKey, values.DefaultLangauge)
+		mp.WL.MultiWallet.SaveUserConfigValue(load.LanguagePreferenceKey, values.DefaultLangauge)
 	}
 	values.SetUserLanguage(langPre)
 }
 
 func (mp *MainPage) updateExchangeSetting() {
-	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	currencyExchangeValue := mp.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyExchangeValue == "" {
-		mp.WL.Wallet.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue)
+		mp.WL.MultiWallet.SaveUserConfigValue(dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue)
 	}
 
 	usdExchangeSet := currencyExchangeValue == values.USDExchangeValue
@@ -788,7 +788,7 @@ func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 
 		initializeBeepNotification(notification)
 	case wallet.Proposal:
-		proposalNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey)
+		proposalNotification := mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey, false)
 		if !proposalNotification {
 			return
 		}
@@ -859,7 +859,7 @@ func (mp *MainPage) listenForNotifications() {
 				switch n.Type {
 				case listeners.NewTransaction:
 					mp.updateBalance()
-					transactionNotification := mp.WL.Wallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey)
+					transactionNotification := mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey, false)
 					if transactionNotification {
 						update := wallet.NewTransaction{
 							Transaction: n.Transaction,
@@ -868,7 +868,7 @@ func (mp *MainPage) listenForNotifications() {
 					}
 					mp.RefreshWindow()
 				case listeners.BlockAttached:
-					beep := mp.WL.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+					beep := mp.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
 					if beep {
 						err := beeep.Beep(5, 1)
 						if err != nil {

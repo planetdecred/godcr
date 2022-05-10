@@ -91,7 +91,7 @@ func (pg *Page) HandleUserInteractions() {
 		go pg.consensusPage.FetchAgendas()
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.proposalsPage.isSyncing = pg.multiWallet.Politeia.IsSyncing()
-		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
+		pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, true)
 	}
 
 	if clicked, selectedItem := pg.tabCategoryList.ItemClicked(); clicked {
@@ -118,7 +118,7 @@ func (pg *Page) HandleUserInteractions() {
 }
 
 func (pg *Page) Layout(gtx C) D {
-	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
+	if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) {
 		return components.UniformPadding(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.layoutPageTopNav),

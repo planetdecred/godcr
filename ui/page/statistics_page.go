@@ -15,14 +15,13 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const StatisticsPageID = "Statistics"
 
 type StatPage struct {
 	*load.Load
-	txs           *wallet.Transactions
+	txs           []dcrlibwallet.Transaction
 	l             layout.List
 	scrollbarList *widget.List
 	startupTime   string
@@ -34,7 +33,6 @@ type StatPage struct {
 func NewStatPage(l *load.Load) *StatPage {
 	pg := &StatPage{
 		Load: l,
-		txs:  l.WL.Transactions,
 		l:    layout.List{Axis: layout.Vertical},
 		scrollbarList: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
@@ -64,6 +62,13 @@ func (pg *StatPage) ID() string {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *StatPage) OnNavigatedTo() {
+	txs, err := pg.WL.MultiWallet.GetTransactionsRaw(0, 0, dcrlibwallet.TxFilterAll, true)
+	if err != nil {
+		log.Errorf("Error getting txs: %s", err.Error())
+	} else {
+		pg.txs = txs
+	}
+
 	pg.appStartTime()
 }
 
@@ -106,13 +111,13 @@ func (pg *StatPage) layoutStats(gtx C) D {
 		pg.Theme.Separator().Layout,
 		item("Best block timestamp", bestBlockTime.Format("2006-01-02 03:04:05 -0700")),
 		pg.Theme.Separator().Layout,
-		item("Best block age", wallet.SecondsToDays(secondsSinceBestBlock)),
+		item("Best block age", components.SecondsToDays(secondsSinceBestBlock)),
 		pg.Theme.Separator().Layout,
 		item("Wallet data directory", pg.WL.WalletDirectory()),
 		pg.Theme.Separator().Layout,
 		item("Wallet data", pg.WL.DataSize()),
 		pg.Theme.Separator().Layout,
-		item("Transactions", fmt.Sprintf("%d", (*pg.txs).Total)),
+		item("Transactions", fmt.Sprintf("%d", len(pg.txs))),
 		pg.Theme.Separator().Layout,
 		item("Wallets", fmt.Sprintf("%d", pg.WL.MultiWallet.LoadedWalletsCount())),
 	}

@@ -15,7 +15,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/text/message"
 )
 
@@ -61,19 +60,6 @@ func formatDateOrTime(timestamp int64) string {
 		t2 = t[3]
 	}
 	return fmt.Sprintf("%s %s", t[1], t2)
-}
-
-// showBadge loops through a slice of recent transactions and checks if there are transaction from different wallets.
-// It returns true if transactions from different wallets exists and false if they don't
-func showLabel(recentTransactions []wallet.Transaction) bool {
-	var name string
-	for _, t := range recentTransactions {
-		if name != "" && name != t.WalletName {
-			return true
-		}
-		name = t.WalletName
-	}
-	return false
 }
 
 // breakBalance takes the balance string and returns it in two slices

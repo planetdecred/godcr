@@ -14,17 +14,11 @@ import (
 var ErrIDNotExist = errors.New("ID does not exist")
 
 type WalletLoad struct {
-	MultiWallet      *dcrlibwallet.MultiWallet
-	TxAuthor         dcrlibwallet.TxAuthor
-	SelectedProposal *dcrlibwallet.Proposal
+	MultiWallet *dcrlibwallet.MultiWallet
+	TxAuthor    dcrlibwallet.TxAuthor
 
-	Proposals       *wallet.Proposals
-	Transactions    *wallet.Transactions
-	Transaction     *wallet.Transaction
-	BroadcastResult wallet.Broadcast
-	UnspentOutputs  *wallet.UnspentOutputs
-	Wallet          *wallet.Wallet
-	Account         *wallet.Account
+	UnspentOutputs *wallet.UnspentOutputs
+	Wallet         *wallet.Wallet
 
 	SelectedWallet  *int
 	SelectedAccount *int
