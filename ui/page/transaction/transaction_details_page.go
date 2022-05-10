@@ -49,6 +49,7 @@ type TxDetailsPage struct {
 	rebroadcast                     decredmaterial.Label
 	rebroadcastClickable            *decredmaterial.Clickable
 	rebroadcastIcon                 *decredmaterial.Image
+	copyRedirectURL                 *decredmaterial.Clickable
 
 	txnWidgets    transactionWdg
 	transaction   *dcrlibwallet.Transaction
@@ -87,6 +88,7 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		hashClickable:             new(widget.Clickable),
 		destAddressClickable:      new(widget.Clickable),
 		toDcrdata:                 l.Theme.NewClickable(true),
+		copyRedirectURL:           l.Theme.NewClickable(false),
 
 		transaction:          transaction,
 		wallet:               l.WL.MultiWallet.WalletWithID(transaction.WalletID),
@@ -705,15 +707,14 @@ func (pg *TxDetailsPage) txnIORow(gtx layout.Context, amount int64, acctNum int3
 }
 
 func (pg *TxDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return pg.pageSections(gtx, func(gtx C) D {
-		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(pg.Theme.Body1(values.String(values.StrViewOnDcrdata)).Layout),
-			layout.Rigid(func(gtx C) D {
-				redirect := pg.Theme.Icons.RedirectIcon
-				return pg.toDcrdata.Layout(gtx, redirect.Layout24dp)
-			}),
-		)
+		return pg.toDcrdata.Layout(gtx, func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+				layout.Rigid(pg.Theme.Body1(values.String(values.StrViewOnDcrdata)).Layout),
+				layout.Rigid(pg.Theme.Icons.RedirectIcon.Layout24dp),
+			)
+		})
 	})
 }
 
@@ -727,8 +728,53 @@ func (pg *TxDetailsPage) pageSections(gtx layout.Context, body layout.Widget) la
 // displayed.
 // Part of the load.Page interface.
 func (pg *TxDetailsPage) HandleUserInteractions() {
-	if pg.toDcrdata.Clicked() {
-		components.GoToURL(pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash))
+	for pg.toDcrdata.Clicked() {
+		redirectURL := pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash)
+		info := modal.NewInfoModal(pg.Load).
+			Title("View on Dcrdata").
+			Body("Copy and paste the link below in your browser, to view transaction on dcrdata dashboard.").
+			SetCancelable(true).
+			UseCustomWidget(func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						wrapper := pg.Theme.Card()
+						wrapper.Color = pg.Theme.Color.Gray4
+						return border.Layout(gtx, func(gtx C) D {
+							return wrapper.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Flexed(0.9, pg.Theme.Body1(redirectURL).Layout),
+										layout.Flexed(0.1, func(gtx C) D {
+											return layout.E.Layout(gtx, func(gtx C) D {
+												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+													if pg.copyRedirectURL.Clicked() {
+														clipboard.WriteOp{Text: redirectURL}.Add(gtx.Ops)
+														pg.Toast.Notify("URL copied")
+													}
+													return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
+												})
+											})
+										}),
+									)
+								})
+							})
+						})
+					}),
+					layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{
+							Top:  values.MarginPaddingMinus10,
+							Left: values.MarginPadding10,
+						}.Layout(gtx, func(gtx C) D {
+							label := pg.Theme.Body2("Web URL")
+							label.Color = pg.Theme.Color.GrayText2
+							return label.Layout(gtx)
+						})
+					}),
+				)
+			}).
+			PositiveButton("Got it", func(isChecked bool) {})
+		pg.ShowModal(info)
 	}
 
 	for pg.associatedTicketClickable.Clicked() {
