@@ -3,10 +3,13 @@ package page
 import (
 	"image"
 
+	"gioui.org/io/clipboard"
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -15,15 +18,18 @@ const HelpPageID = "Help"
 
 type HelpPage struct {
 	*load.Load
-	documentation *decredmaterial.Clickable
-	shadowBox     *decredmaterial.Shadow
-	backButton    decredmaterial.IconButton
+
+	documentation   *decredmaterial.Clickable
+	copyRedirectURL *decredmaterial.Clickable
+	shadowBox       *decredmaterial.Shadow
+	backButton      decredmaterial.IconButton
 }
 
 func NewHelpPage(l *load.Load) *HelpPage {
 	pg := &HelpPage{
-		Load:          l,
-		documentation: l.Theme.NewClickable(true),
+		Load:            l,
+		documentation:   l.Theme.NewClickable(true),
+		copyRedirectURL: l.Theme.NewClickable(false),
 	}
 
 	pg.shadowBox = l.Theme.Shadow()
@@ -115,7 +121,52 @@ func (pg *HelpPage) pageSections(gtx layout.Context, icon *decredmaterial.Image,
 // Part of the load.Page interface.
 func (pg *HelpPage) HandleUserInteractions() {
 	if pg.documentation.Clicked() {
-		components.GoToURL("https://docs.decred.org")
+		decredURL := "https://docs.decred.org"
+		info := modal.NewInfoModal(pg.Load).
+			Title("View documentation").
+			Body("Copy and paste the link below in your browser, to view documentation on decred portal.").
+			SetCancelable(true).
+			UseCustomWidget(func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						wrapper := pg.Theme.Card()
+						wrapper.Color = pg.Theme.Color.Gray4
+						return border.Layout(gtx, func(gtx C) D {
+							return wrapper.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Flexed(0.9, pg.Theme.Body1(decredURL).Layout),
+										layout.Flexed(0.1, func(gtx C) D {
+											return layout.E.Layout(gtx, func(gtx C) D {
+												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+													if pg.copyRedirectURL.Clicked() {
+														clipboard.WriteOp{Text: decredURL}.Add(gtx.Ops)
+														pg.Toast.Notify("URL copied")
+													}
+													return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
+												})
+											})
+										}),
+									)
+								})
+							})
+						})
+					}),
+					layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{
+							Top:  values.MarginPaddingMinus10,
+							Left: values.MarginPadding10,
+						}.Layout(gtx, func(gtx C) D {
+							label := pg.Theme.Body2("Web URL")
+							label.Color = pg.Theme.Color.GrayText2
+							return label.Layout(gtx)
+						})
+					}),
+				)
+			}).
+			PositiveButton("Got it", func(isChecked bool) {})
+		pg.ShowModal(info)
 	}
 }
 

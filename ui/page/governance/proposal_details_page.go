@@ -47,7 +47,6 @@ type ProposalDetails struct {
 	successIcon   *widget.Icon
 
 	redirectIcon *decredmaterial.Image
-	copyIcon     *decredmaterial.Image
 
 	viewInPoliteiaBtn *decredmaterial.Clickable
 	copyRedirectURL   *decredmaterial.Clickable
