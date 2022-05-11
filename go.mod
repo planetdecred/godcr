@@ -24,3 +24,9 @@ require (
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/text v0.3.7
 )
+
+// Older versions of github.com/lib/pq are required by politeia (v1.9.0)
+// and dcrdex (v1.10.3) but only v1.10.4 and above can be compiled for
+// the android OS using gomobile. This replace can be removed once any
+// of those projects update their github.com/lib/pq dependency.
+replace github.com/lib/pq => github.com/lib/pq v1.10.4
