@@ -13,6 +13,8 @@ Then `go build`.
 
 ### Linux
 To build **godcr** on Linux these [gio dependencies](https://gioui.org/doc/install/linux) are required.
+Arch Linux:
+`pacman -S vulkan-headers libxkbcommon-x11`
 
 ## FreeBSD
 To build **godcr** on FreeBSD you will need to `pkg install vulkan-headers` as root. This is a gio dependency.
