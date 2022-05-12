@@ -9,12 +9,16 @@ A cross-platform desktop [SPV](https://docs.decred.org/wallets/spv/) wallet for 
 
 Note: You need to have [Go 1.16](https://golang.org/dl/) or above to build.
 
-Follow the [installation](https://gioui.org/doc/install) instructions for gio.
-
 Then `go build`.
 
 ### Linux
 To build **godcr** on Linux these [gio dependencies](https://gioui.org/doc/install/linux) are required.
+
+Arch Linux:
+`pacman -S vulkan-headers libxkbcommon-x11`
+
+## FreeBSD
+To build **godcr** on FreeBSD you will need to `pkg install vulkan-headers` as root. This is a gio dependency.
 
 ## Running godcr
 ### General usage
