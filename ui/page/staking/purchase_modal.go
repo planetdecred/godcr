@@ -54,12 +54,12 @@ func newStakingModal(l *load.Load) *stakingModal {
 		Load: l,
 
 		tickets:          l.Theme.Editor(new(widget.Editor), ""),
-		cancelPurchase:   l.Theme.OutlineButton("Cancel"),
-		stakeBtn:         l.Theme.Button("Stake"),
+		cancelPurchase:   l.Theme.OutlineButton(values.String(values.StrCancel)),
+		stakeBtn:         l.Theme.Button(values.String(values.StrStake)),
 		modal:            *l.Theme.ModalFloatTitle(),
 		increment:        l.Theme.IconButton(l.Theme.Icons.ContentAdd),
 		decrement:        l.Theme.IconButton(l.Theme.Icons.ContentRemove),
-		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
+		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), values.String(values.StrSpendingPassword)),
 		materialLoader:   material.Loader(l.Theme.Base),
 	}
 
@@ -95,7 +95,7 @@ func (tp *stakingModal) OnResume() {
 		tp.Toast.NotifyError(err.Error())
 	}
 
-	tp.vspSelector = components.NewVSPSelector(tp.Load).Title("Select a vsp")
+	tp.vspSelector = components.NewVSPSelector(tp.Load).Title(values.String(values.StrSelectVSP))
 
 	lastUsedVSP := tp.WL.MultiWallet.LastUsedVSP()
 	if len(tp.WL.MultiWallet.KnownVSPs()) == 0 {
@@ -157,7 +157,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 							layout.Flexed(.5, func(gtx C) D {
 								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										totalLabel := tp.Theme.Label(values.TextSize14, "Total")
+										totalLabel := tp.Theme.Label(values.TextSize14, values.String(values.StrTotal))
 										totalLabel.Color = tp.Theme.Color.GrayText1
 										return totalLabel.Layout(gtx)
 									}),
@@ -284,7 +284,7 @@ func (tp *stakingModal) canPurchase() bool {
 
 	accountBalance := tp.accountSelector.SelectedAccount().Balance.Spendable
 	if accountBalance < tp.totalCost || tp.balanceLessCost < 0 {
-		tp.balanceError = "Insufficient funds"
+		tp.balanceError = values.String(values.StrInsufficentFund)
 		return false
 	}
 
@@ -305,7 +305,7 @@ func (tp *stakingModal) Show() {
 
 func (tp *stakingModal) initializeAccountSelector() {
 	tp.accountSelector = components.NewAccountSelector(tp.Load, nil).
-		Title("Purchasing account").
+		Title(values.String(values.StrPurchasingAcct)).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 			wal := tp.WL.MultiWallet.WalletWithID(account.WalletID)
@@ -431,7 +431,7 @@ func (tp *stakingModal) purchaseTickets() {
 		_, err := wal.PurchaseTickets(account.Number, int32(tp.ticketCount()), vspHost, vspPubKey, password)
 		if err != nil {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-				tp.spendingPassword.SetError("Invalid password")
+				tp.spendingPassword.SetError(values.String(values.StrInvalidPassphrase))
 			} else {
 				tp.Toast.NotifyError(err.Error())
 			}

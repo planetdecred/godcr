@@ -100,13 +100,13 @@ func (pg *Page) OnNavigatedTo() {
 // fetch ticket price only when the wallet is synced
 func (pg *Page) fetchTicketPrice() {
 	if pg.WL.MultiWallet.IsSyncing() {
-		pg.ticketPrice = "Loading price"
+		pg.ticketPrice = values.String(values.StrLoadingPrice)
 	} else {
 		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
 		if err != nil && !pg.WL.MultiWallet.IsSynced() {
 			log.Error(err)
-			pg.ticketPrice = "Not available"
-			pg.Toast.NotifyError("wallet not synced")
+			pg.ticketPrice = values.String(values.StrNotAvailable)
+			pg.Toast.NotifyError(values.String(values.StrWalletNotSynced))
 		} else {
 			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
 		}
@@ -250,9 +250,9 @@ func (pg *Page) HandleUserInteractions() {
 				successIcon.Color = pg.Theme.Color.Success
 				info := modal.NewInfoModal(pg.Load).
 					Icon(successIcon).
-					Title("Ticket(s) Confirmed").
+					Title(values.String(values.StrTicketConfirmed)).
 					SetContentAlignment(align, align).
-					PositiveButton("Back to staking", func(isChecked bool) {})
+					PositiveButton(values.String(values.StrBackStaking), func(isChecked bool) {})
 				pg.ShowModal(info)
 				pg.loadPageData()
 			}).Show()
@@ -277,7 +277,7 @@ func (pg *Page) HandleUserInteractions() {
 					}).
 					OnSettingsSaved(func() {
 						pg.startTicketBuyerPasswordModal()
-						pg.Toast.Notify("Auto ticket purchase setting saved successfully.")
+						pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
 					}).
 					Show()
 			}
@@ -288,7 +288,7 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.autoPurchaseSettings.Clicked() {
 		if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
-			pg.Toast.NotifyError("Settings can not be modified when ticket buyer is running.")
+			pg.Toast.NotifyError(values.String(values.StrAutoTicketWarn))
 			return
 		}
 
@@ -308,7 +308,7 @@ func (pg *Page) HandleUserInteractions() {
 func (pg *Page) ticketBuyerSettingsModal() {
 	newTicketBuyerModal(pg.Load).
 		OnSettingsSaved(func() {
-			pg.Toast.Notify("Auto ticket purchase setting saved successfully.")
+			pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
 			pg.setTBWallet()
 		}).
 		OnCancel(func() {
@@ -322,18 +322,18 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 	balToMaintain := dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain)
 	name, err := pg.ticketBuyerWallet.AccountNameRaw(uint32(tbConfig.PurchaseAccount))
 	if err != nil {
-		pg.Toast.NotifyError("Ticket buyer acount error: " + err.Error())
+		pg.Toast.NotifyError(values.StringF(values.StrTicketError, err))
 		return
 	}
 
 	modal.NewPasswordModal(pg.Load).
-		Title("Confirm Automatic Ticket Purchase").
+		Title(values.String(values.StrConfirmPurchase)).
 		SetCancelable(false).
 		UseCustomWidget(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Wallet to purchase from: %s", pg.ticketBuyerWallet.Name)).Layout),
-				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Selected account: %s", name)).Layout),
-				layout.Rigid(pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %2.f", balToMaintain)).Layout), layout.Rigid(func(gtx C) D {
+				layout.Rigid(pg.Theme.Label(values.TextSize14, values.StringF(values.StrWalletToPurchaseFrom, pg.ticketBuyerWallet.Name)).Layout),
+				layout.Rigid(pg.Theme.Label(values.TextSize14, values.StringF(values.StrSelectedAccount, name)).Layout),
+				layout.Rigid(pg.Theme.Label(values.TextSize14, values.StringF(values.StrBalToMaintainValue, balToMaintain)).Layout), layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", tbConfig.VspHost))
 					return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, label.Layout)
 				}),
@@ -351,7 +351,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 						Alignment: layout.Middle,
 					}.Layout2(gtx, func(gtx C) D {
 						return layout.Inset{Bottom: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-							msg := "Godcr must remain running, for tickets to be automatically purchased"
+							msg := values.String(values.StrAutoTicketInfo)
 							txt := pg.Theme.Label(values.TextSize14, msg)
 							txt.Alignment = text.Middle
 							txt.Color = pg.Theme.Color.GrayText3
@@ -364,10 +364,10 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 				}),
 			)
 		}).
-		NegativeButton("Cancel", func() {
+		NegativeButton(values.String(values.StrCancel), func() {
 			pg.autoPurchase.SetChecked(false)
 		}).
-		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+		PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 			if !pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
 				pg.Toast.NotifyError(values.String(values.StrNotConnected))
 				pm.SetLoading(false)

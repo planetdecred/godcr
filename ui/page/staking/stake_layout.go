@@ -8,7 +8,7 @@ import (
 )
 
 func (pg *Page) initStakePriceWidget() *Page {
-	pg.stakeBtn = pg.Theme.Button("Stake")
+	pg.stakeBtn = pg.Theme.Button(values.String(values.StrStake))
 	pg.autoPurchaseSettings = pg.Theme.NewClickable(false)
 	pg.autoPurchase = pg.Theme.Switch()
 	return pg
@@ -24,7 +24,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 					leftWg := func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								title := pg.Theme.Label(values.TextSize14, "Ticket Price")
+								title := pg.Theme.Label(values.TextSize14, values.String(values.StrTicketPrice))
 								title.Color = pg.Theme.Color.GrayText2
 								return title.Layout(gtx)
 							}),
@@ -40,7 +40,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								txt.Color = pg.Theme.Color.GrayText2
 
 								if pg.WL.MultiWallet.IsSyncing() {
-									txt.Text = "Syncing"
+									txt.Text = values.String(values.StrSyncingState)
 								}
 								return txt.Layout(gtx)
 							}),
@@ -57,7 +57,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								return pg.autoPurchaseSettings.Layout(gtx, icon.Layout24dp)
 							}),
 							layout.Rigid(func(gtx C) D {
-								title := pg.Theme.Label(values.TextSize14, "Auto Purchase")
+								title := pg.Theme.Label(values.TextSize14, values.String(values.StrAutoTicketPurchase))
 								title.Color = pg.Theme.Color.GrayText2
 								return layout.Inset{
 									Left:  values.MarginPadding4,
@@ -98,7 +98,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 					return D{}
 				}
 
-				notSynced := pg.Theme.Label(values.TextSize10, "Wallets not synced")
+				notSynced := pg.Theme.Label(values.TextSize10, values.String(values.StrWalletNotSynced))
 				notSynced.Color = pg.Theme.Color.Danger
 				return layout.Center.Layout(gtx, notSynced.Layout)
 			}),

@@ -2,7 +2,6 @@ package staking
 
 import (
 	"context"
-	"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -63,13 +62,13 @@ func newListPage(l *load.Load) *ListPage {
 	pg.wallets = pg.WL.SortedWalletList()
 	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.StakingDropdownGroup, 0) // first in the set during layout pos 0
 	pg.ticketTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
-		{Text: "All"},
-		{Text: "Unmined"},
-		{Text: "Immature"},
-		{Text: "Live"},
-		{Text: "Voted"},
-		{Text: "Expired"},
-		{Text: "Revoked"},
+		{Text: values.String(values.StrAll)},
+		{Text: values.String(values.StrUmined)},
+		{Text: values.String(values.StrImmature)},
+		{Text: values.String(values.StrLive)},
+		{Text: values.String(values.StrVoted)},
+		{Text: values.String(values.StrExpired)},
+		{Text: values.String(values.StrRevoked)},
 	}, values.StakingDropdownGroup, 2)
 
 	return pg
@@ -181,7 +180,7 @@ func (pg *ListPage) Layout(gtx C) D {
 	body := func(gtx C) D {
 		page := components.SubPage{
 			Load:       pg.Load,
-			Title:      "All tickets",
+			Title:      values.String(values.StrAllTickets),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -197,7 +196,7 @@ func (pg *ListPage) Layout(gtx C) D {
 									if len(tickets) == 0 {
 										gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-										txt := pg.Theme.Body1("No tickets yet")
+										txt := pg.Theme.Body1(values.String(values.StrNoTickets))
 										txt.Color = pg.Theme.Color.GrayText3
 										txt.Alignment = text.Middle
 										return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding16}.Layout(gtx, txt.Layout)
@@ -269,14 +268,14 @@ func (pg *ListPage) HandleUserInteractions() {
 		// TODO: Use log.Errorf and log.Warnf instead of fmt.Printf.
 		ticketInfo, err := pg.WL.MultiWallet.VSPTicketInfo(ticketTx.WalletID, ticketTx.Hash)
 		if err != nil {
-			fmt.Printf("VSPTicketInfo error: %v\n", err)
+			log.Errorf("VSPTicketInfo error: %v\n", err)
 		} else {
 			if ticketInfo.FeeTxStatus != dcrlibwallet.VSPFeeProcessConfirmed {
-				fmt.Printf("[WARN] Ticket %s has unconfirmed fee tx %s with status %q, vsp %s \n",
+				log.Errorf("[WARN] Ticket %s has unconfirmed fee tx %s with status %q, vsp %s \n",
 					ticketTx.Hash, ticketInfo.FeeTxHash, ticketInfo.FeeTxStatus.String(), ticketInfo.VSP)
 			}
 			if ticketInfo.ConfirmedByVSP == nil || !*ticketInfo.ConfirmedByVSP {
-				fmt.Printf("[WARN] Ticket %s is not confirmed by VSP %s. Fee tx %s, status %q \n",
+				log.Errorf("[WARN] Ticket %s is not confirmed by VSP %s. Fee tx %s, status %q \n",
 					ticketTx.Hash, ticketInfo.VSP, ticketInfo.FeeTxHash, ticketInfo.FeeTxStatus.String())
 			}
 		}
