@@ -82,7 +82,7 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 			Text: values.String(values.StrReceived),
 		},
 		{
-			Text: values.String(values.StrYourself),
+			Text: values.String(values.StrTransferred),
 		},
 		{
 			Text: values.String(values.StrMixed),
