@@ -474,7 +474,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						}),
 						layout.Rigid(func(gtx C) D {
 							// vote reward
-							if row.Transaction.Type != dcrlibwallet.TxTypeVote {
+							if row.Transaction.Type != dcrlibwallet.TxTypeVote && row.Transaction.Type != dcrlibwallet.TxTypeRevocation{
 								return D{}
 							}
 
@@ -486,11 +486,6 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								Alignment:   layout.Middle,
 							}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									label := l.Theme.Label(values.TextSize14, "+")
-									label.Color = l.Theme.Color.Turquoise800
-									return label.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
 									ic := l.Theme.Icons.DecredSymbol2
 
 									return layout.Inset{
@@ -500,7 +495,10 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								}),
 								layout.Rigid(func(gtx C) D {
 									label := l.Theme.Label(values.TextSize12, dcrutil.Amount(row.Transaction.VoteReward).String())
-									label.Color = l.Theme.Color.Turquoise800
+									label.Color = l.Theme.Color.Orange
+									if row.Transaction.Type == dcrlibwallet.TxTypeVote {
+										label.Color = l.Theme.Color.Turquoise800
+									}
 									return label.Layout(gtx)
 								}),
 							)
