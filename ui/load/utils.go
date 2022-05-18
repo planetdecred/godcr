@@ -13,4 +13,5 @@ const (
 	SeedBackupNotificationConfigKey  = "seed_backup_notification"
 	ProposalNotificationConfigKey    = "proposal_notification_key"
 	TransactionNotificationConfigKey = "transaction_notification_key"
+	SpendUnmixedFundsKey             = "spend_unmixed_funds"
 )

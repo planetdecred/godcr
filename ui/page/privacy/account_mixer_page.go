@@ -70,11 +70,8 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 	pg.listenForMixerNotifications()
 	pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
 
-	if pg.wallet.AccountMixerConfigIsSet() {
-		pg.allowUnspendUnmixedAcct.SetChecked(false)
-	} else {
-		pg.allowUnspendUnmixedAcct.SetChecked(true)
-	}
+	isSpendUnmixedFunds := pg.wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false)
+	pg.allowUnspendUnmixedAcct.SetChecked(isSpendUnmixedFunds)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -271,7 +268,7 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 						tim.SetError("confirmation text is incorrect")
 						tim.SetLoading(false)
 					} else {
-						pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)
+						pg.wallet.SetBoolConfigValueForKey(load.SpendUnmixedFundsKey, true)
 						tim.Dismiss()
 					}
 					return false
@@ -284,7 +281,7 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 			textModal.Show()
 
 		} else {
-			pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
+			pg.wallet.SetBoolConfigValueForKey(load.SpendUnmixedFundsKey, false)
 		}
 
 		if pg.dangerZoneCollapsible.IsExpanded() {
