@@ -129,91 +129,6 @@ func UniformMobile(gtx layout.Context, isHorizontal, withList bool, body layout.
 func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, ticketSpender *dcrlibwallet.Transaction) *TxStatus {
 	var txStatus TxStatus
 
-	setTransactionIcon(l, wal, tx, &txStatus, ticketSpender)
-	// setTransactionTitle(l, wal, tx, &txStatus)
-
-	// if tx.Type == dcrlibwallet.TxTypeRegular {
-	// 	if tx.Direction == dcrlibwallet.TxDirectionSent {
-	// 		txStatus.Title = "Sent"
-	// 		txStatus.Icon = l.Theme.Icons.SendIcon
-	// 	} else if tx.Direction == dcrlibwallet.TxDirectionReceived {
-	// 		txStatus.Title = "Received"
-	// 		txStatus.Icon = l.Theme.Icons.ReceiveIcon
-	// 	} else if tx.Direction == dcrlibwallet.TxDirectionTransferred {
-	// 		txStatus.Title = "Yourself"
-	// 		txStatus.Icon = l.Theme.Icons.Transferred
-	// 	}
-	// } else if tx.Type == dcrlibwallet.TxTypeMixed {
-	// 	txStatus.Title = "Mixed"
-	// 	txStatus.Icon = l.Theme.Icons.MixedTx
-	// } else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
-
-	// 	if tx.Type == dcrlibwallet.TxTypeTicketPurchase {
-	// 		if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterUnmined) {
-	// 			txStatus.Title = "Unmined"
-	// 			txStatus.Icon = l.Theme.Icons.TicketUnminedIcon
-	// 			txStatus.TicketStatus = dcrlibwallet.TicketStatusUnmined
-	// 			txStatus.Color = l.Theme.Color.LightBlue6
-	// 			txStatus.Background = l.Theme.Color.LightBlue
-	// 		} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
-	// 			txStatus.Title = "Immature"
-	// 			txStatus.Icon = l.Theme.Icons.TicketImmatureIcon
-	// 			txStatus.Color = l.Theme.Color.LightBlue6
-	// 			txStatus.TicketStatus = dcrlibwallet.TicketStatusImmature
-	// 			txStatus.ProgressBarColor = l.Theme.Color.LightBlue5
-	// 			txStatus.ProgressTrackColor = l.Theme.Color.LightBlue3
-	// 			txStatus.Background = l.Theme.Color.LightBlue
-	// 		} else if ticketSpender != nil {
-	// 			if ticketSpender.Type == dcrlibwallet.TxTypeVote {
-	// 				txStatus.Title = "Voted"
-	// 				txStatus.Icon = l.Theme.Icons.TicketVotedIcon
-	// 				txStatus.Color = l.Theme.Color.Turquoise700
-	// 				txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
-	// 				txStatus.ProgressBarColor = l.Theme.Color.Turquoise300
-	// 				txStatus.ProgressTrackColor = l.Theme.Color.Turquoise100
-	// 				txStatus.Background = l.Theme.Color.Success2
-	// 			} else {
-	// 				txStatus.Title = "Revoked"
-	// 				txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
-	// 				txStatus.Color = l.Theme.Color.Orange
-	// 				txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
-	// 				txStatus.ProgressBarColor = l.Theme.Color.Danger
-	// 				txStatus.ProgressTrackColor = l.Theme.Color.Orange3
-	// 				txStatus.Background = l.Theme.Color.Orange2
-	// 			}
-	// 		} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterLive) {
-	// 			txStatus.Title = "Live"
-	// 			txStatus.Icon = l.Theme.Icons.TicketLiveIcon
-	// 			txStatus.Color = l.Theme.Color.Primary
-	// 			txStatus.TicketStatus = dcrlibwallet.TicketStatusLive
-	// 			txStatus.ProgressBarColor = l.Theme.Color.Primary
-	// 			txStatus.ProgressTrackColor = l.Theme.Color.LightBlue4
-	// 			txStatus.Background = l.Theme.Color.Primary50
-	// 		} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
-	// 			txStatus.Title = "Expired"
-	// 			txStatus.Icon = l.Theme.Icons.TicketExpiredIcon
-	// 			txStatus.Color = l.Theme.Color.GrayText2
-	// 			txStatus.TicketStatus = dcrlibwallet.TicketStatusExpired
-	// 			txStatus.Background = l.Theme.Color.Gray4
-	// 		} else {
-	// 			txStatus.Title = "Purchased"
-	// 			txStatus.Icon = l.Theme.Icons.NewStakeIcon
-	// 			txStatus.Color = l.Theme.Color.Text
-	// 			txStatus.Background = l.Theme.Color.LightBlue
-	// 		}
-	// 	} else if tx.Type == dcrlibwallet.TxTypeVote {
-	// 		txStatus.Title = "Vote"
-	// 		txStatus.Icon = l.Theme.Icons.TicketVotedIcon
-	// 	} else if tx.Type == dcrlibwallet.TxTypeRevocation {
-	// 		txStatus.Title = "Revocation"
-	// 		txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
-	// 	}
-	// }
-
-	return &txStatus
-}
-
-func setTransactionIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, txStatus *TxStatus, ticketSpender *dcrlibwallet.Transaction) {
 	switch tx.Direction {
 	case dcrlibwallet.TxDirectionSent:
 		txStatus.Title = "Sent"
@@ -279,10 +194,6 @@ func setTransactionIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet
 							txStatus.Background = l.Theme.Color.Orange2
 						}
 					}
-					// txStatus.Title = "Purchased"
-					// txStatus.Icon = l.Theme.Icons.TicketLiveIcon
-					// txStatus.Color = l.Theme.Color.Text
-					// txStatus.Background = l.Theme.Color.LightBlue
 				}
 			}
 		case dcrlibwallet.TxTypeVote:
@@ -306,30 +217,8 @@ func setTransactionIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet
 		txStatus.Title = values.String(values.StrMixed)
 		txStatus.Icon = l.Theme.Icons.MixedTx
 	}
-}
 
-func setTransactionTitle(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, txStatus *TxStatus) {
-	if tx.Type == dcrlibwallet.TxTypeMixed {
-		txStatus.Title = "Mixed"
-		txStatus.Icon = l.Theme.Icons.MixedTx
-	} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
-		switch tx.Type {
-		case dcrlibwallet.TxTypeTicketPurchase:
-			{
-				if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterUnmined) {
-					txStatus.Title = "Unmined"
-				} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
-					txStatus.Title = "Immature"
-				} else {
-					txStatus.Title = "Live"
-				}
-			}
-		case dcrlibwallet.TxTypeVote:
-			txStatus.Title = "Vote"
-		case dcrlibwallet.TxTypeRevocation:
-			txStatus.Title = "Revocation"
-		}
-	}
+	return &txStatus
 }
 
 func WeekDayHourMinuteCalculator(timestamp int64) string {
