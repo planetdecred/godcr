@@ -87,7 +87,7 @@ func (as *WalletSelector) SelectFirstValidWallet() error {
 		}
 	}
 
-	return errors.New("no valid wallet found")
+	return errors.New(values.String(values.StrnoValidWalletFound))
 }
 
 func (as *WalletSelector) setupSelectedWallet(wallet *dcrlibwallet.Wallet) {

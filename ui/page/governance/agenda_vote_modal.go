@@ -49,16 +49,16 @@ func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, onPreferenceU
 		onPreferenceUpdated: onPreferenceUpdated,
 		materialLoader:      material.Loader(material.NewTheme(gofont.Collection())),
 		optionsRadioGroup:   new(widget.Enum),
-		spendingPassword:    l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
-		voteBtn:             l.Theme.Button("Update Preference"),
-		cancelBtn:           l.Theme.OutlineButton("Cancel"),
+		spendingPassword:    l.Theme.EditorPassword(new(widget.Editor), values.String(values.StrSpendingPassword)),
+		voteBtn:             l.Theme.Button(values.String(values.StrUpdatePreference)),
+		cancelBtn:           l.Theme.OutlineButton(values.String(values.StrCancel)),
 	}
 
 	avm.voteBtn.Background = l.Theme.Color.Gray3
 	avm.voteBtn.Color = l.Theme.Color.Surface
 
 	avm.walletSelector = NewWalletSelector(l).
-		Title("Select wallet").
+		Title(values.String(values.StrSelectWallet)).
 		WalletSelected(func(w *dcrlibwallet.Wallet) {
 			avm.modalUpdateCount = 0 // modal just opened.
 
@@ -180,11 +180,11 @@ func (avm *agendaVoteModal) Handle() {
 func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
-			t := avm.Theme.H6("Update Voting Preference")
+			t := avm.Theme.H6(values.String(values.StrUpdatevotePref))
 			t.Font.Weight = text.SemiBold
 			return t.Layout(gtx)
 		},
-		avm.Theme.Body1("Select one of the options below to vote").Layout,
+		avm.Theme.Body1(values.String(values.StrSelectOption)).Layout,
 		avm.walletSelector.Layout,
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -242,13 +242,13 @@ func (avm *agendaVoteModal) sendVotes() {
 		err := avm.walletSelector.selectedWallet.SetVoteChoice(avm.agenda.AgendaID, choiceID, "", password)
 		if err != nil {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-				avm.spendingPassword.SetError("Invalid password")
+				avm.spendingPassword.SetError(values.String(values.StrInvalidPassphrase))
 			} else {
 				avm.Toast.NotifyError(err.Error())
 			}
 			return
 		}
-		avm.Toast.Notify("Vote preference updated successfully")
+		avm.Toast.Notify(values.String(values.StrVoteUpdated))
 
 		avm.Dismiss()
 		avm.onPreferenceUpdated()

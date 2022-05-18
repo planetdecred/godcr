@@ -13,7 +13,7 @@ import (
 
 func (pg *Page) initSplashScreenWidgets() {
 	_, pg.splashScreenInfoButton = components.SubpageHeaderButtons(pg.Load)
-	pg.enableGovernanceBtn = pg.Theme.Button("Fetch proposals")
+	pg.enableGovernanceBtn = pg.Theme.Button(values.String(values.StrFetchProposals))
 }
 
 func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
@@ -34,7 +34,7 @@ func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 							return pg.Theme.Icons.GovernanceActiveIcon.LayoutSize(gtx, values.MarginPadding150)
 						}),
 						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.Label(values.MarginPadding24, "How does Governance Work?")
+							txt := pg.Theme.Label(values.MarginPadding24, values.String(values.StrHowGovernanceWork))
 							txt.Font.Weight = text.SemiBold
 
 							return layout.Inset{
@@ -43,15 +43,7 @@ func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 							}.Layout(gtx, txt.Layout)
 						}),
 						layout.Rigid(func(gtx C) D {
-							text := `<span style="text-color: gray">
-							The Decred community can participate in proposal discussions 
-							for new initiatives and request funding for these initiatives. 
-							Decred stakeholders can vote if these proposals should be approved 
-							and paid for by the Decred Treasury.
-
-							Would you like to fetch and view the proposals?
-						</span>`
-
+							text := values.StringF(values.StrGovernanceInfo, `<span style="text-color: gray">`, `<br>`, `</span>`)
 							return renderers.RenderHTML(text, pg.Theme).Layout(gtx)
 						}),
 					)
@@ -71,8 +63,8 @@ func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 
 func (pg *Page) showInfoModal() {
 	info := modal.NewInfoModal(pg.Load).
-		Title("Governance").
-		Body("Proposals and politeia notifications can be enabled or disabled from the settings page.").
-		PositiveButton("Got it", func(isChecked bool) {})
+		Title(values.String(values.StrGovernance)).
+		Body(values.String(values.StrProposalInfo)).
+		PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
 	pg.ShowModal(info)
 }

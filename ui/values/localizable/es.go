@@ -228,6 +228,7 @@ const ES = `
 "walletRenamed" = "Monedero renombrado"
 "walletCreated" = "Monedero creado"
 "addWallet" = "Agregar billetera"
+"selectWallet" = "Sélectionner le portefeuille"
 "checkMixerStatus" = "Comprobar el estado del mezclador"
 "walletRestoreMsg" = "Puede restaurar esta billetera desde la palabra inicial después de que se elimine."
 "walletRemoved" = "Monedero eliminado"
@@ -251,6 +252,7 @@ const ES = `
 "abandoned" = "Abandonado"
 "inDiscussion" = "en discusión"
 "fetchingProposals" = "Obtener propuestas..."
+"fetchProposals" = "Obtener propuestas"
 "underReview" = "Bajo revisión"
 "noProposals" = "Sin propuestas %s"
 "waitingForAuthor" = "Esperando a que el autor autorice la votación"
@@ -327,8 +329,33 @@ const ES = `
 "duration" = "%s (%d/%d bloques)"
 "daysToMiss" = "Días para perder"
 "stakeAge" = "Edad de la Apostar"
-
-
-
+"selectOption" = "Seleccione una de las opciones a continuación para votar"
+"updateVotePref" = "Actualizar preferencia de votación"
+"voteUpdated" = "Preferencia de voto actualizada con éxito"
+"votingWallet" = "Cartera de votación"
+"voteConfirm" = "Confirmar para votar"
+"voteSent" = "¡Voto enviado con éxito, propuestas refrescantes!"
+"numberOfVotes" = "Tienes %d votos"
+"notEnoughVotes" = "No tienes suficientes votos"
+"search" = "Búsqueda"
+"consensusChange" = "Cambios de consenso"
+"onChainVote" = "Votación en cadena para actualizar las reglas de consenso de la red Decred".
+"offChainVote" = "Votación fuera de la cadena para iniciativas de desarrollo y marketing financiadas por el tesoro de Decred".
+"consensusDashboard" = "Panel de control de votos por consenso"
+"copyLink" = "Copie y pegue el enlace a continuación en su navegador, para ver el panel de votación por consenso"
+"webURL" = "URL Web"
+"votingDashboard" = "Panel de votación"
+"updated" = "Actualizado"
+"viewOnPoliteia" = "Estado de Viena"
+"votingInProgress" = "Votación en progreso..."
+"version" = "Versión"
+"published2" = "Publicado"
+"howGovernanceWork" = "¿Cómo funciona la gobernanza?"
+"governanceInfo" = "La comunidad de Decred puede participar en discusiones de propuestas para nuevas iniciativas y solicitar fondos para estas iniciativas. Las partes interesadas de Decred pueden votar si estas propuestas deben ser aprobadas y pagadas por el Tesoro de Decred. %v ¿Le gustaría buscar y ver las propuestas?% v"
+"proposalInfo" = "Las propuestas y las notificaciones de cortesía se pueden habilitar o deshabilitar desde la página de configuración".
+"selectTicket" = "Seleccione un boleto para votar"
+"hash" = "Picadillo"
+"max" = "MAX"
+"noValidWalletFound" = "no se encontró una billetera válida"
 
 `
