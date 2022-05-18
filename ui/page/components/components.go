@@ -474,7 +474,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						}),
 						layout.Rigid(func(gtx C) D {
 							// vote reward
-							if row.Transaction.Type != dcrlibwallet.TxTypeVote && row.Transaction.Type != dcrlibwallet.TxTypeRevocation{
+							if row.Transaction.Type != dcrlibwallet.TxTypeVote && row.Transaction.Type != dcrlibwallet.TxTypeRevocation {
 								return D{}
 							}
 
