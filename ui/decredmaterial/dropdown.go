@@ -222,26 +222,24 @@ func (d *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 
 	if d.Position == DropdownBasePos && d.isOpenDropdownGroup(d.group) {
 		if d.isOpen {
-			return layout.Stack{Alignment: alig}.Layout(gtx,
-				layout.Expanded(func(gtx C) D {
-					gtx.Constraints.Min = gtx.Constraints.Max
-					return d.backdrop.Layout(gtx)
-				}),
-				layout.Stacked(func(gtx C) D {
-					return d.openedLayout(gtx, iLeft, iRight)
-				}),
-			)
+			gtx.Constraints.Min = gtx.Constraints.Max
+			return d.backdrop.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Stack{Alignment: alig}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						return d.openedLayout(gtx, iLeft, iRight)
+					}),
+				)
+			})
 		}
 
-		return layout.Stack{Alignment: alig}.Layout(gtx,
-			layout.Expanded(func(gtx C) D {
-				gtx.Constraints.Min = gtx.Constraints.Max
-				return d.backdrop.Layout(gtx)
-			}),
-			layout.Stacked(func(gtx C) D {
-				return d.closedLayout(gtx, iLeft, iRight)
-			}),
-		)
+		gtx.Constraints.Min = gtx.Constraints.Max
+		return d.backdrop.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			return layout.Stack{Alignment: alig}.Layout(gtx,
+				layout.Stacked(func(gtx C) D {
+					return d.closedLayout(gtx, iLeft, iRight)
+				}),
+			)
+		})
 
 	} else if d.isOpen {
 		return layout.Stack{Alignment: alig}.Layout(gtx,

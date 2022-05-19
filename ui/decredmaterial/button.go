@@ -7,6 +7,7 @@ import (
 	"image/color"
 
 	"gioui.org/f32"
+	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -200,7 +201,10 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 				return D{}
 			}
 
-			return b.clickable.Layout(gtx)
+			return b.clickable.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				semantic.Button.Add(gtx.Ops)
+				return layout.Dimensions{Size: gtx.Constraints.Min}
+			})
 		}),
 	)
 }

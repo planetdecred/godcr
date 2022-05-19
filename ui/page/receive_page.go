@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"gioui.org/io/clipboard"
+	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/unit"
@@ -259,7 +260,10 @@ func (pg *ReceivePage) pageBackdropLayout(gtx layout.Context) {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 		m := op.Record(gtx.Ops)
-		pg.backdrop.Layout(gtx)
+		pg.backdrop.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			semantic.Button.Add(gtx.Ops)
+			return layout.Dimensions{Size: gtx.Constraints.Min}
+		})
 		op.Defer(gtx.Ops, m.Stop())
 	}
 }

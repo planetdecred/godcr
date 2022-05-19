@@ -1,10 +1,10 @@
 module github.com/planetdecred/godcr
 
-go 1.16
+go 1.17
 
 require (
 	decred.org/dcrdex v0.4.1
-	gioui.org v0.0.0-20211011183043-05f0f5c20f45
+	gioui.org v0.0.0-20220517073035-79f037f983a7
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
@@ -15,8 +15,8 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jrick/logrotate v1.0.0
 	github.com/nxadm/tail v1.4.4
-	github.com/onsi/ginkgo v1.14.0
-	github.com/onsi/gomega v1.10.1
+	github.com/onsi/ginkgo v1.15.0
+	github.com/onsi/gomega v1.10.5
 	github.com/planetdecred/dcrlibwallet v1.7.0
 	github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-20220425133823-833d52a7cdd5 // indirect
 	github.com/yeqown/go-qrcode v1.5.1

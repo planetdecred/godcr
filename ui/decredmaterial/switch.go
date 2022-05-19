@@ -7,7 +7,7 @@ import (
 	"image/color"
 
 	"gioui.org/f32"
-	"gioui.org/io/pointer"
+	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -108,21 +108,21 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 
 	thumbRadius := float32(thumbSize) / 2
 
+	circle := func(x, y, r float32) clip.Op {
+		b := f32.Rectangle{
+			Min: f32.Pt(x-r, y-r),
+			Max: f32.Pt(x+r, y+r),
+		}
+		return clip.Ellipse(b).Op(gtx.Ops)
+	}
+
 	// Draw thumb shadow, a translucent disc slightly larger than the
 	// thumb itself.
 	// Center shadow horizontally and slightly adjust its Y.
-	paint.FillShape(gtx.Ops, col,
-		clip.Circle{
-			Center: f32.Point{X: thumbRadius, Y: thumbRadius + .25},
-			Radius: thumbRadius + 1,
-		}.Op(gtx.Ops))
+	paint.FillShape(gtx.Ops, col, circle(thumbRadius, thumbRadius+.25, thumbRadius+1))
 
 	// Draw thumb.
-	paint.FillShape(gtx.Ops, thumbColor,
-		clip.Circle{
-			Center: f32.Point{X: thumbRadius, Y: thumbRadius},
-			Radius: thumbRadius,
-		}.Op(gtx.Ops))
+	paint.FillShape(gtx.Ops, thumbColor, circle(thumbRadius, thumbRadius, thumbRadius))
 
 	// Set up click area.
 	clickSize := gtx.Px(unit.Dp(40))
@@ -132,9 +132,12 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	}
 	defer op.Offset(clickOff).Push(gtx.Ops).Pop()
 	sz := image.Pt(clickSize, clickSize)
-	defer pointer.Ellipse(image.Rectangle{Max: sz}).Push(gtx.Ops).Pop()
+	defer clip.Ellipse(f32.Rectangle{Max: layout.FPt(sz)}).Push(gtx.Ops).Pop()
 	gtx.Constraints.Min = sz
-	s.clk.Layout(gtx)
+	s.clk.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		semantic.Switch.Add(gtx.Ops)
+		return layout.Dimensions{Size: sz}
+	})
 
 	dims := image.Point{X: trackWidth, Y: thumbSize}
 	return layout.Dimensions{Size: dims}

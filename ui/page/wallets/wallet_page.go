@@ -7,9 +7,10 @@ import (
 	"sync"
 
 	"gioui.org/gesture"
-	"gioui.org/io/pointer"
+	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/op/clip"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -444,7 +445,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 			layout.Flexed(0.85, func(gtx C) D {
 				return pg.Theme.List(pg.container).Layout(gtx, len(pageContent), func(gtx C, i int) D {
 					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-						defer pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops).Pop()
+						defer clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops).Pop()
 						pg.click.Add(gtx.Ops)
 						return pageContent[i](gtx)
 					})
@@ -470,7 +471,10 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Expanded(func(gtx C) D {
 			if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
-				return pg.backdrop.Layout(gtx)
+				return pg.backdrop.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					semantic.Button.Add(gtx.Ops)
+					return layout.Dimensions{Size: gtx.Constraints.Min}
+				})
 			}
 			return D{}
 		}),

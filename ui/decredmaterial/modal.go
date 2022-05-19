@@ -3,6 +3,7 @@ package decredmaterial
 import (
 	"image/color"
 
+	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -59,7 +60,11 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget) layout.Dimen
 		layout.Expanded(func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			fillMax(gtx, m.overlayColor, CornerRadius{})
-			return m.button.Layout(gtx)
+
+			return m.button.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				semantic.Button.Add(gtx.Ops)
+				return layout.Dimensions{Size: gtx.Constraints.Min}
+			})
 		}),
 		layout.Stacked(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
