@@ -1,5 +1,14 @@
 package load
 
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"strings"
+
+	"github.com/planetdecred/dcrlibwallet"
+)
+
 const Uint32Size = 32 // 32 or 64 ? shifting 32-bit value by 32 bits will always clear it
 const MaxInt32 = 1<<(Uint32Size-1) - 1
 
