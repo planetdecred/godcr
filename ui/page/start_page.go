@@ -12,6 +12,7 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/page/privacy"
 )
 
 const StartPageID = "start_page"
@@ -112,7 +113,7 @@ func (sp *startPage) HandleUserInteractions() {
 			Title("Create new wallet").
 			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
-					_, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
+					wal, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
 					if err != nil {
 						m.SetError(err.Error())
 						m.SetLoading(false)
@@ -121,6 +122,7 @@ func (sp *startPage) HandleUserInteractions() {
 					m.Dismiss()
 
 					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+					sp.ChangeFragment(privacy.NewSetupPrivacyPage(sp.Load, wal))
 				}()
 				return false
 			}).Show()
