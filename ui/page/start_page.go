@@ -19,8 +19,9 @@ const StartPageID = "start_page"
 type startPage struct {
 	*load.Load
 
-	createButton  decredmaterial.Button
-	restoreButton decredmaterial.Button
+	createButton          decredmaterial.Button
+	restoreButton         decredmaterial.Button
+	watchOnlyWalletButton decredmaterial.Button
 
 	loading bool
 }
@@ -30,8 +31,9 @@ func NewStartPage(l *load.Load) load.Page {
 		Load:    l,
 		loading: true,
 
-		createButton:  l.Theme.Button("Create a new wallet"),
-		restoreButton: l.Theme.Button("Restore an existing wallet"),
+		createButton:          l.Theme.Button("Create a new wallet"),
+		restoreButton:         l.Theme.Button("Restore an existing wallet"),
+		watchOnlyWalletButton: l.Theme.Button(values.String(values.StrImportWatchingOnlyWallet)),
 	}
 
 	return sp
@@ -132,6 +134,25 @@ func (sp *startPage) HandleUserInteractions() {
 		}
 		sp.ChangeWindowPage(wallets.NewRestorePage(sp.Load, afterRestore), true)
 	}
+
+	for sp.watchOnlyWalletButton.Clicked() {
+		modal.NewCreateWatchOnlyModal(sp.Load).
+			EnableName(false).
+			WatchOnlyCreated(func(_, password string, m *modal.CreateWatchOnlyModal) bool {
+				go func() {
+					_, err := sp.WL.MultiWallet.CreateWatchOnlyWallet("mywallet", password)
+					if err != nil {
+						m.SetError(err.Error())
+						m.SetLoading(false)
+						return
+					}
+					m.Dismiss()
+
+					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+				}()
+				return false
+			}).Show()
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -171,7 +192,7 @@ func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 	if sp.loading {
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	} else {
-		gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 75) / 100 // use 75% of view height
+		gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 65) / 100 // use 65% of view height
 	}
 
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
@@ -211,7 +232,7 @@ func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 
 func (sp *startPage) buttonSection(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X              // use maximum width
-	gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 25) / 100 // use 25% of view height
+	gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 35) / 100 // use 35% of view height
 	return layout.Stack{Alignment: layout.S}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
@@ -220,13 +241,18 @@ func (sp *startPage) buttonSection(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
 								return sp.createButton.Layout(gtx)
 							})
 						}),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return layout.Inset{Top: values.MarginPadding24, Bottom: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
 								return sp.restoreButton.Layout(gtx)
+							})
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return layout.Inset{Top: values.MarginPadding24, Bottom: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+								return sp.watchOnlyWalletButton.Layout(gtx)
 							})
 						}),
 					)
