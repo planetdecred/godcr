@@ -60,10 +60,11 @@ type MainPage struct {
 	*listeners.SyncProgressListener
 	*listeners.TxAndBlockNotificationListener
 	*listeners.ProposalNotificationListener
-	ctx       context.Context
-	ctxCancel context.CancelFunc
-	appBarNav components.NavDrawer
-	drawerNav components.NavDrawer
+	ctx                 context.Context
+	ctxCancel           context.CancelFunc
+	appBarNav           components.NavDrawer
+	drawerNav           components.NavDrawer
+	bottomNavigationBar components.BottomNavigationBar
 
 	hideBalanceItem HideBalanceItem
 
@@ -121,6 +122,8 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp.setNavExpanded = func() {
 		mp.drawerNav.DrawerToggled(mp.isNavExpanded)
 	}
+
+	mp.bottomNavigationBar.OnViewCreated()
 
 	return mp
 }
@@ -209,6 +212,41 @@ func (mp *MainPage) initNavItems() {
 		},
 		MinimizeNavDrawerButton: mp.Theme.IconButton(mp.Theme.Icons.NavigationArrowBack),
 		MaximizeNavDrawerButton: mp.Theme.IconButton(mp.Theme.Icons.NavigationArrowForward),
+	}
+
+	mp.bottomNavigationBar = components.BottomNavigationBar{
+		Load:        mp.Load,
+		CurrentPage: mp.currentPageID(),
+		BottomNaigationItems: []components.BottomNavigationBarHandler{
+			{
+				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.OverviewIcon,
+				ImageInactive: mp.Theme.Icons.OverviewIconInactive,
+				Title:         values.String(values.StrOverview),
+				PageID:        overview.OverviewPageID,
+			},
+			{
+				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.TransactionsIcon,
+				ImageInactive: mp.Theme.Icons.TransactionsIconInactive,
+				Title:         values.String(values.StrTransactions),
+				PageID:        transaction.TransactionsPageID,
+			},
+			{
+				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.WalletIcon,
+				ImageInactive: mp.Theme.Icons.WalletIconInactive,
+				Title:         values.String(values.StrWallets),
+				PageID:        wallets.WalletPageID,
+			},
+			{
+				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.MoreIcon,
+				ImageInactive: mp.Theme.Icons.MoreIconInactive,
+				Title:         values.String(values.StrMore),
+				PageID:        MorePageID,
+			},
+		},
 	}
 }
 
@@ -386,6 +424,7 @@ func (mp *MainPage) HandleUserInteractions() {
 	}
 
 	mp.drawerNav.CurrentPage = mp.currentPageID()
+	mp.bottomNavigationBar.CurrentPage = mp.currentPageID()
 	mp.appBarNav.CurrentPage = mp.currentPageID()
 
 	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
@@ -448,6 +487,29 @@ func (mp *MainPage) HandleUserInteractions() {
 				} else {
 					pg = dexclient.NewMarketPage(mp.Load)
 				}
+			case MorePageID:
+				pg = NewMorePage(mp.Load)
+			}
+
+			if pg == nil || pg.ID() == mp.currentPageID() {
+				continue
+			}
+
+			// clear stack
+			mp.changeFragment(pg)
+		}
+	}
+
+	for _, item := range mp.bottomNavigationBar.BottomNaigationItems {
+		for item.Clickable.Clicked() {
+			var pg load.Page
+			switch item.PageID {
+			case overview.OverviewPageID:
+				pg = overview.NewOverviewPage(mp.Load)
+			case transaction.TransactionsPageID:
+				pg = transaction.NewTransactionsPage(mp.Load)
+			case wallets.WalletPageID:
+				pg = wallets.NewWalletPage(mp.Load)
 			case MorePageID:
 				pg = NewMorePage(mp.Load)
 			}
@@ -581,6 +643,13 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
+	if gtx.Constraints.Max.X <= gtx.Px(unit.Sp(400)) {
+		return mp.layoutMobile(gtx)
+	}
+	return mp.layoutDesktop(gtx)
+}
+
+func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -632,6 +701,27 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 			//TODO: show toasts here
 			return D{}
 
+		}),
+	)
+}
+
+func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.MatchParent,
+				Height:      decredmaterial.MatchParent,
+				Orientation: layout.Vertical,
+			}.Layout(gtx,
+				layout.Rigid(mp.LayoutTopBar),
+				layout.Rigid(func(gtx C) D {
+					if mp.currentPage == nil {
+						return layout.Dimensions{}
+					}
+					return mp.currentPage.Layout(gtx)
+				}),
+				layout.Rigid(mp.bottomNavigationBar.LayoutBottomNavigationBar),
+			)
 		}),
 	)
 }
@@ -695,74 +785,76 @@ func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
-	return decredmaterial.LinearLayout{
-		Width:       decredmaterial.MatchParent,
-		Height:      decredmaterial.WrapContent,
-		Background:  mp.Theme.Color.Surface,
-		Orientation: layout.Vertical,
-	}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return decredmaterial.LinearLayout{
-				Width:       decredmaterial.MatchParent,
-				Height:      decredmaterial.WrapContent,
-				Background:  mp.Theme.Color.Surface,
-				Orientation: layout.Horizontal,
-			}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.W.Layout(gtx, func(gtx C) D {
-						h := values.MarginPadding24
-						v := values.MarginPadding14
-						// Balance container
-						return components.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
-							func(gtx C) D {
-								return decredmaterial.LinearLayout{
-									Width:       decredmaterial.WrapContent,
-									Height:      decredmaterial.WrapContent,
-									Background:  mp.Theme.Color.Surface,
-									Orientation: layout.Horizontal,
-								}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
-											func(gtx C) D {
-												return mp.Theme.Icons.Logo.Layout24dp(gtx)
-											})
-									}),
-									layout.Rigid(func(gtx C) D {
-										return mp.totalDCRBalance(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										if !mp.isBalanceHidden {
-											return mp.LayoutUSDBalance(gtx)
-										}
-										return layout.Dimensions{}
-									}),
-									layout.Rigid(func(gtx C) D {
-										mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Hide Balance")
-										mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
-										if mp.isBalanceHidden {
-											mp.hideBalanceItem.tooltipLabel.Text = "Show Balance"
-											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
-										}
-										return layout.Inset{
-											Top:  values.MarginPadding1,
-											Left: values.MarginPadding9,
-										}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
-									}),
-								)
-							})
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return mp.appBarNav.LayoutTopBar(gtx)
-				}),
-			)
-		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return mp.Theme.Separator().Layout(gtx)
-		}),
-	)
+	return components.UniformPadding(gtx, func(gtx C) D {
+		return decredmaterial.LinearLayout{
+			Width:       decredmaterial.MatchParent,
+			Height:      decredmaterial.WrapContent,
+			Background:  mp.Theme.Color.Surface,
+			Orientation: layout.Vertical,
+		}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return decredmaterial.LinearLayout{
+					Width:       decredmaterial.MatchParent,
+					Height:      decredmaterial.WrapContent,
+					Background:  mp.Theme.Color.Surface,
+					Orientation: layout.Horizontal,
+				}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.S.Layout(gtx, func(gtx C) D {
+							h := values.MarginPadding24
+							v := values.MarginPadding14
+							// Balance container
+							return components.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
+								func(gtx C) D {
+									return decredmaterial.LinearLayout{
+										Width:       decredmaterial.WrapContent,
+										Height:      decredmaterial.WrapContent,
+										Background:  mp.Theme.Color.Surface,
+										Orientation: layout.Horizontal,
+									}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
+												func(gtx C) D {
+													return mp.Theme.Icons.Logo.Layout24dp(gtx)
+												})
+										}),
+										layout.Rigid(func(gtx C) D {
+											return mp.totalDCRBalance(gtx)
+										}),
+										layout.Rigid(func(gtx C) D {
+											if !mp.isBalanceHidden {
+												return mp.LayoutUSDBalance(gtx)
+											}
+											return layout.Dimensions{}
+										}),
+										layout.Rigid(func(gtx C) D {
+											mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Hide Balance")
+											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
+											if mp.isBalanceHidden {
+												mp.hideBalanceItem.tooltipLabel.Text = "Show Balance"
+												mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
+											}
+											return layout.Inset{
+												Top:  values.MarginPadding1,
+												Left: values.MarginPadding9,
+											}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+										}),
+									)
+								})
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return mp.appBarNav.LayoutTopBar(gtx)
+					}),
+				)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return mp.Theme.Separator().Layout(gtx)
+			}),
+		)
+	})
 }
 
 // postDdesktopNotification posts notifications to the desktop.
