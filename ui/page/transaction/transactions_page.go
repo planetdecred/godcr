@@ -417,3 +417,21 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 func (pg *TransactionsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 }
+
+func (pg *TransactionsPage) splitTxns() [][]dcrlibwallet.Transaction {
+	currentView := make([][]dcrlibwallet.Transaction, 0)
+	tempTxnsArr := make([]dcrlibwallet.Transaction, 0)
+
+	for i := 0; i < len(pg.transactions); i++ {
+		tempTxnsArr = append(tempTxnsArr, pg.transactions[i])
+		if ((i + 1) % 20) == 0 {
+			currentView = append(currentView, tempTxnsArr)
+			tempTxnsArr = nil
+		} else if i == len(pg.transactions)-1 {
+			currentView = append(currentView, tempTxnsArr)
+			tempTxnsArr = nil
+		}
+	}
+
+	return currentView
+}
