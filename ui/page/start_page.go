@@ -10,9 +10,9 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/ui/page/privacy"
 )
 
 const StartPageID = "start_page"
