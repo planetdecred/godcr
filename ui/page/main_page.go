@@ -191,7 +191,7 @@ func (mp *MainPage) initNavItems() {
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.GovernanceActiveIcon,
 				ImageInactive: mp.Theme.Icons.GovernanceInactiveIcon,
-				Title:         "Governance",
+				Title:         values.String(values.StrGovernance),
 				PageID:        governance.GovernancePageID,
 			},
 			// Temp disabling. Will uncomment after release

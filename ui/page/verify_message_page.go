@@ -40,21 +40,21 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 		EnableEditorSwitch: false,
 	}
 
-	pg.addressEditor = l.Theme.Editor(new(widget.Editor), "Address")
+	pg.addressEditor = l.Theme.Editor(new(widget.Editor), values.String(values.StrAddress))
 	pg.addressEditor.Editor.SingleLine = true
 	pg.addressEditor.Editor.Submit = true
 
-	pg.messageEditor = l.Theme.Editor(new(widget.Editor), "Message")
+	pg.messageEditor = l.Theme.Editor(new(widget.Editor), values.String(values.StrMessage))
 	pg.messageEditor.Editor.SingleLine = true
 	pg.messageEditor.Editor.Submit = true
 
-	pg.signatureEditor = l.Theme.Editor(new(widget.Editor), "Signature")
+	pg.signatureEditor = l.Theme.Editor(new(widget.Editor), values.String(values.StrSignature))
 	pg.signatureEditor.Editor.Submit = true
 
-	pg.verifyButton = l.Theme.Button("Verify message")
+	pg.verifyButton = l.Theme.Button(values.String(values.StrVerifyMessage))
 	pg.verifyButton.Font.Weight = text.Medium
 
-	pg.clearBtn = l.Theme.OutlineButton("Clear all")
+	pg.clearBtn = l.Theme.OutlineButton(values.String(values.StrClearAll))
 	pg.clearBtn.Font.Weight = text.Medium
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -84,7 +84,7 @@ func (pg *VerifyMessagePage) Layout(gtx C) D {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Verify message",
+			Title:      values.String(values.StrVerifyMessage),
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
@@ -119,7 +119,7 @@ func (pg *VerifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widge
 
 func (pg *VerifyMessagePage) description() layout.Widget {
 	return func(gtx C) D {
-		desc := pg.Theme.Caption("Enter the address, signature, and message to verify:")
+		desc := pg.Theme.Caption(values.String(values.StrVerifyMsgNote))
 		desc.Color = pg.Theme.Color.GrayText2
 		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
@@ -185,14 +185,14 @@ func (pg *VerifyMessagePage) HandleUserInteractions() {
 		pg.verifyMessageStatus = nil
 		valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text())
 		if err != nil {
-			pg.verifyMessage.Text = "Error verifying message: " + err.Error()
+			pg.verifyMessage.Text = values.StringF(values.StrVerifyMsgError, err)
 			pg.verifyMessage.Color = pg.Theme.Color.Danger
 			pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
 			pg.verifyMessageStatus.Color = pg.Theme.Color.Danger
 			return
 		}
 		if !valid {
-			pg.verifyMessage.Text = "Invalid signature or message"
+			pg.verifyMessage.Text = values.String(values.StrInvalidSignature)
 			pg.verifyMessage.Color = pg.Theme.Color.Danger
 			pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
 			pg.verifyMessageStatus.Color = pg.Theme.Color.Danger
@@ -202,7 +202,7 @@ func (pg *VerifyMessagePage) HandleUserInteractions() {
 
 		pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheck)
 		pg.verifyMessageStatus.Color = pg.Theme.Color.Success
-		pg.verifyMessage.Text = "Valid signature"
+		pg.verifyMessage.Text = values.String(values.StrValidSignature)
 		pg.verifyMessage.Color = pg.Theme.Color.Success
 	}
 
@@ -224,12 +224,12 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 	}
 
 	if !components.StringNotEmpty(pg.signatureEditor.Editor.Text()) {
-		pg.signatureEditor.SetError("Field cannot be empty. Please provide valid signature.")
+		pg.signatureEditor.SetError(values.String(values.StrEmptySign))
 		return false
 	}
 
 	if !components.StringNotEmpty(pg.messageEditor.Editor.Text()) {
-		pg.messageEditor.SetError("Field cannot be empty. Please provide valid signed message.")
+		pg.messageEditor.SetError(values.String(values.StrEmptyMsg))
 		return false
 	}
 
@@ -266,9 +266,9 @@ func (pg *VerifyMessagePage) validateAddress() bool {
 
 	switch {
 	case !components.StringNotEmpty(address):
-		errorMessage = "Please enter a valid address"
+		errorMessage = values.String(values.StrEnterValidAddress)
 	case !pg.WL.MultiWallet.IsAddressValid(address):
-		errorMessage = "Invalid address"
+		errorMessage = values.String(values.StrInvalidAddress)
 	default:
 		valid = true
 	}

@@ -67,7 +67,7 @@ func (pg *LicensePage) Layout(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "License",
+			Title:      values.String(values.StrLicense),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()

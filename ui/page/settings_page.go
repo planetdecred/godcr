@@ -146,13 +146,13 @@ func (pg *SettingsPage) general() layout.Widget {
 		return pg.mainSection(gtx, values.String(values.StrGeneral), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Dark mode", pg.isDarkModeOn)
+					return pg.subSectionSwitch(gtx, values.String(values.StrDarkMode), pg.isDarkModeOn)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Governance", pg.governance)
+					return pg.subSectionSwitch(gtx, values.String(values.StrGovernance), pg.governance)
 				}),
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
@@ -187,10 +187,10 @@ func (pg *SettingsPage) notification() layout.Widget {
 					return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Transaction notification", pg.transactionNotification)
+					return pg.subSectionSwitch(gtx, values.StringF(values.StrTxNotification, ""), pg.transactionNotification)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Proposal notification", pg.proposalNotification)
+					return pg.subSectionSwitch(gtx, values.StringF(values.StrPropNotification, ""), pg.proposalNotification)
 				}),
 			)
 		})
@@ -258,7 +258,7 @@ func (pg *SettingsPage) agent() layout.Widget {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(pg.subSectionLabel(values.String(values.StrCustomUserAgent))),
 								layout.Rigid(func(gtx C) D {
-									txt := pg.Theme.Body2("For HTTP request")
+									txt := pg.Theme.Body2(values.String(values.StrHTTPRequest))
 									txt.Color = pg.Theme.Color.GrayText2
 									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 										return txt.Layout(gtx)
@@ -381,7 +381,7 @@ func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
 		Body(msg).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-		PositiveButton("Remove", func(isChecked bool) {
+		PositiveButton(values.String(values.StrRemove), func(isChecked bool) {
 			pg.WL.MultiWallet.DeleteUserConfigValueForKey(key)
 		})
 	pg.ShowModal(info)
@@ -427,20 +427,20 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		if pg.governance.IsChecked() {
 			go pg.WL.MultiWallet.Politeia.Sync()
 			pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, pg.governance.IsChecked())
-			pg.Toast.Notify("Proposals fetching enabled. Check Governance page")
+			pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrEnabled), values.String(values.StrCheckGovernace)))
 		} else {
 			info := modal.NewInfoModal(pg.Load).
-				Title("Governance").
-				Body("Are you sure you want to disable governance? This will clear all available proposals").
+				Title(values.String(values.StrGovernance)).
+				Body(values.String(values.StrGovernanceSettingsInfo)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-				PositiveButton("Disable", func(isChecked bool) {
+				PositiveButton(values.String(values.StrDisable), func(isChecked bool) {
 					if pg.WL.MultiWallet.Politeia.IsSyncing() {
 						go pg.WL.MultiWallet.Politeia.StopSync()
 					}
 					pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, !pg.governance.IsChecked())
 					pg.WL.MultiWallet.Politeia.ClearSavedProposals()
-					pg.Toast.Notify("Proposals fetching Disabled.")
+					pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrDisabled)))
 				})
 			pg.ShowModal(info)
 		}
@@ -453,33 +453,33 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	if pg.proposalNotification.Changed() {
 		pg.WL.MultiWallet.SaveUserConfigValue(load.ProposalNotificationConfigKey, pg.proposalNotification.IsChecked())
 		if pg.proposalNotification.IsChecked() {
-			pg.Toast.Notify("Proposal notification enabled")
+			pg.Toast.Notify(values.StringF(values.StrPropNotification, values.String(values.StrEnabled)))
 		} else {
-			pg.Toast.Notify("Proposal notification disabled")
+			pg.Toast.Notify(values.StringF(values.StrPropNotification, values.String(values.StrDisabled)))
 		}
 	}
 
 	if pg.transactionNotification.Changed() {
 		pg.WL.MultiWallet.SaveUserConfigValue(load.TransactionNotificationConfigKey, pg.transactionNotification.IsChecked())
 		if pg.transactionNotification.IsChecked() {
-			pg.Toast.Notify("Transaction notification enabled")
+			pg.Toast.Notify(values.StringF(values.StrTxNotification, values.String(values.StrEnabled)))
 		} else {
-			pg.Toast.Notify("Transaction notification disabled")
+			pg.Toast.Notify(values.StringF(values.StrTxNotification, values.String(values.StrDisabled)))
 		}
 	}
 
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).
-			Title("Set up startup password").
-			Body("Startup password helps protect your wallet from unauthorized access.").
-			PositiveButton("Got it", func(isChecked bool) {})
+			Title(values.String(values.StrSetupStartupPassword)).
+			Body(values.String(values.StrStartupPasswordInfo)).
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 
 	for pg.changeStartupPass.Clicked() {
 		modal.NewPasswordModal(pg.Load).
-			Title("Confirm current startup password").
-			Hint("Current startup password").
+			Title(values.String(values.StrConfirmStartupPass)).
+			Hint(values.String(values.StrCurrentStartupPass)).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 				go func() {
@@ -487,7 +487,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 					err := pg.wal.GetMultiWallet().VerifyStartupPassphrase([]byte(password))
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-							error = "Invalid password"
+							error = values.String(values.StrInvalidPassphrase)
 						} else {
 							error = err.Error()
 						}
@@ -501,8 +501,8 @@ func (pg *SettingsPage) HandleUserInteractions() {
 					modal.NewCreatePasswordModal(pg.Load).
 						Title(values.String(values.StrCreateStartupPassword)).
 						EnableName(false).
-						PasswordHint("New startup password").
-						ConfirmPasswordHint("Confirm new startup password").
+						PasswordHint(values.String(values.StrNewStartupPass)).
+						ConfirmPasswordHint(values.String(values.StrConfirmNewStartupPass)).
 						PasswordCreated(func(walletName, newPassword string, m *modal.CreatePasswordModal) bool {
 							go func() {
 								err := pg.wal.GetMultiWallet().ChangeStartupPassphrase([]byte(password), []byte(newPassword), dcrlibwallet.PassphraseTypePass)
@@ -511,7 +511,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify("Startup password changed")
+								pg.Toast.Notify(values.String(values.StrStartupPassConfirm))
 								m.Dismiss()
 							}()
 							return false
@@ -529,8 +529,8 @@ func (pg *SettingsPage) HandleUserInteractions() {
 			modal.NewCreatePasswordModal(pg.Load).
 				Title(values.String(values.StrCreateStartupPassword)).
 				EnableName(false).
-				PasswordHint("Startup password").
-				ConfirmPasswordHint("Confirm startup password").
+				PasswordHint(values.String(values.StrStartupPassword)).
+				ConfirmPasswordHint(values.String(values.StrConfirmStartupPass)).
 				PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
 					go func() {
 						err := pg.wal.GetMultiWallet().SetStartupPassphrase([]byte(password), dcrlibwallet.PassphraseTypePass)
@@ -539,7 +539,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							m.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify("Startup password enabled")
+						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrEnabled)))
 						m.Dismiss()
 					}()
 					return false
@@ -547,7 +547,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		} else {
 			modal.NewPasswordModal(pg.Load).
 				Title(values.String(values.StrConfirmRemoveStartupPass)).
-				Hint("Startup password").
+				Hint(values.String(values.StrStartupPassword)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 					go func() {
@@ -555,7 +555,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 						err := pg.wal.GetMultiWallet().RemoveStartupPassphrase([]byte(password))
 						if err != nil {
 							if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-								error = "Invalid password"
+								error = values.String(values.StrInvalidPassphrase)
 							} else {
 								error = err.Error()
 							}
@@ -563,7 +563,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							pm.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify("Startup password disabled")
+						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrDisabled)))
 						pm.Dismiss()
 					}()
 
@@ -579,8 +579,8 @@ func (pg *SettingsPage) HandleUserInteractions() {
 			return
 		}
 
-		title := "Remove specific peer"
-		msg := "Are you sure you want to proceed with removing the specific peer?"
+		title := values.String(values.StrRemovePeer)
+		msg := values.String(values.StrRemovePeerWarn)
 		pg.showWarningModalDialog(title, msg, specificPeerKey)
 	}
 
@@ -601,16 +601,15 @@ func (pg *SettingsPage) HandleUserInteractions() {
 			return
 		}
 
-		title := "Remove user agent"
-		msg := "Are you sure you want to proceed with removing the user agent?"
+		title := values.String(values.StrRemoveUserAgent)
+		msg := values.String(values.StrRemoveUserAgentWarn)
 		pg.showWarningModalDialog(title, msg, userAgentKey)
 	}
 
 	select {
 	case err := <-pg.errorReceiver:
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-			e := "Password is incorrect"
-			pg.Toast.NotifyError(e)
+			pg.Toast.NotifyError(values.String(values.StrInvalidPassphrase))
 			return
 		}
 		pg.Toast.NotifyError(err.Error())
@@ -620,7 +619,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 
 func (pg *SettingsPage) showSPVPeerDialog() {
 	textModal := modal.NewTextInputModal(pg.Load).
-		Hint("IP address").
+		Hint(values.String(values.StrIPAddress)).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrConfirm), func(ipAddress string, tim *modal.TextInputModal) bool {
 			if ipAddress != "" {
@@ -636,7 +635,7 @@ func (pg *SettingsPage) showSPVPeerDialog() {
 
 func (pg *SettingsPage) showUserAgentDialog() {
 	textModal := modal.NewTextInputModal(pg.Load).
-		Hint("User agent").
+		Hint(values.String(values.StrUserAgent)).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrConfirm), func(userAgent string, tim *modal.TextInputModal) bool {
 			if userAgent != "" {

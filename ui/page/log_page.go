@@ -116,7 +116,7 @@ func (pg *LogPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Wallet log",
+			Title:      values.String(values.StrWalletLog),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -132,7 +132,7 @@ func (pg *LogPage) Layout(gtx C) D {
 			},
 			HandleExtra: func() {
 				pg.copyLogEntries(gtx)
-				pg.Toast.Notify("Copied")
+				pg.Toast.Notify(values.String(values.StrCopied))
 			},
 			Body: func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X

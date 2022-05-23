@@ -37,14 +37,14 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
-	pg.addressEditor = l.Theme.Editor(new(widget.Editor), "Address")
+	pg.addressEditor = l.Theme.Editor(new(widget.Editor), values.String(values.StrAddress))
 	pg.addressEditor.Editor.SingleLine = true
 	pg.addressEditor.Editor.Submit = true
 
-	pg.validateBtn = l.Theme.Button("Validate")
+	pg.validateBtn = l.Theme.Button(values.String(values.StrValidate))
 	pg.validateBtn.Font.Weight = text.Medium
 
-	pg.clearBtn = l.Theme.OutlineButton("Clear")
+	pg.clearBtn = l.Theme.OutlineButton(values.String(values.StrClear))
 	pg.clearBtn.Font.Weight = text.Medium
 
 	pg.stateValidate = none
@@ -74,7 +74,7 @@ func (pg *ValidateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Validate address",
+			Title:      values.String(values.StrValidateAddr),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -107,7 +107,7 @@ func (pg *ValidateAddressPage) addressSection() layout.Widget {
 
 func (pg *ValidateAddressPage) description() layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		desc := pg.Theme.Caption("Enter an address to validate:")
+		desc := pg.Theme.Caption(values.String(values.StrValidateNote))
 		desc.Color = pg.Theme.Color.GrayText2
 		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
@@ -161,14 +161,14 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 					}),
 					layout.Rigid(func(gtx C) D {
 						if pg.stateValidate == invalid {
-							txt := pg.Theme.Body1("Invalid Address")
+							txt := pg.Theme.Body1(values.String(values.StrInvalidAddress))
 							txt.Color = pg.Theme.Color.Danger
 							txt.TextSize = values.TextSize16
 							return txt.Layout(gtx)
 						}
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								txt := pg.Theme.Body1("Valid address")
+								txt := pg.Theme.Body1(values.String(values.StrValidAddress))
 								txt.Color = pg.Theme.Color.Success
 								txt.TextSize = values.TextSize16
 								return txt.Layout(gtx)
@@ -178,9 +178,9 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 									layout.Rigid(func(gtx C) D {
 										var text string
 										if pg.stateValidate == valid {
-											text = "Owned by you in"
+											text = values.String(values.StrOwned)
 										} else {
-											text = "Not owned by you"
+											text = values.String(values.StrNotOwned)
 										}
 										txt := pg.Theme.Body1(text)
 										txt.TextSize = values.TextSize14
@@ -259,7 +259,7 @@ func (pg *ValidateAddressPage) validateAddress() {
 	pg.addressEditor.SetError("")
 
 	if !components.StringNotEmpty(address) {
-		pg.addressEditor.SetError("Please enter a valid address")
+		pg.addressEditor.SetError(values.String(values.StrEnterValidAddress))
 		return
 	}
 

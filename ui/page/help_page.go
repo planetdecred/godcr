@@ -63,8 +63,8 @@ func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Help",
-			SubTitle:   "For more information, please visit the Decred documentation.",
+			Title:      values.String(values.StrHelp),
+			SubTitle:   values.String(values.StrHelpInfo),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -84,7 +84,7 @@ func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *HelpPage) document() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, pg.Theme.Icons.DocumentationIcon, pg.documentation, "Documentation")
+		return pg.pageSections(gtx, pg.Theme.Icons.DocumentationIcon, pg.documentation, values.String(values.StrDocumentation))
 	}
 }
 
@@ -124,7 +124,7 @@ func (pg *HelpPage) HandleUserInteractions() {
 		decredURL := "https://docs.decred.org"
 		info := modal.NewInfoModal(pg.Load).
 			Title("View documentation").
-			Body("Copy and paste the link below in your browser, to view documentation on decred portal.").
+			Body(values.String(values.StrCopyLink)).
 			SetCancelable(true).
 			UseCustomWidget(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
@@ -142,7 +142,7 @@ func (pg *HelpPage) HandleUserInteractions() {
 												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 													if pg.copyRedirectURL.Clicked() {
 														clipboard.WriteOp{Text: decredURL}.Add(gtx.Ops)
-														pg.Toast.Notify("URL copied")
+														pg.Toast.Notify(values.String(values.StrCopied))
 													}
 													return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
 												})
@@ -158,14 +158,14 @@ func (pg *HelpPage) HandleUserInteractions() {
 							Top:  values.MarginPaddingMinus10,
 							Left: values.MarginPadding10,
 						}.Layout(gtx, func(gtx C) D {
-							label := pg.Theme.Body2("Web URL")
+							label := pg.Theme.Body2(values.String(values.StrWebURL))
 							label.Color = pg.Theme.Color.GrayText2
 							return label.Layout(gtx)
 						})
 					}),
 				)
 			}).
-			PositiveButton("Got it", func(isChecked bool) {})
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 }

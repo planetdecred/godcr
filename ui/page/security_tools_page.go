@@ -63,7 +63,7 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Security Tools",
+			Title:      values.String(values.StrSecurityTools),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -88,13 +88,13 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *SecurityToolsPage) message() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, pg.Theme.Icons.VerifyMessageIcon, pg.verifyMessage, "Verify Message")
+		return pg.pageSections(gtx, pg.Theme.Icons.VerifyMessageIcon, pg.verifyMessage, values.String(values.StrVerifyMessage))
 	}
 }
 
 func (pg *SecurityToolsPage) address() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, pg.Theme.Icons.LocationPinIcon, pg.validateAddress, "Validate Address")
+		return pg.pageSections(gtx, pg.Theme.Icons.LocationPinIcon, pg.validateAddress, values.String(values.StrValidateMsg))
 	}
 }
 

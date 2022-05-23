@@ -155,9 +155,18 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 					Top:  values.MarginPadding2,
 					Left: values.MarginPadding18,
 				}.Layout(gtx, func(gtx C) D {
-					page := pg.morePageListItems[i].page
-					if page == SecurityToolsPageID {
-						page = "Security Tools"
+					var page string
+					switch pg.morePageListItems[i].page {
+					case SecurityToolsPageID:
+						page = values.String(values.StrSecurityTools)
+					case DebugPageID:
+						page = values.String(values.StrDebug)
+					case AboutPageID:
+						page = values.String(values.StrAbout)
+					case HelpPageID:
+						page = values.String(values.StrHelp)
+					case SettingsPageID:
+						page = values.String(values.StrSettings)
 					}
 					return pg.Theme.Body1(page).Layout(gtx)
 				})
