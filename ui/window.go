@@ -241,11 +241,15 @@ func (win *Window) drawWindowUI(gtx C) {
 }
 
 func (win *Window) handleKeyEvent(evt *key.Event) {
-	if handler, ok := win.currentPage.(load.KeyEventHandler); ok {
-		handler.HandleKeyEvent(evt)
-	}
+	// Handle key events on any displayed modals first.
 	for _, modal := range win.modals {
 		if handler, ok := modal.(load.KeyEventHandler); ok {
+			handler.HandleKeyEvent(evt)
+		}
+	}
+	// Only handle key events on the current page if no modal is displayed.
+	if len(win.modals) == 0 {
+		if handler, ok := win.currentPage.(load.KeyEventHandler); ok {
 			handler.HandleKeyEvent(evt)
 		}
 	}
