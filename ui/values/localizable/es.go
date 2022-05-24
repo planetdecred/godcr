@@ -437,7 +437,21 @@ const ES = `
 "voteEndedNotif" = "La votación ha finalizado para la propuesta con Token: %s"
 "newProposalUpdate" = "Nueva actualización para propuesta con Token: %s"
 "walletSyncing" = "La billetera se está sincronizando, por favor espere"
-
-
-
+"next" = "Próximo"
+"retry" = "Rever"
+"estimatedTime" = "Hora prevista"
+"estimatedSize" = "Tamaño estimado"
+"rate" = "Precio"
+"totalCost" = "Coste total"
+"balanceAfter" = "Saldo después de enviar"
+"sendingAcct" = "Cuenta de envío"
+"txEstimateErr" = "Error al estimar la transacción: %v"
+"sendInfo" = "Ingrese o escanee la dirección de la billetera de destino e ingrese la cantidad para enviar fondos".
+"amount" = "Monto"
+"txSent" = "¡Transacción enviada!"
+"confirmSend" = "Confirmar para enviar"
+"sendingFrom" = "Enviando desde"
+"sendWarning" = "Su DCR se enviará después de este paso".
+"destAddr" = "Dirección de destino"
+"myAcct" = "Mi cuenta"
 `

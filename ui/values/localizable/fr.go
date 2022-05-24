@@ -414,7 +414,21 @@ const FR = `
 "voteEndedNotif" = "Le vote est terminé pour la proposition avec le jeton: %s"
 "newProposalUpdate" = "Nouvelle mise à jour pour la proposition avec jeton: %s"
 "walletSyncing" = "Le portefeuille est en cours de synchronisation, veuillez patienter"
-
-
-
+"next" = "Suivant"
+"retry" = "Retenter"
+"estimatedTime" = "Temps estimé"
+"estimatedSize" = "Tamaño estimado"
+"rate" = "Tarif"
+"totalCost" = "Coût total"
+"balanceAfter" = "Solde après envoi"
+"sendingAcct" = "Compte d'envoi"
+"txEstimateErr" = "Erreur lors de l'estimation de la transaction: %v"
+"sendInfo" = "Saisissez ou scannez l'adresse du portefeuille de destination et saisissez le montant pour envoyer des fonds."
+"amount" = "Montant"
+"txSent" = "Transaction envoyée!"
+"confirmSend" = "Confirmer pour envoyer"
+"sendingFrom" = "Envoi depuis"
+"sendWarning" = "Votre DCR sera envoyé après cette étape."
+"destAddr" = "Adresse de destination"
+"myAcct" = "Mon compte"
 `

@@ -28,7 +28,7 @@ func (pg *Page) initLayoutWidgets() {
 
 	pg.txFeeCollapsible = pg.Theme.Collapsible()
 
-	pg.nextButton = pg.Theme.Button("Next")
+	pg.nextButton = pg.Theme.Button(values.String(values.StrNext))
 	pg.nextButton.TextSize = values.TextSize18
 	pg.nextButton.Inset = layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15}
 	pg.nextButton.SetEnabled(false)
@@ -39,7 +39,7 @@ func (pg *Page) initLayoutWidgets() {
 	pg.moreOption = pg.Theme.IconButton(pg.Theme.Icons.NavMoreIcon)
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
-	pg.retryExchange = pg.Theme.Button("Retry")
+	pg.retryExchange = pg.Theme.Button(values.String(values.StrRetry))
 	pg.retryExchange.Background = pg.Theme.Color.Gray1
 	pg.retryExchange.Color = pg.Theme.Color.Surface
 	pg.retryExchange.TextSize = values.TextSize12
@@ -62,7 +62,7 @@ func (pg *Page) topNav(gtx layout.Context) layout.Dimensions {
 					return pg.backButton.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: m}.Layout(gtx, pg.Theme.H6("Send DCR").Layout)
+					return layout.Inset{Left: m}.Layout(gtx, pg.Theme.H6(values.String(values.StrSend)+" DCR").Layout)
 				}),
 			)
 		}),
@@ -101,7 +101,7 @@ func (pg *Page) getMoreItem() []moreItem {
 		// 	},
 		// },
 		{
-			text:   "Clear all fields",
+			text:   values.String(values.StrClearAll),
 			button: pg.Theme.NewClickable(true),
 			action: func() {
 				pg.resetFields()
@@ -148,9 +148,7 @@ func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
 func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.pageSections(gtx, "From", false, func(gtx C) D {
-				return pg.sourceAccountSelector.Layout(gtx)
-			})
+			return pg.pageSections(gtx, values.String(values.StrFrom), false, pg.sourceAccountSelector.Layout)
 		},
 		func(gtx C) D {
 			return pg.toSection(gtx)
@@ -237,7 +235,7 @@ func (pg *Page) pageSections(gtx layout.Context, title string, showAccountSwitch
 }
 
 func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
-	return pg.pageSections(gtx, "To", true, func(gtx C) D {
+	return pg.pageSections(gtx, values.String(values.StrTo), true, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{
@@ -329,7 +327,7 @@ func (pg *Page) feeSection(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							//TODO
-							return pg.contentRow(gtx, "Estimated time", "10 minutes (2 blocks)")
+							return pg.contentRow(gtx, values.String(values.StrEstimatedTime), "10 minutes (2 blocks)")
 						}),
 						layout.Rigid(func(gtx C) D {
 							inset := layout.Inset{
@@ -337,11 +335,11 @@ func (pg *Page) feeSection(gtx layout.Context) layout.Dimensions {
 								Bottom: values.MarginPadding5,
 							}
 							return inset.Layout(gtx, func(gtx C) D {
-								return pg.contentRow(gtx, "Estimated size", pg.estSignedSize)
+								return pg.contentRow(gtx, values.String(values.StrEstimatedSize), pg.estSignedSize)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							return pg.contentRow(gtx, "Fee rate", "10 atoms/Byte")
+							return pg.contentRow(gtx, values.String(values.StrFee)+" "+values.String(values.StrRate), "10 atoms/Byte")
 						}),
 					)
 				})
@@ -352,7 +350,7 @@ func (pg *Page) feeSection(gtx layout.Context) layout.Dimensions {
 		Bottom: values.MarginPadding75,
 	}
 	return inset.Layout(gtx, func(gtx C) D {
-		return pg.pageSections(gtx, "Fee", false, func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrFee), false, func(gtx C) D {
 			return pg.txFeeCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody)
 		})
 	})
@@ -379,11 +377,11 @@ func (pg *Page) balanceSection(gtx layout.Context) layout.Dimensions {
 									if pg.exchangeRate != -1 && pg.usdExchangeSet {
 										totalCostText = fmt.Sprintf("%s (%s)", pg.totalCost, pg.totalCostUSD)
 									}
-									return pg.contentRow(gtx, "Total cost", totalCostText)
+									return pg.contentRow(gtx, values.String(values.StrTotalCost), totalCostText)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
-								return pg.contentRow(gtx, "Balance after send", pg.balanceAfterSend)
+								return pg.contentRow(gtx, values.String(values.StrBalanceAfter), pg.balanceAfterSend)
 							}),
 						)
 					})
