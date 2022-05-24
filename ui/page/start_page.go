@@ -32,8 +32,8 @@ func NewStartPage(l *load.Load) load.Page {
 		loading: true,
 
 		watchOnlyWalletButton: l.Theme.Button(values.String(values.StrImportWatchingOnlyWallet)),
-		createButton:  l.Theme.Button(values.String(values.StrCreateANewWallet)),
-		restoreButton: l.Theme.Button(values.String(values.StrRestoreExistingWallet)),
+		createButton:          l.Theme.Button(values.String(values.StrCreateANewWallet)),
+		restoreButton:         l.Theme.Button(values.String(values.StrRestoreExistingWallet)),
 	}
 
 	return sp

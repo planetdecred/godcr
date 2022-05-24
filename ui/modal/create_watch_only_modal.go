@@ -132,11 +132,11 @@ func (cm *CreateWatchOnlyModal) Handle() {
 
 	for (cm.btnPositve.Clicked() || isSubmit) && cm.isEnabled {
 		if cm.walletNameEnabled {
-		if !editorsNotEmpty(cm.walletName.Editor) {
-			cm.walletName.SetError(values.String(values.StrEnterWalletName))
-			return
+			if !editorsNotEmpty(cm.walletName.Editor) {
+				cm.walletName.SetError(values.String(values.StrEnterWalletName))
+				return
+			}
 		}
-	}
 
 		if !editorsNotEmpty(cm.extendedPubKey.Editor) {
 			cm.extendedPubKey.SetError(values.String(values.StrEnterExtendedPubKey))
