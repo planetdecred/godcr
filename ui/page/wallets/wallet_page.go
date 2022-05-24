@@ -375,6 +375,7 @@ func (pg *WalletPage) showAddWalletModal(l *load.Load) {
 
 func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
 	modal.NewCreateWatchOnlyModal(l).
+		EnableName(true).
 		WatchOnlyCreated(func(walletName, extPubKey string, m *modal.CreateWatchOnlyModal) bool {
 			go func() {
 				_, err := pg.multiWallet.CreateWatchOnlyWallet(walletName, extPubKey)

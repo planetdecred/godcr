@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -28,11 +29,13 @@ type CreateWatchOnlyModal struct {
 	btnPositve  decredmaterial.Button
 	btnNegative decredmaterial.Button
 
-	randomID string
+	randomID    string
+	serverError string
 
-	isLoading    bool
-	isCancelable bool
-	isEnabled    bool
+	isLoading         bool
+	isCancelable      bool
+	walletNameEnabled bool
+	isEnabled         bool
 
 	callback func(walletName, extPubKey string, m *CreateWatchOnlyModal) bool // return true to dismiss dialog
 }
@@ -68,7 +71,11 @@ func (cm *CreateWatchOnlyModal) ModalID() string {
 }
 
 func (cm *CreateWatchOnlyModal) OnResume() {
-	cm.walletName.Editor.Focus()
+	if cm.walletNameEnabled {
+		cm.walletName.Editor.Focus()
+	} else {
+		cm.extendedPubKey.Editor.Focus()
+	}
 }
 
 func (cm *CreateWatchOnlyModal) OnDismiss() {}
@@ -79,6 +86,11 @@ func (cm *CreateWatchOnlyModal) Show() {
 
 func (cm *CreateWatchOnlyModal) Dismiss() {
 	cm.DismissModal(cm)
+}
+
+func (cm *CreateWatchOnlyModal) EnableName(enable bool) *CreateWatchOnlyModal {
+	cm.walletNameEnabled = enable
+	return cm
 }
 
 func (cm *CreateWatchOnlyModal) SetLoading(loading bool) {
@@ -92,7 +104,7 @@ func (cm *CreateWatchOnlyModal) SetCancelable(min bool) *CreateWatchOnlyModal {
 }
 
 func (cm *CreateWatchOnlyModal) SetError(err string) {
-	cm.extendedPubKey.SetError(err)
+	cm.serverError = err
 }
 
 func (cm *CreateWatchOnlyModal) WatchOnlyCreated(callback func(walletName, extPubKey string, m *CreateWatchOnlyModal) bool) *CreateWatchOnlyModal {
@@ -113,14 +125,17 @@ func (cm *CreateWatchOnlyModal) Handle() {
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(cm.walletName.Editor, cm.extendedPubKey.Editor)
 	if isChanged {
 		// reset editor errors
+		cm.serverError = ""
 		cm.walletName.SetError("")
 		cm.extendedPubKey.SetError("")
 	}
 
 	for (cm.btnPositve.Clicked() || isSubmit) && cm.isEnabled {
-		if !editorsNotEmpty(cm.walletName.Editor) {
-			cm.walletName.SetError("enter wallet name")
-			return
+		if cm.walletNameEnabled {
+			if !editorsNotEmpty(cm.walletName.Editor) {
+				cm.walletName.SetError("enter wallet name")
+				return
+			}
 		}
 
 		if !editorsNotEmpty(cm.extendedPubKey.Editor) {
@@ -165,7 +180,9 @@ func (cm *CreateWatchOnlyModal) Handle() {
 // HandleKeyEvent is called when a key is pressed on the current window.
 // Satisfies the load.KeyEventHandler interface for receiving key events.
 func (cm *CreateWatchOnlyModal) HandleKeyEvent(evt *key.Event) {
-	decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.extendedPubKey.Editor)
+	if cm.walletNameEnabled {
+		decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.extendedPubKey.Editor)
+	}
 }
 
 func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
@@ -176,7 +193,18 @@ func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
 			return t.Layout(gtx)
 		},
 		func(gtx C) D {
-			return cm.walletName.Layout(gtx)
+			if cm.serverError != "" {
+				// set wallet name editor error if wallet name already exist
+				if cm.serverError == dcrlibwallet.ErrExist && cm.walletNameEnabled {
+					cm.walletName.SetError(fmt.Sprintf("Wallet with name: %s already exist", cm.walletName.Editor.Text()))
+				} else {
+					cm.extendedPubKey.SetError(cm.serverError)
+				}
+			}
+			if cm.walletNameEnabled {
+				return cm.walletName.Layout(gtx)
+			}
+			return D{}
 		},
 		func(gtx C) D {
 			return cm.extendedPubKey.Layout(gtx)
