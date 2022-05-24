@@ -23,7 +23,6 @@ type VerifyMessagePage struct {
 	signatureEditor        decredmaterial.Editor
 	clearBtn, verifyButton decredmaterial.Button
 	verifyMessage          decredmaterial.Label
-	keyEvent               chan *key.Event
 	EnableEditorSwitch     bool
 
 	verifyMessageStatus *decredmaterial.Icon
@@ -38,7 +37,6 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg := &VerifyMessagePage{
 		Load:               l,
 		verifyMessage:      l.Theme.Body1(""),
-		keyEvent:           make(chan *key.Event),
 		EnableEditorSwitch: false,
 	}
 
@@ -77,7 +75,6 @@ func (pg *VerifyMessagePage) ID() string {
 // Part of the load.Page interface.
 func (pg *VerifyMessagePage) OnNavigatedTo() {
 	pg.addressEditor.Editor.Focus()
-	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -212,10 +209,15 @@ func (pg *VerifyMessagePage) HandleUserInteractions() {
 	if pg.clearBtn.Clicked() {
 		pg.clearInputs()
 	}
-
-	//Switch editors on tab press
-	decredmaterial.SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.signatureEditor.Editor, pg.messageEditor.Editor)
 }
+
+// HandleKeyEvent is called when a key is pressed on the current window.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (pg *VerifyMessagePage) HandleKeyEvent(evt *key.Event) {
+	// Switch editors on tab press.
+	decredmaterial.SwitchEditors(evt, pg.addressEditor.Editor, pg.signatureEditor.Editor, pg.messageEditor.Editor)
+}
+
 func (pg *VerifyMessagePage) validateAllInputs() bool {
 	if !pg.validateAddress() {
 		return false
@@ -285,6 +287,4 @@ func (pg *VerifyMessagePage) validateAddress() bool {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *VerifyMessagePage) OnNavigatedFrom() {
-	pg.Load.UnsubscribeKeyEvent(pg.ID())
-}
+func (pg *VerifyMessagePage) OnNavigatedFrom() {}

@@ -18,7 +18,6 @@ type InfoModal struct {
 	*load.Load
 	randomID        string
 	modal           decredmaterial.Modal
-	keyEvent        chan *key.Event
 	enterKeyPressed bool
 
 	dialogIcon *decredmaterial.Icon
@@ -51,15 +50,12 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.OutlineButton("Yes"),
 		btnNegative:  l.Theme.OutlineButton("No"),
-		keyEvent:     make(chan *key.Event),
 		isCancelable: true,
 		btnAlignment: layout.E,
 	}
 
 	in.btnPositve.Font.Weight = text.Medium
 	in.btnNegative.Font.Weight = text.Medium
-
-	in.dismissModalOnEnterKey()
 
 	return in
 }
@@ -76,13 +72,9 @@ func (in *InfoModal) Dismiss() {
 	in.DismissModal(in)
 }
 
-func (in *InfoModal) OnResume() {
-	in.Load.SubscribeKeyEvent(in.keyEvent, in.randomID)
-}
+func (in *InfoModal) OnResume() {}
 
-func (in *InfoModal) OnDismiss() {
-	in.Load.UnsubscribeKeyEvent(in.randomID)
-}
+func (in *InfoModal) OnDismiss() {}
 
 func (in *InfoModal) SetCancelable(min bool) *InfoModal {
 	in.isCancelable = min
@@ -168,16 +160,13 @@ func (in *InfoModal) UseCustomWidget(layout layout.Widget) *InfoModal {
 	return in
 }
 
-func (in *InfoModal) dismissModalOnEnterKey() {
-	go func() {
-		for {
-			event := <-in.keyEvent
-			if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press {
-				in.btnPositve.Click()
-				in.RefreshWindow()
-			}
-		}
-	}()
+// HandleKeyEvent is called when a key is pressed on the current window.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (in *InfoModal) HandleKeyEvent(evt *key.Event) {
+	if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && evt.State == key.Press {
+		in.btnPositve.Click()
+		in.RefreshWindow()
+	}
 }
 
 func (in *InfoModal) Handle() {

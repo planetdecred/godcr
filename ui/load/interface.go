@@ -1,6 +1,9 @@
 package load
 
-import "gioui.org/layout"
+import (
+	"gioui.org/io/key"
+	"gioui.org/layout"
+)
 
 // Page defines methods that control the appearance and functionality of
 // UI components displayed on a window.
@@ -52,4 +55,11 @@ type AppSettingsChangeHandler interface {
 	// OnLanguageChanged is triggered whenever the language setting is changed
 	// to enable UI language update where necessary especially on page Nav
 	OnLanguageChanged()
+}
+
+// KeyEventHandler is implemented by pages and modals that require key event
+// notifications.
+type KeyEventHandler interface {
+	// HandleKeyEvent is called when a key is pressed on the current window.
+	HandleKeyEvent(*key.Event)
 }
