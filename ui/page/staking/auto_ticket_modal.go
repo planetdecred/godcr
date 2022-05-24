@@ -184,8 +184,8 @@ func (tb *ticketBuyerModal) initializeAccountSelector() {
 			// Imported and watch only wallet accounts are invalid for sending
 			accountIsValid := account.Number != dcrlibwallet.ImportedAccountNumber && !wal.IsWatchingOnlyWallet()
 
-			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) {
-				// privacy is enabled for selected wallet
+			if !wal.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) {
+				// Spending from unmixed accounts is disabled for the selected wallet
 				accountIsValid = account.Number == wal.MixedAccountNumber()
 			}
 			return accountIsValid
