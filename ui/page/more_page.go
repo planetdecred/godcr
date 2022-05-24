@@ -118,18 +118,18 @@ func (pg *MorePage) HandleUserInteractions() {
 // Part of the load.Page interface.
 func (pg *MorePage) OnNavigatedFrom() {}
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *MorePage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		pg.layoutMoreItems(gtx)
-		return layout.Dimensions{Size: gtx.Constraints.Max}
+		return D{Size: gtx.Constraints.Max}
 	}
 	return components.UniformPadding(gtx, container)
 }
 
-func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
+func (pg *MorePage) layoutMoreItems(gtx C) D {
 
 	list := layout.List{Axis: layout.Vertical}
 	return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {

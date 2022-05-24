@@ -56,10 +56,10 @@ func (pg *HelpPage) OnNavigatedTo() {
 
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *HelpPage) Layout(gtx C) D {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -88,7 +88,7 @@ func (pg *HelpPage) document() layout.Widget {
 	}
 }
 
-func (pg *HelpPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *decredmaterial.Clickable, title string) layout.Dimensions {
+func (pg *HelpPage) pageSections(gtx C, icon *decredmaterial.Image, action *decredmaterial.Clickable, title string) D {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return decredmaterial.LinearLayout{
 			Orientation: layout.Vertical,
@@ -108,7 +108,7 @@ func (pg *HelpPage) pageSections(gtx layout.Context, icon *decredmaterial.Image,
 			layout.Rigid(pg.Theme.Body1(title).Layout),
 			layout.Rigid(func(gtx C) D {
 				size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
-				return layout.Dimensions{Size: size}
+				return D{Size: size}
 			}),
 		)
 	})
@@ -153,7 +153,7 @@ func (pg *HelpPage) HandleUserInteractions() {
 							})
 						})
 					}),
-					layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+					layout.Stacked(func(gtx C) D {
 						return layout.Inset{
 							Top:  values.MarginPaddingMinus10,
 							Left: values.MarginPadding10,

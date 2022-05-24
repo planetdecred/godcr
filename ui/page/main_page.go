@@ -36,6 +36,11 @@ const (
 	MainPageID = "Main"
 )
 
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
 var (
 	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
 	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
@@ -44,7 +49,6 @@ var (
 type HideBalanceItem struct {
 	hideBalanceButton decredmaterial.IconButton
 	tooltip           *decredmaterial.Tooltip
-	tooltipLabel      decredmaterial.Label
 }
 
 type NavHandler struct {
@@ -363,7 +367,7 @@ func (mp *MainPage) StartSyncing() {
 func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 	modal.NewPasswordModal(mp.Load).
 		Title(values.String(values.StrResumeAccountDiscoveryTitle)).
-		Hint("Spending password").
+		Hint(values.String(values.StrSpendingPassword)).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton(values.String(values.StrUnlock), func(password string, pm *modal.PasswordModal) bool {
 			go func() {
@@ -371,7 +375,7 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 				if err != nil {
 					errText := err.Error()
 					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-						errText = "Invalid password"
+						errText = values.String(values.StrInvalidPassphrase)
 					}
 					pm.SetError(errText)
 					pm.SetLoading(false)
@@ -459,9 +463,9 @@ func (mp *MainPage) HandleUserInteractions() {
 			if mp.WL.MultiWallet.IsSynced() {
 				mp.ChangeFragment(pg)
 			} else if mp.WL.MultiWallet.IsSyncing() {
-				mp.Toast.NotifyError("Wallet is syncing, please wait")
+				mp.Toast.NotifyError(values.String(values.StrNotConnected))
 			} else {
-				mp.Toast.NotifyError("Not connected to the Decred network")
+				mp.Toast.NotifyError(values.String(values.StrWalletSyncing))
 			}
 		}
 	}
@@ -483,7 +487,7 @@ func (mp *MainPage) HandleUserInteractions() {
 			case dexclient.MarketPageID:
 				_, err := mp.WL.MultiWallet.StartDexClient() // does nothing if already started
 				if err != nil {
-					mp.Toast.NotifyError(fmt.Sprintf("Unable to start DEX client: %v", err))
+					mp.Toast.NotifyError(values.StringF(values.StrDexStartupErr, err))
 				} else {
 					pg = dexclient.NewMarketPage(mp.Load)
 				}
@@ -639,7 +643,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 	}
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -667,40 +671,13 @@ func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 						layout.Rigid(mp.drawerNav.LayoutNavDrawer),
 						layout.Rigid(func(gtx C) D {
 							if mp.currentPage == nil {
-								return layout.Dimensions{}
+								return D{}
 							}
 							return mp.currentPage.Layout(gtx)
 						}),
 					)
 				}),
 			)
-		}),
-		layout.Stacked(func(gtx C) D {
-			// TODO: hidden balance tip hover layout
-			// if mp.hideBalanceItem.hideBalanceButton.Button.Hovered() {
-			// 	lm := values.MarginPadding280
-			// 	if mp.hideBalanceItem.tooltipLabel.Text == "Show Balance" {
-			// 		lm = values.MarginPadding168
-			// 	}
-
-			// 	return layout.Inset{Top: values.MarginPadding50, Left: lm}.Layout(gtx, func(gtx C) D {
-			// 		card := mp.Theme.Card()
-			// 		card.Color = mp.Theme.Color.Surface
-			// 		card.Border = true
-			// 		card.Radius = decredmaterial.Radius(5)
-			// 		card.BorderParam.CornerRadius = values.MarginPadding5
-			// 		return card.Layout(gtx, func(gtx C) D {
-			// 			return components.Container{
-			// 				Padding: layout.UniformInset(values.MarginPadding5),
-			// 			}.Layout(gtx, mp.hideBalanceItem.tooltipLabel.Layout)
-			// 		})
-			// 	})
-			// }
-
-			// global toasts. Stack toast on all pages and contents
-			//TODO: show toasts here
-			return D{}
-
 		}),
 	)
 }
@@ -766,7 +743,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	}
 }
 
-func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
+func (mp *MainPage) totalDCRBalance(gtx C) D {
 	if mp.isBalanceHidden {
 		hiddenBalanceText := mp.Theme.Label(values.TextSize18.Scale(0.8), "**********DCR")
 		return layout.Inset{Bottom: values.MarginPadding0, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -776,7 +753,7 @@ func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
 	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
 }
 
-func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
+func (mp *MainPage) LayoutTopBar(gtx C) D {
 	return decredmaterial.LinearLayout{
 		Width:       decredmaterial.MatchParent,
 		Height:      decredmaterial.WrapContent,
@@ -816,13 +793,11 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 										if !mp.isBalanceHidden {
 											return mp.LayoutUSDBalance(gtx)
 										}
-										return layout.Dimensions{}
+										return D{}
 									}),
 									layout.Rigid(func(gtx C) D {
-										mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Hide Balance")
 										mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
 										if mp.isBalanceHidden {
-											mp.hideBalanceItem.tooltipLabel.Text = "Show Balance"
 											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
 										}
 										return layout.Inset{
@@ -840,7 +815,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 				}),
 			)
 		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+		layout.Rigid(func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return mp.Theme.Separator().Layout(gtx)
 		}),
@@ -860,12 +835,12 @@ func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 			}
 			// remove trailing zeros from amount and convert to string
 			amount := strconv.FormatFloat(dcrlibwallet.AmountCoin(t.Transaction.Amount), 'f', -1, 64)
-			notification = fmt.Sprintf("You have received %s DCR", amount)
+			notification = values.StringF(values.StrDcrReceived, amount)
 		case dcrlibwallet.TxTypeVote:
 			reward := strconv.FormatFloat(dcrlibwallet.AmountCoin(t.Transaction.VoteReward), 'f', -1, 64)
-			notification = fmt.Sprintf("A ticket just voted\nVote reward: %s DCR", reward)
+			notification = values.StringF(values.StrTicektVoted, reward)
 		case dcrlibwallet.TxTypeRevocation:
-			notification = "A ticket was revoked"
+			notification = values.String(values.StrTicketRevoked)
 		default:
 			return
 		}
@@ -887,13 +862,13 @@ func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 		}
 		switch {
 		case t.ProposalStatus == wallet.NewProposalFound:
-			notification = fmt.Sprintf("A new proposal has been added Name: %s", t.Proposal.Name)
+			notification = values.StringF(values.StrProposalAddedNotif, t.Proposal.Name)
 		case t.ProposalStatus == wallet.VoteStarted:
-			notification = fmt.Sprintf("Voting has started for proposal with Name: %s", t.Proposal.Name)
+			notification = values.StringF(values.StrVoteStartedNotif, t.Proposal.Name)
 		case t.ProposalStatus == wallet.VoteFinished:
-			notification = fmt.Sprintf("Voting has ended for proposal with Name: %s", t.Proposal.Name)
+			notification = values.StringF(values.StrVoteEndedNotif, t.Proposal.Name)
 		default:
-			notification = fmt.Sprintf("New update for proposal with Name: %s", t.Proposal.Name)
+			notification = values.StringF(values.StrNewProposalUpdate, t.Proposal.Name)
 		}
 		initializeBeepNotification(notification)
 	}

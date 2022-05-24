@@ -108,10 +108,10 @@ func (pg *SettingsPage) OnNavigatedTo() {
 
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *SettingsPage) Layout(gtx C) D {
 	pg.updateSettingOptions()
 
 	body := func(gtx C) D {
@@ -122,7 +122,7 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			Back: func() {
 				pg.PopFragment()
 			},
-			Body: func(gtx layout.Context) layout.Dimensions {
+			Body: func(gtx C) D {
 				pageContent := []func(gtx C) D{
 					pg.general(),
 					pg.security(),
@@ -291,7 +291,7 @@ func (pg *SettingsPage) agent() layout.Widget {
 	}
 }
 
-func (pg *SettingsPage) mainSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+func (pg *SettingsPage) mainSection(gtx C, title string, body layout.Widget) D {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -320,7 +320,7 @@ func (pg *SettingsPage) mainSection(gtx layout.Context, title string, body layou
 	})
 }
 
-func (pg *SettingsPage) subSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+func (pg *SettingsPage) subSection(gtx C, title string, body layout.Widget) D {
 	return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(pg.subSectionLabel(title)),
@@ -331,11 +331,11 @@ func (pg *SettingsPage) subSection(gtx layout.Context, title string, body layout
 	})
 }
 
-func (pg *SettingsPage) subSectionSwitch(gtx layout.Context, title string, option *decredmaterial.Switch) layout.Dimensions {
+func (pg *SettingsPage) subSectionSwitch(gtx C, title string, option *decredmaterial.Switch) D {
 	return pg.subSection(gtx, title, option.Layout)
 }
 
-func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensions {
+func (pg *SettingsPage) clickableRow(gtx C, row row) D {
 	return row.clickable.Layout(gtx, func(gtx C) D {
 		return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
 			return pg.subSection(gtx, row.title, func(gtx C) D {
@@ -352,14 +352,14 @@ func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensi
 	})
 }
 
-func (pg *SettingsPage) conditionalDisplay(gtx layout.Context, display bool, body layout.Widget) layout.Dimensions {
+func (pg *SettingsPage) conditionalDisplay(gtx C, display bool, body layout.Widget) D {
 	if display {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.lineSeparator()),
 			layout.Rigid(body),
 		)
 	}
-	return layout.Dimensions{}
+	return D{}
 }
 
 func (pg *SettingsPage) subSectionLabel(title string) layout.Widget {

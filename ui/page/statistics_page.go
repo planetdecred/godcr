@@ -135,10 +135,10 @@ func (pg *StatPage) layoutStats(gtx C) D {
 	})
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *StatPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *StatPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,

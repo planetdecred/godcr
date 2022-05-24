@@ -67,10 +67,10 @@ func (pg *ValidateAddressPage) OnNavigatedTo() {
 	pg.addressEditor.Editor.Focus()
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *ValidateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *ValidateAddressPage) Layout(gtx C) D {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -106,7 +106,7 @@ func (pg *ValidateAddressPage) addressSection() layout.Widget {
 }
 
 func (pg *ValidateAddressPage) description() layout.Widget {
-	return func(gtx layout.Context) layout.Dimensions {
+	return func(gtx C) D {
 		desc := pg.Theme.Caption(values.String(values.StrValidateNote))
 		desc.Color = pg.Theme.Color.GrayText2
 		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
@@ -117,7 +117,7 @@ func (pg *ValidateAddressPage) actionButtons() layout.Widget {
 	return func(gtx C) D {
 		dims := layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
-				return layout.E.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.E.Layout(gtx, func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
@@ -133,7 +133,7 @@ func (pg *ValidateAddressPage) actionButtons() layout.Widget {
 	}
 }
 
-func (pg *ValidateAddressPage) lineSeparator(gtx layout.Context) layout.Dimensions {
+func (pg *ValidateAddressPage) lineSeparator(gtx C) D {
 	m := values.MarginPadding10
 	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.Theme.Separator().Layout)
 }
@@ -141,7 +141,7 @@ func (pg *ValidateAddressPage) lineSeparator(gtx layout.Context) layout.Dimensio
 func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 	if pg.stateValidate == none {
 		return func(gtx C) D {
-			return layout.Dimensions{}
+			return D{}
 		}
 	}
 	return func(gtx C) D {
@@ -203,7 +203,7 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 												})
 											}
 										}
-										return layout.Dimensions{}
+										return D{}
 									}),
 								)
 							}),
@@ -215,7 +215,7 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 	}
 }
 
-func (pg *ValidateAddressPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *ValidateAddressPage) pageSections(gtx C, body layout.Widget) D {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {

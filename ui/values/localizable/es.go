@@ -44,6 +44,7 @@ const ES = `
 "cancel" = "Cancelar";
 "resumeAccountDiscoveryTitle" = "Desbloquear para reanudar la restauración";
 "unlock" = "Desbloquear";
+"unlockWithPassword" = "Desbloquear con contraseña"
 "syncingProgress" = "Progreso de la sincronización";
 "syncingProgressStat" = "%s detrás";
 "noWalletLoaded" = "Sin cartera cargada";
@@ -213,6 +214,7 @@ const ES = `
 "validateWalSeed" = "Validar semillas de billetera";
 "clearAll" = "Limpiar todo";
 "restoreWallet" = "Restaurar billetera";
+"restoreExistingWallet" = "Restaurar una billetera existente";
 "enterSeedPhrase" = "Ingrese su frase inicial";
 "invalidSeedPhrase" = "Frase inicial no válida"
 "seedAlreadyExist" = "Ya existe una billetera con una semilla idéntica."
@@ -406,6 +408,7 @@ const ES = `
 "checkWalletLog" = "Comprobar los registros de la billetera"
 "checkStatistics" = "Consultar estadísticas"
 "statistics" = "Estadísticas"
+"dexStartupErr" = "No se puede iniciar el cliente DEX:% v"
 "confirmDexReset" = "Confirmar restablecimiento del cliente DEX"
 "dexResetInfo" = "Es posible que deba reiniciar Godcr antes de poder usar el DEX nuevamente. ¿Continuar?"
 "resetDexClient" = "Restablecer cliente DEX"
@@ -418,4 +421,23 @@ const ES = `
 "bestBlockAge" = "Mejor edad de bloque"
 "walletDirectory" = "Directorio de datos de la billetera"
 "dateSize" = "Datos de la billetera"
+"exit" = "Salida"
+"loading" = "Cargando"
+"openingWallet" = "Apertura de carteras"
+"welcomeNote" = "Bienvenido a Decred Wallet, una billetera móvil segura y de código abierto".
+"generateAddress" = "Generar nueva dirección"
+"receivingAddress" = "Cuenta receptora"
+"yourAddress" = "Su dirección"
+"receiveInfo" = "Cada vez que recibe un pago, se genera una nueva dirección para proteger su privacidad".
+"dcrReceived" = "Has recibido %s DCR"
+"ticektVoted" =  "Un ticket acaba de votar\nRecompensa de voto: %s DCR"
+"ticketRevoked" = "Se revocó un ticket"
+"proposalAddedNotif" = "Se agregó una nueva propuesta Nombre: %s"
+"voteStartedNotif" = "Comenzó la votación para la propuesta con Token: %s"
+"voteEndedNotif" = "La votación ha finalizado para la propuesta con Token: %s"
+"newProposalUpdate" = "Nueva actualización para propuesta con Token: %s"
+"walletSyncing" = "La billetera se está sincronizando, por favor espere"
+
+
+
 `

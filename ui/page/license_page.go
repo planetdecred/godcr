@@ -60,10 +60,10 @@ func (pg *LicensePage) ID() string {
 // Part of the load.Page interface.
 func (pg *LicensePage) OnNavigatedTo() {}
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *LicensePage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *LicensePage) Layout(gtx C) D {
 	d := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
