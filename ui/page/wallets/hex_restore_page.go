@@ -20,7 +20,6 @@ type HexRestore struct {
 	*load.Load
 	hexEditor       decredmaterial.Editor
 	validateHex     decredmaterial.Button
-	keyEvent        chan *key.Event
 	restoreComplete func()
 }
 
@@ -28,7 +27,6 @@ func NewHexRestorePage(l *load.Load, onRestoreComplete func()) *HexRestore {
 	pg := &HexRestore{
 		Load:            l,
 		restoreComplete: onRestoreComplete,
-		keyEvent:        make(chan *key.Event),
 	}
 
 	pg.hexEditor = l.Theme.Editor(new(widget.Editor), "Enter hex")
@@ -52,9 +50,7 @@ func (pg *HexRestore) ID() string {
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *HexRestore) OnNavigatedTo() {
-	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
-}
+func (pg *HexRestore) OnNavigatedTo() {}
 
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
@@ -74,8 +70,6 @@ func (pg *HexRestore) HandleUserInteractions() {
 		if !pg.verifyHex() {
 			return
 		}
-
-		pg.Load.UnsubscribeKeyEvent(pg.ID())
 
 		modal.NewCreatePasswordModal(pg.Load).
 			Title("Enter wallet details").
@@ -108,6 +102,10 @@ func (pg *HexRestore) HandleUserInteractions() {
 
 }
 
+// HandleKeyEvent is called when a key is pressed on the current window.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (pg *HexRestore) HandleKeyEvent(evt *key.Event) {}
+
 // OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable
 // features that are irrelevant when the page is NOT displayed.
@@ -116,7 +114,6 @@ func (pg *HexRestore) HandleUserInteractions() {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *HexRestore) OnNavigatedFrom() {
-	pg.Load.UnsubscribeKeyEvent(pg.ID())
 }
 
 func (pg *HexRestore) Layout(gtx layout.Context) layout.Dimensions {
