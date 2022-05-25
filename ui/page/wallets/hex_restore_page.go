@@ -164,7 +164,6 @@ func (pg *HexRestore) validateButtonSection(gtx layout.Context) layout.Dimension
 }
 
 func (pg *HexRestore) verifyHex() bool {
-
 	hex := pg.hexEditor.Editor.Text()
 	if !dcrlibwallet.VerifySeed(hex) {
 		pg.Toast.NotifyError("invalid hex")

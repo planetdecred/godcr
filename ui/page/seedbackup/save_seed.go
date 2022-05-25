@@ -182,7 +182,7 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 						Orientation: layout.Vertical,
 						Background:  pg.Theme.Color.Surface,
 						Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
-						Margin:      layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16},
+						Margin:      layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding2},
 						Padding:     layout.Inset{Top: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding8, Left: values.MarginPadding16},
 					}.Layout(gtx,
 						layout.Rigid(label.Layout),
@@ -217,10 +217,9 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 		Height:      decredmaterial.WrapContent,
 		Orientation: layout.Vertical,
 		Background:  pg.Theme.Color.Surface,
-		//Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
-		// bottom margin accounts for action button's height + components.UniformPadding bottom margin 24dp + 16dp
-		Margin:  layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding8},
-		Padding: layout.Inset{Top: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding8, Left: values.MarginPadding16},
+		Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
+		Margin:      layout.Inset{Top: values.MarginPadding0, Bottom: values.MarginPadding16},
+		Padding:     layout.Inset{Top: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding16, Left: values.MarginPadding16},
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			label := pg.Theme.Label(values.TextSize14, "Seed hex")
@@ -229,7 +228,6 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			//return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					card.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 8, BottomRight: 0, BottomLeft: 8}
@@ -245,10 +243,9 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 							if seedString != "" {
 								hexString, _ := load.SeedWordsToHex(pg.seed)
 								pg.hexLabel.Text = hexString
-								return pg.hexLabel.Layout(gtx)
 							}
+							return pg.hexLabel.Layout(gtx)
 
-							return D{}
 						})
 					})
 				}),
@@ -260,7 +257,6 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 					return card.Layout(gtx, pg.copy.Layout)
 				}),
 			)
-			//})
 		}),
 	)
 }

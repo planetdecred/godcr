@@ -404,7 +404,6 @@ func (pg *SeedRestore) validateSeeds() (bool, string) {
 
 		seedPhrase += editor.Edit.Editor.Text() + " "
 	}
-
 	return true, seedPhrase
 }
 
