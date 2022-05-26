@@ -643,7 +643,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	if gtx.Constraints.Max.X <= gtx.Px(unit.Sp(400)) {
+	if gtx.Constraints.Max.X <= gtx.Px(unit.Sp(428)) {
 		return mp.layoutMobile(gtx)
 	}
 	return mp.layoutDesktop(gtx)
