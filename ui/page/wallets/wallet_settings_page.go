@@ -268,7 +268,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 					if err != nil {
 						pg.Toast.NotifyError(err.Error())
 					} else {
-						walletDeleted()
+						go walletDeleted()
 					}
 					return
 				}
