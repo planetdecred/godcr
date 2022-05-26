@@ -118,7 +118,7 @@ func (sp *startPage) HandleUserInteractions() {
 						m.SetLoading(false)
 						return
 					}
-					crErr := wal.CreateMixerAccounts("mixed", "unmixed", password)
+					err = wal.CreateMixerAccounts("mixed", "unmixed", password)
 					if crErr != nil {
 						m.SetError(err.Error())
 						m.SetLoading(false)
