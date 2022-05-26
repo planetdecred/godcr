@@ -706,22 +706,18 @@ func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 }
 
 func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
-	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			return decredmaterial.LinearLayout{
-				Width:       decredmaterial.MatchParent,
-				Height:      decredmaterial.MatchParent,
-				Orientation: layout.Vertical,
-			}.Layout(gtx,
-				layout.Rigid(mp.LayoutTopBar),
-				layout.Rigid(func(gtx C) D {
-					if mp.currentPage == nil {
-						return layout.Dimensions{}
-					}
-					return mp.currentPage.Layout(gtx)
-				}),
-				layout.Rigid(mp.bottomNavigationBar.LayoutBottomNavigationBar),
-			)
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Flexed(0.125, func(gtx C) D {
+			return mp.LayoutTopBar(gtx)
+		}),
+		layout.Flexed(0.75, func(gtx C) D {
+			if mp.currentPage == nil {
+				return layout.Dimensions{}
+			}
+			return mp.currentPage.Layout(gtx)
+		}),
+		layout.Flexed(0.125, func(gtx C) D {
+			return mp.bottomNavigationBar.LayoutBottomNavigationBar(gtx)
 		}),
 	)
 }
@@ -785,76 +781,74 @@ func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
-	return components.UniformPadding(gtx, func(gtx C) D {
-		return decredmaterial.LinearLayout{
-			Width:       decredmaterial.MatchParent,
-			Height:      decredmaterial.WrapContent,
-			Background:  mp.Theme.Color.Surface,
-			Orientation: layout.Vertical,
-		}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return decredmaterial.LinearLayout{
-					Width:       decredmaterial.MatchParent,
-					Height:      decredmaterial.WrapContent,
-					Background:  mp.Theme.Color.Surface,
-					Orientation: layout.Horizontal,
-				}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.S.Layout(gtx, func(gtx C) D {
-							h := values.MarginPadding24
-							v := values.MarginPadding14
-							// Balance container
-							return components.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
-								func(gtx C) D {
-									return decredmaterial.LinearLayout{
-										Width:       decredmaterial.WrapContent,
-										Height:      decredmaterial.WrapContent,
-										Background:  mp.Theme.Color.Surface,
-										Orientation: layout.Horizontal,
-									}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
-												func(gtx C) D {
-													return mp.Theme.Icons.Logo.Layout24dp(gtx)
-												})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return mp.totalDCRBalance(gtx)
-										}),
-										layout.Rigid(func(gtx C) D {
-											if !mp.isBalanceHidden {
-												return mp.LayoutUSDBalance(gtx)
-											}
-											return layout.Dimensions{}
-										}),
-										layout.Rigid(func(gtx C) D {
-											mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Hide Balance")
-											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
-											if mp.isBalanceHidden {
-												mp.hideBalanceItem.tooltipLabel.Text = "Show Balance"
-												mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
-											}
-											return layout.Inset{
-												Top:  values.MarginPadding1,
-												Left: values.MarginPadding9,
-											}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
-										}),
-									)
-								})
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return mp.appBarNav.LayoutTopBar(gtx)
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return mp.Theme.Separator().Layout(gtx)
-			}),
-		)
-	})
+	return decredmaterial.LinearLayout{
+		Width:       decredmaterial.MatchParent,
+		Height:      decredmaterial.WrapContent,
+		Background:  mp.Theme.Color.Surface,
+		Orientation: layout.Vertical,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.MatchParent,
+				Height:      decredmaterial.WrapContent,
+				Background:  mp.Theme.Color.Surface,
+				Orientation: layout.Horizontal,
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.S.Layout(gtx, func(gtx C) D {
+						h := values.MarginPadding24
+						v := values.MarginPadding14
+						// Balance container
+						return components.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
+							func(gtx C) D {
+								return decredmaterial.LinearLayout{
+									Width:       decredmaterial.WrapContent,
+									Height:      decredmaterial.WrapContent,
+									Background:  mp.Theme.Color.Surface,
+									Orientation: layout.Horizontal,
+								}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
+											func(gtx C) D {
+												return mp.Theme.Icons.Logo.Layout24dp(gtx)
+											})
+									}),
+									layout.Rigid(func(gtx C) D {
+										return mp.totalDCRBalance(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										if !mp.isBalanceHidden {
+											return mp.LayoutUSDBalance(gtx)
+										}
+										return layout.Dimensions{}
+									}),
+									layout.Rigid(func(gtx C) D {
+										mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Hide Balance")
+										mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
+										if mp.isBalanceHidden {
+											mp.hideBalanceItem.tooltipLabel.Text = "Show Balance"
+											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
+										}
+										return layout.Inset{
+											Top:  values.MarginPadding1,
+											Left: values.MarginPadding9,
+										}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+									}),
+								)
+							})
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return mp.appBarNav.LayoutTopBar(gtx)
+				}),
+			)
+		}),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return mp.Theme.Separator().Layout(gtx)
+		}),
+	)
 }
 
 // postDdesktopNotification posts notifications to the desktop.

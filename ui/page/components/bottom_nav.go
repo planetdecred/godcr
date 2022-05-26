@@ -39,58 +39,56 @@ type BottomNavigationBar struct {
 func (bottomNavigationbar *BottomNavigationBar) LayoutBottomNavigationBar(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{Alignment: layout.S}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return UniformPadding(gtx, func(gtx C) D {
-				return decredmaterial.LinearLayout{
-					Width:       decredmaterial.WrapContent,
-					Height:      decredmaterial.WrapContent,
-					Orientation: layout.Horizontal,
-					Background:  bottomNavigationbar.Theme.Color.Surface,
-				}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						list := layout.List{Axis: layout.Horizontal}
-						return list.Layout(gtx, len(bottomNavigationbar.BottomNaigationItems), func(gtx C, i int) D {
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.WrapContent,
+				Height:      decredmaterial.WrapContent,
+				Orientation: layout.Horizontal,
+				Background:  bottomNavigationbar.Theme.Color.Surface,
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					list := layout.List{Axis: layout.Horizontal}
+					return list.Layout(gtx, len(bottomNavigationbar.BottomNaigationItems), func(gtx C, i int) D {
 
-							background := bottomNavigationbar.Theme.Color.Surface
-							if bottomNavigationbar.BottomNaigationItems[i].PageID == bottomNavigationbar.CurrentPage {
-								background = bottomNavigationbar.Theme.Color.Gray5
-							}
-							return decredmaterial.LinearLayout{
-								Orientation: bottomNavigationbar.axis,
-								Width:       (gtx.Px(values.AppWidth) * 100 / len(bottomNavigationbar.BottomNaigationItems)) / 100, // Divide each cell equally
-								Height:      decredmaterial.WrapContent,
-								Padding:     layout.UniformInset(values.MarginPadding15),
-								Alignment:   bottomNavigationbar.alignment,
-								Direction:   bottomNavigationbar.direction,
-								Background:  background,
-								Clickable:   bottomNavigationbar.BottomNaigationItems[i].Clickable,
-							}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									img := bottomNavigationbar.BottomNaigationItems[i].ImageInactive
+						background := bottomNavigationbar.Theme.Color.Surface
+						if bottomNavigationbar.BottomNaigationItems[i].PageID == bottomNavigationbar.CurrentPage {
+							background = bottomNavigationbar.Theme.Color.Gray5
+						}
+						return decredmaterial.LinearLayout{
+							Orientation: bottomNavigationbar.axis,
+							Width:       (gtx.Px(values.AppWidth) * 100 / len(bottomNavigationbar.BottomNaigationItems)) / 100, // Divide each cell equally
+							Height:      decredmaterial.WrapContent,
+							Padding:     layout.UniformInset(values.MarginPadding15),
+							Alignment:   bottomNavigationbar.alignment,
+							Direction:   bottomNavigationbar.direction,
+							Background:  background,
+							Clickable:   bottomNavigationbar.BottomNaigationItems[i].Clickable,
+						}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								img := bottomNavigationbar.BottomNaigationItems[i].ImageInactive
 
+								if bottomNavigationbar.BottomNaigationItems[i].PageID == bottomNavigationbar.CurrentPage {
+									img = bottomNavigationbar.BottomNaigationItems[i].Image
+								}
+
+								return img.Layout24dp(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Bottom: bottomNavigationbar.bottomInset,
+								}.Layout(gtx, func(gtx C) D {
+									textColor := bottomNavigationbar.Theme.Color.GrayText1
 									if bottomNavigationbar.BottomNaigationItems[i].PageID == bottomNavigationbar.CurrentPage {
-										img = bottomNavigationbar.BottomNaigationItems[i].Image
+										textColor = bottomNavigationbar.Theme.Color.DeepBlue
 									}
-
-									return img.Layout24dp(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Bottom: bottomNavigationbar.bottomInset,
-									}.Layout(gtx, func(gtx C) D {
-										textColor := bottomNavigationbar.Theme.Color.GrayText1
-										if bottomNavigationbar.BottomNaigationItems[i].PageID == bottomNavigationbar.CurrentPage {
-											textColor = bottomNavigationbar.Theme.Color.DeepBlue
-										}
-										txt := bottomNavigationbar.Theme.Label(bottomNavigationbar.textSize, bottomNavigationbar.BottomNaigationItems[i].Title)
-										txt.Color = textColor
-										return txt.Layout(gtx)
-									})
-								}),
-							)
-						})
-					}),
-				)
-			})
+									txt := bottomNavigationbar.Theme.Label(bottomNavigationbar.textSize, bottomNavigationbar.BottomNaigationItems[i].Title)
+									txt.Color = textColor
+									return txt.Layout(gtx)
+								})
+							}),
+						)
+					})
+				}),
+			)
 		}),
 	)
 }
