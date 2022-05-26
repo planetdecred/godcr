@@ -118,9 +118,16 @@ func (sp *startPage) HandleUserInteractions() {
 						m.SetLoading(false)
 						return
 					}
+					crErr := wal.CreateMixerAccounts("mixed", "unmixed", password)
+					if crErr != nil {
+						m.SetError(err.Error())
+						m.SetLoading(false)
+						return
+					}
+					sp.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 					m.Dismiss()
 
-					sp.ChangeWindowPage(NewMainPageAfterWalC(sp.Load, wal), false)
+					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
 				}()
 				return false
 			}).Show()

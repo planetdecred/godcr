@@ -365,10 +365,16 @@ func (pg *WalletPage) showAddWalletModal(l *load.Load) {
 					m.SetLoading(false)
 					return
 				}
+				crErr := wal.CreateMixerAccounts("mixed", "unmixed", password)
+				if crErr != nil {
+					m.SetError(err.Error())
+					m.SetLoading(false)
+					return
+				}
+				pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 				pg.loadWalletAndAccounts()
 				pg.Toast.Notify("Wallet created")
 				m.Dismiss()
-				pg.ChangeFragment(privacy.NewSetupPrivacyPage(pg.Load, wal))
 			}()
 			return false
 		}).Show()

@@ -23,7 +23,6 @@ import (
 	"github.com/planetdecred/godcr/ui/page/dexclient"
 	"github.com/planetdecred/godcr/ui/page/governance"
 	"github.com/planetdecred/godcr/ui/page/overview"
-	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/page/transaction"
@@ -121,49 +120,6 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp.setNavExpanded = func() {
 		mp.drawerNav.DrawerToggled(mp.isNavExpanded)
 	}
-
-	return mp
-}
-
-//Creates new main page after startup wallet creation
-//Switches to automatic privacy setup
-func NewMainPageAfterWalC(l *load.Load, wal *dcrlibwallet.Wallet) *MainPage {
-	mp := &MainPage{
-		Load: l,
-	}
-
-	mp.hideBalanceItem.hideBalanceButton = mp.Theme.IconButton(mp.Theme.Icons.ConcealIcon)
-	mp.hideBalanceItem.hideBalanceButton.Size = unit.Dp(19)
-	mp.hideBalanceItem.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
-	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
-
-	// init shared page functions
-	toggleSync := func() {
-		if mp.WL.MultiWallet.IsConnectedToDecredNetwork() {
-			mp.WL.MultiWallet.CancelSync()
-		} else {
-			mp.StartSyncing()
-		}
-	}
-	l.ToggleSync = toggleSync
-	l.ChangeFragment = mp.changeFragment
-	l.PopFragment = mp.popFragment
-	l.PopToFragment = mp.popToFragment
-
-	mp.setLanguageSetting()
-
-	mp.initNavItems()
-
-	mp.refreshExchangeRateBtn = mp.Theme.NewClickable(true)
-
-	// Show a seed backup prompt if necessary.
-	mp.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, false)
-
-	mp.setNavExpanded = func() {
-		mp.drawerNav.DrawerToggled(mp.isNavExpanded)
-	}
-
-	defer mp.ChangeFragment(privacy.NewSetupPrivacyPage(mp.Load, wal))
 
 	return mp
 }
