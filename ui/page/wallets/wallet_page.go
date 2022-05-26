@@ -160,6 +160,8 @@ func (pg *WalletPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
 	pg.listenForTxNotifications()
+
+	pg.hasWatchOnly = false
 	pg.loadWalletAndAccounts()
 }
 

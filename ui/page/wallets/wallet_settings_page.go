@@ -263,33 +263,35 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 				}
 
 				if pg.wallet.IsWatchingOnlyWallet() {
-					// no password is required for watching only wallets.
-					err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, nil)
-					if err != nil {
-						pg.Toast.NotifyError(err.Error())
-					} else {
-						go walletDeleted()
-					}
-					return
-				}
-
-				modal.NewPasswordModal(pg.Load).
-					Title(values.String(values.StrConfirmToRemove)).
-					NegativeButton(values.String(values.StrCancel), func() {}).
-					PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
-						go func() {
-							err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, []byte(password))
-							if err != nil {
-								pm.SetError(err.Error())
-								pm.SetLoading(false)
-								return
-							}
-
+					go func() {
+						// no password is required for watching only wallets.
+						err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, nil)
+						if err != nil {
+							pg.Toast.NotifyError(err.Error())
+						} else {
 							walletDeleted()
-							pm.Dismiss() // calls RefreshWindow.
-						}()
-						return false
-					}).Show()
+						}
+					}()
+					return
+				} else {
+					modal.NewPasswordModal(pg.Load).
+						Title(values.String(values.StrConfirmToRemove)).
+						NegativeButton(values.String(values.StrCancel), func() {}).
+						PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
+							go func() {
+								err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, []byte(password))
+								if err != nil {
+									pm.SetError(err.Error())
+									pm.SetLoading(false)
+									return
+								}
+
+								walletDeleted()
+								pm.Dismiss() // calls RefreshWindow.
+							}()
+							return false
+						}).Show()
+				}
 
 			}).Show()
 	}
