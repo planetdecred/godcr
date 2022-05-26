@@ -10,7 +10,6 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
-	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -121,8 +120,7 @@ func (sp *startPage) HandleUserInteractions() {
 					}
 					m.Dismiss()
 
-					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
-					sp.ChangeFragment(privacy.NewSetupPrivacyPage(sp.Load, wal))
+					sp.ChangeWindowPage(NewMainPageAfterWalC(sp.Load, wal), false)
 				}()
 				return false
 			}).Show()
