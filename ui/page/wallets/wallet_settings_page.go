@@ -276,25 +276,25 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 						}
 					}()
 					return
-				} else {
-					modal.NewPasswordModal(pg.Load).
-						Title(values.String(values.StrConfirmToRemove)).
-						NegativeButton(values.String(values.StrCancel), func() {}).
-						PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
-							go func() {
-								err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, []byte(password))
-								if err != nil {
-									pm.SetError(err.Error())
-									pm.SetLoading(false)
-									return
-								}
-
-								walletDeleted()
-								pm.Dismiss() // calls RefreshWindow.
-							}()
-							return false
-						}).Show()
 				}
+
+				modal.NewPasswordModal(pg.Load).
+					Title(values.String(values.StrConfirmToRemove)).
+					NegativeButton(values.String(values.StrCancel), func() {}).
+					PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
+						go func() {
+							err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, []byte(password))
+							if err != nil {
+								pm.SetError(err.Error())
+								pm.SetLoading(false)
+								return
+							}
+
+							walletDeleted()
+							pm.Dismiss() // calls RefreshWindow.
+						}()
+						return false
+					}).Show()
 
 			}).Show()
 	}

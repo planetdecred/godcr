@@ -105,9 +105,9 @@ func (in *InfoModal) CheckBox(checkbox decredmaterial.CheckBoxStyle, mustBeCheck
 	return in
 }
 
-func (pm *InfoModal) SetLoading(loading bool) {
-	pm.isLoading = loading
-	pm.modal.SetDisabled(loading)
+func (in *InfoModal) SetLoading(loading bool) {
+	in.isLoading = loading
+	in.modal.SetDisabled(loading)
 }
 
 func (in *InfoModal) Title(title string) *InfoModal {
