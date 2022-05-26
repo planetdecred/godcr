@@ -96,8 +96,8 @@ func (t *Theme) ButtonLayout() ButtonLayout {
 	return ButtonLayout{material.ButtonLayout(t.Base, new(widget.Clickable))}
 }
 
-func (t *Theme) IconButton(icon *widget.Icon) *IconButton {
-	return &IconButton{
+func (t *Theme) IconButton(icon *widget.Icon) IconButton {
+	return IconButton{
 		IconButtonStyle{
 			Icon:   icon,
 			Button: new(widget.Clickable),
@@ -216,7 +216,7 @@ func (bl ButtonLayout) Layout(gtx layout.Context, w layout.Widget) layout.Dimens
 // TODO: Test to ensure this works!
 // TODO: Doesn't work, if ib.colorStyle was nil before this method is called,
 // it is temporarily changed but when ib.Layout is called, it returns to nil.
-func (ib *IconButton) ChangeColorStyle(colorStyle *values.ColorStyle) {
+func (ib IconButton) ChangeColorStyle(colorStyle *values.ColorStyle) {
 	// ib.colorStyle = colorStyle ? TODO SA4005: ineffective assignment to field IconButton.colorStyle lint error
 }
 

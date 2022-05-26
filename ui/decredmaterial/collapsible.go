@@ -95,7 +95,6 @@ func (c *Collapsible) Layout(gtx layout.Context, header, body func(C) D) layout.
 								}),
 							)
 						}),
-						// layout.Expanded(c.button.Layout),
 					)
 				})
 			}),
