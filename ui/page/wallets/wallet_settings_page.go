@@ -247,8 +247,8 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 		if pg.wallet.IsWatchingOnlyWallet() {
 			warningMsg = "The watch-only wallet will be removed from your app"
 		}
-		modal.NewInfoModal(pg.Load).
-			Title(values.String(values.StrRemoveWallet)).
+		infoModal := modal.NewInfoModal(pg.Load)
+		infoModal.Title(values.String(values.StrRemoveWallet)).
 			Body(warningMsg).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
@@ -263,13 +263,16 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 				}
 
 				if pg.wallet.IsWatchingOnlyWallet() {
+					infoModal.SetLoading(true)
 					go func() {
 						// no password is required for watching only wallets.
 						err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, nil)
 						if err != nil {
 							pg.Toast.NotifyError(err.Error())
+							infoModal.SetLoading(false)
 						} else {
 							walletDeleted()
+							infoModal.Dismiss()
 						}
 					}()
 					return

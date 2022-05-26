@@ -7,6 +7,8 @@ import (
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget/material"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -39,8 +41,10 @@ type InfoModal struct {
 	mustBeChecked bool
 
 	titleAlignment, btnAlignment layout.Direction
+	materialLoader               material.LoaderStyle
 
 	isCancelable bool
+	isLoading    bool
 }
 
 func NewInfoModal(l *load.Load) *InfoModal {
@@ -51,11 +55,14 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		btnPositve:   l.Theme.OutlineButton(values.String(values.StrYes)),
 		btnNegative:  l.Theme.OutlineButton(values.String(values.StrNo)),
 		isCancelable: true,
+		isLoading:    false,
 		btnAlignment: layout.E,
 	}
 
 	in.btnPositve.Font.Weight = text.Medium
 	in.btnNegative.Font.Weight = text.Medium
+
+	in.materialLoader = material.Loader(l.Theme.Base)
 
 	return in
 }
@@ -96,6 +103,11 @@ func (in *InfoModal) CheckBox(checkbox decredmaterial.CheckBoxStyle, mustBeCheck
 	in.checkbox = checkbox
 	in.mustBeChecked = mustBeChecked // determine if the checkbox must be selected to proceed
 	return in
+}
+
+func (pm *InfoModal) SetLoading(loading bool) {
+	pm.isLoading = loading
+	pm.modal.SetDisabled(loading)
 }
 
 func (in *InfoModal) Title(title string) *InfoModal {
@@ -169,22 +181,31 @@ func (in *InfoModal) HandleKeyEvent(evt *key.Event) {
 
 func (in *InfoModal) Handle() {
 	for in.btnPositve.Clicked() {
-		in.DismissModal(in)
+		if in.isLoading {
+			return
+		}
 		isChecked := false
 		if in.checkbox.CheckBox != nil {
 			isChecked = in.checkbox.CheckBox.Value
 		}
 
 		in.positiveButtonClicked(isChecked)
+		if !in.isLoading {
+			in.DismissModal(in)
+		}
 	}
 
 	for in.btnNegative.Clicked() {
-		in.DismissModal(in)
-		in.negativeButtonClicked()
+		if !in.isLoading {
+			in.DismissModal(in)
+			in.negativeButtonClicked()
+		}
 	}
 
 	if in.modal.BackdropClicked(in.isCancelable) {
-		in.Dismiss()
+		if !in.isLoading {
+			in.Dismiss()
+		}
 	}
 
 	if in.checkbox.CheckBox != nil {
@@ -276,7 +297,7 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 		return in.btnAlignment.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if in.negativeButtonText == "" {
+					if in.negativeButtonText == "" || in.isLoading {
 						return layout.Dimensions{}
 					}
 
@@ -285,6 +306,10 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 					return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, in.btnNegative.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
+					if in.isLoading {
+						return in.materialLoader.Layout(gtx)
+					}
+
 					if in.positiveButtonText == "" {
 						return layout.Dimensions{}
 					}
