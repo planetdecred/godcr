@@ -359,12 +359,19 @@ func (pg *WalletPage) showAddWalletModal(l *load.Load) {
 		ShowWalletInfoTip(true).
 		PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
 			go func() {
-				_, err := pg.multiWallet.CreateNewWallet(walletName, password, dcrlibwallet.PassphraseTypePass)
+				wal, err := pg.multiWallet.CreateNewWallet(walletName, password, dcrlibwallet.PassphraseTypePass)
 				if err != nil {
 					m.SetError(err.Error())
 					m.SetLoading(false)
 					return
 				}
+				err = wal.CreateMixerAccounts("mixed", "unmixed", password)
+				if err != nil {
+					m.SetError(err.Error())
+					m.SetLoading(false)
+					return
+				}
+				pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 				pg.loadWalletAndAccounts()
 				pg.Toast.Notify("Wallet created")
 				m.Dismiss()

@@ -114,12 +114,19 @@ func (sp *startPage) HandleUserInteractions() {
 			Title("Create new wallet").
 			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
-					_, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
+					wal, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
 					if err != nil {
 						m.SetError(err.Error())
 						m.SetLoading(false)
 						return
 					}
+					err = wal.CreateMixerAccounts("mixed", "unmixed", password)
+					if err != nil {
+						m.SetError(err.Error())
+						m.SetLoading(false)
+						return
+					}
+					sp.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 					m.Dismiss()
 
 					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
