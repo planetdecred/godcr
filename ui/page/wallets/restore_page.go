@@ -171,7 +171,6 @@ func (pg *Restore) OnNavigatedFrom() {
 func (pg *Restore) HandleUserInteractions() {
 	if clicked, selectedItem := pg.tabList.ItemClicked(); clicked {
 		if pg.tabIndex != selectedItem {
-			oldIndex := pg.tabIndex
 			pg.tabIndex = selectedItem
 			pg.switchTab(pg.tabIndex)
 		}
