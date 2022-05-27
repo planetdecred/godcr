@@ -180,7 +180,7 @@ func (in *InfoModal) HandleKeyEvent(evt *key.Event) {
 }
 
 func (in *InfoModal) Handle() {
-	for in.btnPositve.Clicked() {
+	if in.btnPositve.Clicked() {
 		if in.isLoading {
 			return
 		}
@@ -195,7 +195,7 @@ func (in *InfoModal) Handle() {
 		}
 	}
 
-	for in.btnNegative.Clicked() {
+	if in.btnNegative.Clicked() {
 		if !in.isLoading {
 			in.DismissModal(in)
 			in.negativeButtonClicked()
