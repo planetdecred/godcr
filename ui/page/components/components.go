@@ -4,6 +4,7 @@
 package components
 
 import (
+	"errors"
 	"fmt"
 	"image/color"
 	"os/exec"
@@ -50,6 +51,17 @@ type (
 		ProgressBarColor   color.NRGBA
 		ProgressTrackColor color.NRGBA
 		Background         color.NRGBA
+	}
+
+	// CummulativeWalletsBalance defines total balance for all available wallets.
+	CummulativeWalletsBalance struct {
+		Total                   dcrutil.Amount
+		Spendable               dcrutil.Amount
+		ImmatureReward          dcrutil.Amount
+		ImmatureStakeGeneration dcrutil.Amount
+		LockedByTickets         dcrutil.Amount
+		VotingAuthority         dcrutil.Amount
+		UnConfirmed             dcrutil.Amount
 	}
 )
 
@@ -721,28 +733,43 @@ func CoinImageBySymbol(l *load.Load, coinName string) *decredmaterial.Image {
 	return nil
 }
 
-func CalculateTotalWalletsBalance(l *load.Load) (dcrutil.Amount, dcrutil.Amount, error) {
-	totalBalance := int64(0)
-	spandableBalance := int64(0)
+func CalculateTotalWalletsBalance(l *load.Load) (*CummulativeWalletsBalance, error) {
+	var totalBalance, spandableBalance, immatureReward, votingAuthority,
+		immatureStakeGeneration, lockedByTickets, unConfirmed int64
 
 	wallets := l.WL.SortedWalletList()
 	if len(wallets) == 0 {
-		return 0, 0, nil
+		return nil, errors.New("no wallets found")
 	}
 
 	for _, wallet := range wallets {
 		accountsResult, err := wallet.GetAccountsRaw()
 		if err != nil {
-			return 0, 0, err
+			return nil, err
 		}
 
 		for _, account := range accountsResult.Acc {
 			totalBalance += account.TotalBalance
 			spandableBalance += account.Balance.Spendable
+			immatureReward += account.Balance.ImmatureReward
+			immatureStakeGeneration += account.Balance.ImmatureStakeGeneration
+			lockedByTickets += account.Balance.LockedByTickets
+			votingAuthority += account.Balance.VotingAuthority
+			unConfirmed += account.Balance.UnConfirmed
 		}
 	}
 
-	return dcrutil.Amount(totalBalance), dcrutil.Amount(spandableBalance), nil
+	cumm := &CummulativeWalletsBalance{
+		Total:                   dcrutil.Amount(totalBalance),
+		Spendable:               dcrutil.Amount(spandableBalance),
+		ImmatureReward:          dcrutil.Amount(immatureReward),
+		ImmatureStakeGeneration: dcrutil.Amount(immatureStakeGeneration),
+		LockedByTickets:         dcrutil.Amount(lockedByTickets),
+		VotingAuthority:         dcrutil.Amount(votingAuthority),
+		UnConfirmed:             dcrutil.Amount(unConfirmed),
+	}
+
+	return cumm, nil
 }
 
 // SecondsToDays takes time in seconds and returns its string equivalent in the format ddhhmm.

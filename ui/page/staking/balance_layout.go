@@ -29,9 +29,9 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 							txt := pg.Theme.Label(values.TextSize14, "")
 							txt.Color = pg.Theme.Color.GrayText2
 
-							totalBalance, _, err := components.CalculateTotalWalletsBalance(pg.Load)
+							totalBalance, err := components.CalculateTotalWalletsBalance(pg.Load)
 							if err == nil {
-								txt.Text = totalBalance.String()
+								txt.Text = totalBalance.Total.String()
 							} else {
 								txt.Text = err.Error()
 							}
@@ -44,16 +44,16 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				totalBalance, spendable, _ := components.CalculateTotalWalletsBalance(pg.Load)
-				locked := totalBalance - spendable
+				totalBalance, _ := components.CalculateTotalWalletsBalance(pg.Load)
+
 				items := []decredmaterial.ProgressBarItem{
 					{
-						Value:   float32(spendable.ToCoin()),
+						Value:   float32(totalBalance.Spendable.ToCoin()),
 						Color:   pg.Theme.Color.Turquoise300,
 						SubText: "Spendable",
 					},
 					{
-						Value:   float32(locked.ToCoin()),
+						Value:   float32(totalBalance.LockedByTickets.ToCoin()),
 						Color:   pg.Theme.Color.Primary,
 						SubText: "Locked",
 					},
@@ -62,14 +62,15 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 				labelWdg := func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return pg.layoutIconAndText(gtx, "Spendable: ", spendable.String(), items[0].Color)
+							return pg.layoutIconAndText(gtx, "Spendable: ", totalBalance.Spendable.String(), items[0].Color)
 						}),
 						layout.Rigid(func(gtx C) D {
-							return pg.layoutIconAndText(gtx, "Locked: ", locked.String(), items[1].Color)
+							return pg.layoutIconAndText(gtx, "Locked: ", totalBalance.LockedByTickets.String(), items[1].Color)
 						}),
 					)
 				}
-				return pg.Theme.MultiLayerProgressBar(float32(totalBalance.ToCoin()), items).Layout(gtx, labelWdg)
+
+				return pg.Theme.MultiLayerProgressBar(float32((totalBalance.Spendable+totalBalance.LockedByTickets).ToCoin()), items).Layout(gtx, labelWdg)
 			}),
 		)
 	})
