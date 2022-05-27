@@ -90,6 +90,10 @@ func (pg *Page) ID() string {
 }
 
 func (pg *Page) HandleUserInteractions() {
+	for pg.splashScreenInfoButton.Button.Clicked() {
+		pg.showInfoModal()
+	}
+
 	for pg.enableGovernanceBtn.Clicked() {
 		go pg.consensusPage.FetchAgendas()
 		go pg.WL.MultiWallet.Politeia.Sync()

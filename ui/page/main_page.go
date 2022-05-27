@@ -643,7 +643,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 	}
 }
 
-// Layout draws the page UI components into the provided C
+// Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {

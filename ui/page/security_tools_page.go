@@ -55,7 +55,7 @@ func (pg *SecurityToolsPage) OnNavigatedTo() {
 
 }
 
-// Layout draws the page UI components into the provided C
+// Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 // main settings layout
