@@ -24,7 +24,6 @@ type BottomNavigationBarHandler struct {
 type BottomNavigationBar struct {
 	*load.Load
 
-	AppBarNavItems       []BottomNavigationBarHandler
 	BottomNaigationItems []BottomNavigationBarHandler
 	CurrentPage          string
 
@@ -92,47 +91,6 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutBottomNavigationBar(gtx la
 		}),
 	)
 }
-
-// func (bottomNavigationbar *BottomNavigationBar) LayoutTopBar(gtx layout.Context) layout.Dimensions {
-// 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-// 	return layout.E.Layout(gtx, func(gtx C) D {
-// 		return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-// 			list := layout.List{Axis: layout.Horizontal}
-// 			return list.Layout(gtx, len(bottomNavigationbar.AppBarNavItems), func(gtx C, i int) D {
-// 				background := bottomNavigationbar.Theme.Color.Surface
-// 				if bottomNavigationbar.AppBarNavItems[i].PageID == bottomNavigationbar.CurrentPage {
-// 					background = bottomNavigationbar.Theme.Color.Gray5
-// 				}
-// 				return decredmaterial.LinearLayout{
-// 					Width:       decredmaterial.WrapContent,
-// 					Height:      decredmaterial.WrapContent,
-// 					Orientation: layout.Horizontal,
-// 					Background:  background,
-// 					Padding:     layout.UniformInset(values.MarginPadding16),
-// 					Clickable:   bottomNavigationbar.AppBarNavItems[i].Clickable,
-// 				}.Layout(gtx,
-// 					layout.Rigid(func(gtx C) D {
-// 						return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-// 							func(gtx C) D {
-// 								return layout.Center.Layout(gtx, func(gtx C) D {
-// 									return bottomNavigationbar.AppBarNavItems[i].Image.Layout24dp(gtx)
-// 								})
-// 							})
-// 					}),
-// 					layout.Rigid(func(gtx C) D {
-// 						return layout.Inset{
-// 							Left: values.MarginPadding0,
-// 						}.Layout(gtx, func(gtx C) D {
-// 							return layout.Center.Layout(gtx, func(gtx C) D {
-// 								return bottomNavigationbar.Theme.Body1(bottomNavigationbar.AppBarNavItems[i].Title).Layout(gtx)
-// 							})
-// 						})
-// 					}),
-// 				)
-// 			})
-// 		})
-// 	})
-// }
 
 func (bottomNavigationbar *BottomNavigationBar) OnViewCreated() {
 	bottomNavigationbar.axis = layout.Vertical

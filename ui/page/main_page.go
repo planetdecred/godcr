@@ -707,18 +707,14 @@ func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 
 func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Flexed(0.125, func(gtx C) D {
-			return mp.LayoutTopBar(gtx)
-		}),
+		layout.Flexed(0.125, mp.LayoutTopBar),
 		layout.Flexed(0.75, func(gtx C) D {
 			if mp.currentPage == nil {
 				return layout.Dimensions{}
 			}
 			return mp.currentPage.Layout(gtx)
 		}),
-		layout.Flexed(0.125, func(gtx C) D {
-			return mp.bottomNavigationBar.LayoutBottomNavigationBar(gtx)
-		}),
+		layout.Flexed(0.125, mp.bottomNavigationBar.LayoutBottomNavigationBar),
 	)
 }
 
@@ -795,7 +791,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 				Orientation: layout.Horizontal,
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.S.Layout(gtx, func(gtx C) D {
+					return layout.W.Layout(gtx, func(gtx C) D {
 						h := values.MarginPadding24
 						v := values.MarginPadding14
 						// Balance container
