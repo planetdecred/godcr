@@ -143,7 +143,7 @@ func (hm *HexRestoreModal) Handle() {
 			hm.btnPositve.SetEnabled(true)
 		} else {
 			hm.btnPositve.SetEnabled(false)
-		} 
+		}
 	}
 
 	if hm.btnPositve.Button.Clicked() || isSubmit {
