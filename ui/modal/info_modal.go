@@ -180,10 +180,7 @@ func (in *InfoModal) HandleKeyEvent(evt *key.Event) {
 }
 
 func (in *InfoModal) Handle() {
-	if in.btnPositve.Clicked() {
-		if in.isLoading {
-			return
-		}
+	for in.btnPositve.Clicked() {
 		isChecked := false
 		if in.checkbox.CheckBox != nil {
 			isChecked = in.checkbox.CheckBox.Value
@@ -195,7 +192,7 @@ func (in *InfoModal) Handle() {
 		}
 	}
 
-	if in.btnNegative.Clicked() {
+	for in.btnNegative.Clicked() {
 		if !in.isLoading {
 			in.DismissModal(in)
 			in.negativeButtonClicked()
