@@ -71,9 +71,7 @@ func (hm *HexRestoreModal) OnResume() {
 	hm.hexEditor.Editor.Focus()
 }
 
-func (hm *HexRestoreModal) OnDismiss() {
-
-}
+func (hm *HexRestoreModal) OnDismiss() {}
 
 func (hm *HexRestoreModal) Show() {
 	hm.ShowModal(hm)
