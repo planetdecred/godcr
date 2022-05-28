@@ -292,18 +292,6 @@ func (e Editor) handleEvents() {
 	if e.editorIconButton.Button.Clicked() {
 		e.EditorIconButtonEvent()
 	}
-
-	if e.errorLabel.Text != "" {
-		e.LineColor = e.t.Color.Danger
-	} else {
-		e.LineColor = e.t.Color.Gray2
-	}
-
-	if e.requiredErrorText != "" {
-		e.LineColor = e.t.Color.Danger
-	} else {
-		e.LineColor = e.t.Color.Gray2
-	}
 }
 
 func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {

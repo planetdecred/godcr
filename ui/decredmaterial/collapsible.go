@@ -82,20 +82,21 @@ func (c *Collapsible) Layout(gtx layout.Context, header, body func(C) D) layout.
 	return c.card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Stack{}.Layout(gtx,
-					layout.Stacked(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return header(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return icon.Layout(gtx, values.MarginPadding20)
-							}),
-						)
-					}),
-					layout.Expanded(c.button.Layout),
-				)
+				return c.button.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return layout.Stack{}.Layout(gtx,
+						layout.Stacked(func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return header(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return icon.Layout(gtx, values.MarginPadding20)
+								}),
+							)
+						}),
+					)
+				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				if c.isExpanded {
@@ -133,18 +134,15 @@ func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) 
 				return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, func(gtx C) D {
-							return layout.Stack{}.Layout(gtx,
-								layout.Stacked(func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											// TODO needs to be centered vertically
-											return icon.Layout24dp(gtx)
-										}),
-										layout.Rigid(header),
-									)
-								}),
-								layout.Expanded(c.button.Layout),
-							)
+							return c.button.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										// TODO needs to be centered vertically
+										return icon.Layout24dp(gtx)
+									}),
+									layout.Rigid(header),
+								)
+							})
 						}),
 						layout.Rigid(func(gtx C) D {
 							more(gtx)

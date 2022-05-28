@@ -4,6 +4,7 @@ import (
 	"image/color"
 
 	"gioui.org/f32"
+	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/unit"
@@ -72,7 +73,10 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 							drawInk(gtx, c, ll.Clickable.style.Color)
 						}
 
-						return ll.Clickable.button.Layout(gtx)
+						return ll.Clickable.button.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+							semantic.Button.Add(gtx.Ops)
+							return layout.Dimensions{Size: gtx.Constraints.Min}
+						})
 					}),
 					layout.Stacked(func(gtx C) D {
 						ll.applyDimension(&gtx)

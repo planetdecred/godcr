@@ -3,6 +3,7 @@ package send
 import (
 	"fmt"
 
+	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/widget"
@@ -192,7 +193,10 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Expanded(func(gtx C) D {
 			if pg.moreOptionIsOpen {
-				return pg.backdrop.Layout(gtx)
+				return pg.backdrop.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					semantic.Button.Add(gtx.Ops)
+					return layout.Dimensions{Size: gtx.Constraints.Min}
+				})
 			}
 			return D{}
 		}),

@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	Uint32Size    = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
+	Uint32Size    = 32 // 32 or 64 ? shifting 32-bit value by 32 bits will always clear it
 	MaxInt32      = 1<<(Uint32Size-1) - 1
 	WalletsPageID = "Wallets"
 )

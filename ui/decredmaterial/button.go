@@ -7,6 +7,7 @@ import (
 	"image/color"
 
 	"gioui.org/f32"
+	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -200,7 +201,10 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 				return D{}
 			}
 
-			return b.clickable.Layout(gtx)
+			return b.clickable.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				semantic.Button.Add(gtx.Ops)
+				return layout.Dimensions{Size: gtx.Constraints.Min}
+			})
 		}),
 	)
 }
@@ -213,7 +217,7 @@ func (bl ButtonLayout) Layout(gtx layout.Context, w layout.Widget) layout.Dimens
 // TODO: Doesn't work, if ib.colorStyle was nil before this method is called,
 // it is temporarily changed but when ib.Layout is called, it returns to nil.
 func (ib IconButton) ChangeColorStyle(colorStyle *values.ColorStyle) {
-	ib.colorStyle = colorStyle
+	// ib.colorStyle = colorStyle ? TODO SA4005: ineffective assignment to field IconButton.colorStyle lint error
 }
 
 func (ib IconButton) Layout(gtx layout.Context) layout.Dimensions {
