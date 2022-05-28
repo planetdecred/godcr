@@ -107,7 +107,8 @@ func NewSendPage(l *load.Load) *Page {
 			// Imported and watch only wallet accounts are invalid for sending
 			accountIsValid := account.Number != load.MaxInt32 && !wal.IsWatchingOnlyWallet()
 
-			if !wal.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) {
+			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
+				!wal.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) {
 				// Spending unmixed fund isn't permitted for the selected wallet
 
 				// only mixed accounts can send to address for wallet with privacy setup

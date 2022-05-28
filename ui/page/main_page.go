@@ -805,13 +805,13 @@ func (mp *MainPage) postDesktopNotification(notifier interface{}) {
 		}
 		switch {
 		case t.ProposalStatus == wallet.NewProposalFound:
-			notification = fmt.Sprintf("A new proposal has been added Token: %s", t.Proposal.Token)
+			notification = fmt.Sprintf("A new proposal has been added Name: %s", t.Proposal.Name)
 		case t.ProposalStatus == wallet.VoteStarted:
-			notification = fmt.Sprintf("Voting has started for proposal with Token: %s", t.Proposal.Token)
+			notification = fmt.Sprintf("Voting has started for proposal with Name: %s", t.Proposal.Name)
 		case t.ProposalStatus == wallet.VoteFinished:
-			notification = fmt.Sprintf("Voting has ended for proposal with Token: %s", t.Proposal.Token)
+			notification = fmt.Sprintf("Voting has ended for proposal with Name: %s", t.Proposal.Name)
 		default:
-			notification = fmt.Sprintf("New update for proposal with Token: %s", t.Proposal.Token)
+			notification = fmt.Sprintf("New update for proposal with Name: %s", t.Proposal.Name)
 		}
 		initializeBeepNotification(notification)
 	}
