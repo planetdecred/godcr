@@ -128,7 +128,7 @@ func (pg *Page) setTBWallet() {
 		}
 	}
 
-	// if there are no tickets with config set, select the first wallet.
+	// if there are no wallets with config set, select the first wallet.
 	if pg.ticketBuyerWallet == nil {
 		pg.ticketBuyerWallet = pg.WL.SortedWalletList()[0]
 	}
@@ -269,24 +269,25 @@ func (pg *Page) HandleUserInteractions() {
 		pg.ParentNavigator().Display(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
 	}
 
-	if pg.autoPurchase.Changed() {
-		if pg.autoPurchase.IsChecked() {
-			if pg.ticketBuyerWallet.TicketBuyerConfigIsSet() {
+	if pg.autoPurchase.Changed() && pg.autoPurchase.IsChecked() {
+		if pg.ticketBuyerWallet.TicketBuyerConfigIsSet() {
+			// get ticket buyer config to check if the saved wallet account is mixed
+			//check if mixer is set, if yes check if allow spend from unmixed account
+			//if not set, check if the saved account is mixed before opening modal
+			// if it is not, open stake config modal
+			tbConfig := pg.ticketBuyerWallet.AutoTicketsBuyerConfig()
+			if pg.ticketBuyerWallet.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
+				!pg.ticketBuyerWallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) &&
+				(tbConfig.PurchaseAccount == pg.ticketBuyerWallet.MixedAccountNumber()) {
 				pg.startTicketBuyerPasswordModal()
 			} else {
-				ticketBuyerModal := newTicketBuyerModal(pg.Load).
-					OnCancel(func() {
-						pg.autoPurchase.SetChecked(false)
-					}).
-					OnSettingsSaved(func() {
-						pg.startTicketBuyerPasswordModal()
-						pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
-					})
-				pg.ParentWindow().ShowModal(ticketBuyerModal)
+				pg.ticketBuyerSettingsModal()
 			}
 		} else {
-			pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
+			pg.ticketBuyerSettingsModal()
 		}
+	} else {
+		pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
 	}
 
 	if pg.autoPurchaseSettings.Clicked() {
@@ -295,7 +296,15 @@ func (pg *Page) HandleUserInteractions() {
 			return
 		}
 
-		pg.ticketBuyerSettingsModal()
+		ticketBuyerModal := newTicketBuyerModal(pg.Load).
+			OnSettingsSaved(func() {
+				pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
+				pg.setTBWallet()
+			}).
+			OnCancel(func() {
+				pg.autoPurchase.SetChecked(false)
+			})
+		pg.ParentWindow().ShowModal(ticketBuyerModal)
 	}
 
 	secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
@@ -310,12 +319,12 @@ func (pg *Page) HandleUserInteractions() {
 
 func (pg *Page) ticketBuyerSettingsModal() {
 	ticketBuyerModal := newTicketBuyerModal(pg.Load).
-		OnSettingsSaved(func() {
-			pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
-			pg.setTBWallet()
-		}).
 		OnCancel(func() {
 			pg.autoPurchase.SetChecked(false)
+		}).
+		OnSettingsSaved(func() {
+			pg.startTicketBuyerPasswordModal()
+			pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
 		})
 	pg.ParentWindow().ShowModal(ticketBuyerModal)
 }
