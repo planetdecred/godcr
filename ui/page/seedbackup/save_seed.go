@@ -241,7 +241,7 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 						}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 							seedString := pg.seed
 							if seedString != "" {
-								hexString, _ := load.SeedWordsToHex(pg.seed)
+								hexString, _ := components.SeedWordsToHex(pg.seed)
 								pg.hexLabel.Text = hexString
 							}
 							return pg.hexLabel.Layout(gtx)
