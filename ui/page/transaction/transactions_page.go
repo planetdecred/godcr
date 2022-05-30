@@ -50,6 +50,7 @@ type TransactionsPage struct {
 	container       *widget.List
 	transactions    []dcrlibwallet.Transaction
 	wallets         []*dcrlibwallet.Wallet
+	viewMoreButton  decredmaterial.Button
 }
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
@@ -62,6 +63,7 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 		separator:       l.Theme.Separator(),
 		transactionList: l.Theme.NewClickableList(layout.Vertical),
 		walletTabList:   l.Theme.NewClickableList(layout.Horizontal),
+		viewMoreButton:  l.Theme.Button("View more"),
 	}
 
 	pg.walletTabList.IsHoverable = false
@@ -151,16 +153,16 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *TransactionsPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
-		wallTxs := pg.transactions
+		wallTxs := pg.splitTxns()[0]
 		return layout.Stack{Alignment: layout.N}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				return layout.Inset{
-					Top: values.MarginPadding60,
+					Top:    values.MarginPadding60,
+					Bottom: values.MarginPadding80,
 				}.Layout(gtx, func(gtx C) D {
 					return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
 						return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 							return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-
 								// return "No transactions yet" text if there are no transactions
 								if len(wallTxs) == 0 {
 									padding := values.MarginPadding16
@@ -211,6 +213,15 @@ func (pg *TransactionsPage) layoutDesktop(gtx layout.Context) layout.Dimensions 
 			}),
 			layout.Expanded(func(gtx C) D {
 				return pg.txTypeDropDown.Layout(gtx, pg.orderDropDown.Width-4, true)
+			}),
+			layout.Expanded(func(gtx C) D {
+				gtx.Constraints.Max.X = 150
+				gtx.Constraints.Max.Y = 50
+				return layout.Inset{
+					Top: values.MarginPadding100,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.viewMoreButton.Layout(gtx)
+				})
 			}),
 		)
 	}
