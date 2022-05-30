@@ -684,8 +684,8 @@ func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 
 func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Flexed(0.125, mp.LayoutTopBar),
-		layout.Flexed(0.75, func(gtx C) D {
+		layout.Flexed(0.08, mp.LayoutTopBar),
+		layout.Flexed(0.795, func(gtx C) D {
 			if mp.currentPage == nil {
 				return layout.Dimensions{}
 			}
