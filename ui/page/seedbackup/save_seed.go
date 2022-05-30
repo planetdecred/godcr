@@ -219,7 +219,7 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 		Background:  pg.Theme.Color.Surface,
 		Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
 		Margin:      layout.Inset{Top: values.MarginPadding0, Bottom: values.MarginPadding16},
-		Padding:     layout.Inset{Top: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding16, Left: values.MarginPadding16},
+		Padding:     layout.Inset{Top: values.MarginPadding5, Right: values.MarginPadding16, Bottom: values.MarginPadding16, Left: values.MarginPadding16},
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			label := pg.Theme.Label(values.TextSize14, "Seed hex")
