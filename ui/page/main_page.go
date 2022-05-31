@@ -239,6 +239,13 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.StakeIcon,
+				ImageInactive: mp.Theme.Icons.StakeIconInactive,
+				Title:         values.String(values.StrStaking),
+				PageID:        staking.OverviewPageID,
+			},
+			{
+				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.WalletIcon,
 				ImageInactive: mp.Theme.Icons.WalletIconInactive,
 				Title:         values.String(values.StrWallets),
@@ -533,6 +540,8 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = overview.NewOverviewPage(mp.Load)
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
+			case staking.OverviewPageID:
+				pg = staking.NewStakingPage(mp.Load)
 			case wallets.WalletPageID:
 				pg = wallets.NewWalletPage(mp.Load)
 			case MorePageID:
