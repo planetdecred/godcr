@@ -243,8 +243,8 @@ func (sp *startPage) buttonSection(gtx C) D {
 	return layout.Stack{Alignment: layout.S}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					gtx.Constraints.Max.X = gtx.Px(values.AppWidth) // set button with to app width
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Max.X = gtx.Px(values.AppWidth) // set button width to app width
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {

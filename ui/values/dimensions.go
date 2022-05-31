@@ -90,9 +90,19 @@ var (
 	TextSize34   = unit.Sp(34)
 	TextSize32   = unit.Sp(32)
 
-	// AppWidth  = unit.Sp(800)
-	// AppHeight = unit.Sp(600)
+	AppWidth  = unit.Sp(800)
+	AppHeight = unit.Sp(600)
 
-	AppWidth  = unit.Sp(428)
-	AppHeight = unit.Sp(740)
+	// AppWidth  = unit.Sp(360)
+	// AppHeight = unit.Sp(740)
+
+	// This defines the dimensions at which we consider the user to be using a
+	// mobile device. The dimensions specified are the default viewport for
+	// iPhone 12 Pro Max (428 x 926).
+	// TODO: The mobile app width should consider larger screens. Browsers considers mobile
+	// devices starting from 600px below. While tablets and large phones are considered to be
+	// between 600px and 768px. While Landscape tablets are considered to be between
+	// 768px and 992px.
+	MobileAppWidth  = unit.Sp(360)
+	MobileAppHeight = unit.Sp(780)
 )
