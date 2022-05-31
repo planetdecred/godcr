@@ -64,11 +64,12 @@ type MainPage struct {
 	*listeners.SyncProgressListener
 	*listeners.TxAndBlockNotificationListener
 	*listeners.ProposalNotificationListener
-	ctx                 context.Context
-	ctxCancel           context.CancelFunc
-	appBarNav           components.NavDrawer
-	drawerNav           components.NavDrawer
-	bottomNavigationBar components.BottomNavigationBar
+	ctx                  context.Context
+	ctxCancel            context.CancelFunc
+	appBarNav            components.NavDrawer
+	drawerNav            components.NavDrawer
+	bottomNavigationBar  components.BottomNavigationBar
+	floatingActionButton components.BottomNavigationBar
 
 	hideBalanceItem HideBalanceItem
 
@@ -252,6 +253,25 @@ func (mp *MainPage) initNavItems() {
 			},
 		},
 	}
+
+	mp.floatingActionButton = components.BottomNavigationBar{
+		Load:        mp.Load,
+		CurrentPage: mp.currentPageID(),
+		FloatingActionButton: []components.BottomNavigationBarHandler{
+			{
+				Clickable: mp.Theme.NewClickable(true),
+				Image:     mp.Theme.Icons.SendIcon,
+				Title:     values.String(values.StrSend),
+				PageID:    send.PageID,
+			},
+			{
+				Clickable: mp.Theme.NewClickable(true),
+				Image:     mp.Theme.Icons.ReceiveIcon,
+				Title:     values.String(values.StrReceive),
+				PageID:    ReceivePageID,
+			},
+		},
+	}
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -430,6 +450,7 @@ func (mp *MainPage) HandleUserInteractions() {
 	mp.drawerNav.CurrentPage = mp.currentPageID()
 	mp.bottomNavigationBar.CurrentPage = mp.currentPageID()
 	mp.appBarNav.CurrentPage = mp.currentPageID()
+	mp.floatingActionButton.CurrentPage = mp.currentPageID()
 
 	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
 		mp.isNavExpanded = true
@@ -647,7 +668,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	if gtx.Constraints.Max.X <= gtx.Px(unit.Sp(428)) {
+	if gtx.Constraints.Max.X <= gtx.Px(values.MobileAppWidth) {
 		return mp.layoutMobile(gtx)
 	}
 	return mp.layoutDesktop(gtx)
@@ -686,10 +707,17 @@ func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(0.08, mp.LayoutTopBar),
 		layout.Flexed(0.795, func(gtx C) D {
-			if mp.currentPage == nil {
-				return layout.Dimensions{}
-			}
-			return mp.currentPage.Layout(gtx)
+			return layout.Stack{Alignment: layout.SE}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					if mp.currentPage == nil {
+						return layout.Dimensions{}
+					}
+					return mp.currentPage.Layout(gtx)
+				}),
+				layout.Stacked(func(gtx C) D {
+					return mp.floatingActionButton.LayoutSendReceive(gtx)
+				}),
+			)
 		}),
 		layout.Flexed(0.125, mp.bottomNavigationBar.LayoutBottomNavigationBar),
 	)
@@ -811,6 +839,9 @@ func (mp *MainPage) LayoutTopBar(gtx C) D {
 				}),
 				layout.Rigid(func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					if gtx.Constraints.Max.X <= gtx.Px(values.MobileAppWidth) {
+						return D{}
+					}
 					return mp.appBarNav.LayoutTopBar(gtx)
 				}),
 			)
