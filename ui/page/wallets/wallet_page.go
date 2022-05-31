@@ -409,10 +409,21 @@ func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
 }
 
 // moreOptionPositionEvent tracks the position of the click event on the page
+// determines the position of options menu
 func (pg *WalletPage) moreOptionPositionEvent(gtx layout.Context) {
-	setUnitValue := func() {
-		pg.mt = unit.Dp(-220)
-	}
+	setUnitValue := func(){}
+	
+	if ok, err := pg.multiWallet.AllWalletsAreWatchOnly(); ok{
+		if err == nil{
+			setUnitValue = func() {
+				pg.mt = unit.Dp(25)
+			}
+		}
+		}else{
+			setUnitValue = func() {
+				pg.mt = unit.Dp(-220)
+			}
+		}
 
 	for _, e := range pg.click.Events(gtx) {
 		switch e.Type {
@@ -443,13 +454,25 @@ func (pg *WalletPage) moreOptionPositionEvent(gtx layout.Context) {
 // Layout lays out the widgets for the main wallets pg.
 func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.moreOptionPositionEvent(gtx)
-	pageContent := []func(gtx C) D{
-		pg.walletSection,
-	}
 
-	if pg.hasWatchOnly {
-		pageContent = append(pageContent, pg.watchOnlyWalletSection)
-	}
+	pageContent := []func(gtx C) D{}
+
+	if ok, err := pg.multiWallet.AllWalletsAreWatchOnly(); ok{
+		if err == nil{
+			pageContent = []func(gtx C) D{
+				pg.watchOnlyWalletSection,
+			}			
+		}
+		}else{
+			pageContent = []func(gtx C) D{
+				pg.walletSection,
+			}
+			
+			if pg.hasWatchOnly {
+				pageContent = append(pageContent, pg.watchOnlyWalletSection)
+				}	
+			}
+
 
 	if len(pg.badWalletsList) != 0 {
 		pageContent = append(pageContent, pg.badWalletsSection)
@@ -496,6 +519,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
+//Sets up layout of options menu
 func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int, listItem *walletListItem) {
 	if pg.openPopupIndex != optionsMenuIndex {
 		return
@@ -653,6 +677,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
+//Sets up layout of watch only wallet section
 func (pg *WalletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensions {
 	if !pg.hasWatchOnly {
 		return D{}
@@ -679,6 +704,7 @@ func (pg *WalletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensio
 	})
 }
 
+// Sets up layout of watch only section items
 func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 	pg.listLock.Lock()
 	listItems := pg.listItems
