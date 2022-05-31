@@ -706,7 +706,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	if gtx.Constraints.Max.X <= gtx.Px(values.MobileAppWidth) {
+	if gtx.Constraints.Max.X <= gtx.Px(values.StartMobileView) {
 		return mp.layoutMobile(gtx)
 	}
 	return mp.layoutDesktop(gtx)
@@ -819,7 +819,8 @@ func (mp *MainPage) totalDCRBalance(gtx C) D {
 	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
 }
 
-func (mp *MainPage) LayoutTopBar(gtx C) D {
+func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
+	screenWidth := gtx.Constraints.Max.X
 	return decredmaterial.LinearLayout{
 		Width:       decredmaterial.MatchParent,
 		Height:      decredmaterial.WrapContent,
@@ -877,7 +878,7 @@ func (mp *MainPage) LayoutTopBar(gtx C) D {
 				}),
 				layout.Rigid(func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					if gtx.Constraints.Max.X <= gtx.Px(values.MobileAppWidth) {
+					if screenWidth <= gtx.Px(values.StartMobileView) {
 						return D{}
 					}
 					return mp.appBarNav.LayoutTopBar(gtx)

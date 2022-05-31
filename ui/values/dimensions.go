@@ -96,7 +96,7 @@ var (
 	AppWidth  = unit.Sp(360)
 	AppHeight = unit.Sp(740)
 
-	// This defines the dimensions at which we consider the user to be using a
+	// These define the dimensions at which we consider the user to be using a
 	// mobile device. The dimensions specified are the default viewport for
 	// iPhone 12 Pro Max (428 x 926).
 	// TODO: The mobile app width should consider larger screens. Browsers considers mobile
@@ -105,4 +105,6 @@ var (
 	// 768px and 992px.
 	MobileAppWidth  = unit.Sp(360)
 	MobileAppHeight = unit.Sp(780)
+
+	StartMobileView = unit.Sp(600)
 )
