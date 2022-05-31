@@ -548,6 +548,35 @@ func (mp *MainPage) HandleUserInteractions() {
 		}
 	}
 
+	for i, item := range mp.floatingActionButton.FloatingActionButton {
+		for item.Clickable.Clicked() {
+			var pg load.Page
+			if i == 0 {
+				if mp.sendPage == nil {
+					mp.sendPage = send.NewSendPage(mp.Load)
+				}
+				pg = mp.sendPage
+			} else {
+				if mp.receivePage == nil {
+					mp.receivePage = NewReceivePage(mp.Load)
+				}
+				pg = mp.receivePage
+			}
+
+			if pg.ID() == mp.currentPageID() {
+				continue
+			}
+
+			if mp.WL.MultiWallet.IsSynced() {
+				mp.ChangeFragment(pg)
+			} else if mp.WL.MultiWallet.IsSyncing() {
+				mp.Toast.NotifyError("Wallet is syncing, please wait")
+			} else {
+				mp.Toast.NotifyError("Not connected to the Decred network")
+			}
+		}
+	}
+
 	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.HideBalanceConfigKey, false)
 	for mp.hideBalanceItem.hideBalanceButton.Button.Clicked() {
 		mp.isBalanceHidden = !mp.isBalanceHidden
