@@ -411,19 +411,19 @@ func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
 // moreOptionPositionEvent tracks the position of the click event on the page
 // determines the position of options menu
 func (pg *WalletPage) moreOptionPositionEvent(gtx layout.Context) {
-	setUnitValue := func(){}
-	
-	if ok, err := pg.multiWallet.AllWalletsAreWatchOnly(); ok{
-		if err == nil{
+	setUnitValue := func() {}
+
+	if ok, err := pg.multiWallet.AllWalletsAreWatchOnly(); ok {
+		if err == nil {
 			setUnitValue = func() {
 				pg.mt = unit.Dp(25)
 			}
 		}
-		}else{
-			setUnitValue = func() {
-				pg.mt = unit.Dp(-220)
-			}
+	} else {
+		setUnitValue = func() {
+			pg.mt = unit.Dp(-220)
 		}
+	}
 
 	for _, e := range pg.click.Events(gtx) {
 		switch e.Type {
@@ -457,22 +457,21 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	pageContent := []func(gtx C) D{}
 
-	if ok, err := pg.multiWallet.AllWalletsAreWatchOnly(); ok{
-		if err == nil{
+	if ok, err := pg.multiWallet.AllWalletsAreWatchOnly(); ok {
+		if err == nil {
 			pageContent = []func(gtx C) D{
 				pg.watchOnlyWalletSection,
-			}			
+			}
 		}
-		}else{
-			pageContent = []func(gtx C) D{
-				pg.walletSection,
-			}
-			
-			if pg.hasWatchOnly {
-				pageContent = append(pageContent, pg.watchOnlyWalletSection)
-				}	
-			}
+	} else {
+		pageContent = []func(gtx C) D{
+			pg.walletSection,
+		}
 
+		if pg.hasWatchOnly {
+			pageContent = append(pageContent, pg.watchOnlyWalletSection)
+		}
+	}
 
 	if len(pg.badWalletsList) != 0 {
 		pageContent = append(pageContent, pg.badWalletsSection)
