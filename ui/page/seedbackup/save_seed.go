@@ -69,12 +69,7 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 	pg.copy.Background = color.NRGBA{}
 	pg.copy.HighlightColor = pg.Theme.Color.SurfaceHighlight
 	pg.copy.Color = pg.Theme.Color.Primary
-	pg.copy.Inset = layout.Inset{
-		Top:    values.MarginPadding16,
-		Bottom: values.MarginPadding16,
-		Left:   values.MarginPadding16,
-		Right:  values.MarginPadding16,
-	}
+	pg.copy.Inset = layout.UniformInset(values.MarginPadding16)
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = l.Theme.Icons.ContentClear
@@ -233,12 +228,7 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 					card.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 8, BottomRight: 0, BottomLeft: 8}
 
 					return card.Layout(gtx, func(gtx C) D {
-						return layout.Inset{
-							Top:    values.MarginPadding16,
-							Bottom: values.MarginPadding16,
-							Left:   values.MarginPadding16,
-							Right:  values.MarginPadding16,
-						}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 							seedString := pg.seed
 							if seedString != "" {
 								hexString, _ := components.SeedWordsToHex(pg.seed)
@@ -248,9 +238,6 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 
 						})
 					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
 				}),
 				layout.Rigid(func(gtx C) D {
 					card.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 8, BottomLeft: 0}
