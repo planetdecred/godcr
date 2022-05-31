@@ -252,7 +252,9 @@ func (pg *Page) HandleUserInteractions() {
 					Icon(successIcon).
 					Title(values.String(values.StrTicketConfirmed)).
 					SetContentAlignment(align, align).
-					PositiveButton(values.String(values.StrBackStaking), func(isChecked bool) {})
+					PositiveButton(values.String(values.StrBackStaking), func(isChecked bool) bool {
+						return true
+					})
 				pg.ShowModal(info)
 				pg.loadPageData()
 			}).Show()

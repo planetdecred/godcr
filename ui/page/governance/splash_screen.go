@@ -65,6 +65,8 @@ func (pg *Page) showInfoModal() {
 	info := modal.NewInfoModal(pg.Load).
 		Title(values.String(values.StrGovernance)).
 		Body(values.String(values.StrProposalInfo)).
-		PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
+		PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+			return true
+		})
 	pg.ShowModal(info)
 }

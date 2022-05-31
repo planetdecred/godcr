@@ -223,18 +223,19 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 				Body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
 					" blockchain for transactions").
 				NegativeButton(values.String(values.StrCancel), func() {}).
-				PositiveButton(values.String(values.StrRescan), func(isChecked bool) {
+				PositiveButton(values.String(values.StrRescan), func(isChecked bool) bool {
 					err := pg.WL.MultiWallet.RescanBlocks(pg.wallet.ID)
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrNotConnected {
 							pg.Toast.NotifyError(values.String(values.StrNotConnected))
-							return
+							return true
 						}
 						pg.Toast.NotifyError(err.Error())
-						return
+						return true
 					}
 					msg := values.String(values.StrRescanProgressNotification)
 					pg.Toast.Notify(msg)
+					return true
 				})
 
 			pg.ShowModal(info)
@@ -252,7 +253,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 			Body(warningMsg).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
-			PositiveButton(values.String(values.StrRemove), func(isChecked bool) {
+			PositiveButton(values.String(values.StrRemove), func(isChecked bool) bool {
 				walletDeleted := func() {
 					if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
 						pg.Toast.Notify("Wallet removed")
@@ -275,7 +276,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 							infoModal.Dismiss()
 						}
 					}()
-					return
+					return false
 				}
 
 				modal.NewPasswordModal(pg.Load).
@@ -295,15 +296,17 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 						}()
 						return false
 					}).Show()
-
+				return false
 			}).Show()
 	}
 
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).
-			Title("Spending password").
-			Body("A spending password helps secure your wallet transactions.").
-			PositiveButton("Got it", func(isChecked bool) {})
+			Title(values.String(values.StrSpendingPassword)).
+			Body(values.String(values.StrSpendingPasswordInfo)).
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			})
 		pg.ShowModal(info)
 	}
 }

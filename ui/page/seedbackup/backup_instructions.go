@@ -93,8 +93,9 @@ func promptToExit(load *load.Load) {
 		Title("Exit?").
 		Body("Are you sure you want to exit the seed backup process?").
 		NegativeButton("No", func() {}).
-		PositiveButton("Yes", func(isChecked bool) {
+		PositiveButton("Yes", func(isChecked bool) bool {
 			load.PopToFragment(components.WalletsPageID)
+			return true
 		}).
 		Show()
 }

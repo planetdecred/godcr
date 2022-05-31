@@ -183,7 +183,9 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 			Title(values.String(values.StrProposal)).
 			Body(values.String(values.StrOffChainVote)).
 			SetCancelable(true).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {}).Show()
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			}).Show()
 	}
 
 	if pg.syncCompleted {

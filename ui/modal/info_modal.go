@@ -30,7 +30,7 @@ type InfoModal struct {
 	customWidget   layout.Widget
 
 	positiveButtonText    string
-	positiveButtonClicked func(isChecked bool)
+	positiveButtonClicked func(isChecked bool) bool
 	btnPositve            decredmaterial.Button
 
 	negativeButtonText    string
@@ -120,7 +120,7 @@ func (in *InfoModal) Body(subtitle string) *InfoModal {
 	return in
 }
 
-func (in *InfoModal) PositiveButton(text string, clicked func(isChecked bool)) *InfoModal {
+func (in *InfoModal) PositiveButton(text string, clicked func(isChecked bool) bool) *InfoModal {
 	in.positiveButtonText = text
 	in.positiveButtonClicked = clicked
 	return in
@@ -181,13 +181,15 @@ func (in *InfoModal) HandleKeyEvent(evt *key.Event) {
 
 func (in *InfoModal) Handle() {
 	for in.btnPositve.Clicked() {
+		if in.isLoading {
+			return
+		}
 		isChecked := false
 		if in.checkbox.CheckBox != nil {
 			isChecked = in.checkbox.CheckBox.Value
 		}
 
-		in.positiveButtonClicked(isChecked)
-		if !in.isLoading {
+		if in.positiveButtonClicked(isChecked) {
 			in.DismissModal(in)
 		}
 	}

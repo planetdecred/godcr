@@ -1245,7 +1245,7 @@ func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 		Body(values.String(values.StrWalletRestoreMsg)).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
-		PositiveButton(values.String(values.StrRemove), func(isChecked bool) {
+		PositiveButton(values.String(values.StrRemove), func(isChecked bool) bool {
 			go func() {
 				err := pg.WL.MultiWallet.DeleteBadWallet(badWalletID)
 				if err != nil {
@@ -1256,6 +1256,7 @@ func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 				pg.loadBadWallets() // refresh bad wallets list
 				pg.RefreshWindow()
 			}()
+			return true
 		}).Show()
 }
 
