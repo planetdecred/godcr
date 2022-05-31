@@ -188,9 +188,7 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 						}),
 					)
 				}),
-				layout.Flexed(1, func(gtx C) D {
-					return pg.hexLayout(gtx)
-				}),
+				layout.Flexed(1, pg.hexLayout),
 			)
 		},
 	}
@@ -241,7 +239,9 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 				}),
 				layout.Rigid(func(gtx C) D {
 					card.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 8, BottomLeft: 0}
-					return card.Layout(gtx, pg.copy.Layout)
+					return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
+						return card.Layout(gtx, pg.copy.Layout)
+					})
 				}),
 			)
 		}),
