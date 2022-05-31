@@ -45,6 +45,7 @@ type ReceivePage struct {
 	receiveAddress    decredmaterial.Label
 	ops               *op.Ops
 	selector          *components.AccountSelector
+	copyAddressButton decredmaterial.Button
 
 	backdrop   *widget.Clickable
 	backButton decredmaterial.IconButton
@@ -95,6 +96,10 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = pg.Theme.Icons.ContentClear
+
+	pg.copyAddressButton = l.Theme.OutlineButton("")
+	pg.copyAddressButton.TextSize = values.MarginPadding14
+	pg.copyAddressButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	pg.selector = components.NewAccountSelector(pg.Load, nil).
 		Title(values.String(values.StrReceivingAddress)).
@@ -180,6 +185,13 @@ func (pg *ReceivePage) Layout(gtx C) D {
 	pg.handleCopyEvent(gtx)
 	pg.pageBackdropLayout(gtx)
 
+	if gtx.Constraints.Max.X <= gtx.Px(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *ReceivePage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, func(gtx C) D {
@@ -246,7 +258,80 @@ func (pg *ReceivePage) Layout(gtx C) D {
 	return dims
 }
 
-func (pg *ReceivePage) pageSections(gtx C, body layout.Widget) D {
+func (pg *ReceivePage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	pageContent := []func(gtx C) D{
+		func(gtx C) D {
+			return pg.pageSections(gtx, func(gtx C) D {
+				return pg.selector.Layout(gtx)
+			})
+		},
+		func(gtx C) D {
+			return pg.Theme.Separator().Layout(gtx)
+		},
+		func(gtx C) D {
+			return pg.pageSections(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.titleLayout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							return layout.Flex{
+								Axis:      layout.Vertical,
+								Alignment: layout.Middle,
+							}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									if pg.qrImage == nil {
+										return layout.Dimensions{}
+									}
+
+									return pg.Theme.ImageIcon(gtx, *pg.qrImage, 500)
+								}),
+								layout.Rigid(func(gtx C) D {
+									if pg.currentAddress != "" {
+										pg.copyAddressButton.Text = pg.currentAddress
+										return pg.copyAddressButton.Layout(gtx)
+									}
+									return layout.Dimensions{}
+								}),
+								layout.Rigid(func(gtx C) D {
+									tapToCopy := pg.Theme.Label(values.TextSize10, "(Tap to copy)")
+									tapToCopy.Color = pg.Theme.Color.Text
+									return tapToCopy.Layout(gtx)
+								}),
+							)
+						})
+					}),
+				)
+			})
+		},
+	}
+
+	dims := components.UniformPadding(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+					return pg.topNav(gtx)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return pg.Theme.List(pg.scrollContainer).Layout(gtx, 1, func(gtx C, i int) D {
+					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+							return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+								return pageContent[i](gtx)
+							})
+						})
+					})
+				})
+			}),
+		)
+	})
+
+	return dims
+}
+
+func (pg *ReceivePage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
@@ -413,6 +498,11 @@ func (pg *ReceivePage) handleCopyEvent(gtx C) {
 			pg.copy.Text = values.String(values.StrCopy)
 			pg.copy.Color = pg.Theme.Color.Primary
 		})
+	}
+
+	if pg.copyAddressButton.Clicked() {
+		clipboard.WriteOp{Text: pg.copyAddressButton.Text}.Add(gtx.Ops)
+		pg.Toast.Notify("Copied")
 	}
 }
 
