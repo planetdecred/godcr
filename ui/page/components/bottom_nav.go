@@ -37,6 +37,7 @@ type BottomNavigationBar struct {
 }
 
 func (bottomNavigationbar *BottomNavigationBar) LayoutBottomNavigationBar(gtx layout.Context) layout.Dimensions {
+	currentScreenWidth := gtx.Constraints.Max.X
 	return layout.Stack{Alignment: layout.S}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -55,7 +56,7 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutBottomNavigationBar(gtx la
 						}
 						return decredmaterial.LinearLayout{
 							Orientation: bottomNavigationbar.axis,
-							Width:       (gtx.Px(values.AppWidth) * 100 / len(bottomNavigationbar.BottomNaigationItems)) / 100, // Divide each cell equally
+							Width:       (currentScreenWidth * 100 / len(bottomNavigationbar.BottomNaigationItems)) / 100, // Divide each cell equally
 							Height:      decredmaterial.WrapContent,
 							Padding:     layout.UniformInset(values.MarginPadding15),
 							Alignment:   bottomNavigationbar.alignment,
