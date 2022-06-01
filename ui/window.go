@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"gioui.org/app"
@@ -149,6 +150,7 @@ func (win *Window) NewLoad() (*load.Load, error) {
 
 // HandleEvents runs main event handling and page rendering loop.
 func (win *Window) HandleEvents() {
+
 	for {
 		e := <-win.Events()
 		switch evt := e.(type) {
@@ -163,14 +165,22 @@ func (win *Window) HandleEvents() {
 		case system.FrameEvent:
 			win.displayWindow(evt)
 
-		case key.Event:
-			win.handleKeyEvent(&evt)
+		// case key.Event:
+		// 	fmt.Println(evt)
+		// 	win.handleKeyEvent(&evt)
 
 		default:
 			log.Tracef("Unhandled window event %v\n", e)
 		}
 	}
 }
+
+// for _, event := range gtx.Events(pg) {
+// 	switch event := event.(type) {
+// 	case key.Event:
+// 		win.handleKeyEvent(&event)
+// 	}
+// }
 
 // displayWindow is called when a FrameEvent is received by the active window.
 // Since user actions such as button clicks also trigger FrameEvents, this
@@ -194,6 +204,18 @@ func (win *Window) displayWindow(evt system.FrameEvent) {
 
 	// Draw the window's UI components into an op.Ops.
 	gtx := layout.NewContext(&op.Ops{}, evt)
+
+	// declare the needed keys
+	key.InputOp{Tag: win, Keys: "(Shift)-[⌤, ⏎]| (Shift)-[↑,↓] | (Shift)-[Tab]"}.Add(gtx.Ops)
+
+	// range through the context events and call handleKeyEvent
+	for _, event := range gtx.Events(win) {
+		switch event := event.(type) {
+		case key.Event:
+			win.handleKeyEvent(&event)
+		}
+	}
+
 	win.drawWindowUI(gtx)
 
 	// Render the window's UI components on screen.

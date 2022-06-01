@@ -598,6 +598,7 @@ func (mp *MainPage) HandleUserInteractions() {
 // HandleKeyEvent is called when a key is pressed on the current window.
 // Satisfies the load.KeyEventHandler interface for receiving key events.
 func (mp *MainPage) HandleKeyEvent(evt *key.Event) {
+	fmt.Println(evt)
 	if mp.currentPage != nil {
 		if keyEvtHandler, ok := mp.currentPage.(load.KeyEventHandler); ok {
 			keyEvtHandler.HandleKeyEvent(evt)
