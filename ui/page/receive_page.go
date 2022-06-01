@@ -185,7 +185,7 @@ func (pg *ReceivePage) Layout(gtx C) D {
 	pg.handleCopyEvent(gtx)
 	pg.pageBackdropLayout(gtx)
 
-	if gtx.Constraints.Max.X <= gtx.Px(values.StartMobileView) {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
 		return pg.layoutMobile(gtx)
 	}
 	return pg.layoutDesktop(gtx)
