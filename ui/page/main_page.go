@@ -279,6 +279,8 @@ func (mp *MainPage) initNavItems() {
 			},
 		},
 	}
+	mp.floatingActionButton.FloatingActionButton[0].Clickable.Hoverable = false
+	mp.floatingActionButton.FloatingActionButton[1].Clickable.Hoverable = false
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
