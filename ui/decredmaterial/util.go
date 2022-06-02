@@ -1,12 +1,12 @@
 package decredmaterial
 
 import (
+	"image"
 	"image/color"
 	"math"
 	"math/rand"
 	"time"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -91,26 +91,26 @@ func drawInk(gtx layout.Context, c widget.Press, highlightColor color.NRGBA) {
 	// Beziér ease-in curve.
 	alphaBezier := t2 * t2 * (3.0 - 2.0*t2)
 	sizeBezier := sizet * sizet * (3.0 - 2.0*sizet)
-	size := float32(gtx.Constraints.Min.X)
-	if h := float32(gtx.Constraints.Min.Y); h > size {
+	size := gtx.Constraints.Min.X
+	if h := gtx.Constraints.Min.Y; h > size {
 		size = h
 	}
 	// Cover the entire constraints min rectangle.
-	size *= 2 * float32(math.Sqrt(2))
+	size *= 2 * int(math.Sqrt(2))
 	// Apply curve values to size and color.
-	size *= sizeBezier
+	size *= int(sizeBezier)
 	alpha := 0.7 * alphaBezier
 	const col = 0.8
 	ba, _ := byte(alpha*0xff), byte(col*0xff)
 	rgba := mulAlpha(highlightColor, ba)
 	ink := paint.ColorOp{Color: rgba}
 	ink.Add(gtx.Ops)
-	rr := size * .5
-	defer op.Offset(c.Position.Add(f32.Point{
+	rr := int(size / 2)
+	defer op.Offset(c.Position.Add(image.Point{
 		X: -rr,
 		Y: -rr,
 	})).Push(gtx.Ops).Pop()
-	defer clip.UniformRRect(f32.Rectangle{Max: f32.Pt(size, size)}, rr).Push(gtx.Ops).Pop()
+	defer clip.UniformRRect(image.Rectangle{Max: image.Pt(size, size)}, rr).Push(gtx.Ops).Pop()
 	paint.PaintOp{}.Add(gtx.Ops)
 }
 

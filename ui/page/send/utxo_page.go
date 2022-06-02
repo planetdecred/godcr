@@ -238,8 +238,8 @@ func (pg *UTXOPage) Layout(gtx C) D {
 }
 
 func (pg *UTXOPage) textData(gtx C, txt, value string) D {
-	txt1 := pg.Theme.Label(values.MarginPadding15, txt)
-	txt2 := pg.Theme.Label(values.MarginPadding15, value)
+	txt1 := pg.Theme.Label(values.TextSize16, txt)
+	txt2 := pg.Theme.Label(values.TextSize16, value)
 	txt1.MaxLines, txt2.MaxLines = 1, 1
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(txt1.Layout),
@@ -248,29 +248,29 @@ func (pg *UTXOPage) textData(gtx C, txt, value string) D {
 }
 
 func (pg *UTXOPage) utxoRowHeader(gtx C) D {
-	txt := pg.Theme.Label(values.MarginPadding15, "")
+	txt := pg.Theme.Label(values.TextSize16, "")
 	txt.MaxLines = 1
 	return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(pg.selectAllChexBox.Layout),
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
+				gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding150)
 				txt.Text = "Amount"
 				return txt.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding200)
+				gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding200)
 				txt.Text = "Address"
 				return txt.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
+				gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding100)
 				txt.Text = "Date (UTC)"
 				txt.Alignment = text.End
 				return txt.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
+				gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding100)
 				txt.Text = "Confirmations"
 				return txt.Layout(gtx)
 			}),
@@ -285,28 +285,28 @@ func (pg *UTXOPage) utxoRow(gtx C, data *wallet.UnspentOutput, index int) D {
 			txt := pg.Theme.Body2(data.Amount)
 			txt.MaxLines = 1
 			txt.Alignment = text.Start
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
+			gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding150)
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2(data.UTXO.Addresses)
 			txt.MaxLines = 1
-			gtx.Constraints.Max.X = gtx.Px(values.MarginPadding200)
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding200)
+			gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding200)
+			gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding200)
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2(data.DateTime)
 			txt.MaxLines = 1
 			txt.Alignment = text.End
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
+			gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding100)
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2(fmt.Sprintf("%d", data.UTXO.Confirmations))
 			txt.MaxLines = 1
 			txt.Alignment = text.End
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
+			gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding100)
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {

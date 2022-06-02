@@ -30,9 +30,9 @@ type NavDrawer struct {
 	CurrentPage    string
 
 	axis      layout.Axis
-	textSize  unit.Value
-	leftInset unit.Value
-	width     unit.Value
+	textSize  unit.Sp
+	leftInset unit.Dp
+	width     unit.Dp
 	alignment layout.Alignment
 	direction layout.Direction
 
@@ -43,7 +43,7 @@ type NavDrawer struct {
 
 func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 	return decredmaterial.LinearLayout{
-		Width:       gtx.Px(nd.width),
+		Width:       gtx.Dp(nd.width),
 		Height:      decredmaterial.MatchParent,
 		Orientation: layout.Vertical,
 		Background:  nd.Theme.Color.Surface,

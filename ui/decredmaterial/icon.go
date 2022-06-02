@@ -23,11 +23,11 @@ func NewIcon(icon *widget.Icon) *Icon {
 	}
 }
 
-func (icon *Icon) Layout(gtx C, iconSize unit.Value) D {
+func (icon *Icon) Layout(gtx C, iconSize unit.Dp) D {
 	cl := color.NRGBA{A: 0xff}
 	if icon.Color != (color.NRGBA{}) {
 		cl = icon.Color
 	}
-	gtx.Constraints.Min.X = gtx.Px(iconSize)
+	gtx.Constraints.Min.X = gtx.Dp(iconSize)
 	return icon.Icon.Layout(gtx, cl)
 }

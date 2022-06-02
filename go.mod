@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	decred.org/dcrdex v0.4.1
-	gioui.org v0.0.0-20220517073035-79f037f983a7
+	gioui.org v0.0.0-20220601100144-a896a467ecae
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d

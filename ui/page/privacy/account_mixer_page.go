@@ -211,7 +211,7 @@ func (pg *AccountMixerPage) dangerZoneLayout(gtx layout.Context) layout.Dimensio
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return pg.dangerZoneCollapsible.Layout(gtx,
 				func(gtx C) D {
-					txt := pg.Theme.Label(values.MarginPadding15, "Danger Zone")
+					txt := pg.Theme.Label(values.TextSize16, "Danger Zone")
 					txt.Color = pg.Theme.Color.Danger
 					return txt.Layout(gtx)
 				},

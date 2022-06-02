@@ -152,8 +152,8 @@ func layoutTitle(gtx C, l *load.Load, proposal dcrlibwallet.Proposal) D {
 
 func layoutProposalVoteBar(gtx C, item *ProposalItem) D {
 	proposal := item.Proposal
-	yes := float32(proposal.YesVotes)
-	no := float32(proposal.NoVotes)
+	yes := int(proposal.YesVotes)
+	no := int(proposal.NoVotes)
 	quorumPercent := float32(proposal.QuorumPercentage)
 	passPercentage := float32(proposal.PassPercentage)
 	eligibleTickets := float32(proposal.EligibleTickets)
@@ -168,8 +168,8 @@ func layoutProposalVoteBar(gtx C, item *ProposalItem) D {
 func layoutInfoTooltip(gtx C, rect image.Rectangle, item ProposalItem) {
 	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus195}
 	item.tooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding195)
-		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding195)
+		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding195)
+		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding195)
 		return item.tooltipLabel.Layout(gtx)
 	})
 }

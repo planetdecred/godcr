@@ -42,8 +42,8 @@ type (
 )
 
 var (
-	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
-	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
+	NavDrawerWidth          = unit.Dp(160)
+	NavDrawerMinimizedWidth = unit.Dp(72)
 )
 
 type HideBalanceItem struct {
@@ -710,7 +710,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 	mp.Load.SetCurrentAppWidth(gtx.Constraints.Max.X)
-	if mp.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+	if mp.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return mp.layoutMobile(gtx)
 	}
 	return mp.layoutDesktop(gtx)
@@ -771,7 +771,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	}
 	switch {
 	case mp.isFetchingExchangeRate && mp.dcrUsdtBittrex.LastTradeRate == "":
-		gtx.Constraints.Max.Y = gtx.Px(values.MarginPadding18)
+		gtx.Constraints.Max.Y = gtx.Dp(values.MarginPadding18)
 		gtx.Constraints.Max.X = gtx.Constraints.Max.Y
 		return layout.Inset{
 			Top:  values.MarginPadding8,
@@ -815,7 +815,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 
 func (mp *MainPage) totalDCRBalance(gtx C) D {
 	if mp.isBalanceHidden {
-		hiddenBalanceText := mp.Theme.Label(values.TextSize18.Scale(0.8), "**********DCR")
+		hiddenBalanceText := mp.Theme.Label(values.TextSize18*0.8, "**********DCR")
 		return layout.Inset{Bottom: values.MarginPadding0, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 			return hiddenBalanceText.Layout(gtx)
 		})

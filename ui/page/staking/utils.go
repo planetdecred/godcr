@@ -176,7 +176,7 @@ func allLiveTickets(mw *dcrlibwallet.MultiWallet) ([]dcrlibwallet.Transaction, e
 }
 
 func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimensions {
-	status := l.Theme.Label(values.MarginPadding14, strings.ToUpper(tx.status.Title))
+	status := l.Theme.Label(values.TextSize14, strings.ToUpper(tx.status.Title))
 	status.Font.Weight = text.Medium
 	status.Color = tx.status.Color
 
@@ -214,11 +214,11 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 		subDesc = values.String(values.StrExpiredInfoDiscSub)
 	}
 
-	titleLabel := l.Theme.Label(values.MarginPadding14, title)
+	titleLabel := l.Theme.Label(values.TextSize14, title)
 
-	mainDescLabel := l.Theme.Label(values.MarginPadding14, mainDesc)
+	mainDescLabel := l.Theme.Label(values.TextSize14, mainDesc)
 	mainDescLabel.Color = l.Theme.Color.GrayText2
-	subDescLabel := l.Theme.Label(values.MarginPadding14, subDesc)
+	subDescLabel := l.Theme.Label(values.TextSize14, subDesc)
 	subDescLabel.Color = l.Theme.Color.GrayText2
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -244,7 +244,7 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 	)
 }
 
-func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmaterial.Tooltip, leftInset unit.Value, body layout.Widget) {
+func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmaterial.Tooltip, leftInset unit.Dp, body layout.Widget) {
 	inset := layout.Inset{
 		Top:  values.MarginPadding15,
 		Left: leftInset,
@@ -261,10 +261,10 @@ func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmater
 }
 
 func titleDescTooltip(gtx C, l *load.Load, title string, desc string) layout.Dimensions {
-	titleLabel := l.Theme.Label(values.MarginPadding14, title)
+	titleLabel := l.Theme.Label(values.TextSize14, title)
 	titleLabel.Color = l.Theme.Color.GrayText2
 
-	descLabel := l.Theme.Label(values.MarginPadding14, desc)
+	descLabel := l.Theme.Label(values.TextSize14, desc)
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(titleLabel.Layout),
@@ -287,7 +287,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 	maturity := l.WL.MultiWallet.TicketMaturity()
 
 	return decredmaterial.LinearLayout{
-		Width:       gtx.Px(values.MarginPadding168),
+		Width:       gtx.Dp(values.MarginPadding168),
 		Height:      decredmaterial.WrapContent,
 		Orientation: layout.Vertical,
 		Shadow:      l.Theme.Shadow(),
@@ -391,7 +391,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 					}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								txt := l.Theme.Label(values.MarginPadding14, txStatus.Title)
+								txt := l.Theme.Label(values.TextSize14, txStatus.Title)
 								txt.Color = txStatus.Color
 								txt.Font.Weight = text.Medium
 								txtLayout := txt.Layout(gtx)
@@ -409,7 +409,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 									Left:  values.MarginPadding4,
 									Right: values.MarginPadding4,
 								}.Layout(gtx, func(gtx C) D {
-									txt := l.Theme.Label(values.MarginPadding14, "•")
+									txt := l.Theme.Label(values.TextSize14, "•")
 									txt.Color = l.Theme.Color.GrayText2
 
 									return txt.Layout(gtx)
@@ -571,7 +571,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 												Left:  values.MarginPadding4,
 												Right: values.MarginPadding4,
 											}.Layout(gtx, func(gtx C) D {
-												txt := l.Theme.Label(values.MarginPadding14, "•")
+												txt := l.Theme.Label(values.TextSize14, "•")
 												txt.Color = l.Theme.Color.GrayText2
 
 												return txt.Layout(gtx)
@@ -619,7 +619,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 															Left:  values.MarginPadding4,
 															Right: values.MarginPadding4,
 														}.Layout(gtx, func(gtx C) D {
-															txt := l.Theme.Label(values.MarginPadding14, "•")
+															txt := l.Theme.Label(values.TextSize14, "•")
 															txt.Color = l.Theme.Color.GrayText2
 															return txt.Layout(gtx)
 														})

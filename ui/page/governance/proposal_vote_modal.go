@@ -238,7 +238,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 				return vm.Theme.Label(values.TextSize16, voteDetailsErr.Error()).Layout(gtx)
 			}
 
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
+			gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding24)
 			return vm.materialLoader.Layout(gtx)
 		},
 		func(gtx C) D {
@@ -276,8 +276,8 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 												card.Color = vm.Theme.Color.Green500
 												card.Radius = decredmaterial.Radius(4)
 												return card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-													gtx.Constraints.Min.X += gtx.Px(values.MarginPadding8)
-													gtx.Constraints.Min.Y += gtx.Px(values.MarginPadding8)
+													gtx.Constraints.Min.X += gtx.Dp(values.MarginPadding8)
+													gtx.Constraints.Min.Y += gtx.Dp(values.MarginPadding8)
 													return layout.Dimensions{Size: gtx.Constraints.Min}
 												})
 											}),
@@ -317,8 +317,8 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 												card.Color = vm.Theme.Color.Danger
 												card.Radius = decredmaterial.Radius(4)
 												return card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-													gtx.Constraints.Min.X += gtx.Px(values.MarginPadding8)
-													gtx.Constraints.Min.Y += gtx.Px(values.MarginPadding8)
+													gtx.Constraints.Min.X += gtx.Dp(values.MarginPadding8)
+													gtx.Constraints.Min.Y += gtx.Dp(values.MarginPadding8)
 													return layout.Dimensions{Size: gtx.Constraints.Min}
 												})
 											}),
@@ -408,8 +408,8 @@ func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 							card.Color = dotColor
 							card.Radius = decredmaterial.Radius(4)
 							return card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-								gtx.Constraints.Min.X += gtx.Px(values.MarginPadding8)
-								gtx.Constraints.Min.Y += gtx.Px(values.MarginPadding8)
+								gtx.Constraints.Min.X += gtx.Dp(values.MarginPadding8)
+								gtx.Constraints.Min.Y += gtx.Dp(values.MarginPadding8)
 								return layout.Dimensions{Size: gtx.Constraints.Min}
 							})
 						}),
@@ -451,7 +451,7 @@ func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 									return dims
 								}),
 								layout.Flexed(0.02, func(gtx C) D {
-									line := vm.Theme.Line(height, gtx.Px(values.MarginPadding2))
+									line := vm.Theme.Line(height, gtx.Dp(values.MarginPadding2))
 									line.Color = vm.Theme.Color.Gray2
 									return line.Layout(gtx)
 								}),

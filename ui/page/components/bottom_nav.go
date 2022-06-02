@@ -29,9 +29,9 @@ type BottomNavigationBar struct {
 	CurrentPage          string
 
 	axis        layout.Axis
-	textSize    unit.Value
-	bottomInset unit.Value
-	height      unit.Value
+	textSize    unit.Sp
+	bottomInset unit.Dp
+	height      unit.Dp
 	alignment   layout.Alignment
 	direction   layout.Direction
 }

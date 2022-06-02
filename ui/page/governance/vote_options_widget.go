@@ -39,7 +39,7 @@ func newInputVoteOptions(l *load.Load, label string) *inputVoteOptionsWidgets {
 	i.increment.ChangeColorStyle(&values.ColorStyle{Foreground: l.Theme.Color.Text})
 	i.decrement.ChangeColorStyle(&values.ColorStyle{Foreground: l.Theme.Color.Text})
 
-	i.increment.Size, i.decrement.Size = values.TextSize18, values.TextSize18
+	i.increment.Size, i.decrement.Size = values.MarginPadding18, values.MarginPadding18
 	i.input.Bordered = false
 	i.input.Editor.SetText("0")
 	i.input.Editor.Alignment = text.Middle

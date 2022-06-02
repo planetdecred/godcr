@@ -45,9 +45,9 @@ func (img *Image) Layout48dp(gtx C) D {
 	return img.LayoutSize(gtx, values.MarginPadding48)
 }
 
-func (img *Image) LayoutSize(gtx C, size unit.Value) D {
-	width := float32(img.Src.Size().X)
-	scale := size.V / width
-	img.Scale = scale
+func (img *Image) LayoutSize(gtx C, size unit.Dp) D {
+	width := img.Src.Size().X
+	scale := int(size) / width
+	img.Scale = float32(scale)
 	return img.Layout(gtx)
 }

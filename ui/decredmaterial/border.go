@@ -1,9 +1,10 @@
 package decredmaterial
 
 import (
+	"image"
 	"image/color"
 
-	"gioui.org/f32"
+	// "gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -14,24 +15,24 @@ import (
 type Border struct {
 	Color  color.NRGBA
 	Radius CornerRadius
-	Width  unit.Value
+	Width  unit.Dp
 }
 
 func (b Border) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 	dims := w(gtx)
-	sz := layout.FPt(dims.Size)
+	sz := dims.Size
 
-	width := float32(gtx.Px(b.Width))
+	width := gtx.Dp(b.Width)
 	sz.X -= width
 	sz.Y -= width
 
-	r := f32.Rectangle{Max: sz}
-	r = r.Add(f32.Point{X: width * 0.5, Y: width * 0.5})
+	r := image.Rectangle{Max: sz}
+	r = r.Add(image.Point{X: width / 2, Y: width / 2})
 
-	tr := float32(gtx.Px(unit.Dp(b.Radius.TopRight)))
-	tl := float32(gtx.Px(unit.Dp(b.Radius.TopLeft)))
-	br := float32(gtx.Px(unit.Dp(b.Radius.BottomRight)))
-	bl := float32(gtx.Px(unit.Dp(b.Radius.BottomLeft)))
+	tr := gtx.Dp(unit.Dp(b.Radius.TopRight))
+	tl := gtx.Dp(unit.Dp(b.Radius.TopLeft))
+	br := gtx.Dp(unit.Dp(b.Radius.BottomRight))
+	bl := gtx.Dp(unit.Dp(b.Radius.BottomLeft))
 	radius := clip.RRect{
 		Rect: r,
 		NW:   tl, NE: tr, SE: br, SW: bl,
@@ -41,7 +42,7 @@ func (b Border) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 		b.Color,
 		clip.Stroke{
 			Path:  radius.Path(gtx.Ops),
-			Width: width,
+			Width: float32(width),
 		}.Op(),
 	)
 

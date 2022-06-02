@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
@@ -41,7 +40,7 @@ type ButtonLayout struct {
 // set using the IconButton.colorStyle field.
 type IconButtonStyle struct {
 	Icon   *widget.Icon
-	Size   unit.Value
+	Size   unit.Dp
 	Inset  layout.Inset
 	Button *widget.Clickable
 }
@@ -171,10 +170,10 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 	min := gtx.Constraints.Min
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			rr := float32(gtx.Px(b.CornerRadius))
-			defer clip.UniformRRect(f32.Rectangle{Max: f32.Point{
-				X: float32(gtx.Constraints.Min.X),
-				Y: float32(gtx.Constraints.Min.Y),
+			rr := gtx.Dp(b.CornerRadius)
+			defer clip.UniformRRect(image.Rectangle{Max: image.Point{
+				X: gtx.Constraints.Min.X,
+				Y: gtx.Constraints.Min.Y,
 			}}, rr).Push(gtx.Ops).Pop()
 
 			background := b.Background
@@ -264,7 +263,7 @@ func (b TextAndIconButton) Layout(gtx layout.Context) layout.Dimensions {
 			layIcon := layout.Rigid(func(gtx C) D {
 				return layout.Inset{Left: textIconSpacer}.Layout(gtx, func(gtx C) D {
 					var d D
-					size := gtx.Px(unit.Dp(46)) - 2*gtx.Px(unit.Dp(16))
+					size := gtx.Dp(unit.Dp(46)) - 2*gtx.Dp(unit.Dp(16))
 					b.icon.Color = b.Color
 					b.icon.Layout(gtx, unit.Dp(14))
 					d = layout.Dimensions{

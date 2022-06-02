@@ -89,7 +89,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Center.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
+					gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding150)
 					return pg.stakeBtn.Layout(gtx)
 				})
 			}),

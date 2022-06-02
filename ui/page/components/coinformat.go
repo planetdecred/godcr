@@ -19,7 +19,7 @@ var (
 	noDecimal                 = regexp.MustCompile(`([0-9]{1,3},*)+`)
 )
 
-func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Value, scale float32, col color.NRGBA) D {
+func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Sp, scale float32, col color.NRGBA) D {
 
 	startIndex := 0
 
@@ -36,7 +36,7 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 
 	mainText, subText := amount[:startIndex], amount[startIndex:]
 
-	subTextSize := unit.Sp(mainTextSize.V * scale)
+	subTextSize := unit.Sp(int(mainTextSize) * int(scale))
 
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -58,11 +58,11 @@ func LayoutBalance(gtx layout.Context, l *load.Load, amount string) layout.Dimen
 	return formatBalance(gtx, l, amount, values.TextSize20, defaultScale, l.Theme.Color.Text)
 }
 
-func LayoutBalanceSize(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Value) layout.Dimensions {
+func LayoutBalanceSize(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Sp) layout.Dimensions {
 	return formatBalance(gtx, l, amount, mainTextSize, defaultScale, l.Theme.Color.Text)
 }
 
-func LayoutBalanceSizeScale(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Value, scale float32) layout.Dimensions {
+func LayoutBalanceSizeScale(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Sp, scale float32) layout.Dimensions {
 	return formatBalance(gtx, l, amount, mainTextSize, scale, l.Theme.Color.Text)
 }
 

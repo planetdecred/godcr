@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -18,14 +17,14 @@ import (
 
 type ProgressBarStyle struct {
 	Radius    CornerRadius
-	Height    unit.Value
-	Width     unit.Value
+	Height    unit.Dp
+	Width     unit.Dp
 	Direction layout.Direction
 	material.ProgressBarStyle
 }
 
 type ProgressBarItem struct {
-	Value   float32
+	Value   int
 	Color   color.NRGBA
 	SubText string
 }
@@ -37,16 +36,16 @@ type MultiLayerProgressBar struct {
 
 	items  []ProgressBarItem
 	Radius CornerRadius
-	Height unit.Value
-	Width  float32
-	total  float32
+	Height unit.Dp
+	Width  int
+	total  int
 }
 
 func (t *Theme) ProgressBar(progress int) ProgressBarStyle {
 	return ProgressBarStyle{ProgressBarStyle: material.ProgressBar(t.Base, float32(progress)/100)}
 }
 
-func (t *Theme) MultiLayerProgressBar(total float32, items []ProgressBarItem) *MultiLayerProgressBar {
+func (t *Theme) MultiLayerProgressBar(total int, items []ProgressBarItem) *MultiLayerProgressBar {
 	mp := &MultiLayerProgressBar{
 		t: t,
 
@@ -60,21 +59,21 @@ func (t *Theme) MultiLayerProgressBar(total float32, items []ProgressBarItem) *M
 
 // This achieves a progress bar using linear layouts.
 func (p ProgressBarStyle) Layout2(gtx C) D {
-	if p.Width.V <= 0 {
-		p.Width = unit.Px(float32(gtx.Constraints.Max.X))
+	if p.Width <= 0 {
+		p.Width = unit.Dp(gtx.Constraints.Max.X)
 	}
 
 	return p.Direction.Layout(gtx, func(gtx C) D {
 		return LinearLayout{
-			Width:      gtx.Px(p.Width),
-			Height:     gtx.Px(p.Height),
+			Width:      gtx.Dp(p.Width),
+			Height:     gtx.Dp(p.Height),
 			Background: p.TrackColor,
 			Border:     Border{Radius: p.Radius},
 		}.Layout2(gtx, func(gtx C) D {
 
 			return LinearLayout{
-				Width:      int(p.Width.V * clamp1(p.Progress)),
-				Height:     gtx.Px(p.Height),
+				Width:      int(float32(p.Width) * clamp1(p.Progress)),
+				Height:     gtx.Dp(p.Height),
 				Background: p.Color,
 				Border:     Border{Radius: p.Radius},
 			}.Layout(gtx)
@@ -83,22 +82,22 @@ func (p ProgressBarStyle) Layout2(gtx C) D {
 }
 
 func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
-	shader := func(width float32, color color.NRGBA) layout.Dimensions {
+	shader := func(width int, color color.NRGBA) layout.Dimensions {
 		maxHeight := p.Height
-		if p.Height.V <= 0 {
+		if p.Height <= 0 {
 			maxHeight = unit.Dp(4)
 		}
 
-		d := image.Point{X: int(width), Y: gtx.Px(maxHeight)}
-		height := float32(gtx.Px(maxHeight))
+		d := image.Point{X: int(width), Y: gtx.Dp(maxHeight)}
+		height := gtx.Dp(maxHeight)
 
-		tr := float32(gtx.Px(unit.Dp(p.Radius.TopRight)))
-		tl := float32(gtx.Px(unit.Dp(p.Radius.TopLeft)))
-		br := float32(gtx.Px(unit.Dp(p.Radius.BottomRight)))
-		bl := float32(gtx.Px(unit.Dp(p.Radius.BottomLeft)))
+		tr := gtx.Dp(unit.Dp(p.Radius.TopRight))
+		tl := gtx.Dp(unit.Dp(p.Radius.TopLeft))
+		br := gtx.Dp(unit.Dp(p.Radius.BottomRight))
+		bl := gtx.Dp(unit.Dp(p.Radius.BottomLeft))
 
 		defer clip.RRect{
-			Rect: f32.Rectangle{Max: f32.Pt(width, height)},
+			Rect: image.Rectangle{Max: image.Pt(width, height)},
 			NW:   tl, NE: tr, SE: br, SW: bl,
 		}.Push(gtx.Ops).Pop()
 
@@ -108,17 +107,17 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 		return layout.Dimensions{Size: d}
 	}
 
-	if p.Width.V <= 0 {
-		p.Width = unit.Px(float32(gtx.Constraints.Max.X))
+	if p.Width <= 0 {
+		p.Width = unit.Dp(gtx.Constraints.Max.X)
 	}
 
-	progressBarWidth := p.Width.V
+	progressBarWidth := int(p.Width)
 	return layout.Stack{Alignment: layout.W}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return shader(progressBarWidth, p.TrackColor)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			fillWidth := progressBarWidth * clamp1(p.Progress)
+			fillWidth := int(float32(progressBarWidth) * clamp1(p.Progress))
 			fillColor := p.Color
 			if gtx.Queue == nil {
 				fillColor = Disabled(fillColor)
@@ -130,17 +129,17 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 
 // TODO: Allow more than just 2 layers and make it dynamic
 func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
-	r := float32(gtx.Px(values.MarginPadding0))
+	r := gtx.Dp(values.MarginPadding0)
 	if mp.Width <= 0 {
-		mp.Width = float32(gtx.Constraints.Max.X)
+		mp.Width = gtx.Constraints.Max.X
 	}
 
 	// progressScale represent the different progress bar layers
-	progressScale := func(width float32, color color.NRGBA) layout.Dimensions {
-		d := image.Point{X: int(width), Y: gtx.Px(mp.Height)}
+	progressScale := func(width int, color color.NRGBA) layout.Dimensions {
+		d := image.Point{X: int(width), Y: gtx.Dp(mp.Height)}
 
 		defer clip.RRect{
-			Rect: f32.Rectangle{Max: f32.Point{X: width, Y: float32(gtx.Px(mp.Height))}},
+			Rect: image.Rectangle{Max: image.Point{X: width, Y: gtx.Dp(mp.Height)}},
 			NE:   r, NW: r, SE: r, SW: r,
 		}.Push(gtx.Ops).Pop()
 
@@ -152,7 +151,7 @@ func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 		}
 	}
 
-	calProgressWidth := func(progress float32) float32 {
+	calProgressWidth := func(progress int) int {
 		val := (progress / mp.total) * 100
 		return (mp.Width / 100) * val
 	}

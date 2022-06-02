@@ -6,7 +6,7 @@ import (
 	"image/color"
 	"strconv"
 
-	"gioui.org/f32"
+	// "gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -25,10 +25,10 @@ import (
 type VoteBar struct {
 	*load.Load
 
-	yesVotes           float32
-	noVotes            float32
+	yesVotes           int
+	noVotes            int
 	eligibleVotes      float32
-	totalVotes         float32
+	totalVotes         int
 	requiredPercentage float32
 	passPercentage     float32
 
@@ -66,7 +66,7 @@ func NewVoteBar(l *load.Load) *VoteBar {
 	return vb
 }
 
-func (v *VoteBar) SetYesNoVoteParams(yesVotes, noVotes float32) *VoteBar {
+func (v *VoteBar) SetYesNoVoteParams(yesVotes, noVotes int) *VoteBar {
 	v.yesVotes = yesVotes
 	v.noVotes = noVotes
 
@@ -92,18 +92,18 @@ func (v *VoteBar) SetProposalDetails(numComment int32, publishedAt int64, token 
 }
 
 func (v *VoteBar) votebarLayout(gtx C) D {
-	var rW, rE float32
-	r := float32(gtx.Px(values.MarginPadding4))
-	progressBarWidth := float32(gtx.Constraints.Max.X)
+	var rW, rE int
+	r := gtx.Dp(values.MarginPadding4)
+	progressBarWidth := gtx.Constraints.Max.X
 	quorumRequirement := (v.requiredPercentage / 100) * v.eligibleVotes
 
-	yesVotes := (v.yesVotes / quorumRequirement) * 100
-	noVotes := (v.noVotes / quorumRequirement) * 100
+	yesVotes := (v.yesVotes / int(quorumRequirement)) * 100
+	noVotes := (v.noVotes / int(quorumRequirement)) * 100
 	yesWidth := (progressBarWidth / 100) * yesVotes
 	noWidth := (progressBarWidth / 100) * noVotes
 
 	// progressScale represent the different progress bar layers
-	progressScale := func(width float32, color color.NRGBA, layer int) layout.Dimensions {
+	progressScale := func(width int, color color.NRGBA, layer int) layout.Dimensions {
 		maxHeight := values.MarginPadding8
 		rW, rE = 0, 0
 		if layer == 2 {
@@ -119,10 +119,10 @@ func (v *VoteBar) votebarLayout(gtx C) D {
 		} else {
 			rE, rW = r, r
 		}
-		d := image.Point{X: int(width), Y: gtx.Px(maxHeight)}
+		d := image.Point{X: width, Y: gtx.Dp(maxHeight)}
 
 		defer clip.RRect{
-			Rect: f32.Rectangle{Max: f32.Point{X: width, Y: float32(gtx.Px(maxHeight))}},
+			Rect: image.Rectangle{Max: image.Point{X: width, Y: gtx.Dp(maxHeight)}},
 			NE:   rE, NW: rW, SE: rE, SW: rW,
 		}.Push(gtx.Ops).Pop()
 
@@ -243,7 +243,7 @@ func (v *VoteBar) infoButtonModal() {
 		PositiveButton(values.String(values.StrGotIt), func(bool) {}).Show()
 }
 
-func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32, col color.NRGBA) D {
+func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count int, col color.NRGBA) D {
 	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
