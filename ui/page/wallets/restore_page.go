@@ -81,10 +81,10 @@ func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
 	pg.optionsMenuCard.Radius = decredmaterial.Radius(8)
 
-	pg.validateSeed = l.Theme.Button("Validate wallet seeds")
+	pg.validateSeed = l.Theme.Button(values.String(values.StrValidateWalSeed))
 	pg.validateSeed.Font.Weight = text.Medium
 
-	pg.resetSeedFields = l.Theme.OutlineButton("Clear all")
+	pg.resetSeedFields = l.Theme.OutlineButton(values.String(values.StrClearAll))
 	pg.resetSeedFields.Font.Weight = text.Medium
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -120,14 +120,14 @@ func (pg *Restore) ID() string {
 // Part of the load.Page interface.
 func (pg *Restore) OnNavigatedTo() {}
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *Restore) Layout(gtx C) D {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Restore wallet",
+			Title:      values.String(values.StrRestoreWallet),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -146,7 +146,7 @@ func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *Restore) restore(gtx layout.Context) layout.Dimensions {
+func (pg *Restore) restore(gtx C) D {
 	dims := layout.Stack{Alignment: layout.S}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -159,7 +159,7 @@ func (pg *Restore) restore(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
 						Bottom: values.MarginPadding10,
-					}.Layout(gtx, pg.Theme.Body1("Enter your seed phrase").Layout)
+					}.Layout(gtx, pg.Theme.Body1(values.String(values.StrEnterSeedPhrase)).Layout)
 				}),
 				layout.Rigid(pg.seedEditorView),
 				layout.Rigid(pg.resetSeedFields.Layout),
@@ -175,7 +175,7 @@ func (pg *Restore) restore(gtx layout.Context) layout.Dimensions {
 	return dims
 }
 
-func (pg *Restore) restoreButtonSection(gtx layout.Context) layout.Dimensions {
+func (pg *Restore) restoreButtonSection(gtx C) D {
 	card := pg.Theme.Card()
 	card.Radius = decredmaterial.Radius(0)
 	return card.Layout(gtx, func(gtx C) D {
@@ -184,7 +184,7 @@ func (pg *Restore) restoreButtonSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *Restore) seedEditorView(gtx layout.Context) layout.Dimensions {
+func (pg *Restore) seedEditorView(gtx C) D {
 	inset := layout.Inset{
 		Right: values.MarginPadding5,
 	}
@@ -215,7 +215,7 @@ func (pg *Restore) seedEditorView(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *Restore) inputsGroup(gtx layout.Context, l *layout.List, len, startIndex int) layout.Dimensions {
+func (pg *Restore) inputsGroup(gtx C, l *layout.List, len, startIndex int) D {
 	return layout.Stack{Alignment: layout.N}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return l.Layout(gtx, len, func(gtx C, i int) D {
@@ -348,7 +348,7 @@ func (pg *Restore) suggestionSeedEffect() {
 	}
 }
 
-func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) {
+func (pg *Restore) layoutSeedMenu(gtx C, optionsSeedMenuIndex int) {
 	if pg.openPopupIndex != optionsSeedMenuIndex || pg.openPopupIndex != pg.seedEditors.focusIndex ||
 		pg.isLastEditor {
 		return
@@ -433,7 +433,7 @@ func (pg *Restore) verifySeeds() bool {
 	if isValid {
 		pg.seedPhrase = seedphrase
 		if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
-			pg.Toast.NotifyError("invalid seed phrase")
+			pg.Toast.NotifyError(values.String(values.StrInvalidSeedPhrase))
 			return false
 		}
 	}
@@ -447,7 +447,7 @@ func (pg *Restore) verifySeeds() bool {
 	}
 
 	if walletWithSameSeed != -1 {
-		pg.Toast.NotifyError("A wallet with an identical seed already exists.")
+		pg.Toast.NotifyError(values.String(values.StrSeedAlreadyExist))
 		return false
 	}
 
@@ -500,7 +500,7 @@ func (pg *Restore) HandleUserInteractions() {
 
 		pg.isRestoring = true
 		modal.NewCreatePasswordModal(pg.Load).
-			Title("Enter wallet details").
+			Title(values.String(values.StrEnterWalDetails)).
 			EnableName(true).
 			ShowWalletInfoTip(true).
 			SetParent(pg).
@@ -514,7 +514,7 @@ func (pg *Restore) HandleUserInteractions() {
 						return
 					}
 
-					pg.Toast.Notify("Wallet restored")
+					pg.Toast.Notify(values.String(values.StrWalletRestored))
 					pg.resetSeeds()
 					m.Dismiss()
 					// Close this page and return to the previous page (most likely wallets page)

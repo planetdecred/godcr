@@ -42,14 +42,14 @@ func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
 		authoredTxData: data,
 	}
 
-	scm.closeConfirmationModalButton = l.Theme.OutlineButton("Cancel")
+	scm.closeConfirmationModalButton = l.Theme.OutlineButton(values.String(values.StrCancel))
 	scm.closeConfirmationModalButton.Font.Weight = text.Medium
 
 	scm.confirmButton = l.Theme.Button("")
 	scm.confirmButton.Font.Weight = text.Medium
 	scm.confirmButton.SetEnabled(false)
 
-	scm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
+	scm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), values.String(values.StrSpendingPassword))
 	scm.passwordEditor.Editor.SetText("")
 	scm.passwordEditor.Editor.SingleLine = true
 	scm.passwordEditor.Editor.Submit = true
@@ -109,7 +109,7 @@ func (scm *sendConfirmModal) broadcastTransaction() {
 			scm.Toast.NotifyError(err.Error())
 			return
 		}
-		scm.Toast.Notify("Transaction sent!")
+		scm.Toast.Notify(values.String(values.StrTxSent))
 
 		scm.txSent()
 		scm.Dismiss()
@@ -143,7 +143,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 
 	w := []layout.Widget{
 		func(gtx C) D {
-			return scm.Theme.H6("Confim to send").Layout(gtx)
+			return scm.Theme.H6(values.String(values.StrConfirmSend)).Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -222,7 +222,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					sendWallet := scm.WL.MultiWallet.WalletWithID(scm.sourceAccount.WalletID)
-					return scm.contentRow(gtx, "Sending from", scm.sourceAccount.Name, sendWallet.Name)
+					return scm.contentRow(gtx, values.String(values.StrSendingFrom), scm.sourceAccount.Name, sendWallet.Name)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding8, Bottom: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
@@ -231,7 +231,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 							txFeeText = fmt.Sprintf("%s (%s)", scm.txFee, scm.txFeeUSD)
 						}
 
-						return scm.contentRow(gtx, "Fee", txFeeText, "")
+						return scm.contentRow(gtx, values.String(values.StrFee), txFeeText, "")
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -240,7 +240,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 						totalCostText = fmt.Sprintf("%s (%s)", scm.totalCost, scm.totalCostUSD)
 					}
 
-					return scm.contentRow(gtx, "Total cost", totalCostText, "")
+					return scm.contentRow(gtx, values.String(values.StrTotalCost), totalCostText, "")
 				}),
 			)
 		},
@@ -257,7 +257,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					txt := scm.Theme.Body2("Your DCR will be sent after this step.")
+					txt := scm.Theme.Body2(values.String(values.StrSendWarning))
 					txt.Color = scm.Theme.Color.GrayText1
 					return txt.Layout(gtx)
 				}),
@@ -282,7 +282,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 								return material.Loader(scm.Theme.Base).Layout(gtx)
 							})
 						}
-						scm.confirmButton.Text = fmt.Sprintf("Send %s", scm.totalCost)
+						scm.confirmButton.Text = fmt.Sprintf("%s %s", values.String(values.StrSend), scm.totalCost)
 						return scm.confirmButton.Layout(gtx)
 					}),
 				)

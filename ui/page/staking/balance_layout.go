@@ -21,7 +21,7 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.Label(values.TextSize14, "Balance:")
+							txt := pg.Theme.Label(values.TextSize14, values.String(values.StrBalance)+":")
 							txt.Color = pg.Theme.Color.GrayText2
 							return txt.Layout(gtx)
 						}),
@@ -50,22 +50,22 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 					{
 						Value:   float32(totalBalance.Spendable.ToCoin()),
 						Color:   pg.Theme.Color.Turquoise300,
-						SubText: "Spendable",
+						SubText: values.String(values.StrLabelSpendable),
 					},
 					{
 						Value:   float32(totalBalance.LockedByTickets.ToCoin()),
 						Color:   pg.Theme.Color.Primary,
-						SubText: "Locked",
+						SubText: values.String(values.StrLocked),
 					},
 				}
 
 				labelWdg := func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return pg.layoutIconAndText(gtx, "Spendable: ", totalBalance.Spendable.String(), items[0].Color)
+							return pg.layoutIconAndText(gtx, values.String(values.StrLabelSpendable)+": ", totalBalance.Spendable.String(), items[0].Color)
 						}),
 						layout.Rigid(func(gtx C) D {
-							return pg.layoutIconAndText(gtx, "Locked: ", totalBalance.LockedByTickets.String(), items[1].Color)
+							return pg.layoutIconAndText(gtx, values.String(values.StrLocked)+": ", totalBalance.LockedByTickets.String(), items[1].Color)
 						}),
 					)
 				}

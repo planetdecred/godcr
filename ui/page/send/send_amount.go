@@ -38,22 +38,22 @@ func newSendAmount(l *load.Load) *sendAmount {
 		exchangeRate: -1,
 	}
 
-	sa.dcrAmountEditor = l.Theme.Editor(new(widget.Editor), "Amount (DCR)")
+	sa.dcrAmountEditor = l.Theme.Editor(new(widget.Editor), values.String(values.StrAmount)+" (DCR)")
 	sa.dcrAmountEditor.Editor.SetText("")
 	sa.dcrAmountEditor.HasCustomButton = true
 	sa.dcrAmountEditor.Editor.SingleLine = true
 
 	sa.dcrAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
-	sa.dcrAmountEditor.CustomButton.Text = "Max"
+	sa.dcrAmountEditor.CustomButton.Text = values.String(values.StrMax)
 	sa.dcrAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
-	sa.usdAmountEditor = l.Theme.Editor(new(widget.Editor), "Amount (USD)")
+	sa.usdAmountEditor = l.Theme.Editor(new(widget.Editor), values.String(values.StrAmount)+" (DCR)")
 	sa.usdAmountEditor.Editor.SetText("")
 	sa.usdAmountEditor.HasCustomButton = true
 	sa.usdAmountEditor.Editor.SingleLine = true
 
 	sa.usdAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
-	sa.usdAmountEditor.CustomButton.Text = "Max"
+	sa.usdAmountEditor.CustomButton.Text = values.String(values.StrMax)
 	sa.usdAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
 	sa.styleWidgets()

@@ -60,7 +60,7 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 			List: layout.List{Axis: layout.Vertical},
 		},
 	}
-	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Theme.Icons.SearchIcon, true)
+	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), values.String(values.StrSearch), l.Theme.Icons.SearchIcon, true)
 	pg.searchEditor.Editor.SingleLine, pg.searchEditor.Editor.Submit, pg.searchEditor.Bordered = true, true, false
 
 	pg.updatedIcon = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCheck)
@@ -79,16 +79,16 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 	pg.orderDropDown = components.CreateOrderDropDown(l, values.ProposalDropdownGroup, 0)
 	pg.categoryDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
-			Text: "Under Review",
+			Text: values.String(values.StrUnderReview),
 		},
 		{
-			Text: "Approved",
+			Text: values.String(values.StrApproved),
 		},
 		{
-			Text: "Rejected",
+			Text: values.String(values.StrRejected),
 		},
 		{
-			Text: "Abandoned",
+			Text: values.String(values.StrAbandoned),
 		},
 	}, values.ProposalDropdownGroup, 1)
 
@@ -180,10 +180,10 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 
 	if pg.infoButton.Button.Clicked() {
 		modal.NewInfoModal(pg.Load).
-			Title("Proposals").
-			Body("Off-chain voting for development and marketing initiatives funded by the Decred treasury.").
+			Title(values.String(values.StrProposal)).
+			Body(values.String(values.StrOffChainVote)).
 			SetCancelable(true).
-			PositiveButton("Got it", func(isChecked bool) {}).Show()
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {}).Show()
 	}
 
 	if pg.syncCompleted {
@@ -317,7 +317,7 @@ func (pg *ProposalsPage) layoutSectionHeader(gtx C) D {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.Theme.Label(values.TextSize20, "Proposals").Layout), // Do we really need to display the title? nav is proposals already
+				layout.Rigid(pg.Theme.Label(values.TextSize20, values.String(values.StrProposal)).Layout), // Do we really need to display the title? nav is proposals already
 				layout.Rigid(pg.infoButton.Layout),
 			)
 		}),
@@ -327,11 +327,11 @@ func (pg *ProposalsPage) layoutSectionHeader(gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						var text string
 						if pg.isSyncing {
-							text = "Syncing..."
+							text = values.String(values.StrSyncingState)
 						} else if pg.syncCompleted {
-							text = "Updated"
+							text = values.String(values.StrUpdated)
 						} else {
-							text = "Upated " + components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
+							text = values.String(values.StrUpdated) + " " + components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
 						}
 
 						lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)

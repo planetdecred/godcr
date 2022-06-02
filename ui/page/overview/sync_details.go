@@ -28,7 +28,7 @@ func (pg *AppOverviewPage) syncDetail(name, status, headersFetched, progress str
 		name:               pg.Theme.Body1(name),
 		status:             pg.Theme.Body2(status),
 		blockHeaderFetched: pg.Theme.Body1(headersFetched),
-		syncingProgress:    pg.Theme.Body1(fmt.Sprintf("%s behind", progress)),
+		syncingProgress:    pg.Theme.Body1(values.StringF(values.StrSyncingProgressStat, progress)),
 	}
 }
 
@@ -44,7 +44,7 @@ func (pg *AppOverviewPage) connectionPeer(gtx C) D {
 			return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, pg.Theme.Body1(fmt.Sprintf("%d", connectedPeers)).Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
-			peersLabel := pg.Theme.Body1("peers")
+			peersLabel := pg.Theme.Body1(values.String(values.StrPeers))
 			peersLabel.Color = pg.Theme.Color.GrayText2
 			return peersLabel.Layout(gtx)
 		}),
@@ -57,7 +57,7 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
 	if pg.WL.MultiWallet.IsSyncing() {
 		syncStatusLabel.Text = values.String(values.StrSyncingState)
 	} else if pg.WL.MultiWallet.IsRescanning() {
-		syncStatusLabel.Text = "Rescanning blocks"
+		syncStatusLabel.Text = values.String(values.StrRescanningBlocks)
 	} else if pg.WL.MultiWallet.IsSynced() {
 		syncStatusLabel.Text = values.String(values.StrSynced)
 	}
@@ -136,9 +136,9 @@ func (pg *AppOverviewPage) progressStatusRow(gtx C, inset layout.Inset) D {
 	}
 
 	percentageLabel := pg.Theme.Body1(fmt.Sprintf("%v%%", progress))
-	timeLeftLabel := fmt.Sprintf("%v left", timeLeft)
+	timeLeftLabel := values.StringF(values.StrTimeLeft, timeLeft)
 	if progress == 0 {
-		timeLeftLabel = "connecting"
+		timeLeftLabel = values.String(values.StrConnecting)
 	}
 	return inset.Layout(gtx, func(gtx C) D {
 		return components.EndToEndRow(gtx, percentageLabel.Layout, pg.Theme.Body1(timeLeftLabel).Layout)
@@ -181,9 +181,9 @@ func (pg *AppOverviewPage) walletSyncRow(gtx C, inset layout.Inset) D {
 				for i := 0; i < len(pg.allWallets); i++ {
 					w := pg.allWallets[i]
 
-					status := "syncing..."
+					status := values.String(values.StrSyncingState)
 					if w.IsWaiting() {
-						status = "waiting..."
+						status = values.String(values.StrWaitingState)
 					}
 
 					blockHeightProgress := values.StringF(values.StrBlockHeaderFetchedCount, w.GetBestBlock(), pg.headersToFetchOrScan)
@@ -257,7 +257,7 @@ func (pg *AppOverviewPage) rescanDetailsLayout(gtx C, inset layout.Inset) D {
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						headersFetchedTitleLabel := pg.Theme.Body2("Blocks scanned")
+						headersFetchedTitleLabel := pg.Theme.Body2(values.String(values.StrBlocksScanned))
 						headersFetchedTitleLabel.Color = pg.Theme.Color.GrayText2
 
 						blocksScannedLabel := pg.Theme.Body1(fmt.Sprint(rescanUpdate.ProgressReport.CurrentRescanHeight))
@@ -269,7 +269,7 @@ func (pg *AppOverviewPage) rescanDetailsLayout(gtx C, inset layout.Inset) D {
 						progressTitleLabel := pg.Theme.Body2(values.String(values.StrSyncingProgress))
 						progressTitleLabel.Color = pg.Theme.Color.GrayText2
 
-						rescanProgress := fmt.Sprintf("%d blocks left", rescanUpdate.ProgressReport.TotalHeadersToScan-rescanUpdate.ProgressReport.CurrentRescanHeight)
+						rescanProgress := values.StringF(values.StrBlocksLeft, rescanUpdate.ProgressReport.TotalHeadersToScan-rescanUpdate.ProgressReport.CurrentRescanHeight)
 						blocksScannedLabel := pg.Theme.Body1(rescanProgress)
 						return inset.Layout(gtx, func(gtx C) D {
 							return components.EndToEndRow(gtx, progressTitleLabel.Layout, blocksScannedLabel.Layout)

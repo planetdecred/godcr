@@ -221,7 +221,7 @@ func (pg *AppOverviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *AppOverviewPage) layoutAutoSyncSection(gtx layout.Context) layout.Dimensions {
-	txt := pg.Theme.Body2("Auto sync")
+	txt := pg.Theme.Body2(values.String(values.StrAutoSync))
 	txt.Color = pg.Theme.Color.GrayText2
 
 	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {

@@ -67,7 +67,7 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 			Text: values.String(values.StrYourself),
 		},
 		{
-			Text: "Mixed",
+			Text: values.String(values.StrMixed),
 		},
 		{
 			Text: values.String(values.StrStaking),

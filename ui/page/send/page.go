@@ -97,7 +97,7 @@ func NewSendPage(l *load.Load) *Page {
 
 	// Source account picker
 	pg.sourceAccountSelector = components.NewAccountSelector(l, nil).
-		Title("Sending account").
+		Title(values.String(values.StrSendingAcct)).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			pg.validateAndConstructTx()
 		}).
@@ -314,12 +314,12 @@ func (pg *Page) constructTx(useDefaultParams bool) {
 
 func (pg *Page) feeEstimationError(err string) {
 	if err == dcrlibwallet.ErrInsufficientBalance {
-		pg.amount.setError("Not enough funds")
+		pg.amount.setError(values.String(values.StrInsufficentFund))
 	} else if strings.Contains(err, invalidAmountErr) {
 		pg.amount.setError(invalidAmountErr)
 	} else {
 		pg.amount.setError(err)
-		pg.Toast.NotifyError("Error estimating transaction: " + err)
+		pg.Toast.NotifyError(values.StringF(values.StrTxEstimateErr, err))
 	}
 
 	pg.clearEstimates()
@@ -360,9 +360,9 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).
-			Title("Send DCR").
-			Body("Input or scan the destination wallet address and input the amount to send funds.").
-			PositiveButton("Got it", func(isChecked bool) {})
+			Title(values.String(values.StrSend)+" DCR").
+			Body(values.String(values.StrSendInfo)).
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 

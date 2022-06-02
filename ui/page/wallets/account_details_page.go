@@ -90,13 +90,13 @@ func (pg *AcctDetailsPage) OnNavigatedTo() {
 	ext := pg.account.ExternalKeyCount
 	internal := pg.account.InternalKeyCount
 	imp := pg.account.ImportedKeyCount
-	pg.keys = fmt.Sprintf("%d external, %d internal, %d imported", ext, internal, imp)
+	pg.keys = values.StringF(values.StrAcctDetailsKey, ext, internal, imp)
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *AcctDetailsPage) Layout(gtx C) D {
 	widgets := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.accountBalanceLayout(gtx)
@@ -150,7 +150,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimensions {
+func (pg *AcctDetailsPage) accountBalanceLayout(gtx C) D {
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -169,30 +169,30 @@ func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimen
 						}.Layout(gtx, accountIcon.Layout24dp)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.acctBalLayout(gtx, "Total Balance", pg.totalBalance, true)
+						return pg.acctBalLayout(gtx, values.String(values.StrTotalBalance), pg.totalBalance, true)
 					}),
 				)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.acctBalLayout(gtx, "Spendable", pg.spendable, false)
+				return pg.acctBalLayout(gtx, values.String(values.StrLabelSpendable), pg.spendable, false)
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.stakingBalance == 0 {
-					return layout.Dimensions{}
+					return D{}
 				}
 
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return pg.acctBalLayout(gtx, "Immature Rewards", pg.immatureRewards, false)
+						return pg.acctBalLayout(gtx, values.String(values.StrImmatureRewards), pg.immatureRewards, false)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.acctBalLayout(gtx, "Locked By Tickets", pg.lockedByTickets, false)
+						return pg.acctBalLayout(gtx, values.String(values.StrLockedByTickets), pg.lockedByTickets, false)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.acctBalLayout(gtx, "Voting Authority", pg.votingAuthority, false)
+						return pg.acctBalLayout(gtx, values.String(values.StrVotingAuthority), pg.votingAuthority, false)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.acctBalLayout(gtx, "Immature Stake Gen", pg.immatureStakeGen, false)
+						return pg.acctBalLayout(gtx, values.String(values.StrImmatureStakeGen), pg.immatureStakeGen, false)
 					}),
 				)
 			}),
@@ -200,7 +200,7 @@ func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimen
 	})
 }
 
-func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, balance string, isTotalBalance bool) layout.Dimensions {
+func (pg *AcctDetailsPage) acctBalLayout(gtx C, balType string, balance string, isTotalBalance bool) D {
 
 	marginTop := values.MarginPadding16
 	marginLeft := values.MarginPadding35
@@ -231,12 +231,12 @@ func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, bal
 	})
 }
 
-func (pg *AcctDetailsPage) accountInfoLayout(gtx layout.Context) layout.Dimensions {
+func (pg *AcctDetailsPage) accountInfoLayout(gtx C) D {
 	return pg.pageSections(gtx, func(gtx C) D {
 		m := values.MarginPadding10
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return pg.acctInfoLayout(gtx, "Account Number", fmt.Sprint(pg.account.Number))
+				return pg.acctInfoLayout(gtx, values.String(values.StrAcctNum), fmt.Sprint(pg.account.Number))
 			}),
 			layout.Rigid(func(gtx C) D {
 				inset := layout.Inset{
@@ -244,7 +244,7 @@ func (pg *AcctDetailsPage) accountInfoLayout(gtx layout.Context) layout.Dimensio
 					Bottom: m,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					return pg.acctInfoLayout(gtx, "HD Path", pg.hdPath)
+					return pg.acctInfoLayout(gtx, values.String(values.StrHDPath), pg.hdPath)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -252,14 +252,14 @@ func (pg *AcctDetailsPage) accountInfoLayout(gtx layout.Context) layout.Dimensio
 					Bottom: m,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					return pg.acctInfoLayout(gtx, "Keys", pg.keys)
+					return pg.acctInfoLayout(gtx, values.String(values.StrKey), pg.keys)
 				})
 			}),
 		)
 	})
 }
 
-func (pg *AcctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightText string) layout.Dimensions {
+func (pg *AcctDetailsPage) acctInfoLayout(gtx C, leftText, rightText string) D {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -276,7 +276,7 @@ func (pg *AcctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightTex
 	)
 }
 
-func (pg *AcctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *AcctDetailsPage) pageSections(gtx C, body layout.Widget) D {
 	m := values.MarginPadding20
 	mtb := values.MarginPadding5
 	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
@@ -290,7 +290,7 @@ func (pg *AcctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 func (pg *AcctDetailsPage) HandleUserInteractions() {
 	if pg.renameAccount.Clicked() {
 		textModal := modal.NewTextInputModal(pg.Load).
-			Hint("Account name").
+			Hint(values.String(values.StrAcctName)).
 			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 			PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 				err := pg.wallet.RenameAccount(pg.account.Number, newName)
@@ -300,11 +300,11 @@ func (pg *AcctDetailsPage) HandleUserInteractions() {
 					return false
 				}
 				pg.account.Name = newName
-				pg.Toast.Notify("Account renamed")
+				pg.Toast.Notify(values.String(values.StrAcctRenamed))
 				return true
 			})
 
-		textModal.Title("Rename account").
+		textModal.Title(values.String(values.StrRenameAcct)).
 			NegativeButton(values.String(values.StrCancel), func() {})
 		textModal.Show()
 	}

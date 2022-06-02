@@ -1,8 +1,6 @@
 package renderers
 
 import (
-	//"fmt"
-
 	"strings"
 	"unicode"
 
@@ -29,7 +27,6 @@ type layoutRow struct {
 }
 
 type MarkdownProvider struct {
-	//containers     []layout.Widget
 	containers     []layoutRow
 	theme          *decredmaterial.Theme
 	listItemNumber int // should be negative when not rendering a list

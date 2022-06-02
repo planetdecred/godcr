@@ -33,7 +33,10 @@ type Page struct {
 	changed               bool
 }
 
-var governanceTabTitles = []string{"Proposals", "Consensus Changes"}
+var governanceTabTitles = []string{
+	values.String(values.StrProposal),
+	values.String(values.StrConsensusChange),
+}
 
 func NewGovernancePage(l *load.Load) *Page {
 	pg := &Page{
@@ -87,6 +90,10 @@ func (pg *Page) ID() string {
 }
 
 func (pg *Page) HandleUserInteractions() {
+	for pg.splashScreenInfoButton.Button.Clicked() {
+		pg.showInfoModal()
+	}
+
 	for pg.enableGovernanceBtn.Clicked() {
 		go pg.consensusPage.FetchAgendas()
 		go pg.WL.MultiWallet.Politeia.Sync()
@@ -197,7 +204,7 @@ func (pg *Page) layoutPageTopNav(gtx C) D {
 			return layout.Inset{
 				Left: values.MarginPadding20,
 			}.Layout(gtx, func(gtx C) D {
-				txt := pg.Theme.Label(values.TextSize20, "Governance")
+				txt := pg.Theme.Label(values.TextSize20, values.String(values.StrGovernance))
 				txt.Font.Weight = text.SemiBold
 				return txt.Layout(gtx)
 			})

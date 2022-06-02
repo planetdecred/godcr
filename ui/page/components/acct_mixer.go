@@ -8,14 +8,14 @@ import (
 )
 
 func mixerInfoStatusTextLayout(gtx C, l *load.Load, mixerActive bool) D {
-	txt := l.Theme.H6("Mixer")
-	subtxt := l.Theme.Body2("Ready to mix")
+	txt := l.Theme.H6(values.String(values.StrMixer))
+	subtxt := l.Theme.Body2(values.String(values.StrReadyToMix))
 	subtxt.Color = l.Theme.Color.GrayText2
 	iconVisibility := false
 
 	if mixerActive {
-		txt.Text = "Mixer is running..."
-		subtxt.Text = "Keep this app opened"
+		txt.Text = values.String(values.StrMixerRunning)
+		subtxt.Text = values.String(values.StrKeepAppOpen)
 		iconVisibility = true
 	}
 
@@ -62,7 +62,7 @@ func MixerInfoLayout(gtx C, l *load.Load, mixerActive bool, button layout.Widget
 				layout.Rigid(mixerInfo),
 				layout.Rigid(func(gtx C) D {
 					if mixerActive {
-						txt := l.Theme.Body2("The mixer will automatically stop when unmixed balance are fully mixed.")
+						txt := l.Theme.Body2(values.String(values.StrMixerShutdown))
 						txt.Color = l.Theme.Color.GrayText2
 						return txt.Layout(gtx)
 					}

@@ -27,7 +27,7 @@ func AgendaItemWidget(gtx C, l *load.Load, consensusItem *ConsensusItem) D {
 		}),
 		layout.Rigid(layoutAgendaDetails(l, consensusItem.Agenda.Description)),
 		layout.Rigid(layoutAgendaDetails(l, "ID: #"+consensusItem.Agenda.AgendaID)),
-		layout.Rigid(layoutAgendaDetails(l, "Voting Preference: "+consensusItem.Agenda.VotingPreference)),
+		layout.Rigid(layoutAgendaDetails(l, values.String(values.StrVotingPreference)+" "+consensusItem.Agenda.VotingPreference)),
 		layout.Rigid(func(gtx C) D {
 			return layoutAgendaVoteAction(gtx, l, consensusItem)
 		}),
@@ -130,10 +130,10 @@ func layoutAgendaVoteAction(gtx C, l *load.Load, item *ConsensusItem) D {
 
 func LayoutNoAgendasFound(gtx C, l *load.Load, syncing bool) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	text := l.Theme.Body1("No agendas yet")
+	text := l.Theme.Body1(values.String(values.StrNoAgendaYet))
 	text.Color = l.Theme.Color.GrayText3
 	if syncing {
-		text = l.Theme.Body1("Fetching agendas...")
+		text = l.Theme.Body1(values.String(values.StrFetchingAgenda))
 	}
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
@@ -152,7 +152,7 @@ func LoadAgendas(l *load.Load, selectedWallet *dcrlibwallet.Wallet, newestFirst 
 	for i := 0; i < len(agendas); i++ {
 		consensusItems[i] = &ConsensusItem{
 			Agenda:     *agendas[i],
-			VoteButton: l.Theme.Button("Update Preference"),
+			VoteButton: l.Theme.Button(values.String(values.StrUpdatePreference)),
 		}
 	}
 	return consensusItems

@@ -11,6 +11,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type destination struct {
@@ -29,15 +30,18 @@ func newSendDestination(l *load.Load) *destination {
 		Load: l,
 	}
 
-	dst.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), "Destination Address")
+	dst.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), values.String(values.StrDestAddr))
 	dst.destinationAddressEditor.Editor.SingleLine = true
 	dst.destinationAddressEditor.Editor.SetText("")
 
-	dst.accountSwitch = l.Theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
+	dst.accountSwitch = l.Theme.SwitchButtonText([]decredmaterial.SwitchItem{
+		{Text: values.String(values.StrAddress)},
+		{Text: values.String(values.StrMyAcct)},
+	})
 
 	// Destination account picker
 	dst.destinationAccountSelector = components.NewAccountSelector(dst.Load, nil).
-		Title("Receiving account").
+		Title(values.String(values.StrReceivingAddress)).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 
 			// Filter out imported account and mixed.
@@ -67,7 +71,7 @@ func (dst *destination) destinationAddress(useDefaultParams bool) (string, error
 			return address, nil
 		}
 
-		return "", fmt.Errorf("invalid address")
+		return "", fmt.Errorf(values.String(values.StrInvalidAddress))
 	}
 
 	return wal.CurrentAddress(destinationAccount.Number)
@@ -100,7 +104,7 @@ func (dst *destination) validateDestinationAddress() (bool, string) {
 		return true, address
 	}
 
-	dst.destinationAddressEditor.SetError("Invalid address")
+	dst.destinationAddressEditor.SetError(values.String(values.StrInvalidAddress))
 	return false, address
 }
 

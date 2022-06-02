@@ -2,7 +2,6 @@ package staking
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"gioui.org/layout"
@@ -41,13 +40,13 @@ func newTicketBuyerModal(l *load.Load) *ticketBuyerModal {
 	tb := &ticketBuyerModal{
 		Load: l,
 
-		cancel:          l.Theme.OutlineButton("Cancel"),
-		saveSettingsBtn: l.Theme.Button("Save"),
+		cancel:          l.Theme.OutlineButton(values.String(values.StrCancel)),
+		saveSettingsBtn: l.Theme.Button(values.String(values.StrSave)),
 		modal:           *l.Theme.ModalFloatTitle(),
-		vspSelector:     components.NewVSPSelector(l).Title("Select a vsp"),
+		vspSelector:     components.NewVSPSelector(l).Title(values.String(values.StrSelectVSP)),
 	}
 
-	tb.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), "Balance to maintain (DCR)")
+	tb.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), values.String(values.StrBalToMaintain))
 	tb.balToMaintainEditor.Editor.SingleLine = true
 
 	tb.saveSettingsBtn.SetEnabled(false)
@@ -105,7 +104,7 @@ func (tb *ticketBuyerModal) OnResume() {
 func (tb *ticketBuyerModal) Layout(gtx layout.Context) layout.Dimensions {
 	l := []layout.Widget{
 		func(gtx C) D {
-			t := tb.Theme.H6("Auto ticket purchase")
+			t := tb.Theme.H6(values.String(values.StrAutoTicketPurchase))
 			t.Font.Weight = text.SemiBold
 			return t.Layout(gtx)
 		},
@@ -176,7 +175,7 @@ func (tb *ticketBuyerModal) Dismiss() {
 
 func (tb *ticketBuyerModal) initializeAccountSelector() {
 	tb.accountSelector = components.NewAccountSelector(tb.Load, nil).
-		Title("Purchasing account").
+		Title(values.String(values.StrPurchasingAcct)).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 			wal := tb.WL.MultiWallet.WalletWithID(account.WalletID)
@@ -215,7 +214,7 @@ func (tb *ticketBuyerModal) Handle() {
 		account := tb.accountSelector.SelectedAccount()
 		wal := tb.WL.MultiWallet.WalletWithID(account.WalletID)
 		if wal == nil {
-			tb.Toast.NotifyError(fmt.Sprintf("wallet with ID: %v does not exist", wal.ID))
+			tb.Toast.NotifyError(values.StringF(values.StrWalletNotExist, wal.ID))
 			return
 		}
 

@@ -99,27 +99,27 @@ func (pg *StatPage) layoutStats(gtx C) D {
 	secondsSinceBestBlock := int64(time.Since(bestBlockTime).Seconds())
 
 	items := []layout.Widget{
-		item("Build", pg.netType+", "+time.Now().Format("2006-01-02")),
+		item(values.String(values.StrBuild), pg.netType+", "+time.Now().Format("2006-01-02")),
 		pg.Theme.Separator().Layout,
-		item("Peers connected", strconv.Itoa(int(pg.WL.MultiWallet.ConnectedPeers()))),
+		item(values.String(values.StrPeersConnected), strconv.Itoa(int(pg.WL.MultiWallet.ConnectedPeers()))),
 		pg.Theme.Separator().Layout,
-		item("Uptime", pg.startupTime),
+		item(values.String(values.StrUptime), pg.startupTime),
 		pg.Theme.Separator().Layout,
-		item("Network", pg.netType),
+		item(values.String(values.StrNetwork), pg.netType),
 		pg.Theme.Separator().Layout,
-		item("Best block", fmt.Sprintf("%d", bestBlock.Height)),
+		item(values.String(values.StrBestBlocks), fmt.Sprintf("%d", bestBlock.Height)),
 		pg.Theme.Separator().Layout,
-		item("Best block timestamp", bestBlockTime.Format("2006-01-02 03:04:05 -0700")),
+		item(values.String(values.StrBestBlockTimestamp), bestBlockTime.Format("2006-01-02 03:04:05 -0700")),
 		pg.Theme.Separator().Layout,
-		item("Best block age", components.SecondsToDays(secondsSinceBestBlock)),
+		item(values.String(values.StrBestBlockAge), components.SecondsToDays(secondsSinceBestBlock)),
 		pg.Theme.Separator().Layout,
-		item("Wallet data directory", pg.WL.WalletDirectory()),
+		item(values.String(values.StrWalletDirectory), pg.WL.WalletDirectory()),
 		pg.Theme.Separator().Layout,
-		item("Wallet data", pg.WL.DataSize()),
+		item(values.String(values.StrDateSize), pg.WL.DataSize()),
 		pg.Theme.Separator().Layout,
-		item("Transactions", fmt.Sprintf("%d", len(pg.txs))),
+		item(values.String(values.StrTransactions), fmt.Sprintf("%d", len(pg.txs))),
 		pg.Theme.Separator().Layout,
-		item("Wallets", fmt.Sprintf("%d", pg.WL.MultiWallet.LoadedWalletsCount())),
+		item(values.String(values.StrWallets), fmt.Sprintf("%d", pg.WL.MultiWallet.LoadedWalletsCount())),
 	}
 
 	return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {
@@ -135,14 +135,14 @@ func (pg *StatPage) layoutStats(gtx C) D {
 	})
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *StatPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *StatPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Statistics",
+			Title:      values.String(values.StrStatistics),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()

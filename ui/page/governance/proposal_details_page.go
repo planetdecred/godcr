@@ -81,7 +81,7 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
-	pg.vote = l.Theme.Button("Vote")
+	pg.vote = l.Theme.Button(values.String(values.StrVote))
 	pg.vote.TextSize = values.TextSize14
 	pg.vote.Background = l.Theme.Color.Primary
 	pg.vote.Color = l.Theme.Color.Surface
@@ -136,8 +136,8 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 		}
 
 		info := modal.NewInfoModal(pg.Load).
-			Title("View on Politeia").
-			Body("Copy and paste the link below in your browser, to view proposal on Politeia dashboard.").
+			Title(values.String(values.StrViewOnPoliteia)).
+			Body(values.String(values.StrCopyLink)).
 			SetCancelable(true).
 			UseCustomWidget(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
@@ -155,7 +155,7 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 													if pg.copyRedirectURL.Clicked() {
 														clipboard.WriteOp{Text: host}.Add(gtx.Ops)
-														pg.Toast.Notify("URL copied")
+														pg.Toast.Notify(values.String(values.StrCopied))
 													}
 													return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
 												})
@@ -171,14 +171,14 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 							Top:  values.MarginPaddingMinus10,
 							Left: values.MarginPadding10,
 						}.Layout(gtx, func(gtx C) D {
-							label := pg.Theme.Body2("Web URL")
+							label := pg.Theme.Body2(values.String(values.StrWebURL))
 							label.Color = pg.Theme.Color.GrayText2
 							return label.Layout(gtx)
 						})
 					}),
 				)
 			}).
-			PositiveButton("Got it", func(isChecked bool) {})
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 }
@@ -329,17 +329,17 @@ func (pg *ProposalDetails) layoutNormalTitle(gtx C) D {
 	proposal := pg.proposal
 	switch proposal.Category {
 	case dcrlibwallet.ProposalCategoryApproved:
-		label = pg.Theme.Body2("Approved")
+		label = pg.Theme.Body2(values.String(values.StrApproved))
 		icon = decredmaterial.NewIcon(pg.successIcon)
 		icon.Color = pg.Theme.Color.Success
 	case dcrlibwallet.ProposalCategoryRejected:
-		label = pg.Theme.Body2("Rejected")
+		label = pg.Theme.Body2(values.String(values.StrRejected))
 		icon = decredmaterial.NewIcon(pg.rejectedIcon)
 		icon.Color = pg.Theme.Color.Danger
 	case dcrlibwallet.ProposalCategoryAbandoned:
-		label = pg.Theme.Body2("Abandoned")
+		label = pg.Theme.Body2(values.String(values.StrAbandoned))
 	case dcrlibwallet.ProposalCategoryActive:
-		label = pg.Theme.Body2("Voting in progress...")
+		label = pg.Theme.Body2(values.String(values.StrVotingInProgress))
 	}
 	timeagoLabel := pg.Theme.Body2(components.TimeAgo(proposal.Timestamp))
 
@@ -414,13 +414,13 @@ func (pg *ProposalDetails) layoutDescription(gtx C) D {
 	userLabel := pg.Theme.Body2(proposal.Username)
 	userLabel.Color = grayCol
 
-	versionLabel := pg.Theme.Body2("Version " + proposal.Version)
+	versionLabel := pg.Theme.Body2(values.String(values.StrVersion) + " " + proposal.Version)
 	versionLabel.Color = grayCol
 
-	publishedLabel := pg.Theme.Body2("Published " + components.TimeAgo(proposal.PublishedAt))
+	publishedLabel := pg.Theme.Body2(values.String(values.StrPublished2) + " " + components.TimeAgo(proposal.PublishedAt))
 	publishedLabel.Color = grayCol
 
-	updatedLabel := pg.Theme.Body2("Updated " + components.TimeAgo(proposal.Timestamp))
+	updatedLabel := pg.Theme.Body2(values.String(values.StrUpdated) + " " + components.TimeAgo(proposal.Timestamp))
 	updatedLabel.Color = grayCol
 
 	w := []layout.Widget{
@@ -465,7 +465,7 @@ func (pg *ProposalDetails) layoutDescription(gtx C) D {
 		w = append(w, loading)
 	}
 
-	w = append(w, pg.layoutRedirect("View on Politeia", pg.redirectIcon, pg.viewInPoliteiaBtn))
+	w = append(w, pg.layoutRedirect(values.String(values.StrViewOnPoliteia), pg.redirectIcon, pg.viewInPoliteiaBtn))
 
 	return pg.descriptionCard.Layout(gtx, func(gtx C) D {
 		return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {
@@ -523,7 +523,7 @@ func (pg *ProposalDetails) Layout(gtx C) D {
 				var err error
 				proposalDescription, err = pg.WL.MultiWallet.Politeia.FetchProposalDescription(proposal.Token)
 				if err != nil {
-					fmt.Printf("Error loading proposal description: %v", err)
+					log.Errorf("Error loading proposal description: %v", err)
 					time.Sleep(7 * time.Second)
 					pg.loadingDescription = false
 					return
@@ -564,7 +564,7 @@ func (pg *ProposalDetails) Layout(gtx C) D {
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
 									Top: values.MarginPadding5,
-								}.Layout(gtx, pg.Theme.Caption("View in politeia").Layout)
+								}.Layout(gtx, pg.Theme.Caption(values.String(values.StrViewOnPoliteia)).Layout)
 							}),
 							layout.Rigid(pg.redirectIcon.Layout24dp),
 						)

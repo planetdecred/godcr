@@ -32,20 +32,20 @@ type SignMessagePage struct {
 	clearButton, signButton, copyButton        decredmaterial.Button
 	copySignature                              *decredmaterial.Clickable
 	copyIcon                                   *decredmaterial.Image
-	gtx                                        *layout.Context
+	gtx                                        *C
 
 	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
 }
 
 func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessagePage {
-	addressEditor := l.Theme.Editor(new(widget.Editor), "Address")
+	addressEditor := l.Theme.Editor(new(widget.Editor), values.String(values.StrAddress))
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
-	messageEditor := l.Theme.Editor(new(widget.Editor), "Message")
+	messageEditor := l.Theme.Editor(new(widget.Editor), values.String(values.StrMessage))
 	messageEditor.Editor.SingleLine, messageEditor.Editor.Submit = true, true
 
-	clearButton := l.Theme.OutlineButton("Clear all")
-	signButton := l.Theme.Button("Sign message")
+	clearButton := l.Theme.OutlineButton(values.String(values.StrClearAll))
+	signButton := l.Theme.Button(values.String(values.StrSignMessage))
 	clearButton.Font.Weight, signButton.Font.Weight = text.Medium, text.Medium
 	signButton.SetEnabled(false)
 	clearButton.SetEnabled(false)
@@ -61,14 +61,14 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 			Axis: layout.Vertical,
 		},
 
-		titleLabel:         l.Theme.H5("Sign Message"),
+		titleLabel:         l.Theme.H5(values.String(values.StrSignMessage)),
 		signedMessageLabel: l.Theme.Body1(""),
 		errorLabel:         errorLabel,
 		addressEditor:      addressEditor,
 		messageEditor:      messageEditor,
 		clearButton:        clearButton,
 		signButton:         signButton,
-		copyButton:         l.Theme.Button("Copy"),
+		copyButton:         l.Theme.Button(values.String(values.StrCopy)),
 		copySignature:      l.Theme.NewClickable(false),
 		copyIcon:           copyIcon,
 	}
@@ -94,22 +94,22 @@ func (pg *SignMessagePage) OnNavigatedTo() {
 	pg.addressEditor.Editor.Focus()
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *SignMessagePage) Layout(gtx C) D {
 
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Sign message",
+			Title:      values.String(values.StrSignMessage),
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
 				pg.PopFragment()
 			},
-			Body: func(gtx layout.Context) layout.Dimensions {
+			Body: func(gtx C) D {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -132,7 +132,7 @@ func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *SignMessagePage) description() layout.Widget {
 	return func(gtx C) D {
-		desc := pg.Theme.Caption("Enter an address and message to sign:")
+		desc := pg.Theme.Caption(values.String(values.StrEnterAddressToSign))
 		desc.Color = pg.Theme.Color.GrayText2
 		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
@@ -167,7 +167,7 @@ func (pg *SignMessagePage) drawButtonsRow() layout.Widget {
 func (pg *SignMessagePage) drawResult() layout.Widget {
 	return func(gtx C) D {
 		if !components.StringNotEmpty(pg.signedMessageLabel.Text) {
-			return layout.Dimensions{}
+			return D{}
 		}
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -190,7 +190,7 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 													if pg.copySignature.Clicked() {
 														clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
-														pg.Toast.Notify("Signature copied")
+														pg.Toast.Notify(values.String(values.StrSignCopied))
 													}
 													return pg.copySignature.Layout(gtx, pg.copyIcon.Layout24dp)
 												})
@@ -201,13 +201,13 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 							})
 						})
 					}),
-					layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+					layout.Stacked(func(gtx C) D {
 						return layout.Inset{
 							Top:  values.MarginPaddingMinus10,
 							Left: values.MarginPadding10,
 						}.Layout(gtx, func(gtx C) D {
-							return pg.Theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-								label := pg.Theme.Body1("Signature")
+							return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+								label := pg.Theme.Body1(values.String(values.StrSignature))
 								label.Color = pg.Theme.Color.GrayText2
 								return label.Layout(gtx)
 							})
@@ -264,9 +264,9 @@ func (pg *SignMessagePage) HandleUserInteractions() {
 			message := pg.messageEditor.Editor.Text()
 
 			modal.NewPasswordModal(pg.Load).
-				Title("Confirm to sign").
-				NegativeButton("Cancel", func() {}).
-				PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+				Title(values.String(values.StrConfirmToSign)).
+				NegativeButton(values.String(values.StrCancel), func() {}).
+				PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 					go func() {
 						sig, err := pg.wallet.SignMessage([]byte(password), address, message)
 						if err != nil {
@@ -308,11 +308,11 @@ func (pg *SignMessagePage) validateAddress() bool {
 
 	switch {
 	case !components.StringNotEmpty(address):
-		errorMessage = "Please enter a valid address"
+		errorMessage = values.String(values.StrEnterValidAddress)
 	case !pg.WL.MultiWallet.IsAddressValid(address):
-		errorMessage = "Invalid address"
+		errorMessage = values.String(values.StrInvalidAddress)
 	case !pg.wallet.HaveAddress(address):
-		errorMessage = "Address not owned by any wallet"
+		errorMessage = values.String(values.StrAddrNotOwned)
 	default:
 		valid = true
 	}
@@ -329,7 +329,7 @@ func (pg *SignMessagePage) validateMessage() bool {
 	pg.messageEditor.SetError("")
 
 	if !components.StringNotEmpty(message) {
-		pg.messageEditor.SetError("Please enter a valid message to sign")
+		pg.messageEditor.SetError(values.String(values.StrEnterValidMsg))
 		pg.messageIsValid = false
 		return false
 	}

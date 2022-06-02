@@ -134,7 +134,7 @@ func (sp *SubPage) EventHandler() {
 				Title(sp.Title).
 				SetupWithTemplate(sp.InfoTemplate).
 				SetCancelable(true).
-				PositiveButton("Got it", func(isChecked bool) {}).Show()
+				PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {}).Show()
 		}
 	}
 

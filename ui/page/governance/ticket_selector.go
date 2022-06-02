@@ -60,7 +60,7 @@ func (ts *ticketSelector) SelectedTicket() *dcrlibwallet.Transaction {
 func (ts *ticketSelector) handle() {
 	if ts.showTicketModal.Clicked() {
 		newTicketSelectorModal(ts.Load, ts.liveTickets).
-			title("Select a ticket to vote").
+			title(values.String(values.StrSelectTicket)).
 			ticketSelected(func(ticket *dcrlibwallet.Transaction) {
 				ts.SelectTicket(ticket.Hash)
 			}).
@@ -83,7 +83,7 @@ func (ts *ticketSelector) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						if ts.selectedTicket == nil {
-							txt := ts.Theme.Label(values.TextSize16, "Select a Ticket...")
+							txt := ts.Theme.Label(values.TextSize16, values.String(values.StrSelectTicket))
 							txt.Color = ts.Theme.Color.GrayText3
 							return txt.Layout(gtx)
 						}
@@ -184,7 +184,7 @@ func (tsm *ticketSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := tsm.Theme.Label(values.TextSize14, "Hash")
+					txt := tsm.Theme.Label(values.TextSize14, values.String(values.StrHash))
 					txt.Color = tsm.Theme.Color.GrayText2
 					return txt.Layout(gtx)
 				}),

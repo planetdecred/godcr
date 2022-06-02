@@ -64,7 +64,7 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 		copyRedirectURL:     l.Theme.NewClickable(false),
 	}
 
-	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Theme.Icons.SearchIcon, true)
+	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), values.String(values.StrSearch), l.Theme.Icons.SearchIcon, true)
 	pg.searchEditor.Editor.SingleLine, pg.searchEditor.Editor.Submit, pg.searchEditor.Bordered = true, true, false
 
 	_, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -114,10 +114,10 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 
 	if pg.infoButton.Button.Clicked() {
 		modal.NewInfoModal(pg.Load).
-			Title("Consensus changes").
-			Body("On-chain voting for upgrading the Decred network consensus rules.").
+			Title(values.String(values.StrConsensusChange)).
+			Body(values.String(values.StrOnChainVote)).
 			SetCancelable(true).
-			PositiveButton("Got it", func(isChecked bool) {}).Show()
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {}).Show()
 	}
 
 	for pg.viewVotingDashboard.Clicked() {
@@ -127,8 +127,8 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 		}
 
 		info := modal.NewInfoModal(pg.Load).
-			Title("Consensus Vote Dashboard").
-			Body("Copy and paste the link below in your browser, to the view consensus vote dashboard.").
+			Title(values.String(values.StrConsensusDashboard)).
+			Body(values.String(values.StrCopyLink)).
 			SetCancelable(true).
 			UseCustomWidget(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
@@ -145,7 +145,7 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 											return layout.E.Layout(gtx, func(gtx C) D {
 												if pg.copyRedirectURL.Clicked() {
 													clipboard.WriteOp{Text: host}.Add(gtx.Ops)
-													pg.Toast.Notify("URL copied")
+													pg.Toast.Notify(values.String(values.StrCopied))
 												}
 												return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
 											})
@@ -160,14 +160,14 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 							Top:  values.MarginPaddingMinus10,
 							Left: values.MarginPadding10,
 						}.Layout(gtx, func(gtx C) D {
-							label := pg.Theme.Body2("Web URL")
+							label := pg.Theme.Body2(values.String(values.StrWebURL))
 							label.Color = pg.Theme.Color.GrayText2
 							return label.Layout(gtx)
 						})
 					}),
 				)
 			}).
-			PositiveButton("Got it", func(isChecked bool) {})
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 
@@ -209,7 +209,7 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(pg.Theme.Label(values.TextSize20, "Consensus Changes").Layout), // Do we really need to display the title? nav is proposals already
+						layout.Rigid(pg.Theme.Label(values.TextSize20, values.String(values.StrConsensusChange)).Layout), // Do we really need to display the title? nav is proposals already
 						layout.Rigid(pg.infoButton.Layout),
 					)
 				}),
@@ -285,7 +285,7 @@ func (pg *ConsensusPage) layoutRedirectVoting(gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{
 							Top: values.MarginPaddingMinus2,
-						}.Layout(gtx, pg.Theme.Label(values.TextSize16, "Voting Dashboard").Layout)
+						}.Layout(gtx, pg.Theme.Label(values.TextSize16, values.String(values.StrVotingDashboard)).Layout)
 					}),
 				)
 			})
@@ -293,9 +293,9 @@ func (pg *ConsensusPage) layoutRedirectVoting(gtx C) D {
 		layout.Rigid(func(gtx C) D {
 			var text string
 			if pg.isSyncing {
-				text = "Syncing..."
+				text = values.String(values.StrSyncingState)
 			} else if pg.syncCompleted {
-				text = "Updated"
+				text = values.String(values.StrUpdated)
 			}
 
 			lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)

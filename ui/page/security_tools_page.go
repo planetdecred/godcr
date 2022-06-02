@@ -59,11 +59,11 @@ func (pg *SecurityToolsPage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 // main settings layout
-func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *SecurityToolsPage) Layout(gtx C) D {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Security Tools",
+			Title:      values.String(values.StrSecurityTools),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -74,7 +74,7 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 						layout.Flexed(.5, pg.message()),
 						layout.Rigid(func(gtx C) D {
 							size := image.Point{X: 15, Y: gtx.Constraints.Min.Y}
-							return layout.Dimensions{Size: size}
+							return D{Size: size}
 						}),
 						layout.Flexed(.5, pg.address()),
 					)
@@ -88,17 +88,17 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *SecurityToolsPage) message() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, pg.Theme.Icons.VerifyMessageIcon, pg.verifyMessage, "Verify Message")
+		return pg.pageSections(gtx, pg.Theme.Icons.VerifyMessageIcon, pg.verifyMessage, values.String(values.StrVerifyMessage))
 	}
 }
 
 func (pg *SecurityToolsPage) address() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, pg.Theme.Icons.LocationPinIcon, pg.validateAddress, "Validate Address")
+		return pg.pageSections(gtx, pg.Theme.Icons.LocationPinIcon, pg.validateAddress, values.String(values.StrValidateMsg))
 	}
 }
 
-func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *decredmaterial.Clickable, title string) layout.Dimensions {
+func (pg *SecurityToolsPage) pageSections(gtx C, icon *decredmaterial.Image, action *decredmaterial.Clickable, title string) D {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return decredmaterial.LinearLayout{
 			Orientation: layout.Vertical,
@@ -118,7 +118,7 @@ func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *decredmateri
 			layout.Rigid(pg.Theme.Body1(title).Layout),
 			layout.Rigid(func(gtx C) D {
 				size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
-				return layout.Dimensions{Size: size}
+				return D{Size: size}
 			}),
 		)
 	})

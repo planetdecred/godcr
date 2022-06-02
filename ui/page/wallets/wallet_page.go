@@ -233,7 +233,7 @@ func (pg *WalletPage) loadBadWallets() {
 	for _, badWallet := range badWallets {
 		listItem := &badWalletListItem{
 			Wallet:    badWallet,
-			deleteBtn: pg.Theme.OutlineButton("Delete"),
+			deleteBtn: pg.Theme.OutlineButton(values.String(values.StrDeleted)),
 		}
 		listItem.deleteBtn.Color = pg.Theme.Color.Danger
 		listItem.deleteBtn.Inset = layout.Inset{}
@@ -296,7 +296,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			button: pg.Theme.NewClickable(true),
 			action: func(l *load.Load) {
 				textModal := modal.NewTextInputModal(l).
-					Hint("Wallet name").
+					Hint(values.String(values.StrWalletName)).
 					PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 						err := pg.multiWallet.RenameWallet(wal.ID, newName)
@@ -327,7 +327,7 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 			button: pg.Theme.NewClickable(true),
 			action: func(l *load.Load) {
 				textModal := modal.NewTextInputModal(l).
-					Hint("Wallet name").
+					Hint(values.String(values.StrWalletName)).
 					PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 						//TODO
@@ -335,7 +335,7 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 						if err != nil {
 							pg.Toast.NotifyError(err.Error())
 						} else {
-							pg.Toast.Notify("Wallet renamed")
+							pg.Toast.Notify(values.String(values.StrWalletRenamed))
 						}
 						return true
 					})
@@ -355,7 +355,7 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 
 func (pg *WalletPage) showAddWalletModal(l *load.Load) {
 	modal.NewCreatePasswordModal(l).
-		Title("Create new wallet").
+		Title(values.String(values.StrCreateANewWallet)).
 		EnableName(true).
 		ShowWalletInfoTip(true).
 		PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
@@ -374,7 +374,7 @@ func (pg *WalletPage) showAddWalletModal(l *load.Load) {
 				}
 				pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 				pg.loadWalletAndAccounts()
-				pg.Toast.Notify("Wallet created")
+				pg.Toast.Notify(values.String(values.StrWalletCreated))
 				m.Dismiss()
 			}()
 			return false
@@ -999,7 +999,7 @@ func (pg *WalletPage) checkMixerSection(gtx layout.Context, listItem *walletList
 							}
 							return inset.Layout(gtx, func(gtx C) D {
 								return layout.E.Layout(gtx, func(gtx C) D {
-									txt := pg.Theme.Body2("Check mixer status")
+									txt := pg.Theme.Body2(values.String(values.StrCheckMixerStatus))
 									txt.Color = pg.Theme.Color.Primary
 
 									return layout.Flex{}.Layout(gtx,
@@ -1073,7 +1073,7 @@ func (pg *WalletPage) layoutAddWalletSection(gtx layout.Context) layout.Dimensio
 						return layout.Inset{
 							Left: values.MarginPadding4,
 							Top:  values.MarginPadding2,
-						}.Layout(gtx, pg.Theme.Body2("Add wallet").Layout)
+						}.Layout(gtx, pg.Theme.Body2(values.String(values.StrAddWallet)).Layout)
 					}),
 				)
 			}),
@@ -1142,14 +1142,14 @@ func (pg *WalletPage) HandleUserInteractions() {
 			for listItem.addAcctClickable.Clicked() {
 				walletID := listItem.wal.ID
 				textModal := modal.NewTextInputModal(pg.Load).
-					Hint("Account name").
+					Hint(values.String(values.StrAcctName)).
 					ShowAccountInfoTip(true).
 					PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 					PositiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.TextInputModal) bool {
 						if accountName != "" {
 							modal.NewPasswordModal(pg.Load).
 								Title(values.String(values.StrCreateNewAccount)).
-								Hint("Spending password").
+								Hint(values.String(values.StrSpendingPassword)).
 								NegativeButton(values.String(values.StrCancel), func() {}).
 								PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 									go func() {
@@ -1159,7 +1159,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 											pg.Toast.NotifyError(err.Error())
 											tim.SetError(err.Error())
 										} else {
-											pg.Toast.Notify("Account created")
+											pg.Toast.Notify(values.String(values.StrAcctCreated))
 											tim.Dismiss()
 										}
 										pg.updateAccountBalance()
@@ -1229,7 +1229,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 	modal.NewInfoModal(pg.Load).
 		Title(values.String(values.StrRemoveWallet)).
-		Body("You can restore this wallet from seed word after it is deleted.").
+		Body(values.String(values.StrWalletRestoreMsg)).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
 		PositiveButton(values.String(values.StrRemove), func(isChecked bool) {
@@ -1239,7 +1239,7 @@ func (pg *WalletPage) deleteBadWallet(badWalletID int) {
 					pg.Toast.NotifyError(err.Error())
 					return
 				}
-				pg.Toast.Notify("Wallet removed")
+				pg.Toast.Notify(values.String(values.StrWalletRemoved))
 				pg.loadBadWallets() // refresh bad wallets list
 				pg.RefreshWindow()
 			}()

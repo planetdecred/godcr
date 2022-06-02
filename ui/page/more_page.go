@@ -118,18 +118,18 @@ func (pg *MorePage) HandleUserInteractions() {
 // Part of the load.Page interface.
 func (pg *MorePage) OnNavigatedFrom() {}
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *MorePage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		pg.layoutMoreItems(gtx)
-		return layout.Dimensions{Size: gtx.Constraints.Max}
+		return D{Size: gtx.Constraints.Max}
 	}
 	return components.UniformPadding(gtx, container)
 }
 
-func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
+func (pg *MorePage) layoutMoreItems(gtx C) D {
 
 	list := layout.List{Axis: layout.Vertical}
 	return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
@@ -155,9 +155,18 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 					Top:  values.MarginPadding2,
 					Left: values.MarginPadding18,
 				}.Layout(gtx, func(gtx C) D {
-					page := pg.morePageListItems[i].page
-					if page == SecurityToolsPageID {
-						page = "Security Tools"
+					var page string
+					switch pg.morePageListItems[i].page {
+					case SecurityToolsPageID:
+						page = values.String(values.StrSecurityTools)
+					case DebugPageID:
+						page = values.String(values.StrDebug)
+					case AboutPageID:
+						page = values.String(values.StrAbout)
+					case HelpPageID:
+						page = values.String(values.StrHelp)
+					case SettingsPageID:
+						page = values.String(values.StrSettings)
 					}
 					return pg.Theme.Body1(page).Layout(gtx)
 				})

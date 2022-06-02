@@ -37,12 +37,12 @@ func NewAboutPage(l *load.Load) *AboutPage {
 		Load:             l,
 		card:             l.Theme.Card(),
 		container:        &layout.List{Axis: layout.Vertical},
-		version:          l.Theme.Body1("Version"),
+		version:          l.Theme.Body1(values.String(values.StrVersion)),
 		versionValue:     l.Theme.Body1(l.WL.Wallet.Version()),
-		buildDate:        l.Theme.Body1("Build date"),
+		buildDate:        l.Theme.Body1(values.String(values.StrBuildDate)),
 		buildDateValue:   l.Theme.Body1(l.WL.Wallet.BuildDate().Format("2006-01-02 15:04:05")),
-		network:          l.Theme.Body1("Network"),
-		license:          l.Theme.Body1("License"),
+		network:          l.Theme.Body1(values.String(values.StrNetwork)),
+		license:          l.Theme.Body1(values.String(values.StrLicense)),
 		licenseRow:       l.Theme.NewClickable(true),
 		shadowBox:        l.Theme.Shadow(),
 		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
@@ -83,14 +83,14 @@ func (pg *AboutPage) OnNavigatedTo() {
 
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *AboutPage) Layout(gtx C) D {
 	body := func(gtx C) D {
 		page := components.SubPage{
 			Load:       pg.Load,
-			Title:      "About",
+			Title:      values.String(values.StrAbout),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -107,7 +107,7 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
+func (pg *AboutPage) layoutRows(gtx C) D {
 	var in = layout.Inset{
 		Top:    values.MarginPadding20,
 		Bottom: values.MarginPadding20,
@@ -162,7 +162,7 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(w[i]),
 				layout.Rigid(func(gtx C) D {
 					if i == len(w)-1 {
-						return layout.Dimensions{}
+						return D{}
 					}
 					return layout.Inset{
 						Left: values.MarginPadding16,

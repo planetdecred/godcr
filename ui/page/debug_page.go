@@ -29,14 +29,14 @@ type DebugPage struct {
 func NewDebugPage(l *load.Load) *DebugPage {
 	debugItems := []debugItem{
 		{
-			text: "Check wallet logs",
+			text: values.String(values.StrWalletLog),
 			page: LogPageID,
 			action: func() {
 				l.ChangeFragment(NewLogPage(l))
 			},
 		},
 		{
-			text: "Check statistics",
+			text: values.String(values.StrCheckStatistics),
 			page: StatisticsPageID,
 			action: func() {
 				l.ChangeFragment(NewStatPage(l))
@@ -148,7 +148,7 @@ func (pg *DebugPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "Debug",
+			Title:      values.String(values.StrDebug),
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -167,10 +167,10 @@ func (pg *DebugPage) Layout(gtx C) D {
 func (pg *DebugPage) resetDexData() {
 	// Show confirm modal before resetting dex client data.
 	confirmModal := modal.NewInfoModal(pg.Load).
-		Title("Confirm DEX Client Reset").
-		Body("You may need to restart godcr before you can use the DEX again. Proceed?").
+		Title(values.String(values.StrConfirmDexReset)).
+		Body(values.String(values.StrDexResetInfo)).
 		NegativeButton(values.String(values.StrCancel), func() {}).
-		PositiveButton("Reset DEX Client", func(isChecked bool) {
+		PositiveButton(values.String(values.StrResetDexClient), func(isChecked bool) {
 			if pg.Dexc().Reset() {
 				pg.Toast.Notify("DEX client data reset complete.")
 			} else {

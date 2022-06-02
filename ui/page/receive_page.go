@@ -62,9 +62,9 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 			List: layout.List{Axis: layout.Vertical},
 		},
 		info:           l.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo))),
-		copy:           l.Theme.Button("Copy"),
+		copy:           l.Theme.Button(values.String(values.StrCopy)),
 		more:           l.Theme.IconButton(l.Theme.Icons.NavMoreIcon),
-		newAddr:        l.Theme.Button("Generate new address"),
+		newAddr:        l.Theme.Button(values.String(values.StrGenerateAddress)),
 		receiveAddress: l.Theme.Label(values.TextSize20, ""),
 		card:           l.Theme.Card(),
 		backdrop:       new(widget.Clickable),
@@ -97,7 +97,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.backButton.Icon = pg.Theme.Icons.ContentClear
 
 	pg.selector = components.NewAccountSelector(pg.Load, nil).
-		Title("Receiving account").
+		Title(values.String(values.StrReceivingAddress)).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)
 			currentAddress, err := selectedWallet.CurrentAddress(selectedAccount.Number)
@@ -173,10 +173,10 @@ func (pg *ReceivePage) generateQRForAddress() {
 	pg.qrImage = &imgdec
 }
 
-// Layout draws the page UI components into the provided layout context
+// Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *ReceivePage) Layout(gtx C) D {
 	pg.handleCopyEvent(gtx)
 	pg.pageBackdropLayout(gtx)
 
@@ -205,11 +205,11 @@ func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
 									if pg.currentAddress != "" {
 										return pg.addressLayout(gtx)
 									}
-									return layout.Dimensions{}
+									return D{}
 								}),
 								layout.Rigid(func(gtx C) D {
 									if pg.qrImage == nil {
-										return layout.Dimensions{}
+										return D{}
 									}
 
 									return pg.Theme.ImageIcon(gtx, *pg.qrImage, 360)
@@ -246,7 +246,7 @@ func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
 	return dims
 }
 
-func (pg *ReceivePage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *ReceivePage) pageSections(gtx C, body layout.Widget) D {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
@@ -255,7 +255,7 @@ func (pg *ReceivePage) pageSections(gtx layout.Context, body layout.Widget) layo
 
 // pageBackdropLayout layout of background overlay when the popup button generate new address is show,
 // click outside of the generate new address button to hide the button
-func (pg *ReceivePage) pageBackdropLayout(gtx layout.Context) {
+func (pg *ReceivePage) pageBackdropLayout(gtx C) {
 	if pg.isNewAddr {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
@@ -268,7 +268,7 @@ func (pg *ReceivePage) pageBackdropLayout(gtx layout.Context) {
 	}
 }
 
-func (pg *ReceivePage) topNav(gtx layout.Context) layout.Dimensions {
+func (pg *ReceivePage) topNav(gtx C) D {
 	m := values.MarginPadding20
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -277,7 +277,7 @@ func (pg *ReceivePage) topNav(gtx layout.Context) layout.Dimensions {
 					return pg.backButton.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: m}.Layout(gtx, pg.Theme.H6("Receive DCR").Layout)
+					return layout.Inset{Left: m}.Layout(gtx, pg.Theme.H6(values.String(values.StrReceive)+" DCR").Layout)
 				}),
 			)
 		}),
@@ -287,10 +287,10 @@ func (pg *ReceivePage) topNav(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
+func (pg *ReceivePage) titleLayout(gtx C) D {
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			txt := pg.Theme.Body2("Your Address")
+			txt := pg.Theme.Body2(values.String(values.StrYourAddress))
 			txt.Color = pg.Theme.Color.GrayText2
 			return txt.Layout(gtx)
 		}),
@@ -304,7 +304,7 @@ func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 						})
 						op.Defer(gtx.Ops, m.Stop())
 					}
-					return layout.Dimensions{}
+					return D{}
 				}),
 				layout.Rigid(pg.more.Layout),
 			)
@@ -312,12 +312,12 @@ func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
+func (pg *ReceivePage) addressLayout(gtx C) D {
 	card := decredmaterial.Card{
 		Color: pg.Theme.Color.Gray4,
 	}
 
-	return layout.Inset{Top: values.MarginPadding14, Bottom: values.MarginPadding16}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+	return layout.Inset{Top: values.MarginPadding14, Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				card.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 8, BottomRight: 0, BottomLeft: 8}
@@ -327,14 +327,14 @@ func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 						Bottom: values.MarginPadding16,
 						Left:   values.MarginPadding16,
 						Right:  values.MarginPadding16,
-					}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					}.Layout(gtx, func(gtx C) D {
 						pg.receiveAddress.Text = pg.currentAddress
 						return pg.receiveAddress.Layout(gtx)
 					})
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
+				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return D{} })
 			}),
 			layout.Rigid(func(gtx C) D {
 				card.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 8, BottomLeft: 0}
@@ -375,9 +375,9 @@ func (pg *ReceivePage) HandleUserInteractions() {
 
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).
-			Title("Receive DCR").
-			Body("Each time you receive a payment, a new address is generated to protect your privacy.").
-			PositiveButton("Got it", func(isChecked bool) {})
+			Title(values.String(values.StrReceive)+" DCR").
+			Body(values.String(values.StrReceiveInfo)).
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
 		pg.ShowModal(info)
 	}
 
@@ -403,14 +403,14 @@ generateAddress:
 	return newAddr, nil
 }
 
-func (pg *ReceivePage) handleCopyEvent(gtx layout.Context) {
+func (pg *ReceivePage) handleCopyEvent(gtx C) {
 	if pg.copy.Clicked() {
 		clipboard.WriteOp{Text: pg.currentAddress}.Add(gtx.Ops)
 
-		pg.copy.Text = "Copied!"
+		pg.copy.Text = values.String(values.StrCopied)
 		pg.copy.Color = pg.Theme.Color.Success
 		time.AfterFunc(time.Second*3, func() {
-			pg.copy.Text = "Copy"
+			pg.copy.Text = values.String(values.StrCopy)
 			pg.copy.Color = pg.Theme.Color.Primary
 		})
 	}

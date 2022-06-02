@@ -13,7 +13,7 @@ import (
 )
 
 func (pg *Page) initLiveStakeWidget() *Page {
-	pg.toTickets = pg.Theme.TextAndIconButton("See All", pg.Theme.Icons.NavigationArrowForward)
+	pg.toTickets = pg.Theme.TextAndIconButton(values.String(values.StrSeeAll), pg.Theme.Icons.NavigationArrowForward)
 	pg.toTickets.Color = pg.Theme.Color.Primary
 	pg.toTickets.BackgroundColor = color.NRGBA{}
 
@@ -27,7 +27,7 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
-					title := pg.Theme.Label(values.TextSize14, "Live Tickets")
+					title := pg.Theme.Label(values.TextSize14, values.String(values.StrLiveTickets))
 					title.Color = pg.Theme.Color.GrayText2
 					return pg.titleRow(gtx, title.Layout, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
@@ -46,7 +46,7 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				if len(pg.liveTickets) == 0 {
-					noLiveStake := pg.Theme.Label(values.TextSize16, "No active tickets")
+					noLiveStake := pg.Theme.Label(values.TextSize16, values.String(values.StrNoActiveTickets))
 					noLiveStake.Color = pg.Theme.Color.GrayText3
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Center.Layout(gtx, noLiveStake.Layout)
@@ -87,7 +87,7 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 				return layout.Inset{
 					Bottom: values.MarginPadding14,
 				}.Layout(gtx, func(gtx C) D {
-					title := pg.Theme.Label(values.TextSize14, "Ticket Record")
+					title := pg.Theme.Label(values.TextSize14, values.String(values.StrTicketRecord))
 					title.Color = pg.Theme.Color.GrayText2
 
 					if pg.ticketOverview.All == 0 {
@@ -98,12 +98,12 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 			}),
 			layout.Rigid(func(gtx C) D {
 				wdgs := []layout.Widget{
-					pg.ticketRecordIconCount(pg.Theme.Icons.TicketUnminedIcon, pg.ticketOverview.Unmined, "Unmined"),
-					pg.ticketRecordIconCount(pg.Theme.Icons.TicketImmatureIcon, pg.ticketOverview.Immature, "Immature"),
-					pg.ticketRecordIconCount(pg.Theme.Icons.TicketLiveIcon, pg.ticketOverview.Live, "Live"),
-					pg.ticketRecordIconCount(pg.Theme.Icons.TicketVotedIcon, pg.ticketOverview.Voted, "Voted"),
-					pg.ticketRecordIconCount(pg.Theme.Icons.TicketExpiredIcon, pg.ticketOverview.Expired, "Expired"),
-					pg.ticketRecordIconCount(pg.Theme.Icons.TicketRevokedIcon, pg.ticketOverview.Revoked, "Revoked"),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketUnminedIcon, pg.ticketOverview.Unmined, values.String(values.StrUmined)),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketImmatureIcon, pg.ticketOverview.Immature, values.String(values.StrImmature)),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketLiveIcon, pg.ticketOverview.Live, values.String(values.StrLive)),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketVotedIcon, pg.ticketOverview.Voted, values.String(values.StrVoted)),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketExpiredIcon, pg.ticketOverview.Expired, values.String(values.StrExpired)),
+					pg.ticketRecordIconCount(pg.Theme.Icons.TicketRevokedIcon, pg.ticketOverview.Revoked, values.String(values.StrRevoked)),
 				}
 
 				return decredmaterial.GridWrap{
@@ -126,7 +126,7 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Bottom: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-							txt := pg.Theme.Label(values.TextSize14, "Rewards Earned")
+							txt := pg.Theme.Label(values.TextSize14, values.String(values.StrRewardsEarned))
 							txt.Color = pg.Theme.Color.Turquoise700
 							return txt.Layout(gtx)
 						})
@@ -146,7 +146,7 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 								}
 
 								if pg.totalRewards == "0 DCR" {
-									txt := pg.Theme.Label(values.TextSize16, "Stakey sees no rewards")
+									txt := pg.Theme.Label(values.TextSize16, values.String(values.StrNoReward))
 									txt.Color = noAward
 									return txt.Layout(gtx)
 								}

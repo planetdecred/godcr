@@ -45,17 +45,17 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 		modal:          *l.Theme.ModalFloatTitle(),
 		proposal:       proposal,
 		materialLoader: material.Loader(l.Theme.Base),
-		voteBtn:        l.Theme.Button("Vote"),
-		cancelBtn:      l.Theme.OutlineButton("Cancel"),
+		voteBtn:        l.Theme.Button(values.String(values.StrVote)),
+		cancelBtn:      l.Theme.OutlineButton(values.String(values.StrCancel)),
 	}
 
-	vm.yesVote = newInputVoteOptions(vm.Load, "Yes")
-	vm.noVote = newInputVoteOptions(vm.Load, "No")
+	vm.yesVote = newInputVoteOptions(vm.Load, values.String(values.StrYes))
+	vm.noVote = newInputVoteOptions(vm.Load, values.String(values.StrNo))
 	vm.noVote.activeBg = l.Theme.Color.Orange2
 	vm.noVote.dotColor = l.Theme.Color.Danger
 
 	vm.walletSelector = NewWalletSelector(l).
-		Title("Voting wallet").
+		Title(values.String(values.StrVotingWallet)).
 		WalletSelected(func(w *dcrlibwallet.Wallet) {
 
 			vm.detailsMu.Lock()
@@ -162,11 +162,11 @@ func (vm *voteModal) sendVotes() {
 	addVotes(dcrlibwallet.VoteBitNo, vm.noVote.voteCount())
 
 	modal.NewPasswordModal(vm.Load).
-		Title("Confirm to vote").
-		NegativeButton("Cancel", func() {
+		Title(values.String(values.StrVoteConfirm)).
+		NegativeButton(values.String(values.StrCancel), func() {
 			vm.isVoting = false
 		}).
-		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+		PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 			go func() {
 				err := vm.WL.MultiWallet.Politeia.CastVotes(vm.walletSelector.selectedWallet.ID, votes, vm.proposal.Token, password)
 				if err != nil {
@@ -175,7 +175,7 @@ func (vm *voteModal) sendVotes() {
 					return
 				}
 				pm.Dismiss()
-				vm.Toast.Notify("Vote sent successfully, refreshing proposals!")
+				vm.Toast.Notify(values.String(values.StrVoteSent))
 				go vm.WL.MultiWallet.Politeia.Sync()
 				vm.Dismiss()
 			}()
@@ -222,7 +222,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 	vm.detailsMu.Unlock()
 	w := []layout.Widget{
 		func(gtx C) D {
-			t := vm.Theme.H6("Vote")
+			t := vm.Theme.H6(values.String(values.StrVote))
 			t.Font.Weight = text.SemiBold
 			return t.Layout(gtx)
 		},
@@ -283,7 +283,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 											}),
 											layout.Rigid(func(gtx C) D {
 												return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-													label := vm.Theme.Body2(fmt.Sprintf("Yes: %d", voteDetails.YesVotes))
+													label := vm.Theme.Body2(fmt.Sprintf("%s: %d", values.String(values.StrYes), voteDetails.YesVotes))
 													return label.Layout(gtx)
 												})
 											}),
@@ -324,7 +324,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 											}),
 											layout.Rigid(func(gtx C) D {
 												return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-													label := vm.Theme.Body2(fmt.Sprintf("No: %d", voteDetails.NoVotes))
+													label := vm.Theme.Body2(fmt.Sprintf("%s: %d", values.String(values.StrNo), voteDetails.NoVotes))
 													return label.Layout(gtx)
 												})
 											}),
@@ -340,7 +340,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 						return D{}
 					}
 
-					text := fmt.Sprintf("You have %d votes", len(voteDetails.EligibleTickets))
+					text := values.StringF(values.StrNumberOfVotes, len(voteDetails.EligibleTickets))
 					return vm.Theme.Label(values.TextSize16, text).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -357,7 +357,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 		},
 		func(gtx C) D {
 			if voteDetails != nil && vm.yesVote.voteCount()+vm.noVote.voteCount() > len(voteDetails.EligibleTickets) {
-				label := vm.Theme.Label(values.TextSize14, "You don’t have enough votes")
+				label := vm.Theme.Label(values.TextSize14, values.String(values.StrNotEnoughVotes))
 				label.Color = vm.Theme.Color.Danger
 				return label.Layout(gtx)
 			}

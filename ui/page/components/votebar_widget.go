@@ -172,7 +172,7 @@ func (v *VoteBar) votesIndicatorTooltip(gtx C, r image.Rectangle, tipPos float32
 	insetLeft := tipPos - float32(voteBarThumbWidth/2) - 205
 	inset := layout.Inset{Left: unit.Dp(insetLeft), Top: values.MarginPadding25}
 	v.passTooltip.Layout(gtx, r, inset, func(gtx C) D {
-		txt := fmt.Sprintf("%d %% Yes votes required for approval", int(v.passPercentage))
+		txt := values.StringF(values.StrVoteTooltip, int(v.passPercentage))
 		return v.Theme.Caption(txt).Layout(gtx)
 	})
 }
@@ -206,11 +206,11 @@ func (v *VoteBar) Layout(gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								yesLabel := v.Theme.Body1("Yes: ")
+								yesLabel := v.Theme.Body1(values.String(values.StrYes))
 								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes, v.yesColor)
 							}),
 							layout.Rigid(func(gtx C) D {
-								noLabel := v.Theme.Body1("No: ")
+								noLabel := v.Theme.Body1(values.String(values.StrNo))
 								return v.layoutIconAndText(gtx, noLabel, v.noVotes, v.noColor)
 							}),
 							layout.Flexed(1, func(gtx C) D {
@@ -230,17 +230,17 @@ func (v *VoteBar) Layout(gtx C) D {
 }
 
 func (v *VoteBar) infoButtonModal() {
-	text1 := fmt.Sprintf("Total votes:  %6.0f", v.totalVotes)
-	text2 := fmt.Sprintf("Quorum requirement:  %6.0f", (v.requiredPercentage/100)*v.eligibleVotes)
-	text3 := fmt.Sprintf("Discussions:   %d comments", v.numComment)
-	text4 := fmt.Sprintf("Published:   %s", dcrlibwallet.FormatUTCTime(v.publishedAt))
-	text5 := fmt.Sprintf("Token:   %s", v.token)
+	text1 := values.StringF(values.StrTotalVotes, v.totalVotes)
+	text2 := values.StringF(values.StrQuorumRequirement, (v.requiredPercentage/100)*v.eligibleVotes)
+	text3 := values.StringF(values.StrDiscussions, v.numComment)
+	text4 := values.StringF(values.StrPublished, dcrlibwallet.FormatUTCTime(v.publishedAt))
+	text5 := values.StringF(values.StrToken, v.token)
 	bodyText := fmt.Sprintf("%s\n %v\n %s\n %s\n %s", text1, text2, text3, text4, text5)
 	modal.NewInfoModal(v.Load).
-		Title("Proposal vote details").
+		Title(values.String(values.StrProposalVoteDetails)).
 		Body(bodyText).
 		SetCancelable(true).
-		PositiveButton("Got it", func(bool) {}).Show()
+		PositiveButton(values.String(values.StrGotIt), func(bool) {}).Show()
 }
 
 func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32, col color.NRGBA) D {
@@ -272,7 +272,7 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float
 
 func (v *VoteBar) layoutInfo(gtx C) D {
 	dims := layout.Flex{}.Layout(gtx,
-		layout.Rigid(v.Theme.Body2(fmt.Sprintf("%d Total votes", int(v.totalVotes))).Layout),
+		layout.Rigid(v.Theme.Body2(values.StringF(values.StrTotalVotesReverse, int(v.totalVotes))).Layout),
 		layout.Rigid(func(gtx C) D {
 			if v.infoButton.Button.Clicked() {
 				v.infoButtonModal()

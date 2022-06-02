@@ -5,11 +5,11 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -38,7 +38,7 @@ func NewTextInputModal(l *load.Load) *TextInputModal {
 
 	tm.randomID = fmt.Sprintf("%s-%d", TextInput, decredmaterial.GenerateRandomNumber())
 
-	tm.textInput = l.Theme.Editor(new(widget.Editor), "Hint")
+	tm.textInput = l.Theme.Editor(new(widget.Editor), values.String(values.StrHint))
 	tm.textInput.Editor.SingleLine, tm.textInput.Editor.Submit = true, true
 
 	return tm
@@ -164,25 +164,8 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							txt := tm.Theme.Label(values.MarginPadding16, "Accounts")
-							txt.Color = tm.Theme.Color.GrayText1
-							return txt.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							txt := tm.Theme.Label(values.MarginPadding16, "cannot")
-							txt.Font.Weight = text.SemiBold
-							txt.Color = tm.Theme.Color.GrayText1
-							inset := layout.Inset{Right: values.MarginPadding2, Left: values.MarginPadding2}
-							return inset.Layout(gtx, txt.Layout)
-						}),
-						layout.Rigid(func(gtx C) D {
-							txt := tm.Theme.Label(values.MarginPadding16, "be deleted once created")
-							txt.Color = tm.Theme.Color.GrayText1
-							return txt.Layout(gtx)
-						}),
-					)
+					text := values.StringF(values.StrAddAcctWarn, `<span style="text-color: grayText1">`, `<span style="font-weight: bold">`, `</span>`, `</span>`)
+					return renderers.RenderHTML(text, tm.Theme).Layout(gtx)
 				}),
 			)
 		}
