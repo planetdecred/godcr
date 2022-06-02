@@ -123,7 +123,16 @@ func (pg *Restore) OnNavigatedTo() {}
 // Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *Restore) Layout(gtx C) D {
+func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
+	pg.Load.SetCurrentAppWidth(gtx.Constraints.Max.X)
+	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *Restore) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -146,7 +155,30 @@ func (pg *Restore) Layout(gtx C) D {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *Restore) restore(gtx C) D {
+func (pg *Restore) layoutMobile(gtx layout.Context) layout.Dimensions {
+	body := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      "Restore wallet",
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.PopFragment()
+			},
+			Body: func(gtx C) D {
+				return pg.restoreMobile(gtx)
+			},
+		}
+		return sp.Layout(gtx)
+	}
+
+	pg.resetSeedFields.SetEnabled(pg.updateSeedResetBtn())
+	seedValid, _ := pg.validateSeeds()
+	pg.validateSeed.SetEnabled(seedValid)
+
+	return components.UniformPadding(gtx, body)
+}
+
+func (pg *Restore) restore(gtx layout.Context) layout.Dimensions {
 	dims := layout.Stack{Alignment: layout.S}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -161,14 +193,58 @@ func (pg *Restore) restore(gtx C) D {
 						Bottom: values.MarginPadding10,
 					}.Layout(gtx, pg.Theme.Body1(values.String(values.StrEnterSeedPhrase)).Layout)
 				}),
-				layout.Rigid(pg.seedEditorView),
+				layout.Rigid(func(gtx C) D {
+					return pg.seedEditorViewDesktop(gtx)
+				}),
 				layout.Rigid(pg.resetSeedFields.Layout),
 			)
 		}),
 		layout.Stacked(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 			return layout.S.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, pg.restoreButtonSection)
+				return layout.Inset{Left: values.MarginPadding1, Top: values.MarginPadding20}.Layout(gtx, pg.restoreButtonSection)
+			})
+		}),
+	)
+	return dims
+}
+
+func (pg *Restore) restoreMobile(gtx layout.Context) layout.Dimensions {
+	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Flexed(0.9, func(gtx C) D {
+			return layout.Stack{Alignment: layout.N}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return decredmaterial.LinearLayout{
+						Orientation: layout.Vertical,
+						Width:       decredmaterial.MatchParent,
+						Height:      decredmaterial.WrapContent,
+						Background:  pg.Theme.Color.Surface,
+						Border:      decredmaterial.Border{Radius: decredmaterial.Radius(14)},
+						Padding:     layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{
+								Bottom: values.MarginPadding10,
+							}.Layout(gtx, pg.Theme.Body1("Enter your seed phrase").Layout)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Flexed(0.92, func(gtx C) D {
+									return pg.seedEditorViewMobile(gtx)
+								}),
+								layout.Flexed(0.08, func(gtx C) D {
+									return pg.resetSeedFields.Layout(gtx)
+								}),
+							)
+
+						}),
+					)
+				}),
+			)
+		}),
+		layout.Flexed(0.1, func(gtx C) D {
+			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+			return layout.S.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding1, Top: values.MarginPadding20}.Layout(gtx, pg.restoreButtonSection)
 			})
 		}),
 	)
@@ -184,7 +260,7 @@ func (pg *Restore) restoreButtonSection(gtx C) D {
 	})
 }
 
-func (pg *Restore) seedEditorView(gtx C) D {
+func (pg *Restore) seedEditorViewDesktop(gtx layout.Context) layout.Dimensions {
 	inset := layout.Inset{
 		Right: values.MarginPadding5,
 	}
@@ -215,7 +291,20 @@ func (pg *Restore) seedEditorView(gtx C) D {
 	)
 }
 
-func (pg *Restore) inputsGroup(gtx C, l *layout.List, len, startIndex int) D {
+func (pg *Restore) seedEditorViewMobile(gtx layout.Context) layout.Dimensions {
+	inset := layout.Inset{
+		Right: values.MarginPadding5,
+	}
+	return layout.Flex{}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return inset.Layout(gtx, func(gtx C) D {
+				return pg.inputsGroupMobile(gtx, pg.seedList, 33, 0)
+			})
+		}),
+	)
+}
+
+func (pg *Restore) inputsGroup(gtx layout.Context, l *layout.List, len, startIndex int) layout.Dimensions {
 	return layout.Stack{Alignment: layout.N}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return l.Layout(gtx, len, func(gtx C, i int) D {
@@ -224,6 +313,23 @@ func (pg *Restore) inputsGroup(gtx C, l *layout.List, len, startIndex int) D {
 						return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 							pg.layoutSeedMenu(gtx, i*5+startIndex)
 							return pg.seedEditors.editors[i*5+startIndex].Layout(gtx)
+						})
+					}),
+				)
+			})
+		}),
+	)
+}
+
+func (pg *Restore) inputsGroupMobile(gtx layout.Context, l *layout.List, len, startIndex int) layout.Dimensions {
+	return layout.Stack{Alignment: layout.N}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return l.Layout(gtx, len, func(gtx C, i int) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+							pg.layoutSeedMenu(gtx, i*1+startIndex)
+							return pg.seedEditors.editors[i*1+startIndex].Layout(gtx)
 						})
 					}),
 				)
