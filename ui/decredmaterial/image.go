@@ -47,7 +47,7 @@ func (img *Image) Layout48dp(gtx C) D {
 
 func (img *Image) LayoutSize(gtx C, size unit.Dp) D {
 	width := img.Src.Size().X
-	scale := int(size) / width
-	img.Scale = float32(scale)
+	scale := float32(size) / float32(width)
+	img.Scale = scale
 	return img.Layout(gtx)
 }

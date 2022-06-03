@@ -105,7 +105,7 @@ func drawInk(gtx layout.Context, c widget.Press, highlightColor color.NRGBA) {
 	rgba := mulAlpha(highlightColor, ba)
 	ink := paint.ColorOp{Color: rgba}
 	ink.Add(gtx.Ops)
-	rr := int(size / 2)
+	rr := size / 2
 	defer op.Offset(c.Position.Add(image.Point{
 		X: -rr,
 		Y: -rr,

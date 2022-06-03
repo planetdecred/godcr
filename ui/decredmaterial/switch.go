@@ -73,7 +73,7 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	trackWidth := gtx.Dp(unit.Dp(32))
 	trackHeight := gtx.Dp(unit.Dp(20))
 	thumbSize := gtx.Dp(unit.Dp(18))
-	trackOff := thumbSize - trackHeight/2
+	trackOff := (thumbSize - trackHeight) / 2
 
 	// Draw track.
 	trackCorner := trackHeight / 2

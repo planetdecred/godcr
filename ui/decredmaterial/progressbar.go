@@ -88,7 +88,7 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 			maxHeight = unit.Dp(4)
 		}
 
-		d := image.Point{X: int(width), Y: gtx.Dp(maxHeight)}
+		d := image.Point{X: width, Y: gtx.Dp(maxHeight)}
 		height := gtx.Dp(maxHeight)
 
 		tr := gtx.Dp(unit.Dp(p.Radius.TopRight))

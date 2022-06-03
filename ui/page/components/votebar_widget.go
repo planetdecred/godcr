@@ -235,6 +235,7 @@ func (v *VoteBar) infoButtonModal() {
 	text3 := values.StringF(values.StrDiscussions, v.numComment)
 	text4 := values.StringF(values.StrPublished, dcrlibwallet.FormatUTCTime(v.publishedAt))
 	text5 := values.StringF(values.StrToken, v.token)
+
 	bodyText := fmt.Sprintf("%s\n %v\n %s\n %s\n %s", text1, text2, text3, text4, text5)
 	modal.NewInfoModal(v.Load).
 		Title(values.String(values.StrProposalVoteDetails)).
