@@ -51,6 +51,7 @@ type TransactionsPage struct {
 	transactions    []dcrlibwallet.Transaction
 	wallets         []*dcrlibwallet.Wallet
 	viewMoreButton  decredmaterial.Button
+	paginatedTxns   [][]dcrlibwallet.Transaction
 }
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
@@ -137,7 +138,12 @@ func (pg *TransactionsPage) loadTransactions(selectedWalletIndex int) {
 	if err != nil {
 		// log.Error("Error loading transactions:", err)
 	} else {
-		pg.transactions = wallTxs
+		if len(wallTxs) > 20 {
+			pg.paginatedTxns = pg.splitTxns(wallTxs)
+			pg.transactions = pg.paginatedTxns[0]
+		} else {
+			pg.transactions = wallTxs
+		}
 	}
 }
 
@@ -153,7 +159,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *TransactionsPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
-		wallTxs := pg.splitTxns()[0]
+		wallTxs := pg.transactions
 		return layout.Stack{Alignment: layout.N}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -207,14 +213,17 @@ func (pg *TransactionsPage) layoutDesktop(gtx layout.Context) layout.Dimensions 
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
-											gtx.Constraints.Max.X = 110
-											return layout.S.Layout(gtx, func(gtx C) D {
-												return layout.Inset{
-													Top: values.MarginPadding20,
-												}.Layout(gtx, func(gtx C) D {
-													return pg.viewMoreButton.Layout(gtx)
+											if len(pg.paginatedTxns) > 1 {
+												gtx.Constraints.Max.X = 110
+												return layout.S.Layout(gtx, func(gtx C) D {
+													return layout.Inset{
+														Top: values.MarginPadding20,
+													}.Layout(gtx, func(gtx C) D {
+														return pg.viewMoreButton.Layout(gtx)
+													})
 												})
-											})
+											}
+											return D{}
 										}),
 									)
 								})
@@ -391,6 +400,12 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 
 		pg.loadTransactions(pg.selectedCategoryIndex)
 		pg.changed = false
+	if pg.viewMoreButton.Clicked() {
+		for i := 1; i < len(pg.paginatedTxns); i++ {
+			if i != len(pg.paginatedTxns)-1 {
+				pg.transactions = append(pg.transactions, pg.paginatedTxns[i][i])
+			}
+		}
 	}
 }
 
@@ -439,20 +454,20 @@ func (pg *TransactionsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 }
 
-func (pg *TransactionsPage) splitTxns() [][]dcrlibwallet.Transaction {
-	currentView := make([][]dcrlibwallet.Transaction, 0)
+func (pg *TransactionsPage) splitTxns(txnArray []dcrlibwallet.Transaction) [][]dcrlibwallet.Transaction {
+	result := make([][]dcrlibwallet.Transaction, 0)
 	tempTxnsArr := make([]dcrlibwallet.Transaction, 0)
 
-	for i := 0; i < len(pg.transactions); i++ {
-		tempTxnsArr = append(tempTxnsArr, pg.transactions[i])
+	for i := 0; i < len(txnArray); i++ {
+		tempTxnsArr = append(tempTxnsArr, txnArray[i])
 		if ((i + 1) % 20) == 0 {
-			currentView = append(currentView, tempTxnsArr)
+			result = append(result, tempTxnsArr)
 			tempTxnsArr = nil
-		} else if i == len(pg.transactions)-1 {
-			currentView = append(currentView, tempTxnsArr)
+		} else if i == len(txnArray)-1 {
+			result = append(result, tempTxnsArr)
 			tempTxnsArr = nil
 		}
 	}
 
-	return currentView
+	return result
 }
