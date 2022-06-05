@@ -52,6 +52,16 @@ type TransactionsPage struct {
 	wallets         []*dcrlibwallet.Wallet
 	viewMoreButton  decredmaterial.Button
 	paginatedTxns   [][]dcrlibwallet.Transaction
+	orderDropDown    *decredmaterial.DropDown
+	txTypeDropDown   *decredmaterial.DropDown
+	walletDropDown   *decredmaterial.DropDown
+	transactionList  *decredmaterial.ClickableList
+	container        *widget.List
+	transactions     []dcrlibwallet.Transaction
+	wallets          []*dcrlibwallet.Wallet
+	viewMoreButton   decredmaterial.Button
+	paginatedTxns    [][]dcrlibwallet.Transaction
+	currentPageIndex int // position tracker for paginated transactions
 }
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
@@ -138,13 +148,23 @@ func (pg *TransactionsPage) loadTransactions(selectedWalletIndex int) {
 	if err != nil {
 		// log.Error("Error loading transactions:", err)
 	} else {
-		if len(wallTxs) > 20 {
-			pg.paginatedTxns = pg.splitTxns(wallTxs)
-			pg.transactions = pg.paginatedTxns[0]
-		} else {
-			pg.transactions = wallTxs
-		}
+		pg.checkForPagination(wallTxs)
 	}
+}
+
+func (pg *TransactionsPage) checkForPagination(txns []dcrlibwallet.Transaction) bool {
+	if len(txns) > 20 {
+		pg.currentPageIndex = 0
+		pg.paginatedTxns = pg.splitTxns(txns)
+		pg.transactions = pg.paginatedTxns[pg.currentPageIndex]
+		return true
+	} else {
+		pg.currentPageIndex = 0
+		pg.paginatedTxns = nil
+		pg.transactions = txns
+	}
+
+	return false
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -223,6 +243,7 @@ func (pg *TransactionsPage) layoutDesktop(gtx layout.Context) layout.Dimensions 
 													})
 												})
 											}
+
 											return D{}
 										}),
 									)
@@ -401,11 +422,14 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 		pg.loadTransactions(pg.selectedCategoryIndex)
 		pg.changed = false
 	if pg.viewMoreButton.Clicked() {
-		for i := 1; i < len(pg.paginatedTxns); i++ {
-			if i != len(pg.paginatedTxns)-1 {
-				pg.transactions = append(pg.transactions, pg.paginatedTxns[i][i])
-			}
+		pg.currentPageIndex = pg.currentPageIndex + 1
+		for i := 0; i < len(pg.paginatedTxns[pg.currentPageIndex]); i++ {
+			pg.transactions = append(pg.transactions, pg.paginatedTxns[pg.currentPageIndex][i])
 		}
+	}
+
+	if pg.currentPageIndex == len(pg.paginatedTxns)-1 {
+		pg.paginatedTxns = nil
 	}
 }
 
@@ -454,18 +478,19 @@ func (pg *TransactionsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 }
 
-func (pg *TransactionsPage) splitTxns(txnArray []dcrlibwallet.Transaction) [][]dcrlibwallet.Transaction {
+// Splits transactions into arrays of 20 elements each if the number of transactions exceeds 20
+func (pg *TransactionsPage) splitTxns(arrayToSplit []dcrlibwallet.Transaction) [][]dcrlibwallet.Transaction {
 	result := make([][]dcrlibwallet.Transaction, 0)
-	tempTxnsArr := make([]dcrlibwallet.Transaction, 0)
+	currentTxnSlice := make([]dcrlibwallet.Transaction, 0)
 
-	for i := 0; i < len(txnArray); i++ {
-		tempTxnsArr = append(tempTxnsArr, txnArray[i])
+	for i := 0; i < len(arrayToSplit); i++ {
+		currentTxnSlice = append(currentTxnSlice, arrayToSplit[i])
 		if ((i + 1) % 20) == 0 {
-			result = append(result, tempTxnsArr)
-			tempTxnsArr = nil
-		} else if i == len(txnArray)-1 {
-			result = append(result, tempTxnsArr)
-			tempTxnsArr = nil
+			result = append(result, currentTxnSlice)
+			currentTxnSlice = nil
+		} else if i == len(arrayToSplit)-1 {
+			result = append(result, currentTxnSlice)
+			currentTxnSlice = nil
 		}
 	}
 
