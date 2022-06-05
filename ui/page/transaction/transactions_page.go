@@ -158,11 +158,11 @@ func (pg *TransactionsPage) checkForPagination(txns []dcrlibwallet.Transaction) 
 		pg.paginatedTxns = pg.splitTxns(txns)
 		pg.transactions = pg.paginatedTxns[pg.currentPageIndex]
 		return true
-	} else {
-		pg.currentPageIndex = 0
-		pg.paginatedTxns = nil
-		pg.transactions = txns
 	}
+
+	pg.currentPageIndex = 0
+	pg.paginatedTxns = nil
+	pg.transactions = txns
 
 	return false
 }
