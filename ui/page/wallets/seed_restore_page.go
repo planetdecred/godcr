@@ -2,7 +2,6 @@ package wallets
 
 import (
 	"fmt"
-
 	"image/color"
 	"strings"
 

@@ -257,6 +257,7 @@ func (pg *SaveSeedPage) handleCopyEvent(gtx layout.Context) {
 		time.AfterFunc(time.Second*3, func() {
 			pg.copy.Text = "Copy"
 			pg.copy.Color = pg.Theme.Color.Primary
+			pg.RefreshWindow()
 		})
 	}
 }
