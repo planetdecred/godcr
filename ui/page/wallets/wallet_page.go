@@ -73,9 +73,10 @@ type WalletPage struct {
 
 	multiWallet *dcrlibwallet.MultiWallet
 
-	listItems      []*walletListItem
-	badWalletsList []*badWalletListItem
-	addWalletMenu  []menuItem
+	listItems                []*walletListItem
+	badWalletsList           []*badWalletListItem
+	addWalletMenu            []menuItem
+	watchOnlyWalletActionBtn []*decredmaterial.Clickable
 
 	container   *widget.List
 	backdrop    *widget.Clickable
@@ -84,7 +85,6 @@ type WalletPage struct {
 	walletIcon               *decredmaterial.Image
 	walletAlertIcon          *decredmaterial.Image
 	watchOnlyWalletIcon      *decredmaterial.Image
-	watchWalletsList         *decredmaterial.ClickableList
 	openAddWalletPopupButton *decredmaterial.Clickable
 	shadowBox                *decredmaterial.Shadow
 	addAcctIcon              *decredmaterial.Icon
@@ -112,7 +112,6 @@ func NewWalletPage(l *load.Load) *WalletPage {
 			List: layout.List{Axis: layout.Vertical},
 		},
 		walletsList:              layout.List{Axis: layout.Vertical},
-		watchWalletsList:         l.Theme.NewClickableList(layout.Vertical),
 		card:                     l.Theme.Card(),
 		backdrop:                 new(widget.Clickable),
 		openAddWalletPopupButton: l.Theme.NewClickable(false),
@@ -168,6 +167,7 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 	wallets := pg.WL.SortedWalletList()
 
 	listItems := make([]*walletListItem, 0)
+	watchOnlyWalletActionBtn := make([]*decredmaterial.Clickable, 0)
 
 	for _, wal := range wallets {
 		accountsResult, err := wal.GetAccountsRaw()
@@ -189,8 +189,12 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 			accountsList: pg.Theme.NewClickableList(layout.Vertical),
 		}
 
+		clickable := pg.Theme.NewClickable(true)
+		watchOnlyWalletActionBtn = append(watchOnlyWalletActionBtn, clickable)
+
 		if wal.IsWatchingOnlyWallet() {
 			pg.hasWatchOnly = true
+
 			listItem.moreButton = pg.Theme.IconButtonWithStyle(
 				decredmaterial.IconButtonStyle{
 					Button: new(widget.Clickable),
@@ -221,6 +225,7 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 	}
 
 	pg.listLock.Lock()
+	pg.watchOnlyWalletActionBtn = watchOnlyWalletActionBtn
 	pg.listItems = listItems
 	pg.listLock.Unlock()
 
@@ -677,8 +682,8 @@ func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 	listItems := pg.listItems
 	pg.listLock.Unlock()
 
-	return pg.watchWalletsList.Layout(gtx, len(listItems), func(gtx C, i int) D {
-
+	list := &layout.List{Axis: layout.Vertical}
+	return list.Layout(gtx, len(listItems), func(gtx C, i int) D {
 		listItem := listItems[i]
 
 		if !listItem.wal.IsWatchingOnlyWallet() {
@@ -690,26 +695,30 @@ func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							inset := layout.Inset{
-								Left:  values.MarginPadding10,
-								Right: values.MarginPadding10,
-							}
-							return inset.Layout(gtx, pg.watchOnlyWalletIcon.Layout24dp)
-						}),
-						layout.Rigid(pg.Theme.Body2(listItem.wal.Name).Layout),
 						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
+							return pg.watchOnlyWalletActionBtn[i].Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										balanceLabel := pg.Theme.Body2(listItem.totalBalance)
-										return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
+										inset := layout.Inset{
+											Left:  values.MarginPadding10,
+											Right: values.MarginPadding10,
+										}
+										return inset.Layout(gtx, pg.watchOnlyWalletIcon.Layout24dp)
 									}),
-									layout.Rigid(func(gtx C) D {
-										pg.layoutOptionsMenu(gtx, i, listItem)
-										return layout.Inset{Top: unit.Dp(-3)}.Layout(gtx, listItem.moreButton.Layout)
+									layout.Rigid(pg.Theme.Body2(listItem.wal.Name).Layout),
+									layout.Flexed(1, func(gtx C) D {
+										return layout.E.Layout(gtx, func(gtx C) D {
+											balanceLabel := pg.Theme.Body2(listItem.totalBalance)
+											return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
+										})
 									}),
 								)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								pg.layoutOptionsMenu(gtx, i, listItem)
+								return layout.Inset{Top: unit.Dp(-3)}.Layout(gtx, listItem.moreButton.Layout)
 							})
 						}),
 					)
@@ -1107,13 +1116,15 @@ func (pg *WalletPage) HandleUserInteractions() {
 		pg.closePopups()
 	}
 
-	if ok, selectedItem := pg.watchWalletsList.ItemClicked(); ok {
-		pg.listLock.Lock()
-		listItem := pg.listItems[selectedItem]
-		pg.listLock.Unlock()
+	for index, btn := range pg.watchOnlyWalletActionBtn {
+		for btn.Clicked() {
+			pg.listLock.Lock()
+			listItem := pg.listItems[index]
+			pg.listLock.Unlock()
 
-		// TODO: find default account using number
-		pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[0]))
+			// TODO: find default account using number
+			pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[0]))
+		}
 	}
 
 	pg.listLock.Lock()
