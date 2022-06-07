@@ -64,11 +64,12 @@ type MainPage struct {
 	*listeners.SyncProgressListener
 	*listeners.TxAndBlockNotificationListener
 	*listeners.ProposalNotificationListener
-	ctx                 context.Context
-	ctxCancel           context.CancelFunc
-	appBarNav           components.NavDrawer
-	drawerNav           components.NavDrawer
-	bottomNavigationBar components.BottomNavigationBar
+	ctx                  context.Context
+	ctxCancel            context.CancelFunc
+	appBarNav            components.NavDrawer
+	drawerNav            components.NavDrawer
+	bottomNavigationBar  components.BottomNavigationBar
+	floatingActionButton components.BottomNavigationBar
 
 	hideBalanceItem HideBalanceItem
 
@@ -238,6 +239,13 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.StakeIcon,
+				ImageInactive: mp.Theme.Icons.StakeIconInactive,
+				Title:         values.String(values.StrStaking),
+				PageID:        staking.OverviewPageID,
+			},
+			{
+				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.WalletIcon,
 				ImageInactive: mp.Theme.Icons.WalletIconInactive,
 				Title:         values.String(values.StrWallets),
@@ -252,6 +260,27 @@ func (mp *MainPage) initNavItems() {
 			},
 		},
 	}
+
+	mp.floatingActionButton = components.BottomNavigationBar{
+		Load:        mp.Load,
+		CurrentPage: mp.currentPageID(),
+		FloatingActionButton: []components.BottomNavigationBarHandler{
+			{
+				Clickable: mp.Theme.NewClickable(true),
+				Image:     mp.Theme.Icons.SendIcon,
+				Title:     values.String(values.StrSend),
+				PageID:    send.PageID,
+			},
+			{
+				Clickable: mp.Theme.NewClickable(true),
+				Image:     mp.Theme.Icons.ReceiveIcon,
+				Title:     values.String(values.StrReceive),
+				PageID:    ReceivePageID,
+			},
+		},
+	}
+	mp.floatingActionButton.FloatingActionButton[0].Clickable.Hoverable = false
+	mp.floatingActionButton.FloatingActionButton[1].Clickable.Hoverable = false
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -430,6 +459,7 @@ func (mp *MainPage) HandleUserInteractions() {
 	mp.drawerNav.CurrentPage = mp.currentPageID()
 	mp.bottomNavigationBar.CurrentPage = mp.currentPageID()
 	mp.appBarNav.CurrentPage = mp.currentPageID()
+	mp.floatingActionButton.CurrentPage = mp.currentPageID()
 
 	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
 		mp.isNavExpanded = true
@@ -512,6 +542,8 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = overview.NewOverviewPage(mp.Load)
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
+			case staking.OverviewPageID:
+				pg = staking.NewStakingPage(mp.Load)
 			case wallets.WalletPageID:
 				pg = wallets.NewWalletPage(mp.Load)
 			case MorePageID:
@@ -524,6 +556,35 @@ func (mp *MainPage) HandleUserInteractions() {
 
 			// clear stack
 			mp.changeFragment(pg)
+		}
+	}
+
+	for i, item := range mp.floatingActionButton.FloatingActionButton {
+		for item.Clickable.Clicked() {
+			var pg load.Page
+			if i == 0 {
+				if mp.sendPage == nil {
+					mp.sendPage = send.NewSendPage(mp.Load)
+				}
+				pg = mp.sendPage
+			} else {
+				if mp.receivePage == nil {
+					mp.receivePage = NewReceivePage(mp.Load)
+				}
+				pg = mp.receivePage
+			}
+
+			if pg.ID() == mp.currentPageID() {
+				continue
+			}
+
+			if mp.WL.MultiWallet.IsSynced() {
+				mp.ChangeFragment(pg)
+			} else if mp.WL.MultiWallet.IsSyncing() {
+				mp.Toast.NotifyError("Wallet is syncing, please wait")
+			} else {
+				mp.Toast.NotifyError("Not connected to the Decred network")
+			}
 		}
 	}
 
@@ -647,7 +708,8 @@ func (mp *MainPage) popToFragment(pageID string) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	if gtx.Constraints.Max.X <= gtx.Px(unit.Sp(428)) {
+	mp.Load.SetCurrentAppWidth(gtx.Constraints.Max.X)
+	if mp.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
 		return mp.layoutMobile(gtx)
 	}
 	return mp.layoutDesktop(gtx)
@@ -684,12 +746,19 @@ func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 
 func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Flexed(0.125, mp.LayoutTopBar),
-		layout.Flexed(0.75, func(gtx C) D {
-			if mp.currentPage == nil {
-				return layout.Dimensions{}
-			}
-			return mp.currentPage.Layout(gtx)
+		layout.Flexed(0.08, mp.LayoutTopBar),
+		layout.Flexed(0.795, func(gtx C) D {
+			return layout.Stack{Alignment: layout.N}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					if mp.currentPage == nil {
+						return layout.Dimensions{}
+					}
+					return mp.currentPage.Layout(gtx)
+				}),
+				layout.Stacked(func(gtx C) D {
+					return mp.floatingActionButton.LayoutSendReceive(gtx)
+				}),
+			)
 		}),
 		layout.Flexed(0.125, mp.bottomNavigationBar.LayoutBottomNavigationBar),
 	)
@@ -753,7 +822,7 @@ func (mp *MainPage) totalDCRBalance(gtx C) D {
 	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
 }
 
-func (mp *MainPage) LayoutTopBar(gtx C) D {
+func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 	return decredmaterial.LinearLayout{
 		Width:       decredmaterial.MatchParent,
 		Height:      decredmaterial.WrapContent,
@@ -811,6 +880,9 @@ func (mp *MainPage) LayoutTopBar(gtx C) D {
 				}),
 				layout.Rigid(func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					if mp.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+						return D{}
+					}
 					return mp.appBarNav.LayoutTopBar(gtx)
 				}),
 			)

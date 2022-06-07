@@ -22,9 +22,10 @@ type DCRUSDTBittrex struct {
 type Load struct {
 	Theme *decredmaterial.Theme
 
-	WL      *WalletLoad
-	Printer *message.Printer
-	Network string
+	WL              *WalletLoad
+	Printer         *message.Printer
+	Network         string
+	CurrentAppWidth int
 
 	Toast *notification.Toast
 
