@@ -68,5 +68,5 @@ func (pg *Page) showInfoModal() {
 		PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
 			return true
 		})
-	pg.ShowModal(info)
+	pg.ParentWindow().ShowModal(info)
 }

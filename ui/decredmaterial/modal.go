@@ -1,15 +1,23 @@
 package decredmaterial
 
 import (
+	"fmt"
 	"image/color"
 
 	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/planetdecred/godcr/app"
 )
 
 type Modal struct {
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Modal satisfy the app.Modal interface. It also defines
+	// helper methods for accessing the WindowNavigator that displayed this
+	// modal.
+	*app.GenericPageModal
+
 	overlayColor color.NRGBA
 	background   color.NRGBA
 	list         *widget.List
@@ -23,19 +31,21 @@ type Modal struct {
 	showScrollBar bool
 }
 
-func (t *Theme) ModalFloatTitle() *Modal {
-	mod := t.Modal()
+func (t *Theme) ModalFloatTitle(id string) *Modal {
+	mod := t.Modal(id)
 	mod.isFloatTitle = true
 	return mod
 }
 
-func (t *Theme) Modal() *Modal {
+func (t *Theme) Modal(id string) *Modal {
 	overlayColor := t.Color.Black
 	overlayColor.A = 200
 
+	uniqueID := fmt.Sprintf("%s-%d", id, GenerateRandomNumber())
 	m := &Modal{
-		overlayColor: overlayColor,
-		background:   t.Color.Surface,
+		GenericPageModal: app.NewGenericPageModal(uniqueID),
+		overlayColor:     overlayColor,
+		background:       t.Color.Surface,
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical, Alignment: layout.Middle},
 		},
@@ -47,6 +57,28 @@ func (t *Theme) Modal() *Modal {
 	m.scroll = t.List(m.list)
 
 	return m
+}
+
+// Dismiss removes the modal from the window. Does nothing if the modal was
+// not previously pushed into a window.
+func (m *Modal) Dismiss() {
+	// ParentWindow will only be accessible if this modal has been
+	// pushed into display by a WindowNavigator.
+	if parentWindow := m.ParentWindow(); parentWindow != nil {
+		parentWindow.DismissModal(m.ID())
+	} else {
+		panic("can't dismiss a modal that has not been displayed")
+	}
+}
+
+// IsShown is true if this modal has been pushed into a window and is currently
+// the top modal in the window.
+func (m *Modal) IsShown() bool {
+	if parentWindow := m.ParentWindow(); parentWindow != nil {
+		topModal := parentWindow.TopModal()
+		return topModal != nil && topModal.ID() == m.ID()
+	}
+	return false
 }
 
 // Layout renders the modal widget to screen. The modal assumes the size of

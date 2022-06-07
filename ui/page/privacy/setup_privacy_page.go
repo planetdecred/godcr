@@ -8,6 +8,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -24,6 +25,11 @@ type (
 
 type SetupPrivacyPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -38,22 +44,16 @@ type SetupPrivacyPage struct {
 
 func NewSetupPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SetupPrivacyPage {
 	pg := &SetupPrivacyPage{
-		Load:           l,
-		wallet:         wallet,
-		pageContainer:  layout.List{Axis: layout.Vertical},
-		toPrivacySetup: l.Theme.Button("Set up mixer for this wallet"),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(SetupPrivacyPageID),
+		wallet:           wallet,
+		pageContainer:    layout.List{Axis: layout.Vertical},
+		toPrivacySetup:   l.Theme.Button("Set up mixer for this wallet"),
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
 
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *SetupPrivacyPage) ID() string {
-	return SetupPrivacyPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -76,14 +76,14 @@ func (pg *SetupPrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			InfoTemplate: modal.PrivacyInfoTemplate,
 			Body: func(gtx layout.Context) layout.Dimensions {
 				return pg.privacyIntroLayout(gtx)
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, d)
 }
@@ -166,13 +166,15 @@ func (pg *SetupPrivacyPage) HandleUserInteractions() {
 		}
 
 		if walCount <= 1 {
-			go showModalSetupMixerInfo(&sharedModalConf{
-				Load:     pg.Load,
-				wallet:   pg.wallet,
-				checkBox: pg.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
+			go showModalSetupMixerInfo(&sharedModalConfig{
+				Load:          pg.Load,
+				window:        pg.ParentWindow(),
+				pageNavigator: pg.ParentNavigator(),
+				wallet:        pg.wallet,
+				checkBox:      pg.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
 			})
 		} else {
-			pg.ChangeFragment(NewSetupMixerAccountsPage(pg.Load, pg.wallet))
+			pg.ParentNavigator().Display(NewSetupMixerAccountsPage(pg.Load, pg.wallet))
 		}
 	}
 }

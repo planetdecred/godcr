@@ -17,11 +17,9 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const ModalInputVote = "input_vote_modal"
-
 type voteModal struct {
 	*load.Load
-	modal decredmaterial.Modal
+	*decredmaterial.Modal
 
 	detailsMu      sync.Mutex
 	detailsCancel  context.CancelFunc
@@ -42,7 +40,7 @@ type voteModal struct {
 func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 	vm := &voteModal{
 		Load:           l,
-		modal:          *l.Theme.ModalFloatTitle(),
+		Modal:          l.Theme.ModalFloatTitle("input_vote_modal"),
 		proposal:       proposal,
 		materialLoader: material.Loader(l.Theme.Base),
 		voteBtn:        l.Theme.Button(values.String(values.StrVote)),
@@ -74,7 +72,7 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 
 			vm.detailsMu.Unlock()
 
-			vm.RefreshWindow()
+			vm.ParentWindow().Reload()
 
 			go func() {
 				voteDetails, err := vm.WL.MultiWallet.Politeia.ProposalVoteDetailsRaw(w.ID, vm.proposal.Token)
@@ -92,24 +90,12 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 	return vm
 }
 
-func (vm *voteModal) ModalID() string {
-	return ModalInputVote
-}
-
 func (vm *voteModal) OnResume() {
 	vm.walletSelector.SelectFirstValidWallet()
 }
 
 func (vm *voteModal) OnDismiss() {
 
-}
-
-func (vm *voteModal) Show() {
-	vm.ShowModal(vm)
-}
-
-func (vm *voteModal) Dismiss() {
-	vm.DismissModal(vm)
 }
 
 func (vm *voteModal) eligibleVotes() int {
@@ -161,7 +147,7 @@ func (vm *voteModal) sendVotes() {
 	addVotes(dcrlibwallet.VoteBitYes, vm.yesVote.voteCount())
 	addVotes(dcrlibwallet.VoteBitNo, vm.noVote.voteCount())
 
-	modal.NewPasswordModal(vm.Load).
+	passwordModal := modal.NewPasswordModal(vm.Load).
 		Title(values.String(values.StrVoteConfirm)).
 		NegativeButton(values.String(values.StrCancel), func() {
 			vm.isVoting = false
@@ -181,7 +167,8 @@ func (vm *voteModal) sendVotes() {
 			}()
 
 			return false
-		}).Show()
+		})
+	vm.ParentWindow().ShowModal(passwordModal)
 }
 
 func (vm *voteModal) Handle() {
@@ -227,7 +214,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 			return t.Layout(gtx)
 		},
 		func(gtx C) D {
-			return vm.walletSelector.Layout(gtx)
+			return vm.walletSelector.Layout(gtx, vm.ParentWindow())
 		},
 		func(gtx C) D {
 			if voteDetails != nil {
@@ -381,7 +368,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return vm.modal.Layout(gtx, w)
+	return vm.Modal.Layout(gtx, w)
 }
 
 func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidgets) D {

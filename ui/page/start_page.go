@@ -7,6 +7,7 @@ import (
 	"gioui.org/text"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -18,6 +19,11 @@ const StartPageID = "start_page"
 
 type startPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	createButton          decredmaterial.Button
 	restoreButton         decredmaterial.Button
@@ -26,10 +32,11 @@ type startPage struct {
 	loading bool
 }
 
-func NewStartPage(l *load.Load) load.Page {
+func NewStartPage(l *load.Load) app.Page {
 	sp := &startPage{
-		Load:    l,
-		loading: true,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(StartPageID),
+		loading:          true,
 
 		watchOnlyWalletButton: l.Theme.Button(values.String(values.StrImportWatchingOnlyWallet)),
 		createButton:          l.Theme.Button(values.String(values.StrCreateANewWallet)),
@@ -39,13 +46,6 @@ func NewStartPage(l *load.Load) load.Page {
 	return sp
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (sp *startPage) ID() string {
-	return StartPageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -53,23 +53,19 @@ func (sp *startPage) ID() string {
 func (sp *startPage) OnNavigatedTo() {
 	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
 
-	// refresh theme now that config is available
-	sp.RefreshTheme()
-
 	if sp.WL.MultiWallet.LoadedWalletsCount() > 0 {
 		if sp.WL.MultiWallet.IsStartupSecuritySet() {
 			sp.unlock()
 		} else {
 			go sp.openWallets("")
 		}
-
 	} else {
 		sp.loading = false
 	}
 }
 
 func (sp *startPage) unlock() {
-	modal.NewPasswordModal(sp.Load).
+	startupPasswordModal := modal.NewPasswordModal(sp.Load).
 		Title(values.String(values.StrUnlockWithPassword)).
 		Hint(values.String(values.StrStartupPassword)).
 		NegativeButton(values.String(values.StrExit), func() {
@@ -88,7 +84,8 @@ func (sp *startPage) unlock() {
 				m.Dismiss()
 			}()
 			return false
-		}).Show()
+		})
+	sp.ParentWindow().ShowModal(startupPasswordModal)
 }
 
 func (sp *startPage) openWallets(password string) error {
@@ -99,7 +96,7 @@ func (sp *startPage) openWallets(password string) error {
 		return err
 	}
 
-	sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+	sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
 	return nil
 }
 
@@ -110,7 +107,7 @@ func (sp *startPage) openWallets(password string) error {
 // Part of the load.Page interface.
 func (sp *startPage) HandleUserInteractions() {
 	for sp.createButton.Clicked() {
-		modal.NewCreatePasswordModal(sp.Load).
+		spendingPasswordModal := modal.NewCreatePasswordModal(sp.Load).
 			Title(values.String(values.StrCreateANewWallet)).
 			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
@@ -129,21 +126,22 @@ func (sp *startPage) HandleUserInteractions() {
 					sp.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 					m.Dismiss()
 
-					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+					sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
 				}()
 				return false
-			}).Show()
+			})
+		sp.ParentWindow().ShowModal(spendingPasswordModal)
 	}
 
 	for sp.restoreButton.Clicked() {
 		afterRestore := func() {
-			sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+			sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
 		}
-		sp.ChangeWindowPage(wallets.NewRestorePage(sp.Load, afterRestore), true)
+		sp.ParentNavigator().Display(wallets.NewRestorePage(sp.Load, afterRestore))
 	}
 
 	for sp.watchOnlyWalletButton.Clicked() {
-		modal.NewCreateWatchOnlyModal(sp.Load).
+		createWatchOnlyModal := modal.NewCreateWatchOnlyModal(sp.Load).
 			EnableName(false).
 			WatchOnlyCreated(func(_, password string, m *modal.CreateWatchOnlyModal) bool {
 				go func() {
@@ -155,10 +153,11 @@ func (sp *startPage) HandleUserInteractions() {
 					}
 					m.Dismiss()
 
-					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+					sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
 				}()
 				return false
-			}).Show()
+			})
+		sp.ParentWindow().ShowModal(createWatchOnlyModal)
 	}
 }
 

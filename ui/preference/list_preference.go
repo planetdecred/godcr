@@ -1,7 +1,6 @@
 package preference
 
 import (
-	"fmt"
 	"sort"
 
 	"gioui.org/layout"
@@ -13,11 +12,9 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const ListPreference = "list_preference"
-
 type ListPreferenceModal struct {
 	*load.Load
-	modal *decredmaterial.Modal
+	*decredmaterial.Modal
 
 	optionsRadioGroup *widget.Enum
 	cancelButton      decredmaterial.IconButton
@@ -29,7 +26,6 @@ type ListPreferenceModal struct {
 	defaultValue  string // str-key
 	initialValue  string
 	currentValue  string
-	randomID      string
 
 	updateButtonClicked func()
 }
@@ -48,23 +44,18 @@ func NewListPreference(l *load.Load, preferenceKey, defaultValue string, items m
 		Load:          l,
 		preferenceKey: preferenceKey,
 		defaultValue:  defaultValue,
-		randomID:      fmt.Sprintf("%s-%d", ListPreference, decredmaterial.GenerateRandomNumber()),
 
 		items:    items,
 		itemKeys: sortedKeys,
 
 		optionsRadioGroup: new(widget.Enum),
-		modal:             l.Theme.ModalFloatTitle(),
+		Modal:             l.Theme.ModalFloatTitle("list_preference"),
 	}
 
 	lp.cancelButton, _ = components.SubpageHeaderButtons(l)
 	lp.cancelButton.Icon = l.Theme.Icons.ContentClear
 
 	return &lp
-}
-
-func (lp *ListPreferenceModal) ModalID() string {
-	return lp.randomID
 }
 
 func (lp *ListPreferenceModal) OnResume() {
@@ -80,14 +71,6 @@ func (lp *ListPreferenceModal) OnResume() {
 }
 
 func (lp *ListPreferenceModal) OnDismiss() {}
-
-func (lp *ListPreferenceModal) Show() {
-	lp.ShowModal(lp)
-}
-
-func (lp *ListPreferenceModal) Dismiss() {
-	lp.DismissModal(lp)
-}
 
 func (lp *ListPreferenceModal) Title(title string) *ListPreferenceModal {
 	lp.title = title
@@ -105,16 +88,16 @@ func (lp *ListPreferenceModal) Handle() {
 		lp.currentValue = lp.optionsRadioGroup.Value
 		lp.WL.MultiWallet.SaveUserConfigValue(lp.preferenceKey, lp.optionsRadioGroup.Value)
 		lp.updateButtonClicked()
-		lp.RefreshTheme()
-		lp.DismissModal(lp)
+		lp.RefreshTheme(lp.ParentWindow())
+		lp.Dismiss()
 	}
 
 	for lp.cancelButton.Button.Clicked() {
-		lp.DismissModal(lp)
+		lp.Modal.Dismiss()
 	}
 
-	if lp.modal.BackdropClicked(true) {
-		lp.DismissModal(lp)
+	if lp.Modal.BackdropClicked(true) {
+		lp.Modal.Dismiss()
 	}
 }
 
@@ -135,7 +118,7 @@ func (lp *ListPreferenceModal) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return lp.modal.Layout(gtx, w)
+	return lp.Modal.Layout(gtx, w)
 }
 
 func (lp *ListPreferenceModal) layoutItems() []layout.FlexChild {

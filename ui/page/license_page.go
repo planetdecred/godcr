@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -30,14 +31,20 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.`
 
 type LicensePage struct {
 	*load.Load
-	pageContainer *widget.List
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
-	backButton decredmaterial.IconButton
+	pageContainer *widget.List
+	backButton    decredmaterial.IconButton
 }
 
 func NewLicensePage(l *load.Load) *LicensePage {
 	pg := &LicensePage{
-		Load: l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(LicensePageID),
 		pageContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -45,13 +52,6 @@ func NewLicensePage(l *load.Load) *LicensePage {
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *LicensePage) ID() string {
-	return LicensePageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -70,7 +70,7 @@ func (pg *LicensePage) Layout(gtx C) D {
 			Title:      values.String(values.StrLicense),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.Theme.List(pg.pageContainer).Layout(gtx, 1, func(gtx C, i int) D {
@@ -84,7 +84,7 @@ func (pg *LicensePage) Layout(gtx C) D {
 				})
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, d)
 }

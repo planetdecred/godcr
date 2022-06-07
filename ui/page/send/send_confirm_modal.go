@@ -15,11 +15,9 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const ModalSendConfirm = "send_confirm_modal"
-
 type sendConfirmModal struct {
 	*load.Load
-	modal *decredmaterial.Modal
+	*decredmaterial.Modal
 
 	closeConfirmationModalButton decredmaterial.Button
 	confirmButton                decredmaterial.Button
@@ -30,14 +28,12 @@ type sendConfirmModal struct {
 
 	*authoredTxData
 	exchangeRateSet bool
-	isShown         bool
-	parent          load.Page // Reference to the page that this modal is shown on.
 }
 
 func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
 	scm := &sendConfirmModal{
 		Load:  l,
-		modal: l.Theme.ModalFloatTitle(),
+		Modal: l.Theme.ModalFloatTitle("send_confirm_modal"),
 
 		authoredTxData: data,
 	}
@@ -57,41 +53,11 @@ func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
 	return scm
 }
 
-func (scm *sendConfirmModal) ModalID() string {
-	return ModalSendConfirm
-}
-
-func (scm *sendConfirmModal) Show() {
-	scm.isShown = true
-	scm.ShowModal(scm)
-}
-
-func (scm *sendConfirmModal) Dismiss() {
-	scm.isShown = false
-	// Call Parent's onResume to resubscribe parent for key events.
-	if scm.parent != nil {
-		scm.parent.OnNavigatedTo()
-	}
-	scm.DismissModal(scm)
-}
-
 func (scm *sendConfirmModal) OnResume() {
 	scm.passwordEditor.Editor.Focus()
 }
 
-func (scm *sendConfirmModal) OnDismiss() {
-
-}
-
-func (scm *sendConfirmModal) IsShown() bool {
-	return scm.isShown
-}
-
-// SetParent sets the page that created sendConfirmModal as it's parent.
-func (scm *sendConfirmModal) SetParent(parent load.Page) *sendConfirmModal {
-	scm.parent = parent
-	return scm
-}
+func (scm *sendConfirmModal) OnDismiss() {}
 
 func (scm *sendConfirmModal) broadcastTransaction() {
 	password := scm.passwordEditor.Editor.Text()
@@ -100,11 +66,11 @@ func (scm *sendConfirmModal) broadcastTransaction() {
 	}
 
 	scm.isSending = true
-	scm.modal.SetDisabled(true)
+	scm.Modal.SetDisabled(true)
 	go func() {
 		_, err := scm.authoredTxData.txAuthor.Broadcast([]byte(password))
 		scm.isSending = false
-		scm.modal.SetDisabled(false)
+		scm.Modal.SetDisabled(false)
 		if err != nil {
 			scm.Toast.NotifyError(err.Error())
 			return
@@ -290,7 +256,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return scm.modal.Layout(gtx, w)
+	return scm.Modal.Layout(gtx, w)
 }
 
 func (scm *sendConfirmModal) contentRow(gtx layout.Context, leftValue, rightValue, walletName string) layout.Dimensions {

@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/layout"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -15,6 +16,12 @@ const SecurityToolsPageID = "SecurityTools"
 
 type SecurityToolsPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	verifyMessage   *decredmaterial.Clickable
 	validateAddress *decredmaterial.Clickable
 	shadowBox       *decredmaterial.Shadow
@@ -24,9 +31,10 @@ type SecurityToolsPage struct {
 
 func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 	pg := &SecurityToolsPage{
-		Load:            l,
-		verifyMessage:   l.Theme.NewClickable(true),
-		validateAddress: l.Theme.NewClickable(true),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(SecurityToolsPageID),
+		verifyMessage:    l.Theme.NewClickable(true),
+		validateAddress:  l.Theme.NewClickable(true),
 	}
 
 	pg.shadowBox = l.Theme.Shadow()
@@ -38,13 +46,6 @@ func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *SecurityToolsPage) ID() string {
-	return SecurityToolsPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -66,7 +67,7 @@ func (pg *SecurityToolsPage) Layout(gtx C) D {
 			Title:      values.String(values.StrSecurityTools),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -81,7 +82,7 @@ func (pg *SecurityToolsPage) Layout(gtx C) D {
 				})
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, body)
 }
@@ -131,11 +132,11 @@ func (pg *SecurityToolsPage) pageSections(gtx C, icon *decredmaterial.Image, act
 // Part of the load.Page interface.
 func (pg *SecurityToolsPage) HandleUserInteractions() {
 	if pg.verifyMessage.Clicked() {
-		pg.ChangeFragment(NewVerifyMessagePage(pg.Load))
+		pg.ParentNavigator().Display(NewVerifyMessagePage(pg.Load))
 	}
 
 	if pg.validateAddress.Clicked() {
-		pg.ChangeFragment(NewValidateAddressPage(pg.Load))
+		pg.ParentNavigator().Display(NewValidateAddressPage(pg.Load))
 	}
 }
 

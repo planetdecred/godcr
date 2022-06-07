@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -14,6 +15,12 @@ const AboutPageID = "About"
 
 type AboutPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	card      decredmaterial.Card
 	container *layout.List
 
@@ -35,6 +42,7 @@ type AboutPage struct {
 func NewAboutPage(l *load.Load) *AboutPage {
 	pg := &AboutPage{
 		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(AboutPageID),
 		card:             l.Theme.Card(),
 		container:        &layout.List{Axis: layout.Vertical},
 		version:          l.Theme.Body1(values.String(values.StrVersion)),
@@ -65,13 +73,6 @@ func NewAboutPage(l *load.Load) *AboutPage {
 	return pg
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *AboutPage) ID() string {
-	return AboutPageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -90,7 +91,7 @@ func (pg *AboutPage) Layout(gtx C) D {
 			Title:      values.String(values.StrAbout),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {
@@ -98,7 +99,7 @@ func (pg *AboutPage) Layout(gtx C) D {
 				})
 			},
 		}
-		return page.Layout(gtx)
+		return page.Layout(pg.ParentWindow(), gtx)
 	}
 
 	return components.UniformPadding(gtx, body)
@@ -177,7 +178,7 @@ func (pg *AboutPage) layoutRows(gtx C) D {
 // Part of the load.Page interface.
 func (pg *AboutPage) HandleUserInteractions() {
 	if pg.licenseRow.Clicked() {
-		pg.ChangeFragment(NewLicensePage(pg.Load))
+		pg.ParentNavigator().Display(NewLicensePage(pg.Load))
 	}
 }
 

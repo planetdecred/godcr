@@ -9,6 +9,7 @@ import (
 	"gioui.org/text"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -19,6 +20,11 @@ const GovernancePageID = "Governance"
 
 type Page struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	multiWallet *dcrlibwallet.MultiWallet
 
@@ -41,6 +47,7 @@ var governanceTabTitles = []string{
 func NewGovernancePage(l *load.Load) *Page {
 	pg := &Page{
 		Load:                  l,
+		GenericPageModal:      app.NewGenericPageModal(GovernancePageID),
 		multiWallet:           l.WL.MultiWallet,
 		selectedCategoryIndex: -1,
 		proposalsPage:         NewProposalsPage(l),
@@ -83,10 +90,6 @@ func (pg *Page) OnNavigatedTo() {
 func (pg *Page) OnNavigatedFrom() {
 	pg.consensusPage.OnNavigatedFrom()
 	pg.proposalsPage.OnNavigatedFrom()
-}
-
-func (pg *Page) ID() string {
-	return GovernancePageID
 }
 
 func (pg *Page) HandleUserInteractions() {

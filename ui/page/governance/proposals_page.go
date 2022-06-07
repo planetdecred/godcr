@@ -10,6 +10,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -28,6 +29,11 @@ type (
 
 type ProposalsPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	*listeners.ProposalNotificationListener
 	ctx        context.Context // page context
@@ -54,8 +60,9 @@ type ProposalsPage struct {
 
 func NewProposalsPage(l *load.Load) *ProposalsPage {
 	pg := &ProposalsPage{
-		Load:        l,
-		multiWallet: l.WL.MultiWallet,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(ProposalsPageID),
+		multiWallet:      l.WL.MultiWallet,
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -93,13 +100,6 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 	}, values.ProposalDropdownGroup, 1)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *ProposalsPage) ID() string {
-	return ProposalsPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -168,7 +168,7 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 		selectedProposal := pg.proposalItems[selectedItem].Proposal
 		pg.proposalMu.Unlock()
 
-		pg.ChangeFragment(NewProposalDetailsPage(pg.Load, &selectedProposal))
+		pg.ParentNavigator().Display(NewProposalDetailsPage(pg.Load, &selectedProposal))
 	}
 
 	for pg.syncButton.Clicked() {
@@ -179,19 +179,20 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 	}
 
 	if pg.infoButton.Button.Clicked() {
-		modal.NewInfoModal(pg.Load).
+		infoModal := modal.NewInfoModal(pg.Load).
 			Title(values.String(values.StrProposal)).
 			Body(values.String(values.StrOffChainVote)).
 			SetCancelable(true).
 			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
 				return true
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(infoModal)
 	}
 
 	if pg.syncCompleted {
 		time.AfterFunc(time.Second*3, func() {
 			pg.syncCompleted = false
-			pg.RefreshWindow()
+			pg.ParentWindow().Reload()
 		})
 	}
 
@@ -279,7 +280,7 @@ func (pg *ProposalsPage) layoutContent(gtx C) D {
 						return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return components.ProposalsList(gtx, pg.Load, proposalItems[i])
+									return components.ProposalsList(pg.ParentWindow(), gtx, pg.Load, proposalItems[i])
 								}),
 								layout.Rigid(func(gtx C) D {
 									return pg.Theme.Separator().Layout(gtx)
@@ -371,7 +372,7 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 					pg.isSyncing = false
 
 					pg.fetchProposals()
-					pg.RefreshWindow()
+					pg.ParentWindow().Reload()
 				}
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalsPageID)

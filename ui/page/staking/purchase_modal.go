@@ -18,17 +18,15 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const stakingModalID = "staking_modal"
-
 type stakingModal struct {
 	*load.Load
+	*decredmaterial.Modal
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
 	ticketPrice dcrutil.Amount
 
-	modal          decredmaterial.Modal
 	cancelPurchase decredmaterial.Button
 	stakeBtn       decredmaterial.Button
 
@@ -51,12 +49,12 @@ type stakingModal struct {
 
 func newStakingModal(l *load.Load) *stakingModal {
 	tp := &stakingModal{
-		Load: l,
+		Load:  l,
+		Modal: l.Theme.ModalFloatTitle("staking_modal"),
 
 		tickets:          l.Theme.Editor(new(widget.Editor), ""),
 		cancelPurchase:   l.Theme.OutlineButton(values.String(values.StrCancel)),
 		stakeBtn:         l.Theme.Button(values.String(values.StrStake)),
-		modal:            *l.Theme.ModalFloatTitle(),
 		increment:        l.Theme.IconButton(l.Theme.Icons.ContentAdd),
 		decrement:        l.Theme.IconButton(l.Theme.Icons.ContentRemove),
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), values.String(values.StrSpendingPassword)),
@@ -71,7 +69,7 @@ func newStakingModal(l *load.Load) *stakingModal {
 	tp.decrement.ChangeColorStyle(&values.ColorStyle{Foreground: tp.Theme.Color.Gray2})
 	tp.increment.Size, tp.decrement.Size = values.MarginPadding18, values.MarginPadding18
 
-	tp.modal.SetPadding(values.MarginPadding0)
+	tp.Modal.SetPadding(values.MarginPadding0)
 
 	tp.stakeBtn.SetEnabled(false)
 
@@ -88,7 +86,7 @@ func (tp *stakingModal) OnResume() {
 
 	tp.ctx, tp.ctxCancel = context.WithCancel(context.TODO())
 
-	tp.accountSelector.ListenForTxNotifications(tp.ctx)
+	tp.accountSelector.ListenForTxNotifications(tp.ctx, tp.ParentWindow())
 
 	err := tp.accountSelector.SelectFirstWalletValidAccount(nil)
 	if err != nil {
@@ -111,7 +109,7 @@ func (tp *stakingModal) OnResume() {
 			tp.Toast.NotifyError(err.Error())
 		} else {
 			tp.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice)
-			tp.RefreshWindow()
+			tp.ParentWindow().Reload()
 		}
 	}()
 }
@@ -206,7 +204,9 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 				Bottom: values.MarginPadding14,
 			}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(tp.accountSelector.Layout),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return tp.accountSelector.Layout(tp.ParentWindow(), gtx)
+					}),
 					layout.Rigid(func(gtx C) D {
 						if tp.balanceError == "" {
 							return D{}
@@ -221,7 +221,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 							Top:    values.MarginPadding16,
 							Bottom: values.MarginPadding16,
 						}.Layout(gtx, func(gtx C) D {
-							return tp.vspSelector.Layout(gtx)
+							return tp.vspSelector.Layout(tp.ParentWindow(), gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -256,7 +256,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return tp.modal.Layout(gtx, l)
+	return tp.Modal.Layout(gtx, l)
 }
 
 func (tp *stakingModal) ticketCount() int64 {
@@ -295,14 +295,6 @@ func (tp *stakingModal) canPurchase() bool {
 	return true
 }
 
-func (tp *stakingModal) ModalID() string {
-	return stakingModalID
-}
-
-func (tp *stakingModal) Show() {
-	tp.ShowModal(tp)
-}
-
 func (tp *stakingModal) initializeAccountSelector() {
 	tp.accountSelector = components.NewAccountSelector(tp.Load, nil).
 		Title(values.String(values.StrPurchasingAcct)).
@@ -323,7 +315,9 @@ func (tp *stakingModal) initializeAccountSelector() {
 		})
 }
 
-func (tp *stakingModal) OnDismiss() {}
+func (tp *stakingModal) OnDismiss() {
+	tp.ctxCancel()
+}
 
 func (tp *stakingModal) calculateTotals() {
 	account := tp.accountSelector.SelectedAccount()
@@ -369,7 +363,7 @@ func (tp *stakingModal) Handle() {
 		tp.Dismiss()
 	}
 
-	if tp.modal.BackdropClicked(true) {
+	if tp.Modal.BackdropClicked(true) {
 		if tp.isLoading {
 			return
 		}
@@ -413,7 +407,7 @@ func (tp *stakingModal) purchaseTickets() {
 	}
 
 	tp.isLoading = true
-	tp.modal.SetDisabled(true)
+	tp.Modal.SetDisabled(true)
 	go func() {
 		password := []byte(tp.spendingPassword.Editor.Text())
 
@@ -424,7 +418,7 @@ func (tp *stakingModal) purchaseTickets() {
 
 		defer func() {
 			tp.isLoading = false
-			tp.modal.SetDisabled(false)
+			tp.Modal.SetDisabled(false)
 		}()
 
 		vspHost, vspPubKey := selectedVSP.Host, selectedVSP.PubKey
@@ -441,9 +435,4 @@ func (tp *stakingModal) purchaseTickets() {
 		tp.ticketsPurchased()
 		tp.Dismiss()
 	}()
-}
-
-func (tp *stakingModal) Dismiss() {
-	tp.ctxCancel()
-	tp.DismissModal(tp)
 }

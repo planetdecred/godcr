@@ -16,6 +16,7 @@ import (
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/gen2brain/beeep"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -60,6 +61,8 @@ type NavHandler struct {
 }
 
 type MainPage struct {
+	*app.MasterPage
+
 	*load.Load
 	*listeners.SyncProgressListener
 	*listeners.TxAndBlockNotificationListener
@@ -73,10 +76,8 @@ type MainPage struct {
 
 	hideBalanceItem HideBalanceItem
 
-	currentPage   load.Page
-	pageBackStack []load.Page
-	sendPage      *send.Page   // reuse value to keep data persistent onresume.
-	receivePage   *ReceivePage // pointer to receive page. to avoid duplication.
+	sendPage    *send.Page   // reuse value to keep data persistent onresume.
+	receivePage *ReceivePage // pointer to receive page. to avoid duplication.
 
 	refreshExchangeRateBtn *decredmaterial.Clickable
 
@@ -94,7 +95,8 @@ type MainPage struct {
 
 func NewMainPage(l *load.Load) *MainPage {
 	mp := &MainPage{
-		Load: l,
+		Load:       l,
+		MasterPage: app.NewMasterPage(MainPageID),
 	}
 
 	mp.hideBalanceItem.hideBalanceButton = mp.Theme.IconButton(mp.Theme.Icons.ConcealIcon)
@@ -111,9 +113,6 @@ func NewMainPage(l *load.Load) *MainPage {
 		}
 	}
 	l.ToggleSync = toggleSync
-	l.ChangeFragment = mp.changeFragment
-	l.PopFragment = mp.popFragment
-	l.PopToFragment = mp.popToFragment
 
 	mp.setLanguageSetting()
 
@@ -143,7 +142,7 @@ func (mp *MainPage) ID() string {
 func (mp *MainPage) initNavItems() {
 	mp.appBarNav = components.NavDrawer{
 		Load:        mp.Load,
-		CurrentPage: mp.currentPageID(),
+		CurrentPage: mp.CurrentPageID(),
 		AppBarNavItems: []components.NavHandler{
 			{
 				Clickable: mp.Theme.NewClickable(true),
@@ -162,7 +161,7 @@ func (mp *MainPage) initNavItems() {
 
 	mp.drawerNav = components.NavDrawer{
 		Load:        mp.Load,
-		CurrentPage: mp.currentPageID(),
+		CurrentPage: mp.CurrentPageID(),
 		DrawerNavItems: []components.NavHandler{
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -221,7 +220,7 @@ func (mp *MainPage) initNavItems() {
 
 	mp.bottomNavigationBar = components.BottomNavigationBar{
 		Load:        mp.Load,
-		CurrentPage: mp.currentPageID(),
+		CurrentPage: mp.CurrentPageID(),
 		BottomNaigationItems: []components.BottomNavigationBarHandler{
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -263,7 +262,7 @@ func (mp *MainPage) initNavItems() {
 
 	mp.floatingActionButton = components.BottomNavigationBar{
 		Load:        mp.Load,
-		CurrentPage: mp.currentPageID(),
+		CurrentPage: mp.CurrentPageID(),
 		FloatingActionButton: []components.BottomNavigationBarHandler{
 			{
 				Clickable: mp.Theme.NewClickable(true),
@@ -293,10 +292,10 @@ func (mp *MainPage) OnNavigatedTo() {
 	mp.ctx, mp.ctxCancel = context.WithCancel(context.TODO())
 	mp.listenForNotifications()
 
-	if mp.currentPage == nil {
-		mp.currentPage = overview.NewOverviewPage(mp.Load)
+	if mp.CurrentPage() == nil {
+		mp.Display(overview.NewOverviewPage(mp.Load)) // TODO: Should pagestack have a start page?
 	}
-	mp.currentPage.OnNavigatedTo()
+	mp.CurrentPage().OnNavigatedTo()
 
 	if mp.sendPage != nil {
 		mp.sendPage.OnNavigatedTo()
@@ -358,7 +357,7 @@ func (mp *MainPage) fetchExchangeRate() {
 	} else {
 		log.Infof("exchange rate value fetched: %s", mp.dcrUsdtBittrex.LastTradeRate)
 		mp.updateBalance()
-		mp.RefreshWindow()
+		mp.ParentWindow().Reload()
 	}
 	mp.isFetchingExchangeRate = false
 }
@@ -394,7 +393,7 @@ func (mp *MainPage) StartSyncing() {
 }
 
 func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
-	modal.NewPasswordModal(mp.Load).
+	spendingPasswordModal := modal.NewPasswordModal(mp.Load).
 		Title(values.String(values.StrResumeAccountDiscoveryTitle)).
 		Hint(values.String(values.StrSpendingPassword)).
 		NegativeButton(values.String(values.StrCancel), func() {}).
@@ -415,7 +414,8 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 			}()
 
 			return false
-		}).Show()
+		})
+	mp.ParentWindow().ShowModal(spendingPasswordModal)
 }
 
 // OnDarkModeChanged is triggered whenever the dark mode setting is changed
@@ -426,7 +426,7 @@ func (mp *MainPage) OnDarkModeChanged(isDarkModeOn bool) {
 	// is called. If that page implements the AppSettingsChangeHandler interface,
 	// the following code will trigger the OnDarkModeChanged method of that
 	// page.
-	if currentPage, ok := mp.currentPage.(load.AppSettingsChangeHandler); ok {
+	if currentPage, ok := mp.CurrentPage().(load.AppSettingsChangeHandler); ok {
 		currentPage.OnDarkModeChanged(isDarkModeOn)
 	}
 
@@ -448,18 +448,18 @@ func (mp *MainPage) OnCurrencyChanged() {
 // displayed.
 // Part of the load.Page interface.
 func (mp *MainPage) HandleUserInteractions() {
-	if mp.currentPage != nil {
-		mp.currentPage.HandleUserInteractions()
+	if mp.CurrentPage() != nil {
+		mp.CurrentPage().HandleUserInteractions()
 	}
 
 	if mp.refreshExchangeRateBtn.Clicked() {
 		go mp.fetchExchangeRate()
 	}
 
-	mp.drawerNav.CurrentPage = mp.currentPageID()
-	mp.bottomNavigationBar.CurrentPage = mp.currentPageID()
-	mp.appBarNav.CurrentPage = mp.currentPageID()
-	mp.floatingActionButton.CurrentPage = mp.currentPageID()
+	mp.drawerNav.CurrentPage = mp.CurrentPageID()
+	mp.bottomNavigationBar.CurrentPage = mp.CurrentPageID()
+	mp.appBarNav.CurrentPage = mp.CurrentPageID()
+	mp.floatingActionButton.CurrentPage = mp.CurrentPageID()
 
 	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
 		mp.isNavExpanded = true
@@ -473,7 +473,7 @@ func (mp *MainPage) HandleUserInteractions() {
 
 	for i, item := range mp.appBarNav.AppBarNavItems {
 		for item.Clickable.Clicked() {
-			var pg load.Page
+			var pg app.Page
 			if i == 0 {
 				if mp.sendPage == nil {
 					mp.sendPage = send.NewSendPage(mp.Load)
@@ -486,12 +486,12 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = mp.receivePage
 			}
 
-			if pg.ID() == mp.currentPageID() {
+			if pg.ID() == mp.CurrentPageID() {
 				continue
 			}
 
 			if mp.WL.MultiWallet.IsSynced() {
-				mp.ChangeFragment(pg)
+				mp.Display(pg)
 			} else if mp.WL.MultiWallet.IsSyncing() {
 				mp.Toast.NotifyError(values.String(values.StrNotConnected))
 			} else {
@@ -502,7 +502,7 @@ func (mp *MainPage) HandleUserInteractions() {
 
 	for _, item := range mp.drawerNav.DrawerNavItems {
 		for item.Clickable.Clicked() {
-			var pg load.Page
+			var pg app.Page
 			switch item.PageID {
 			case overview.OverviewPageID:
 				pg = overview.NewOverviewPage(mp.Load)
@@ -525,18 +525,18 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = NewMorePage(mp.Load)
 			}
 
-			if pg == nil || pg.ID() == mp.currentPageID() {
+			if pg == nil || pg.ID() == mp.CurrentPageID() {
 				continue
 			}
 
 			// clear stack
-			mp.changeFragment(pg)
+			mp.Display(pg)
 		}
 	}
 
 	for _, item := range mp.bottomNavigationBar.BottomNaigationItems {
 		for item.Clickable.Clicked() {
-			var pg load.Page
+			var pg app.Page
 			switch item.PageID {
 			case overview.OverviewPageID:
 				pg = overview.NewOverviewPage(mp.Load)
@@ -550,18 +550,18 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = NewMorePage(mp.Load)
 			}
 
-			if pg == nil || pg.ID() == mp.currentPageID() {
+			if pg == nil || pg.ID() == mp.CurrentPageID() {
 				continue
 			}
 
 			// clear stack
-			mp.changeFragment(pg)
+			mp.Display(pg)
 		}
 	}
 
 	for i, item := range mp.floatingActionButton.FloatingActionButton {
 		for item.Clickable.Clicked() {
-			var pg load.Page
+			var pg app.Page
 			if i == 0 {
 				if mp.sendPage == nil {
 					mp.sendPage = send.NewSendPage(mp.Load)
@@ -574,12 +574,12 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = mp.receivePage
 			}
 
-			if pg.ID() == mp.currentPageID() {
+			if pg.ID() == mp.CurrentPageID() {
 				continue
 			}
 
 			if mp.WL.MultiWallet.IsSynced() {
-				mp.ChangeFragment(pg)
+				mp.Display(pg)
 			} else if mp.WL.MultiWallet.IsSyncing() {
 				mp.Toast.NotifyError("Wallet is syncing, please wait")
 			} else {
@@ -598,9 +598,8 @@ func (mp *MainPage) HandleUserInteractions() {
 // HandleKeyEvent is called when a key is pressed on the current window.
 // Satisfies the load.KeyEventHandler interface for receiving key events.
 func (mp *MainPage) HandleKeyEvent(evt *key.Event) {
-	fmt.Println(evt)
-	if mp.currentPage != nil {
-		if keyEvtHandler, ok := mp.currentPage.(load.KeyEventHandler); ok {
+	if currentPage := mp.CurrentPage(); currentPage != nil {
+		if keyEvtHandler, ok := currentPage.(load.KeyEventHandler); ok {
 			keyEvtHandler.HandleKeyEvent(evt)
 		}
 	}
@@ -615,8 +614,8 @@ func (mp *MainPage) HandleKeyEvent(evt *key.Event) {
 // Part of the load.Page interface.
 func (mp *MainPage) OnNavigatedFrom() {
 	// Also disappear all child pages.
-	if mp.currentPage != nil {
-		mp.currentPage.OnNavigatedFrom()
+	if mp.CurrentPage() != nil {
+		mp.CurrentPage().OnNavigatedFrom()
 	}
 	if mp.sendPage != nil {
 		mp.sendPage.OnNavigatedFrom()
@@ -626,83 +625,6 @@ func (mp *MainPage) OnNavigatedFrom() {
 	}
 
 	mp.ctxCancel()
-}
-
-func (mp *MainPage) currentPageID() string {
-	if mp.currentPage != nil {
-		return mp.currentPage.ID()
-	}
-
-	return ""
-}
-
-func (mp *MainPage) changeFragment(page load.Page) {
-
-	// If Page is the last in back stack return.
-	if mp.currentPageID() == page.ID() {
-		return
-	}
-
-	// Maintain one pointer to Page in backstack slice.
-	for i := len(mp.pageBackStack) - 1; i >= 0; i-- {
-		if mp.pageBackStack[i].ID() == page.ID() {
-			var mPages []load.Page
-			mPagesf, mPagesb := mp.pageBackStack[:i], mp.pageBackStack[i+1:]
-			mPages = append(mPages, mPagesf...)
-			mPages = append(mPages, mPagesb...)
-			mp.pageBackStack = mPages
-		}
-	}
-
-	if mp.currentPage != nil {
-		mp.currentPage.OnNavigatedFrom() // TODO: Unload unless it is possible that this page will be revisited.
-		mp.pageBackStack = append(mp.pageBackStack, mp.currentPage)
-	}
-
-	page.OnNavigatedTo()
-	mp.currentPage = page
-}
-
-// popFragment goes back to the previous page
-func (mp *MainPage) popFragment() {
-	if len(mp.pageBackStack) > 0 {
-		// get and remove last page
-		previousPage := mp.pageBackStack[len(mp.pageBackStack)-1]
-		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
-
-		mp.currentPage.OnNavigatedFrom()
-		previousPage.OnNavigatedTo()
-		mp.currentPage = previousPage
-	}
-}
-
-func (mp *MainPage) popToFragment(pageID string) {
-	// close current page and all pages before `pageID`
-	if mp.currentPage != nil {
-		mp.currentPage.OnNavigatedFrom()
-	}
-
-	for i := len(mp.pageBackStack) - 1; i >= 0; i-- {
-		if mp.pageBackStack[i].ID() == pageID {
-			var closedPages []load.Page
-			mp.pageBackStack, closedPages = mp.pageBackStack[:i+1], mp.pageBackStack[i+1:]
-
-			for j := len(closedPages) - 1; j >= 0; j-- {
-				closedPages[j].OnNavigatedFrom()
-			}
-			break
-		}
-	}
-
-	if len(mp.pageBackStack) > 0 {
-		// set curent page to `pageID`
-		mp.currentPage = mp.pageBackStack[len(mp.pageBackStack)-1]
-		mp.currentPage.OnNavigatedTo()
-		// remove current page from backstack history
-		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
-	} else {
-		mp.currentPage = nil
-	}
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -733,10 +655,10 @@ func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 					}.Layout(gtx,
 						layout.Rigid(mp.drawerNav.LayoutNavDrawer),
 						layout.Rigid(func(gtx C) D {
-							if mp.currentPage == nil {
+							if mp.CurrentPage() == nil {
 								return D{}
 							}
-							return mp.currentPage.Layout(gtx)
+							return mp.CurrentPage().Layout(gtx)
 						}),
 					)
 				}),
@@ -751,10 +673,11 @@ func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 		layout.Flexed(0.795, func(gtx C) D {
 			return layout.Stack{Alignment: layout.N}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					if mp.currentPage == nil {
+					currentPage := mp.CurrentPage()
+					if currentPage == nil {
 						return layout.Dimensions{}
 					}
-					return mp.currentPage.Layout(gtx)
+					return currentPage.Layout(gtx)
 				}),
 				layout.Stacked(func(gtx C) D {
 					return mp.floatingActionButton.LayoutSendReceive(gtx)
@@ -1007,7 +930,7 @@ func (mp *MainPage) listenForNotifications() {
 						}
 						mp.postDesktopNotification(update)
 					}
-					mp.RefreshWindow()
+					mp.ParentWindow().Reload()
 				case listeners.BlockAttached:
 					beep := mp.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
 					if beep {
@@ -1018,10 +941,10 @@ func (mp *MainPage) listenForNotifications() {
 					}
 
 					mp.updateBalance()
-					mp.RefreshWindow()
+					mp.ParentWindow().Reload()
 				case listeners.TxConfirmed:
 					mp.updateBalance()
-					mp.RefreshWindow()
+					mp.ParentWindow().Reload()
 
 				}
 			case notification := <-mp.ProposalNotifChan:
@@ -1032,7 +955,7 @@ func (mp *MainPage) listenForNotifications() {
 			case n := <-mp.SyncStatusChan:
 				if n.Stage == wallet.SyncCompleted {
 					mp.updateBalance()
-					mp.RefreshWindow()
+					mp.ParentWindow().Reload()
 				}
 			case <-mp.ctx.Done():
 				mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)

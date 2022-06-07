@@ -8,6 +8,7 @@ import (
 	"decred.org/dcrdex/client/db"
 	"gioui.org/layout"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -24,6 +25,12 @@ const MarketPageID = "Markets"
 
 type Page struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	ctx        context.Context
 	ctxCancel  context.CancelFunc
 	login      decredmaterial.Button
@@ -44,21 +51,15 @@ func (pg *Page) dexMarket(mktName string) *core.Market {
 
 func NewMarketPage(l *load.Load) *Page {
 	pg := &Page{
-		Load:       l,
-		login:      l.Theme.Button("Login"),
-		initialize: l.Theme.Button("Start using now"),
-		addDex:     l.Theme.Button("Add a dex"),
-		sync:       l.Theme.Button("Start sync to continue"),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(MarketPageID),
+		login:            l.Theme.Button("Login"),
+		initialize:       l.Theme.Button("Start using now"),
+		addDex:           l.Theme.Button("Add a dex"),
+		sync:             l.Theme.Button("Start sync to continue"),
 	}
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *Page) ID() string {
-	return MarketPageID
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -193,7 +194,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.login.Button.Clicked() {
-		modal.NewPasswordModal(pg.Load).
+		appPasswordModal := modal.NewPasswordModal(pg.Load).
 			Title("Login").
 			Hint("App password").
 			NegativeButton(values.String(values.StrCancel), func() {}).
@@ -208,15 +209,16 @@ func (pg *Page) HandleUserInteractions() {
 					pm.Dismiss()
 					// Check if there is no dex registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
-						newAddDexModal(pg.Load).Show()
+						pg.ParentWindow().ShowModal(newAddDexModal(pg.Load))
 					}
 				}()
 				return false
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(appPasswordModal)
 	}
 
 	if pg.initialize.Button.Clicked() {
-		modal.NewCreatePasswordModal(pg.Load).
+		setAppPasswordModal := modal.NewCreatePasswordModal(pg.Load).
 			Title("Set App Password").
 			SetDescription("Set your app password. This password will protect your DEX account keys and connected wallets.").
 			EnableName(false).
@@ -235,15 +237,16 @@ func (pg *Page) HandleUserInteractions() {
 					m.Dismiss()
 					// Check if there is no dex registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
-						newAddDexModal(pg.Load).Show()
+						pg.ParentWindow().ShowModal(newAddDexModal(pg.Load))
 					}
 				}()
 				return false
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(setAppPasswordModal)
 	}
 
 	if pg.addDex.Button.Clicked() {
-		newAddDexModal(pg.Load).Show()
+		pg.ParentWindow().ShowModal(newAddDexModal(pg.Load))
 	}
 }
 
@@ -254,7 +257,7 @@ func (pg *Page) readNotifications() {
 		select {
 		case n := <-ch:
 			if n.Type() == core.NoteTypeFeePayment {
-				pg.RefreshWindow()
+				pg.ParentWindow().Reload()
 			}
 
 			if n.Severity() > db.Success {

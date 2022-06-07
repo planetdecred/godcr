@@ -6,11 +6,10 @@
 package load
 
 import (
-	"sync"
-
 	"golang.org/x/text/message"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/notification"
@@ -30,33 +29,23 @@ type Load struct {
 	CurrentAppWidth int
 
 	Toast *notification.Toast
-	UIMu  sync.Mutex // Mutex to sync concurrent access to UI components.
 
 	SelectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 
-	ToggleSync       func()
-	RefreshWindow    func()
-	ShowModal        func(Modal)
-	DismissModal     func(Modal)
-	ChangeWindowPage func(page Page, keepBackStack bool)
-	PopWindowPage    func() bool
-	ChangeFragment   func(page Page)
-	PopFragment      func()
-	PopToFragment    func(pageID string)
-	ReloadApp        func()
+	ToggleSync func()
 
 	DarkModeSettingChanged func(bool)
 	LanguageSettingChanged func()
 	CurrencySettingChanged func()
 }
 
-func (l *Load) RefreshTheme() {
+func (l *Load) RefreshTheme(window app.WindowNavigator) {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)
 	l.DarkModeSettingChanged(isDarkModeOn)
 	l.LanguageSettingChanged()
 	l.CurrencySettingChanged()
-	l.RefreshWindow()
+	window.Reload()
 }
 
 func (l *Load) Dexc() *dcrlibwallet.DexClient {

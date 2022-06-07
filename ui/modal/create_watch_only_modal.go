@@ -15,12 +15,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const CreateWatchOnly = "create_watch_only_modal"
-
 type CreateWatchOnlyModal struct {
 	*load.Load
+	*decredmaterial.Modal
 
-	modal          decredmaterial.Modal
 	materialLoader material.LoaderStyle
 
 	walletName     decredmaterial.Editor
@@ -29,7 +27,6 @@ type CreateWatchOnlyModal struct {
 	btnPositve  decredmaterial.Button
 	btnNegative decredmaterial.Button
 
-	randomID    string
 	serverError string
 
 	isLoading         bool
@@ -43,8 +40,7 @@ type CreateWatchOnlyModal struct {
 func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 	cm := &CreateWatchOnlyModal{
 		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", CreateWatchOnly, decredmaterial.GenerateRandomNumber()),
-		modal:        *l.Theme.ModalFloatTitle(),
+		Modal:        l.Theme.ModalFloatTitle("create_watch_only_modal"),
 		btnPositve:   l.Theme.Button(values.String(values.StrImport)),
 		btnNegative:  l.Theme.OutlineButton(values.String(values.StrCancel)),
 		isCancelable: true,
@@ -66,10 +62,6 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 	return cm
 }
 
-func (cm *CreateWatchOnlyModal) ModalID() string {
-	return cm.randomID
-}
-
 func (cm *CreateWatchOnlyModal) OnResume() {
 	if cm.walletNameEnabled {
 		cm.walletName.Editor.Focus()
@@ -80,14 +72,6 @@ func (cm *CreateWatchOnlyModal) OnResume() {
 
 func (cm *CreateWatchOnlyModal) OnDismiss() {}
 
-func (cm *CreateWatchOnlyModal) Show() {
-	cm.ShowModal(cm)
-}
-
-func (cm *CreateWatchOnlyModal) Dismiss() {
-	cm.DismissModal(cm)
-}
-
 func (cm *CreateWatchOnlyModal) EnableName(enable bool) *CreateWatchOnlyModal {
 	cm.walletNameEnabled = enable
 	return cm
@@ -95,7 +79,7 @@ func (cm *CreateWatchOnlyModal) EnableName(enable bool) *CreateWatchOnlyModal {
 
 func (cm *CreateWatchOnlyModal) SetLoading(loading bool) {
 	cm.isLoading = loading
-	cm.modal.SetDisabled(loading)
+	cm.Modal.SetDisabled(loading)
 }
 
 func (cm *CreateWatchOnlyModal) SetCancelable(min bool) *CreateWatchOnlyModal {
@@ -170,7 +154,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		}
 	}
 
-	if cm.modal.BackdropClicked(cm.isCancelable) {
+	if cm.Modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {
 			cm.Dismiss()
 		}
@@ -230,5 +214,5 @@ func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return cm.modal.Layout(gtx, w)
+	return cm.Modal.Layout(gtx, w)
 }

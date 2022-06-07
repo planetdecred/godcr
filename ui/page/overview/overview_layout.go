@@ -12,6 +12,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -43,6 +44,12 @@ type walletSyncDetails struct {
 
 type AppOverviewPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	*listeners.SyncProgressListener
 	*listeners.TxAndBlockNotificationListener
 	*listeners.ProposalNotificationListener
@@ -95,7 +102,9 @@ type AppOverviewPage struct {
 
 func NewOverviewPage(l *load.Load) *AppOverviewPage {
 	pg := &AppOverviewPage{
-		Load:       l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(OverviewPageID),
+
 		allWallets: l.WL.SortedWalletList(),
 
 		listContainer: &layout.List{Axis: layout.Vertical},
@@ -116,13 +125,6 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 	pg.initializeProposalsWidget()
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *AppOverviewPage) ID() string {
-	return OverviewPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -226,7 +228,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *AppOverviewPage) showBackupInfo() {
-	modal.NewInfoModal(pg.Load).
+	backupNowOrLaterModal := modal.NewInfoModal(pg.Load).
 		SetupWithTemplate(modal.WalletBackupInfoTemplate).
 		SetCancelable(false).
 		SetContentAlignment(layout.W, layout.Center).
@@ -237,9 +239,10 @@ func (pg *AppOverviewPage) showBackupInfo() {
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrBackupNow), func(isChecked bool) bool {
 			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
-			pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
+			pg.ParentNavigator().Display(wPage.NewWalletPage(pg.Load))
 			return true
-		}).Show()
+		})
+	pg.ParentWindow().ShowModal(backupNowOrLaterModal)
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -260,9 +263,9 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 
 	if pg.toMixer.Button.Clicked() {
 		if len(pg.mixerWallets) == 1 {
-			pg.ChangeFragment(privacy.NewAccountMixerPage(pg.Load, pg.mixerWallets[0]))
+			pg.ParentNavigator().Display(privacy.NewAccountMixerPage(pg.Load, pg.mixerWallets[0]))
 		}
-		pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
+		pg.ParentNavigator().Display(wPage.NewWalletPage(pg.Load))
 	}
 
 	if pg.syncClickable.Clicked() {
@@ -285,11 +288,11 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 	}
 
 	if pg.toTransactions.Button.Clicked() {
-		pg.ChangeFragment(tPage.NewTransactionsPage(pg.Load))
+		pg.ParentNavigator().Display(tPage.NewTransactionsPage(pg.Load))
 	}
 
 	if clicked, selectedItem := pg.transactionsList.ItemClicked(); clicked {
-		pg.ChangeFragment(tPage.NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
+		pg.ParentNavigator().Display(tPage.NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
 	}
 
 	if pg.toggleSyncDetails.Clicked() {
@@ -302,7 +305,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 	}
 
 	for pg.toProposals.Button.Clicked() {
-		pg.ChangeFragment(gPage.NewProposalsPage(pg.Load))
+		pg.ParentNavigator().Display(gPage.NewProposalsPage(pg.Load))
 	}
 
 	if clicked, selectedItem := pg.proposalsList.ItemClicked(); clicked {
@@ -310,7 +313,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 		selectedProposal := pg.proposalItems[selectedItem].Proposal
 		pg.proposalMu.Unlock()
 
-		pg.ChangeFragment(gPage.NewProposalDetailsPage(pg.Load, &selectedProposal))
+		pg.ParentNavigator().Display(gPage.NewProposalDetailsPage(pg.Load, &selectedProposal))
 	}
 
 	if pg.autoSyncSwitch.Changed() {
@@ -397,26 +400,26 @@ func (pg *AppOverviewPage) listenForNotifications() {
 					fallthrough
 				case wallet.SyncCompleted:
 					pg.loadTransactions()
-					pg.RefreshWindow()
+					pg.ParentWindow().Reload()
 				}
 
 			case n := <-pg.TxAndBlockNotifChan:
 				switch n.Type {
 				case listeners.NewTransaction:
 					pg.loadTransactions()
-					pg.RefreshWindow()
+					pg.ParentWindow().Reload()
 				case listeners.BlockAttached:
-					pg.RefreshWindow()
+					pg.ParentWindow().Reload()
 				}
 			case n := <-pg.ProposalNotifChan:
 				if n.ProposalStatus == wallet.Synced {
 					pg.loadRecentProposals()
-					pg.RefreshWindow()
+					pg.ParentWindow().Reload()
 				}
 			case n := <-pg.BlockRescanChan:
 				pg.rescanUpdate = &n
 				if n.Stage == wallet.RescanEnded {
-					pg.RefreshWindow()
+					pg.ParentWindow().Reload()
 				}
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)

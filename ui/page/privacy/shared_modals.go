@@ -7,6 +7,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -14,13 +15,15 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-type sharedModalConf struct {
+type sharedModalConfig struct {
 	*load.Load
-	wallet   *dcrlibwallet.Wallet
-	checkBox decredmaterial.CheckBoxStyle
+	window        app.WindowNavigator
+	pageNavigator app.PageNavigator
+	wallet        *dcrlibwallet.Wallet
+	checkBox      decredmaterial.CheckBoxStyle
 }
 
-func showInfoModal(conf *sharedModalConf, title, body, btnText string, isError, alignCenter bool) {
+func showInfoModal(conf *sharedModalConfig, title, body, btnText string, isError, alignCenter bool) {
 	icon := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.AlertError)))
 	icon.Color = conf.Theme.Color.DeepBlue
 	if !isError {
@@ -41,10 +44,10 @@ func showInfoModal(conf *sharedModalConf, title, body, btnText string, isError, 
 		info.SetContentAlignment(align, align)
 	}
 
-	conf.ShowModal(info)
+	conf.window.ShowModal(info)
 }
 
-func showModalSetupMixerInfo(conf *sharedModalConf) {
+func showModalSetupMixerInfo(conf *sharedModalConfig) {
 	info := modal.NewInfoModal(conf.Load).
 		Title("Set up mixer by creating two needed accounts").
 		SetupWithTemplate(modal.SetupMixerInfoTemplate).
@@ -54,10 +57,10 @@ func showModalSetupMixerInfo(conf *sharedModalConf) {
 			showModalSetupMixerAcct(conf, movefundsChecked)
 			return true
 		})
-	conf.ShowModal(info)
+	conf.window.ShowModal(info)
 }
 
-func showModalSetupMixerAcct(conf *sharedModalConf, movefundsChecked bool) {
+func showModalSetupMixerAcct(conf *sharedModalConfig, movefundsChecked bool) {
 	accounts, _ := conf.wallet.GetAccountsRaw()
 	txt := "There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup."
 	for _, acct := range accounts.Acc {
@@ -69,15 +72,15 @@ func showModalSetupMixerAcct(conf *sharedModalConf, movefundsChecked bool) {
 				Title("Account name is taken").
 				Body(txt).
 				PositiveButton("Go back & rename", func(movefundsChecked bool) bool {
-					conf.PopFragment()
+					conf.pageNavigator.CloseCurrentPage()
 					return true
 				})
-			conf.ShowModal(info)
+			conf.window.ShowModal(info)
 			return
 		}
 	}
 
-	modal.NewPasswordModal(conf.Load).
+	passwordModal := modal.NewPasswordModal(conf.Load).
 		Title("Confirm to create needed accounts").
 		NegativeButton("Cancel", func() {}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
@@ -101,16 +104,17 @@ func showModalSetupMixerAcct(conf *sharedModalConf, movefundsChecked bool) {
 
 				pm.Dismiss()
 
-				conf.ChangeFragment(NewAccountMixerPage(conf.Load, conf.wallet))
+				conf.pageNavigator.Display(NewAccountMixerPage(conf.Load, conf.wallet))
 			}()
 
 			return false
-		}).Show()
+		})
+	conf.window.ShowModal(passwordModal)
 }
 
 // moveFundsFromDefaultToUnmixed moves funds from the default wallet account to the
 // newly created unmixed account
-func moveFundsFromDefaultToUnmixed(conf *sharedModalConf, password string) error {
+func moveFundsFromDefaultToUnmixed(conf *sharedModalConfig, password string) error {
 	acc, err := conf.wallet.GetAccountsRaw()
 	if err != nil {
 		return err

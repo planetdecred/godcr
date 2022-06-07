@@ -1,7 +1,6 @@
 package modal
 
 import (
-	"fmt"
 	"image/color"
 
 	"gioui.org/io/key"
@@ -14,12 +13,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Info = "info_modal"
-
 type InfoModal struct {
 	*load.Load
-	randomID        string
-	modal           decredmaterial.Modal
+	*decredmaterial.Modal
+
 	enterKeyPressed bool
 
 	dialogIcon *decredmaterial.Icon
@@ -48,10 +45,14 @@ type InfoModal struct {
 }
 
 func NewInfoModal(l *load.Load) *InfoModal {
+	return NewInfoModalWithKey(l, "info_modal")
+}
+
+func NewInfoModalWithKey(l *load.Load, key string) *InfoModal {
+
 	in := &InfoModal{
 		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", Info, decredmaterial.GenerateRandomNumber()),
-		modal:        *l.Theme.ModalFloatTitle(),
+		Modal:        l.Theme.ModalFloatTitle(key),
 		btnPositve:   l.Theme.OutlineButton(values.String(values.StrYes)),
 		btnNegative:  l.Theme.OutlineButton(values.String(values.StrNo)),
 		isCancelable: true,
@@ -65,18 +66,6 @@ func NewInfoModal(l *load.Load) *InfoModal {
 	in.materialLoader = material.Loader(l.Theme.Base)
 
 	return in
-}
-
-func (in *InfoModal) ModalID() string {
-	return in.randomID
-}
-
-func (in *InfoModal) Show() {
-	in.ShowModal(in)
-}
-
-func (in *InfoModal) Dismiss() {
-	in.DismissModal(in)
 }
 
 func (in *InfoModal) OnResume() {}
@@ -107,7 +96,7 @@ func (in *InfoModal) CheckBox(checkbox decredmaterial.CheckBoxStyle, mustBeCheck
 
 func (in *InfoModal) SetLoading(loading bool) {
 	in.isLoading = loading
-	in.modal.SetDisabled(loading)
+	in.Modal.SetDisabled(loading)
 }
 
 func (in *InfoModal) Title(title string) *InfoModal {
@@ -175,7 +164,7 @@ func (in *InfoModal) UseCustomWidget(layout layout.Widget) *InfoModal {
 func (in *InfoModal) HandleKeyEvent(evt *key.Event) {
 	if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && evt.State == key.Press {
 		in.btnPositve.Click()
-		in.RefreshWindow()
+		in.ParentWindow().Reload()
 	}
 }
 
@@ -190,18 +179,18 @@ func (in *InfoModal) Handle() {
 		}
 
 		if in.positiveButtonClicked(isChecked) {
-			in.DismissModal(in)
+			in.Dismiss()
 		}
 	}
 
 	for in.btnNegative.Clicked() {
 		if !in.isLoading {
-			in.DismissModal(in)
+			in.Dismiss()
 			in.negativeButtonClicked()
 		}
 	}
 
-	if in.modal.BackdropClicked(in.isCancelable) {
+	if in.Modal.BackdropClicked(in.isCancelable) {
 		if !in.isLoading {
 			in.Dismiss()
 		}
@@ -280,7 +269,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 		w = append(w, in.actionButtonsLayout())
 	}
 
-	return in.modal.Layout(gtx, w)
+	return in.Modal.Layout(gtx, w)
 }
 
 func (in *InfoModal) titleLayout() layout.Widget {

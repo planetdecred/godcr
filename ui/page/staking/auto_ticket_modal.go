@@ -15,10 +15,9 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const ticketBuyerModalID = "staking_modal"
-
 type ticketBuyerModal struct {
 	*load.Load
+	*decredmaterial.Modal
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -26,7 +25,6 @@ type ticketBuyerModal struct {
 	settingsSaved func()
 	onCancel      func()
 
-	modal           decredmaterial.Modal
 	cancel          decredmaterial.Button
 	saveSettingsBtn decredmaterial.Button
 
@@ -38,11 +36,11 @@ type ticketBuyerModal struct {
 
 func newTicketBuyerModal(l *load.Load) *ticketBuyerModal {
 	tb := &ticketBuyerModal{
-		Load: l,
+		Load:  l,
+		Modal: l.Theme.ModalFloatTitle("staking_modal"),
 
 		cancel:          l.Theme.OutlineButton(values.String(values.StrCancel)),
 		saveSettingsBtn: l.Theme.Button(values.String(values.StrSave)),
-		modal:           *l.Theme.ModalFloatTitle(),
 		vspSelector:     components.NewVSPSelector(l).Title(values.String(values.StrSelectVSP)),
 	}
 
@@ -67,7 +65,7 @@ func (tb *ticketBuyerModal) OnCancel(cancel func()) *ticketBuyerModal {
 func (tb *ticketBuyerModal) OnResume() {
 	tb.initializeAccountSelector()
 	tb.ctx, tb.ctxCancel = context.WithCancel(context.TODO())
-	tb.accountSelector.ListenForTxNotifications(tb.ctx)
+	tb.accountSelector.ListenForTxNotifications(tb.ctx, tb.ParentWindow())
 
 	if len(tb.WL.MultiWallet.KnownVSPs()) == 0 {
 		// TODO: Does this modal need this list?
@@ -114,7 +112,9 @@ func (tb *ticketBuyerModal) Layout(gtx layout.Context) layout.Dimensions {
 					return layout.Inset{
 						Top:    values.MarginPadding8,
 						Bottom: values.MarginPadding16,
-					}.Layout(gtx, tb.accountSelector.Layout)
+					}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						return tb.accountSelector.Layout(tb.ParentWindow(), gtx)
+					})
 				}),
 				layout.Rigid(func(gtx C) D {
 					return tb.balToMaintainEditor.Layout(gtx)
@@ -124,7 +124,7 @@ func (tb *ticketBuyerModal) Layout(gtx layout.Context) layout.Dimensions {
 						Top:    values.MarginPadding16,
 						Bottom: values.MarginPadding16,
 					}.Layout(gtx, func(gtx C) D {
-						return tb.vspSelector.Layout(gtx)
+						return tb.vspSelector.Layout(tb.ParentWindow(), gtx)
 					})
 				}),
 			)
@@ -145,7 +145,7 @@ func (tb *ticketBuyerModal) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return tb.modal.Layout(gtx, l)
+	return tb.Modal.Layout(gtx, l)
 }
 
 func (tb *ticketBuyerModal) canSave() bool {
@@ -158,19 +158,6 @@ func (tb *ticketBuyerModal) canSave() bool {
 	}
 
 	return true
-}
-
-func (tb *ticketBuyerModal) ModalID() string {
-	return ticketBuyerModalID
-}
-
-func (tb *ticketBuyerModal) Show() {
-	tb.ShowModal(tb)
-}
-
-func (tb *ticketBuyerModal) Dismiss() {
-	tb.ctxCancel()
-	tb.DismissModal(tb)
 }
 
 func (tb *ticketBuyerModal) initializeAccountSelector() {
@@ -192,12 +179,14 @@ func (tb *ticketBuyerModal) initializeAccountSelector() {
 		})
 }
 
-func (tb *ticketBuyerModal) OnDismiss() {}
+func (tb *ticketBuyerModal) OnDismiss() {
+	tb.ctxCancel()
+}
 
 func (tb *ticketBuyerModal) Handle() {
 	tb.saveSettingsBtn.SetEnabled(tb.canSave())
 
-	if tb.cancel.Clicked() || tb.modal.BackdropClicked(true) {
+	if tb.cancel.Clicked() || tb.Modal.BackdropClicked(true) {
 		tb.onCancel()
 		tb.Dismiss()
 	}

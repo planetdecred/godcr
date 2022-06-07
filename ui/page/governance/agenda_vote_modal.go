@@ -18,7 +18,7 @@ import (
 
 type agendaVoteModal struct {
 	*load.Load
-	modal decredmaterial.Modal
+	*decredmaterial.Modal
 
 	// tickets that have not been spent by a vote or revocation (unspent) and that
 	// have not expired (unexpired).
@@ -44,7 +44,7 @@ type agendaVoteModal struct {
 func newAgendaVoteModal(l *load.Load, agenda *dcrlibwallet.Agenda, onPreferenceUpdated func()) *agendaVoteModal {
 	avm := &agendaVoteModal{
 		Load:                l,
-		modal:               *l.Theme.ModalFloatTitle(),
+		Modal:               l.Theme.ModalFloatTitle("input_vote_modal"),
 		agenda:              agenda,
 		onPreferenceUpdated: onPreferenceUpdated,
 		materialLoader:      material.Loader(material.NewTheme(gofont.Collection())),
@@ -106,12 +106,8 @@ func (avm *agendaVoteModal) FetchUnspentUnexpiredTickets(walletID int) {
 		for i := range tickets {
 			avm.votableTickets[i] = &tickets[i]
 		}
-		avm.RefreshWindow()
+		avm.ParentWindow().Reload()
 	}()
-}
-
-func (avm *agendaVoteModal) ModalID() string {
-	return ModalInputVote
 }
 
 func (avm *agendaVoteModal) OnResume() {
@@ -122,14 +118,6 @@ func (avm *agendaVoteModal) OnResume() {
 }
 
 func (avm *agendaVoteModal) OnDismiss() {}
-
-func (avm *agendaVoteModal) Show() {
-	avm.ShowModal(avm)
-}
-
-func (avm *agendaVoteModal) Dismiss() {
-	avm.DismissModal(avm)
-}
 
 func (avm *agendaVoteModal) Handle() {
 	for avm.cancelBtn.Clicked() {
@@ -170,7 +158,7 @@ func (avm *agendaVoteModal) Handle() {
 		avm.sendVotes()
 	}
 
-	if avm.modal.BackdropClicked(true) {
+	if avm.Modal.BackdropClicked(true) {
 		avm.Dismiss()
 	}
 }
@@ -185,7 +173,9 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 			return t.Layout(gtx)
 		},
 		avm.Theme.Body1(values.String(values.StrSelectOption)).Layout,
-		avm.walletSelector.Layout,
+		func(gtx layout.Context) layout.Dimensions {
+			return avm.walletSelector.Layout(gtx, avm.ParentWindow())
+		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -215,7 +205,7 @@ func (avm *agendaVoteModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return avm.modal.Layout(gtx, w)
+	return avm.Modal.Layout(gtx, w)
 }
 
 func (avm *agendaVoteModal) layoutItems() []layout.FlexChild {

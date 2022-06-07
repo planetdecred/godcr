@@ -13,6 +13,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -37,6 +38,14 @@ type seedItemMenu struct {
 
 type Restore struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the ParentNavigator that displayed this page
+	// and the root WindowNavigator. The ParentNavigator is also the root
+	// WindowNavigator if this page is displayed from the StartPage, otherwise
+	// the ParentNavigator is the MainPage.
+	*app.GenericPageModal
+
 	isRestoring     bool
 	restoreComplete func()
 
@@ -69,8 +78,9 @@ type Restore struct {
 
 func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 	pg := &Restore{
-		Load:            l,
-		restoreComplete: onRestoreComplete,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(CreateRestorePageID),
+		restoreComplete:  onRestoreComplete,
 
 		seedList: &layout.List{Axis: layout.Vertical},
 
@@ -107,13 +117,6 @@ func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 	return pg
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *Restore) ID() string {
-	return CreateRestorePageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -139,13 +142,13 @@ func (pg *Restore) layoutDesktop(gtx layout.Context) layout.Dimensions {
 			Title:      "Restore wallet",
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.restore(gtx)
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 
 	pg.resetSeedFields.SetEnabled(pg.updateSeedResetBtn())
@@ -162,13 +165,13 @@ func (pg *Restore) layoutMobile(gtx layout.Context) layout.Dimensions {
 			Title:      "Restore wallet",
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.restoreMobile(gtx)
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 
 	pg.resetSeedFields.SetEnabled(pg.updateSeedResetBtn())
@@ -596,7 +599,7 @@ func (pg *Restore) HandleUserInteractions() {
 	}
 
 	for pg.backButton.Button.Clicked() {
-		pg.PopWindowPage()
+		pg.ParentNavigator().CloseCurrentPage()
 	}
 
 	for pg.validateSeed.Clicked() {
@@ -605,7 +608,7 @@ func (pg *Restore) HandleUserInteractions() {
 		}
 
 		pg.isRestoring = true
-		modal.NewCreatePasswordModal(pg.Load).
+		walletPasswordModal := modal.NewCreatePasswordModal(pg.Load).
 			Title("Enter wallet details").
 			EnableName(true).
 			ShowWalletInfoTip(true).
@@ -623,16 +626,11 @@ func (pg *Restore) HandleUserInteractions() {
 					pg.Toast.Notify("Wallet restored")
 					pg.resetSeeds()
 					m.Dismiss()
-					// Close this page and return to the previous page (most likely wallets page)
-					// if there's no restoreComplete callback function.
-					if pg.restoreComplete == nil {
-						pg.PopWindowPage()
-					} else {
-						pg.restoreComplete()
-					}
+					pg.restoreComplete()
 				}()
 				return false
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(walletPasswordModal)
 	}
 
 	for pg.resetSeedFields.Clicked() {
