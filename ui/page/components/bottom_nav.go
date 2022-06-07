@@ -57,7 +57,7 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutBottomNavigationBar(gtx la
 							Orientation: bottomNavigationbar.axis,
 							Width:       (bottomNavigationbar.Load.GetCurrentAppWidth() * 100 / len(bottomNavigationbar.BottomNaigationItems)) / 100, // Divide each cell equally
 							Height:      decredmaterial.WrapContent,
-							Padding:     layout.UniformInset(values.MarginPadding15),
+							Padding:     layout.UniformInset(values.MarginPadding10),
 							Alignment:   bottomNavigationbar.alignment,
 							Direction:   bottomNavigationbar.direction,
 							Background:  background,
