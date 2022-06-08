@@ -92,17 +92,17 @@ func (pg *SaveSeedPage) OnNavigatedTo() {
 				row3 := wordList[22:]
 
 				//for mobile
-				rowm1 := wordList[:17]
-				rowm2 := wordList[17:]
+				rowMobile1 := wordList[:17]
+				rowMobile2 := wordList[17:]
 				mobileRows := make([]saveSeedRow, 0)
-				for i := range rowm1 {
+				for i := range rowMobile1 {
 					r2 := ""
-					if i < len(rowm2) {
-						r2 = rowm2[i]
+					if i < len(rowMobile2) {
+						r2 = rowMobile2[i]
 					}
 					mobileRows = append(mobileRows, saveSeedRow{
 						rowIndex: i + 1,
-						word1:    rowm1[i],
+						word1:    rowMobile1[i],
 						word2:    r2,
 					})
 				}
@@ -152,6 +152,13 @@ func (pg *SaveSeedPage) OnNavigatedFrom() {}
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *SaveSeedPage) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *SaveSeedPage) layoutDesktop(gtx C) D {
 	sp := components.SubPage{
 		Load:       pg.Load,
 		Title:      "Write down seed word",
@@ -163,6 +170,51 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 		},
 		Body: func(gtx C) D {
 
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					label := pg.Theme.Label(values.TextSize16, "Write down all 33 words in the correct order.")
+					label.Color = pg.Theme.Color.GrayText1
+					return label.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					label := pg.Theme.Label(values.TextSize14, "Your 33-word seed word")
+					label.Color = pg.Theme.Color.GrayText1
+					return decredmaterial.LinearLayout{
+						Width:       decredmaterial.MatchParent,
+						Height:      decredmaterial.WrapContent,
+						Orientation: layout.Vertical,
+						Background:  pg.Theme.Color.Surface,
+						Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
+						// bottom margin accounts for action button's height + components.UniformPadding bottom margin 24dp + 16dp
+						Margin:  layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding120},
+						Padding: layout.Inset{Top: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding8, Left: values.MarginPadding16},
+					}.Layout(gtx,
+						layout.Rigid(label.Layout),
+						layout.Rigid(func(gtx C) D {
+							return pg.Theme.List(pg.seedList).Layout(gtx, len(pg.rows), func(gtx C, index int) D {
+								return pg.desktopSeedRow(gtx, pg.rows[index])
+							})
+						}),
+					)
+				}),
+			)
+		},
+	}
+
+	return container(gtx, *pg.Theme, sp.Layout, pg.infoText, pg.actionButton)
+}
+
+func (pg *SaveSeedPage) layoutMobile(gtx C) D {
+	sp := components.SubPage{
+		Load:       pg.Load,
+		Title:      "Write down seed word",
+		SubTitle:   "Step 1/2",
+		WalletName: pg.wallet.Name,
+		BackButton: pg.backButton,
+		Back: func() {
+			promptToExit(pg.Load)
+		},
+		Body: func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize16, "Write down all 33 words in the correct order.")
@@ -185,14 +237,8 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 					}.Layout(gtx,
 						layout.Rigid(label.Layout),
 						layout.Rigid(func(gtx C) D {
-							rowsCount := len(pg.rows)
-							datas := pg.rows
-							if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
-								rowsCount = len(pg.mobileRows)
-								datas = pg.mobileRows
-							}
-							return pg.Theme.List(pg.seedList).Layout(gtx, rowsCount, func(gtx C, index int) D {
-								return pg.seedRow(gtx, datas[index])
+							return pg.Theme.List(pg.seedList).Layout(gtx, len(pg.mobileRows), func(gtx C, index int) D {
+								return pg.mobileSeedRow(gtx, pg.mobileRows[index])
 							})
 						}),
 					)
@@ -204,29 +250,34 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 	return container(gtx, *pg.Theme, sp.Layout, pg.infoText, pg.actionButton)
 }
 
-func (pg *SaveSeedPage) seedRow(gtx C, row saveSeedRow) D {
-	itemWidth := gtx.Constraints.Max.X / 3 // Divide total width into 3 rows for deskop
+func (pg *SaveSeedPage) mobileSeedRow(gtx C, row saveSeedRow) D {
+	itemWidth := gtx.Constraints.Max.X / 2 // Divide total width into 2 rows for mobile
 	topMargin := values.MarginPadding8
 	if row.rowIndex == 1 {
 		topMargin = values.MarginPadding16
 	}
-	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
-		itemWidth = gtx.Constraints.Max.X / 2 // Divide total width into 2 rows for mobile
-		return decredmaterial.LinearLayout{
-			Width:  decredmaterial.MatchParent,
-			Height: decredmaterial.WrapContent,
-			Margin: layout.Inset{Top: topMargin},
-		}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return seedItem(pg.Theme, gtx, itemWidth, row.rowIndex, row.word1)
-			}),
-			layout.Rigid(func(gtx C) D {
-				if row.word2 == "" {
-					return layout.Dimensions{}
-				}
-				return seedItem(pg.Theme, gtx, itemWidth, row.rowIndex+17, row.word2)
-			}),
-		)
+	return decredmaterial.LinearLayout{
+		Width:  decredmaterial.MatchParent,
+		Height: decredmaterial.WrapContent,
+		Margin: layout.Inset{Top: topMargin},
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return seedItem(pg.Theme, gtx, itemWidth, row.rowIndex, row.word1)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if row.word2 == "" {
+				return layout.Dimensions{}
+			}
+			return seedItem(pg.Theme, gtx, itemWidth, row.rowIndex+17, row.word2)
+		}),
+	)
+}
+
+func (pg *SaveSeedPage) desktopSeedRow(gtx C, row saveSeedRow) D {
+	itemWidth := gtx.Constraints.Max.X / 3 // Divide total width into 3 rows for deskop
+	topMargin := values.MarginPadding8
+	if row.rowIndex == 1 {
+		topMargin = values.MarginPadding16
 	}
 	return decredmaterial.LinearLayout{
 		Width:  decredmaterial.MatchParent,

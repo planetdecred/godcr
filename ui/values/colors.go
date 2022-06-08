@@ -71,10 +71,6 @@ func (c *Color) DarkThemeColors() {
 	c.Surface = rgb(0x252525)
 }
 
-func (c *Color) SetDefaultThemeColors() {
-	c = c.DefaultThemeColors()
-}
-
 func (c *Color) DefaultThemeColors() *Color {
 	cl := Color{
 		Primary:          rgb(0x2970ff),
