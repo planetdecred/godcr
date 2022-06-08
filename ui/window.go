@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"sync"
+	// "fmt"
 
 	"gioui.org/app"
 	"gioui.org/io/key"
@@ -11,6 +12,7 @@ import (
 	"gioui.org/op"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
+	// "gioui.org/io/event"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/assets"
@@ -153,7 +155,6 @@ func (win *Window) HandleEvents() {
 	for {
 		e := <-win.Events()
 		switch evt := e.(type) {
-
 		case system.DestroyEvent:
 			if win.currentPage != nil {
 				win.currentPage.OnNavigatedFrom()
@@ -164,22 +165,11 @@ func (win *Window) HandleEvents() {
 		case system.FrameEvent:
 			win.displayWindow(evt)
 
-		// case key.Event:
-		// 	fmt.Println(evt)
-		// 	win.handleKeyEvent(&evt)
-
 		default:
 			log.Tracef("Unhandled window event %v\n", e)
 		}
 	}
 }
-
-// for _, event := range gtx.Events(pg) {
-// 	switch event := event.(type) {
-// 	case key.Event:
-// 		win.handleKeyEvent(&event)
-// 	}
-// }
 
 // displayWindow is called when a FrameEvent is received by the active window.
 // Since user actions such as button clicks also trigger FrameEvents, this
@@ -205,15 +195,16 @@ func (win *Window) displayWindow(evt system.FrameEvent) {
 	gtx := layout.NewContext(&op.Ops{}, evt)
 
 	// declare the needed keys
-	key.InputOp{Tag: win, Keys: "(Shift)-[⌤, ⏎]| (Shift)-[↑,↓] | (Shift)-[Tab]"}.Add(gtx.Ops)
+	// key.InputOp{Tag: win, Keys: "(Shift)-[⌤, ⏎]| (Shift)-[↑,↓] | (Shift)-[Tab]"}.Add(gtx.Ops)
+	// key.InputOp{Tag: win, Keys: key.NameUpArrow}.Add(gtx.Ops)
 
-	// range through the context events and call handleKeyEvent
-	for _, event := range gtx.Events(win) {
-		switch event := event.(type) {
-		case key.Event:
-			win.handleKeyEvent(&event)
-		}
-	}
+	// // range through the context events and call handleKeyEvent
+	// for _, event := range gtx.Events(win) {
+	// 	switch event := event.(type) {
+	// 	case key.Event:
+	// win.handleKeyEvent(&event)
+	// 	}
+	// }
 
 	win.drawWindowUI(gtx)
 

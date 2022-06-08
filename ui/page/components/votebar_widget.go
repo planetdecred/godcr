@@ -273,7 +273,7 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count int, 
 
 func (v *VoteBar) layoutInfo(gtx C) D {
 	dims := layout.Flex{}.Layout(gtx,
-		layout.Rigid(v.Theme.Body2(values.StringF(values.StrTotalVotesReverse, int(v.totalVotes))).Layout),
+		layout.Rigid(v.Theme.Body2(values.StringF(values.StrTotalVotesReverse, v.totalVotes)).Layout),
 		layout.Rigid(func(gtx C) D {
 			if v.infoButton.Button.Clicked() {
 				v.infoButtonModal()

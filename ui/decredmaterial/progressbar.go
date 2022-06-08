@@ -136,7 +136,7 @@ func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 
 	// progressScale represent the different progress bar layers
 	progressScale := func(width int, color color.NRGBA) layout.Dimensions {
-		d := image.Point{X: int(width), Y: gtx.Dp(mp.Height)}
+		d := image.Point{X: width, Y: gtx.Dp(mp.Height)}
 
 		defer clip.RRect{
 			Rect: image.Rectangle{Max: image.Point{X: width, Y: gtx.Dp(mp.Height)}},
