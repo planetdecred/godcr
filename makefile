@@ -1,5 +1,5 @@
 # This how we want to name the binary output
-BINARY=godcrtest
+BINARY=godcr
 
 VERSION="1.7.0"
 BUILD=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
