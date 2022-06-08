@@ -125,7 +125,7 @@ func (pg *Restore) OnNavigatedTo() {}
 // Part of the load.Page interface.
 func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
 	pg.Load.SetCurrentAppWidth(gtx.Constraints.Max.X)
-	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx)
 	}
 

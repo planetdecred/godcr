@@ -225,7 +225,7 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 					}),
 					//TODO: temp removal till after V1
 					// layout.Expanded(func(gtx C) D {
-					// 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
+					// 	gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding150)
 					// 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
 					// 	card := pg.Theme.Card()
@@ -301,7 +301,7 @@ func (pg *ProposalsPage) layoutSyncSection(gtx C) D {
 }
 
 func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
-	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding24)
+	gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding24)
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	loader := material.Loader(pg.Theme.Base)
 	loader.Color = pg.Theme.Color.Gray1

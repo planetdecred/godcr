@@ -1,7 +1,8 @@
 package decredmaterial
 
 import (
-	"gioui.org/f32"
+	"image"
+
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -63,14 +64,14 @@ func (cl *Clickable) Layout(gtx C, w layout.Widget) D {
 	return cl.button.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Stack{}.Layout(gtx,
 			layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-				tr := float32(gtx.Px(unit.Dp(cl.Radius.TopRight)))
-				tl := float32(gtx.Px(unit.Dp(cl.Radius.TopLeft)))
-				br := float32(gtx.Px(unit.Dp(cl.Radius.BottomRight)))
-				bl := float32(gtx.Px(unit.Dp(cl.Radius.BottomLeft)))
+				tr := gtx.Dp(unit.Dp(cl.Radius.TopRight))
+				tl := gtx.Dp(unit.Dp(cl.Radius.TopLeft))
+				br := gtx.Dp(unit.Dp(cl.Radius.BottomRight))
+				bl := gtx.Dp(unit.Dp(cl.Radius.BottomLeft))
 				defer clip.RRect{
-					Rect: f32.Rectangle{Max: f32.Point{
-						X: float32(gtx.Constraints.Min.X),
-						Y: float32(gtx.Constraints.Min.Y),
+					Rect: image.Rectangle{Max: image.Point{
+						X: gtx.Constraints.Min.X,
+						Y: gtx.Constraints.Min.Y,
 					}},
 					NW: tl, NE: tr, SE: br, SW: bl,
 				}.Push(gtx.Ops).Pop()

@@ -119,7 +119,7 @@ func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
 
 	m := op.Record(gtx.Ops)
 	inset.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding130)
+		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding130)
 		return pg.shadowBox.Layout(gtx, func(gtx C) D {
 			optionsMenuCard := decredmaterial.Card{Color: pg.Theme.Color.Surface}
 			optionsMenuCard.Radius = decredmaterial.Radius(5)
@@ -277,7 +277,7 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							gtx.Constraints.Min.Y = gtx.Px(values.MarginPadding1)
+							gtx.Constraints.Min.Y = gtx.Dp(values.MarginPadding1)
 							return decredmaterial.Fill(gtx, pg.Theme.Color.Gray1)
 						})
 					}),

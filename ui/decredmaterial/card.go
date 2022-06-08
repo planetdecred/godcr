@@ -1,9 +1,9 @@
 package decredmaterial
 
 import (
+	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/unit"
@@ -17,13 +17,13 @@ type Card struct {
 }
 
 type CornerRadius struct {
-	TopLeft     float32
-	TopRight    float32
-	BottomRight float32
-	BottomLeft  float32
+	TopLeft     int
+	TopRight    int
+	BottomRight int
+	BottomLeft  int
 }
 
-func Radius(radius float32) CornerRadius {
+func Radius(radius int) CornerRadius {
 	return CornerRadius{
 		TopLeft:     radius,
 		TopRight:    radius,
@@ -32,14 +32,14 @@ func Radius(radius float32) CornerRadius {
 	}
 }
 
-func TopRadius(radius float32) CornerRadius {
+func TopRadius(radius int) CornerRadius {
 	return CornerRadius{
 		TopLeft:  radius,
 		TopRight: radius,
 	}
 }
 
-func BottomRadius(radius float32) CornerRadius {
+func BottomRadius(radius int) CornerRadius {
 	return CornerRadius{
 		BottomRight: radius,
 		BottomLeft:  radius,
@@ -62,14 +62,14 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 	dims := c.Inset.Layout(gtx, func(gtx C) D {
 		return layout.Stack{}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				tr := float32(gtx.Px(unit.Dp(c.Radius.TopRight)))
-				tl := float32(gtx.Px(unit.Dp(c.Radius.TopLeft)))
-				br := float32(gtx.Px(unit.Dp(c.Radius.BottomRight)))
-				bl := float32(gtx.Px(unit.Dp(c.Radius.BottomLeft)))
+				tr := gtx.Dp(unit.Dp(c.Radius.TopRight))
+				tl := gtx.Dp(unit.Dp(c.Radius.TopLeft))
+				br := gtx.Dp(unit.Dp(c.Radius.BottomRight))
+				bl := gtx.Dp(unit.Dp(c.Radius.BottomLeft))
 				defer clip.RRect{
-					Rect: f32.Rectangle{Max: f32.Point{
-						X: float32(gtx.Constraints.Min.X),
-						Y: float32(gtx.Constraints.Min.Y),
+					Rect: image.Rectangle{Max: image.Point{
+						X: gtx.Constraints.Min.X,
+						Y: gtx.Constraints.Min.Y,
 					}},
 					NW: tl, NE: tr, SE: br, SW: bl,
 				}.Push(gtx.Ops).Pop()
@@ -87,14 +87,14 @@ func (c Card) HoverableLayout(gtx layout.Context, btn *Clickable, w layout.Widge
 	dims := c.Inset.Layout(gtx, func(gtx C) D {
 		return layout.Stack{}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				tr := float32(gtx.Px(unit.Dp(c.Radius.TopRight)))
-				tl := float32(gtx.Px(unit.Dp(c.Radius.TopLeft)))
-				br := float32(gtx.Px(unit.Dp(c.Radius.BottomRight)))
-				bl := float32(gtx.Px(unit.Dp(c.Radius.BottomLeft)))
+				tr := gtx.Dp(unit.Dp(c.Radius.TopRight))
+				tl := gtx.Dp(unit.Dp(c.Radius.TopLeft))
+				br := gtx.Dp(unit.Dp(c.Radius.BottomRight))
+				bl := gtx.Dp(unit.Dp(c.Radius.BottomLeft))
 				defer clip.RRect{
-					Rect: f32.Rectangle{Max: f32.Point{
-						X: float32(gtx.Constraints.Min.X),
-						Y: float32(gtx.Constraints.Min.Y),
+					Rect: image.Rectangle{Max: image.Point{
+						X: gtx.Constraints.Min.X,
+						Y: gtx.Constraints.Min.Y,
 					}},
 					NW: tl, NE: tr, SE: br, SW: bl,
 				}.Push(gtx.Ops).Pop()

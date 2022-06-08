@@ -227,7 +227,7 @@ func (pg *ConsensusPage) Layout(gtx C) D {
 						}.Layout(gtx, pg.layoutContent)
 					}),
 					// layout.Expanded(func(gtx C) D {
-					// 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding150)
+					// 	gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding150)
 					// 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
 					//TODO: temp removal till after V1
@@ -353,7 +353,7 @@ func (pg *ConsensusPage) layoutSyncSection(gtx C) D {
 
 func (pg *ConsensusPage) layoutIsSyncingSection(gtx C) D {
 	th := material.NewTheme(gofont.Collection())
-	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding24)
+	gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding24)
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	loader := material.Loader(th)
 	loader.Color = pg.Theme.Color.Gray1

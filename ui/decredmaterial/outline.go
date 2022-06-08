@@ -1,9 +1,9 @@
 package decredmaterial
 
 import (
+	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/unit"
@@ -26,11 +26,11 @@ func (o Outline) Layout(gtx layout.Context, w layout.Widget) D {
 
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			borderRadius := float32(gtx.Px(unit.Dp(4)))
+			borderRadius := gtx.Dp(unit.Dp(4))
 			defer clip.RRect{
-				Rect: f32.Rectangle{Max: f32.Point{
-					X: float32(gtx.Constraints.Min.X),
-					Y: float32(gtx.Constraints.Min.Y),
+				Rect: image.Rectangle{Max: image.Point{
+					X: gtx.Constraints.Min.X,
+					Y: gtx.Constraints.Min.Y,
 				}},
 				NE: borderRadius, NW: borderRadius, SE: borderRadius, SW: borderRadius,
 			}.Push(gtx.Ops).Pop()
@@ -42,9 +42,9 @@ func (o Outline) Layout(gtx layout.Context, w layout.Widget) D {
 					gtx.Constraints.Min.Y = minHeight - o.Weight
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					defer clip.RRect{
-						Rect: f32.Rectangle{Max: f32.Point{
-							X: float32(gtx.Constraints.Min.X),
-							Y: float32(gtx.Constraints.Min.Y),
+						Rect: image.Rectangle{Max: image.Point{
+							X: gtx.Constraints.Min.X,
+							Y: gtx.Constraints.Min.Y,
 						}},
 						NE: borderRadius, NW: borderRadius, SE: borderRadius, SW: borderRadius,
 					}.Push(gtx.Ops).Pop()

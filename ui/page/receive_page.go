@@ -98,7 +98,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.backButton.Icon = pg.Theme.Icons.ContentClear
 
 	pg.copyAddressButton = l.Theme.OutlineButton("")
-	pg.copyAddressButton.TextSize = values.MarginPadding14
+	pg.copyAddressButton.TextSize = values.TextSize14
 	pg.copyAddressButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	pg.selector = components.NewAccountSelector(pg.Load, nil).
@@ -185,7 +185,7 @@ func (pg *ReceivePage) Layout(gtx C) D {
 	pg.handleCopyEvent(gtx)
 	pg.pageBackdropLayout(gtx)
 
-	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx)
 	}
 	return pg.layoutDesktop(gtx)

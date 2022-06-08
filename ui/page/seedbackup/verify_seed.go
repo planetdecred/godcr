@@ -292,8 +292,8 @@ func (pg *VerifySeedPage) seedButton(gtx C, index int, multiSeed shuffledSeedWor
 	return multiSeed.clickables[index].Layout(gtx, func(gtx C) D {
 
 		return decredmaterial.LinearLayout{
-			Width:      gtx.Px(values.MarginPadding100),
-			Height:     gtx.Px(values.MarginPadding40),
+			Width:      gtx.Dp(values.MarginPadding100),
+			Height:     gtx.Dp(values.MarginPadding40),
 			Background: pg.Theme.Color.Surface,
 			Direction:  layout.Center,
 			Border:     decredmaterial.Border{Radius: decredmaterial.Radius(8), Color: borderColor, Width: values.MarginPadding2},

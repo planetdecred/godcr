@@ -1,9 +1,9 @@
 package decredmaterial
 
 import (
+	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
@@ -47,14 +47,14 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 					layout.Expanded(func(gtx C) D {
 						ll.applyDimension(&gtx)
 						// draw background and clip the background to border radius
-						tr := float32(gtx.Px(unit.Dp(ll.Border.Radius.TopRight)))
-						tl := float32(gtx.Px(unit.Dp(ll.Border.Radius.TopLeft)))
-						br := float32(gtx.Px(unit.Dp(ll.Border.Radius.BottomRight)))
-						bl := float32(gtx.Px(unit.Dp(ll.Border.Radius.BottomLeft)))
+						tr := gtx.Dp(unit.Dp(ll.Border.Radius.TopRight))
+						tl := gtx.Dp(unit.Dp(ll.Border.Radius.TopLeft))
+						br := gtx.Dp(unit.Dp(ll.Border.Radius.BottomRight))
+						bl := gtx.Dp(unit.Dp(ll.Border.Radius.BottomLeft))
 						defer clip.RRect{
-							Rect: f32.Rectangle{Max: f32.Point{
-								X: float32(gtx.Constraints.Min.X),
-								Y: float32(gtx.Constraints.Min.Y),
+							Rect: image.Rectangle{Max: image.Point{
+								X: gtx.Constraints.Min.X,
+								Y: gtx.Constraints.Min.Y,
 							}},
 							NW: tl, NE: tr, SE: br, SW: bl,
 						}.Push(gtx.Ops).Pop()

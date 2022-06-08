@@ -281,7 +281,7 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 					}
 
 					in.btnNegative.Text = in.negativeButtonText
-					gtx.Constraints.Max.X = gtx.Px(values.MarginPadding250)
+					gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding250)
 					return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, in.btnNegative.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -290,7 +290,7 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 					}
 
 					in.btnPositve.Text = in.positiveButtonText
-					gtx.Constraints.Max.X = gtx.Px(values.MarginPadding250)
+					gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding250)
 					return in.btnPositve.Layout(gtx)
 				}),
 			)

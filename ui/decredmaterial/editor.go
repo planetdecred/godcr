@@ -56,8 +56,8 @@ type Editor struct {
 
 	EditorIconButtonEvent func()
 
-	m2 unit.Value
-	m5 unit.Value
+	m2 unit.Dp
+	m5 unit.Dp
 }
 
 func (t *Theme) EditorPassword(editor *widget.Editor, hint string) Editor {
@@ -271,7 +271,7 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 					Right: e.m5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					e.CustomButton.TextSize = unit.Dp(10)
+					e.CustomButton.TextSize = unit.Sp(10)
 					return e.CustomButton.Layout(gtx)
 				})
 			}
@@ -305,8 +305,7 @@ func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				width := unit.Value{U: unit.UnitDp, V: 40}
-				gtx.Constraints.Min.X = gtx.Px(width)
+				gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding40)
 				return layout.Center.Layout(gtx, func(gtx C) D {
 					return re.TitleLabel.Layout(gtx)
 				})

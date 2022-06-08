@@ -48,12 +48,12 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 
 				items := []decredmaterial.ProgressBarItem{
 					{
-						Value:   float32(totalBalance.Spendable.ToCoin()),
+						Value:   int(totalBalance.Spendable.ToCoin()),
 						Color:   pg.Theme.Color.Turquoise300,
 						SubText: values.String(values.StrLabelSpendable),
 					},
 					{
-						Value:   float32(totalBalance.LockedByTickets.ToCoin()),
+						Value:   int(totalBalance.LockedByTickets.ToCoin()),
 						Color:   pg.Theme.Color.Primary,
 						SubText: values.String(values.StrLocked),
 					},
@@ -70,7 +70,7 @@ func (pg *Page) walletBalanceLayout(gtx C) D {
 					)
 				}
 
-				return pg.Theme.MultiLayerProgressBar(float32((totalBalance.Spendable+totalBalance.LockedByTickets).ToCoin()), items).Layout(gtx, labelWdg)
+				return pg.Theme.MultiLayerProgressBar(int((totalBalance.Spendable+totalBalance.LockedByTickets).ToCoin()), items).Layout(gtx, labelWdg)
 			}),
 		)
 	})

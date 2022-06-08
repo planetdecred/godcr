@@ -12,10 +12,8 @@ import (
 func (pg *AppOverviewPage) initRecentTxWidgets() {
 	pg.transactionsList = pg.Theme.NewClickableList(layout.Vertical)
 	pg.transactionsList.IsShadowEnabled = true
-	pg.transactionsList.Radius = decredmaterial.CornerRadius{
-		BottomRight: values.MarginPadding14.V,
-		BottomLeft:  values.MarginPadding14.V,
-	}
+	pg.transactionsList.Radius = decredmaterial.BottomRadius(14)
+
 	pg.toTransactions = pg.Theme.TextAndIconButton(values.String(values.StrSeeAll), pg.Theme.Icons.NavigationArrowForward)
 	pg.toTransactions.Color = pg.Theme.Color.Primary
 	pg.toTransactions.BackgroundColor = pg.Theme.Color.Surface
