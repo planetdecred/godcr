@@ -881,7 +881,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 				}),
 				layout.Rigid(func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					if mp.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+					if mp.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 						return D{}
 					}
 					return mp.appBarNav.LayoutTopBar(gtx)

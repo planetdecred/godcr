@@ -90,8 +90,8 @@ var (
 	TextSize34   = unit.Sp(34)
 	TextSize32   = unit.Sp(32)
 
-	AppWidth  = unit.Sp(800)
-	AppHeight = unit.Sp(600)
+	AppWidth  = unit.Dp(800)
+	AppHeight = unit.Dp(600)
 
 	// These define the dimensions at which we consider the user to be using a
 	// mobile device. The dimensions specified are the default viewport for
@@ -100,8 +100,8 @@ var (
 	// devices starting from 600px below. While tablets and large phones are considered to be
 	// between 600px and 768px. While Landscape tablets are considered to be between
 	// 768px and 992px.
-	MobileAppWidth  = unit.Sp(360)
-	MobileAppHeight = unit.Sp(780)
+	MobileAppWidth  = unit.Dp(360)
+	MobileAppHeight = unit.Dp(780)
 
-	StartMobileView = unit.Sp(600)
+	StartMobileView = unit.Dp(600)
 )

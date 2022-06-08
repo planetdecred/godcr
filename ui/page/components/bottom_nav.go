@@ -135,7 +135,7 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutSendReceive(gtx layout.Con
 													Left: values.MarginPadding0,
 												}.Layout(gtx, func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
-														txt := bottomNavigationbar.Theme.Label(values.MarginPadding16, bottomNavigationbar.FloatingActionButton[0].Title)
+														txt := bottomNavigationbar.Theme.Label(values.TextSize16, bottomNavigationbar.FloatingActionButton[0].Title)
 														txt.Color = bottomNavigationbar.Theme.Color.DefualtThemeColors().White
 														return txt.Layout(gtx)
 													})
@@ -172,7 +172,7 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutSendReceive(gtx layout.Con
 													Left: values.MarginPadding0,
 												}.Layout(gtx, func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
-														txt := bottomNavigationbar.Theme.Label(values.MarginPadding16, bottomNavigationbar.FloatingActionButton[1].Title)
+														txt := bottomNavigationbar.Theme.Label(values.TextSize16, bottomNavigationbar.FloatingActionButton[1].Title)
 														txt.Color = bottomNavigationbar.Theme.Color.DefualtThemeColors().White
 														return txt.Layout(gtx)
 													})

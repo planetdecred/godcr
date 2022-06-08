@@ -204,7 +204,7 @@ func (pg *MorePage) OnNavigatedFrom() {}
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
-	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		container := func(gtx C) D {
 			pg.layoutMoreItemsMobile(gtx)
 			return layout.Dimensions{Size: gtx.Constraints.Max}

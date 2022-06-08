@@ -3,7 +3,6 @@ package ui
 import (
 	"errors"
 	"sync"
-	// "fmt"
 
 	"gioui.org/app"
 	"gioui.org/io/key"
@@ -12,7 +11,6 @@ import (
 	"gioui.org/op"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
-	// "gioui.org/io/event"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/assets"
@@ -155,6 +153,7 @@ func (win *Window) HandleEvents() {
 	for {
 		e := <-win.Events()
 		switch evt := e.(type) {
+
 		case system.DestroyEvent:
 			if win.currentPage != nil {
 				win.currentPage.OnNavigatedFrom()
@@ -164,6 +163,9 @@ func (win *Window) HandleEvents() {
 
 		case system.FrameEvent:
 			win.displayWindow(evt)
+
+		case key.Event:
+			win.handleKeyEvent(&evt)
 
 		default:
 			log.Tracef("Unhandled window event %v\n", e)
@@ -193,18 +195,6 @@ func (win *Window) displayWindow(evt system.FrameEvent) {
 
 	// Draw the window's UI components into an op.Ops.
 	gtx := layout.NewContext(&op.Ops{}, evt)
-
-	// declare the needed keys
-	// key.InputOp{Tag: win, Keys: "(Shift)-[⌤, ⏎]| (Shift)-[↑,↓] | (Shift)-[Tab]"}.Add(gtx.Ops)
-	// key.InputOp{Tag: win, Keys: key.NameUpArrow}.Add(gtx.Ops)
-
-	// // range through the context events and call handleKeyEvent
-	// for _, event := range gtx.Events(win) {
-	// 	switch event := event.(type) {
-	// 	case key.Event:
-	// win.handleKeyEvent(&event)
-	// 	}
-	// }
 
 	win.drawWindowUI(gtx)
 

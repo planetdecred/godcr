@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 
-	// "gioui.org/f32"
 	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op"

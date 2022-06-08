@@ -142,7 +142,7 @@ func (pg *TransactionsPage) loadTransactions(selectedWalletIndex int) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
-	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx)
 	}
 	return pg.layoutDesktop(gtx)
@@ -321,7 +321,7 @@ func (pg *TransactionsPage) layoutTabs(gtx C) D {
 					return D{}
 				}
 
-				tabHeight := gtx.Px(values.MarginPadding2)
+				tabHeight := gtx.Dp(values.MarginPadding2)
 				tabRect := image.Rect(0, 0, dims.Size.X, tabHeight)
 
 				return layout.Inset{

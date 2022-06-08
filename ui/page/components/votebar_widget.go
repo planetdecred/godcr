@@ -6,7 +6,6 @@ import (
 	"image/color"
 	"strconv"
 
-	// "gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -259,7 +258,7 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count int, 
 			}),
 			layout.Rigid(func(gtx C) D {
 				percentage := (count / v.totalVotes) * 100
-				if percentage != percentage {
+				if percentage < 0 {
 					percentage = 0
 				}
 				percentageStr := strconv.FormatFloat(float64(percentage), 'f', 1, 64) + "%"
