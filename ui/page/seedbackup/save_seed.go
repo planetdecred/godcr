@@ -33,9 +33,10 @@ type SaveSeedPage struct {
 	actionButton decredmaterial.Button
 	seedList     *widget.List
 
-	infoText string
-	seed     string
-	rows     []saveSeedRow
+	infoText   string
+	seed       string
+	rows       []saveSeedRow
+	mobileRows []saveSeedRow
 }
 
 func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
@@ -90,6 +91,22 @@ func (pg *SaveSeedPage) OnNavigatedTo() {
 				row2 := wordList[11:22]
 				row3 := wordList[22:]
 
+				//for mobile
+				rowm1 := wordList[:17]
+				rowm2 := wordList[17:]
+				mobileRows := make([]saveSeedRow, 0)
+				for i := range rowm1 {
+					r2 := ""
+					if i < len(rowm2) {
+						r2 = rowm2[i]
+					}
+					mobileRows = append(mobileRows, saveSeedRow{
+						rowIndex: i + 1,
+						word1:    rowm1[i],
+						word2:    r2,
+					})
+				}
+
 				rows := make([]saveSeedRow, 0)
 				for i := range row1 {
 					rows = append(rows, saveSeedRow{
@@ -100,6 +117,7 @@ func (pg *SaveSeedPage) OnNavigatedTo() {
 					})
 				}
 				pg.rows = rows
+				pg.mobileRows = mobileRows
 			}()
 
 			return false
@@ -167,8 +185,14 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 					}.Layout(gtx,
 						layout.Rigid(label.Layout),
 						layout.Rigid(func(gtx C) D {
-							return pg.Theme.List(pg.seedList).Layout(gtx, len(pg.rows), func(gtx C, index int) D {
-								return pg.seedRow(gtx, pg.rows[index])
+							rowsCount := len(pg.rows)
+							datas := pg.rows
+							if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+								rowsCount = len(pg.mobileRows)
+								datas = pg.mobileRows
+							}
+							return pg.Theme.List(pg.seedList).Layout(gtx, rowsCount, func(gtx C, index int) D {
+								return pg.seedRow(gtx, datas[index])
 							})
 						}),
 					)
@@ -181,10 +205,28 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 }
 
 func (pg *SaveSeedPage) seedRow(gtx C, row saveSeedRow) D {
-	itemWidth := gtx.Constraints.Max.X / 3 // Divide total width into 3 rows
+	itemWidth := gtx.Constraints.Max.X / 3 // Divide total width into 3 rows for deskop
 	topMargin := values.MarginPadding8
 	if row.rowIndex == 1 {
 		topMargin = values.MarginPadding16
+	}
+	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+		itemWidth = gtx.Constraints.Max.X / 2 // Divide total width into 2 rows for mobile
+		return decredmaterial.LinearLayout{
+			Width:  decredmaterial.MatchParent,
+			Height: decredmaterial.WrapContent,
+			Margin: layout.Inset{Top: topMargin},
+		}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return seedItem(pg.Theme, gtx, itemWidth, row.rowIndex, row.word1)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if row.word2 == "" {
+					return layout.Dimensions{}
+				}
+				return seedItem(pg.Theme, gtx, itemWidth, row.rowIndex+17, row.word2)
+			}),
+		)
 	}
 	return decredmaterial.LinearLayout{
 		Width:  decredmaterial.MatchParent,

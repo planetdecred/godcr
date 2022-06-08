@@ -33,7 +33,7 @@ type VerifySeedPage struct {
 
 	backButton   decredmaterial.IconButton
 	actionButton decredmaterial.Button
-	seedList     *layout.List
+	listSeedList []*layout.List
 	list         *widget.List
 }
 
@@ -44,7 +44,6 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 		seed:   seed,
 
 		actionButton: l.Theme.Button("Verify"),
-		seedList:     &layout.List{Axis: layout.Vertical},
 	}
 	pg.list = &widget.List{
 		List: layout.List{
@@ -74,16 +73,19 @@ func (pg *VerifySeedPage) ID() string {
 func (pg *VerifySeedPage) OnNavigatedTo() {
 	allSeeds := dcrlibwallet.PGPWordList()
 
+	listSeedList := make([]*layout.List, 0)
 	multiSeedList := make([]shuffledSeedWords, 0)
 	seedWords := strings.Split(pg.seed, " ")
 	rand.Seed(time.Now().UnixNano())
 	for _, word := range seedWords {
+		listSeedList = append(listSeedList, &layout.List{Axis: layout.Horizontal})
 		index := seedPosition(word, allSeeds)
 		shuffledSeed := pg.getMultiSeed(index, dcrlibwallet.PGPWordList()) // using allSeeds here modifies the slice
 		multiSeedList = append(multiSeedList, shuffledSeed)
 	}
 
 	pg.multiSeedList = multiSeedList
+	pg.listSeedList = listSeedList
 }
 
 func (pg *VerifySeedPage) getMultiSeed(realSeedIndex int, allSeeds []string) shuffledSeedWords {
@@ -270,12 +272,15 @@ func (pg *VerifySeedPage) seedListRow(gtx C, index int, multiSeed shuffledSeedWo
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
 			return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-					layout.Rigid(func(gtx C) D { return pg.seedButton(gtx, 0, multiSeed) }),
-					layout.Rigid(func(gtx C) D { return pg.seedButton(gtx, 1, multiSeed) }),
-					layout.Rigid(func(gtx C) D { return pg.seedButton(gtx, 2, multiSeed) }),
-					layout.Rigid(func(gtx C) D { return pg.seedButton(gtx, 3, multiSeed) }),
-				)
+				widgets := []layout.Widget{
+					func(gtx C) D { return pg.seedButton(gtx, 0, multiSeed) },
+					func(gtx C) D { return pg.seedButton(gtx, 1, multiSeed) },
+					func(gtx C) D { return pg.seedButton(gtx, 2, multiSeed) },
+					func(gtx C) D { return pg.seedButton(gtx, 3, multiSeed) },
+				}
+				return pg.listSeedList[index].Layout(gtx, len(widgets), func(gtx C, i int) D {
+					return layout.UniformInset(values.MarginPadding0).Layout(gtx, widgets[i])
+				})
 			})
 		}),
 	)
