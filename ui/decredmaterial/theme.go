@@ -74,9 +74,8 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 }
 
 func (t *Theme) SwitchDarkMode(isDarkModeOn bool, decredIcons map[string]image.Image) {
-	t.Color.DefualtThemeColors()
+	t.Color = t.Color.DefaultThemeColors()
 	t.Icons.DefaultIcons()
-
 	expandIcon := "expand_icon"
 	collapseIcon := "collapse_icon"
 	if isDarkModeOn {
