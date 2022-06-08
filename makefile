@@ -7,6 +7,7 @@ BUILD=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
 BuildEnv="prod" 
 
 LDFLAGS=-ldflags "-w -s -X main.Version=${VERSION} -X main.BuildDate=${BUILD} -X main.BuildEnv=${BuildEnv}"
+# LDFLAGSWIN adds the -H=windowsgui flag to windows build to prevent cli from starting alongside godcr
 LDFLAGSWIN= -ldflags "-H=windowsgui -w -s -X main.Version=${VERSION} -X main.BuildDate=${BUILD} -X main.BuildEnv=${BuildEnv}"
 export GOARCH=amd64
 
