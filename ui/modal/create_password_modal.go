@@ -223,9 +223,18 @@ func (cm *CreatePasswordModal) Handle() {
 	computePasswordStrength(&cm.passwordStrength, cm.Theme, cm.passwordEditor.Editor)
 }
 
-// HandleKeyEvent is called when a key is pressed on the current window.
+// KeysToHandle returns an expression that describes a set of key combinations
+// that this modal wishes to capture. The HandleKeyPress() method will only be
+// called when any of these key combinations is pressed.
 // Satisfies the load.KeyEventHandler interface for receiving key events.
-func (cm *CreatePasswordModal) HandleKeyEvent(evt *key.Event) {
+func (cm *CreatePasswordModal) KeysToHandle() key.Set {
+	return decredmaterial.AnyKeyWithOptionalModifier(key.ModShift, key.NameTab)
+}
+
+// HandleKeyPress is called when one or more keys are pressed on the current
+// window that match any of the key combinations returned by KeysToHandle().
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (cm *CreatePasswordModal) HandleKeyPress(evt *key.Event) {
 	if cm.walletNameEnabled {
 		decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 	} else {
