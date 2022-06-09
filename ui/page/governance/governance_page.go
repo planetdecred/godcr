@@ -32,6 +32,7 @@ type Page struct {
 var governanceTabTitles = []string{
 	values.String(values.StrProposal),
 	values.String(values.StrConsensusChange),
+	values.String(values.StrTreasurySpending),
 }
 
 func NewGovernancePage(l *load.Load) *Page {

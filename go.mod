@@ -141,3 +141,4 @@ require (
 // the android OS using gomobile. This replace can be removed once any
 // of those projects update their github.com/lib/pq dependency.
 replace github.com/lib/pq => github.com/lib/pq v1.10.4
+replace github.com/planetdecred/dcrlibwallet => /home/kennedy/Projects/src/github.com/dreacot/dcrlibwallet
