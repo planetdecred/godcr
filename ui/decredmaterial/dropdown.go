@@ -154,9 +154,9 @@ func (d *DropDown) layoutActiveIcon(gtx layout.Context, index int) D {
 func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 	item := d.items[itemIndex]
 
-	width := gtx.Px(values.MarginPadding180)
+	width := gtx.Dp(values.MarginPadding180)
 	if d.revs {
-		width = gtx.Px(values.MarginPadding140)
+		width = gtx.Dp(values.MarginPadding140)
 	}
 
 	radius := Radius(0)
@@ -185,9 +185,9 @@ func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 			return item.Icon.Layout24dp(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Max.X = gtx.Px(unit.Dp(115))
+			gtx.Constraints.Max.X = gtx.Dp(unit.Dp(115))
 			if d.revs {
-				gtx.Constraints.Max.X = gtx.Px(unit.Dp(100))
+				gtx.Constraints.Max.X = gtx.Dp(unit.Dp(100))
 			}
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.Inset{
@@ -277,7 +277,7 @@ func (d *DropDown) closedLayout(gtx C, iLeft int, iRight int) D {
 				layout.Rigid(func(gtx C) D {
 					return d.layoutOption(gtx, d.selectedIndex)
 				}))
-			w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
+			w := (lay.Size.X * 800) / gtx.Dp(MaxWidth)
 			d.Width = w + 10
 			return lay
 		})

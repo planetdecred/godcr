@@ -152,7 +152,7 @@ func (pg *SaveSeedPage) OnNavigatedFrom() {}
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *SaveSeedPage) Layout(gtx C) D {
-	if pg.Load.GetCurrentAppWidth() <= gtx.Px(values.StartMobileView) {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx)
 	}
 	return pg.layoutDesktop(gtx)
@@ -306,8 +306,8 @@ func seedItem(theme *decredmaterial.Theme, gtx C, width, index int, word string)
 			indexLabel.Color = theme.Color.GrayText1
 			indexLabel.Font.Weight = text.Medium
 			return decredmaterial.LinearLayout{
-				Width:     gtx.Px(values.MarginPadding30),
-				Height:    gtx.Px(values.MarginPadding22),
+				Width:     gtx.Dp(values.MarginPadding30),
+				Height:    gtx.Dp(values.MarginPadding22),
 				Direction: layout.Center,
 				Margin:    layout.Inset{Right: values.MarginPadding8},
 				Border:    decredmaterial.Border{Radius: decredmaterial.Radius(9), Color: theme.Color.Gray3, Width: values.MarginPadding1},

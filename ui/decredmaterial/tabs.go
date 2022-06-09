@@ -105,7 +105,7 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dime
 			return layout.Flex{Axis: widgetAxis, Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
-						dim := gtx.Px(unit.Dp(20))
+						dim := gtx.Dp(unit.Dp(20))
 						gtx.Constraints.Max = image.Point{X: dim, Y: dim}
 						return t.layoutIcon(gtx)
 					})

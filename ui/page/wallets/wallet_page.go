@@ -96,7 +96,7 @@ type WalletPage struct {
 	watchOnlyWalletLabel decredmaterial.Label
 	separator            decredmaterial.Line
 
-	mt    unit.Value    // option menu top margin padding
+	mt    unit.Dp       // option menu top margin padding
 	click gesture.Click // page click event
 
 	openPopupIndex      int
@@ -417,7 +417,7 @@ func (pg *WalletPage) moreOptionPositionEvent(gtx layout.Context) {
 		case gesture.TypeClick:
 
 			// calculate the click position making reference to list length
-			pos := (e.Position.Y / float32(pg.container.Position.Length)) * 100
+			pos := (e.Position.Y / pg.container.Position.Length) * 100
 
 			switch {
 			case pg.container.Position.Count > 1 && pos > -20 && pos < 1:
@@ -508,8 +508,8 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 
 	m := op.Record(gtx.Ops)
 	inset.Layout(gtx, func(gtx C) D {
-		width := unit.Value{U: unit.UnitDp, V: 150}
-		gtx.Constraints.Max.X = gtx.Px(width)
+		width := values.MarginPadding150
+		gtx.Constraints.Max.X = gtx.Dp(width)
 		return pg.shadowBox.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
@@ -1033,7 +1033,7 @@ func (pg *WalletPage) checkMixerSection(gtx layout.Context, listItem *walletList
 }
 
 func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding110)
+	gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding110)
 	inset := layout.Inset{
 		Top:  unit.Dp(-130),
 		Left: unit.Dp(-80),

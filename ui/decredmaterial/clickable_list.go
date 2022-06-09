@@ -11,7 +11,7 @@ type ClickableList struct {
 	clickables      []*Clickable
 	Radius          CornerRadius // this radius is used by the clickable
 	selectedItem    int
-	DividerHeight   unit.Value
+	DividerHeight   unit.Dp
 	IsShadowEnabled bool
 	IsHoverable     bool
 }
@@ -82,13 +82,13 @@ func (cl *ClickableList) row(gtx layout.Context, count int, i int, w layout.List
 	})
 
 	// add divider to all rows except last
-	if i < (count-1) && cl.DividerHeight.V > 0 {
+	if i < (count-1) && cl.DividerHeight > 0 {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return row
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				gtx.Constraints.Min.Y += gtx.Px(cl.DividerHeight)
+				gtx.Constraints.Min.Y += gtx.Dp(cl.DividerHeight)
 				return layout.Dimensions{Size: gtx.Constraints.Min}
 			}),
 		)

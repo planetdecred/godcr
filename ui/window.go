@@ -149,6 +149,7 @@ func (win *Window) NewLoad() (*load.Load, error) {
 
 // HandleEvents runs main event handling and page rendering loop.
 func (win *Window) HandleEvents() {
+
 	for {
 		e := <-win.Events()
 		switch evt := e.(type) {
@@ -194,6 +195,7 @@ func (win *Window) displayWindow(evt system.FrameEvent) {
 
 	// Draw the window's UI components into an op.Ops.
 	gtx := layout.NewContext(&op.Ops{}, evt)
+
 	win.drawWindowUI(gtx)
 
 	// Render the window's UI components on screen.

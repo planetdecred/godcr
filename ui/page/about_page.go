@@ -48,10 +48,7 @@ func NewAboutPage(l *load.Load) *AboutPage {
 		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
 	}
 
-	pg.licenseRow.Radius = decredmaterial.CornerRadius{
-		BottomRight: values.MarginPadding14.V,
-		BottomLeft:  values.MarginPadding14.V,
-	}
+	pg.licenseRow.Radius = decredmaterial.BottomRadius(14)
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 	col := pg.Theme.Color.GrayText2

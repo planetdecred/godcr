@@ -16,7 +16,7 @@ type Modal struct {
 	button       *widget.Clickable
 	card         Card
 	scroll       ListStyle
-	padding      unit.Value
+	padding      unit.Dp
 
 	isFloatTitle  bool
 	isDisabled    bool
@@ -78,7 +78,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget) layout.Dimen
 				widgetFuncs = append(widgetFuncs, widgets...)
 			}
 
-			gtx.Constraints.Max.X = gtx.Px(unit.Dp(380))
+			gtx.Constraints.Max.X = gtx.Dp(unit.Dp(380))
 			inset := layout.Inset{
 				Top:    unit.Dp(50),
 				Bottom: unit.Dp(50),
@@ -151,7 +151,7 @@ func (m *Modal) BackdropClicked(minimizable bool) bool {
 	return false
 }
 
-func (m *Modal) SetPadding(padding unit.Value) {
+func (m *Modal) SetPadding(padding unit.Dp) {
 	m.padding = padding
 }
 

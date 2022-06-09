@@ -233,8 +233,8 @@ func (pg *ProposalDetails) OnNavigatedFrom() {
 func (pg *ProposalDetails) layoutProposalVoteBar(gtx C) D {
 	proposal := pg.proposal
 
-	yes := float32(proposal.YesVotes)
-	no := float32(proposal.NoVotes)
+	yes := int(proposal.YesVotes)
+	no := int(proposal.NoVotes)
 	quorumPercent := float32(proposal.QuorumPercentage)
 	passPercentage := float32(proposal.PassPercentage)
 	eligibleTickets := float32(proposal.EligibleTickets)
@@ -263,7 +263,7 @@ func (pg *ProposalDetails) layoutInDiscussionState(gtx C) D {
 				if proposal.VoteStatus == val || proposal.VoteStatus < val {
 					c := pg.Theme.Card()
 					c.Color = pg.Theme.Color.Primary
-					c.Radius = decredmaterial.Radius(9.5)
+					c.Radius = decredmaterial.Radius(9)
 					lbl := pg.Theme.Body1(fmt.Sprint(val))
 					lbl.Color = pg.Theme.Color.Surface
 					if proposal.VoteStatus < val {
@@ -308,7 +308,7 @@ func (pg *ProposalDetails) layoutInDiscussionState(gtx C) D {
 			return c(gtx, 1, stateText1)
 		}),
 		layout.Rigid(func(gtx C) D {
-			height, width := gtx.Px(values.MarginPadding26), gtx.Px(values.MarginPadding4)
+			height, width := gtx.Dp(values.MarginPadding26), gtx.Dp(values.MarginPadding4)
 			line := pg.Theme.Line(height, width)
 			if proposal.VoteStatus > 1 {
 				line.Color = pg.Theme.Color.Primary

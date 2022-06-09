@@ -34,7 +34,7 @@ type Theme struct {
 	Styles *values.WidgetStyles
 
 	Icons                 *Icons
-	TextSize              unit.Value
+	TextSize              unit.Sp
 	checkBoxCheckedIcon   *widget.Icon
 	checkBoxUncheckedIcon *widget.Icon
 	radioCheckedIcon      *widget.Icon
@@ -148,7 +148,7 @@ func (t *Theme) ImageIcon(gtx layout.Context, icon image.Image, size int) layout
 	draw.ApproxBiLinear.Scale(img, img.Bounds(), icon, icon.Bounds(), draw.Src, nil)
 
 	i := widget.Image{Src: paint.NewImageOp(img)}
-	i.Scale = float32(size) / float32(gtx.Px(unit.Dp(float32(size))))
+	i.Scale = float32(size) / float32(gtx.Dp(unit.Dp(float32(size))))
 	return i.Layout(gtx)
 }
 
@@ -174,8 +174,8 @@ func toPointF(p image.Point) f32.Point {
 func fillMax(gtx layout.Context, col color.NRGBA, radius CornerRadius) D {
 	cs := gtx.Constraints
 	d := image.Point{X: cs.Max.X, Y: cs.Max.Y}
-	track := f32.Rectangle{
-		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
+	track := image.Rectangle{
+		Max: image.Point{X: d.X, Y: d.Y},
 	}
 
 	defer clip.RRect{

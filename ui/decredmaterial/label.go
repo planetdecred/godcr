@@ -53,7 +53,7 @@ func (t *Theme) ErrorLabel(txt string) Label {
 	return label
 }
 
-func (t *Theme) Label(size unit.Value, txt string) Label {
+func (t *Theme) Label(size unit.Sp, txt string) Label {
 	return t.labelWithDefaultColor(Label{material.Label(t.Base, size, txt)})
 }
 

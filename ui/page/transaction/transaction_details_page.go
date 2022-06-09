@@ -63,7 +63,7 @@ type TxDetailsPage struct {
 }
 
 func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction) *TxDetailsPage {
-	rebroadcast := l.Theme.Label(values.MarginPadding14, values.String(values.StrRebroadcast))
+	rebroadcast := l.Theme.Label(values.TextSize14, values.String(values.StrRebroadcast))
 	rebroadcast.TextSize = values.TextSize14
 	rebroadcast.Color = l.Theme.Color.Text
 	pg := &TxDetailsPage{
@@ -368,7 +368,7 @@ func (pg *TxDetailsPage) maturityProgressBar(gtx C) D {
 			progress.TrackColor = pg.Theme.Color.BlueProgressTint
 			progress.Height = values.MarginPadding8
 			progress.Width = values.MarginPadding80
-			progress.Radius = decredmaterial.Radius(values.MarginPadding8.V)
+			progress.Radius = decredmaterial.Radius(8)
 
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{
@@ -550,7 +550,7 @@ func (pg *TxDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
 					}),
 					layout.Rigid(func(gtx C) D {
 						btn := pg.Theme.OutlineButton(transaction.Hash)
-						btn.TextSize = values.MarginPadding14
+						btn.TextSize = values.TextSize14
 						btn.SetClickable(pg.hashClickable)
 						btn.Inset = layout.UniformInset(values.MarginPadding0)
 						return btn.Layout(gtx)
@@ -594,7 +594,7 @@ func (pg *TxDetailsPage) txnInfoSection(gtx layout.Context, label, value string,
 						}
 
 						btn := pg.Theme.OutlineButton(value)
-						btn.TextSize = values.MarginPadding14
+						btn.TextSize = values.TextSize14
 						btn.SetClickable(clickable)
 						btn.Inset = layout.UniformInset(values.MarginPadding0)
 						return btn.Layout(gtx)
@@ -870,7 +870,7 @@ func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transac
 	txn.copyTextButtons = make([]decredmaterial.Button, x)
 	for i := 0; i < x; i++ {
 		btn := l.Theme.OutlineButton("")
-		btn.TextSize = values.MarginPadding14
+		btn.TextSize = values.TextSize14
 		btn.Inset = layout.UniformInset(values.MarginPadding0)
 		txn.copyTextButtons[i] = btn
 	}

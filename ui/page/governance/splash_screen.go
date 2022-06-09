@@ -34,7 +34,7 @@ func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 							return pg.Theme.Icons.GovernanceActiveIcon.LayoutSize(gtx, values.MarginPadding150)
 						}),
 						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.Label(values.MarginPadding24, values.String(values.StrHowGovernanceWork))
+							txt := pg.Theme.Label(values.TextSize24, values.String(values.StrHowGovernanceWork))
 							txt.Font.Weight = text.SemiBold
 
 							return layout.Inset{
@@ -52,7 +52,7 @@ func (pg *Page) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding350)
+			gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding350)
 			return layout.Inset{
 				Top:   values.MarginPadding24,
 				Right: values.MarginPadding16,

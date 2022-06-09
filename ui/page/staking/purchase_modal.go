@@ -69,7 +69,7 @@ func newStakingModal(l *load.Load) *stakingModal {
 
 	tp.increment.ChangeColorStyle(&values.ColorStyle{Foreground: tp.Theme.Color.DeepBlue})
 	tp.decrement.ChangeColorStyle(&values.ColorStyle{Foreground: tp.Theme.Color.Gray2})
-	tp.increment.Size, tp.decrement.Size = values.TextSize18, values.TextSize18
+	tp.increment.Size, tp.decrement.Size = values.MarginPadding18, values.MarginPadding18
 
 	tp.modal.SetPadding(values.MarginPadding0)
 
@@ -145,7 +145,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-									return components.LayoutBalanceSize(gtx, tp.Load, tp.ticketPrice.String(), values.Size28)
+									return components.LayoutBalanceSize(gtx, tp.Load, tp.ticketPrice.String(), values.TextSize28)
 								})
 							}),
 						)

@@ -80,9 +80,9 @@ func UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 
 	padding := values.MarginPadding24
 
-	if (width - 2*gtx.Px(padding)) > gtx.Px(MaxWidth) {
-		paddingValue := float32(width-gtx.Px(MaxWidth)) / 2
-		padding = unit.Px(paddingValue)
+	if (width - 2*gtx.Dp(padding)) > gtx.Dp(MaxWidth) {
+		paddingValue := float32(width-gtx.Dp(MaxWidth)) / 2
+		padding = unit.Dp(paddingValue)
 	}
 
 	return layout.Inset{
@@ -98,9 +98,9 @@ func UniformHorizontalPadding(gtx layout.Context, body layout.Widget) layout.Dim
 
 	padding := values.MarginPadding24
 
-	if (width - 2*gtx.Px(padding)) > gtx.Px(MaxWidth) {
-		paddingValue := float32(width-gtx.Px(MaxWidth)) / 2
-		padding = unit.Px(paddingValue)
+	if (width - 2*gtx.Dp(padding)) > gtx.Dp(MaxWidth) {
+		paddingValue := float32(width-gtx.Dp(MaxWidth)) / 2
+		padding = unit.Dp(paddingValue)
 	}
 
 	return layout.Inset{
@@ -371,7 +371,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 	return decredmaterial.LinearLayout{
 		Orientation: layout.Horizontal,
 		Width:       decredmaterial.MatchParent,
-		Height:      gtx.Px(values.MarginPadding56),
+		Height:      gtx.Dp(values.MarginPadding56),
 		Alignment:   layout.Middle,
 		Padding:     layout.Inset{Left: values.MarginPadding16, Right: values.MarginPadding16},
 	}.Layout(gtx,

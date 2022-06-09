@@ -4,7 +4,6 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -27,12 +26,9 @@ func (b *Badge) Layout(gtx C, label Label) D {
 	}
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			radius := 0.5 * float32(min.X)
+			radius := min.X / 2
 
-			defer clip.UniformRRect(f32.Rectangle{Max: f32.Point{
-				X: float32(min.X),
-				Y: float32(min.Y),
-			}}, radius).Push(gtx.Ops).Pop()
+			defer clip.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, radius).Push(gtx.Ops).Pop()
 			paint.Fill(gtx.Ops, b.Background)
 			return layout.Dimensions{Size: min}
 		}),

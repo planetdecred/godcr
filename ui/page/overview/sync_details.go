@@ -17,7 +17,7 @@ func (pg *AppOverviewPage) initSyncDetailsWidgets() {
 	pg.syncClickable = pg.Theme.NewClickable(true)
 	pg.cachedIcon = decredmaterial.NewIcon(pg.Theme.Icons.Cached)
 
-	pg.sync = pg.Theme.Label(values.MarginPadding14, values.String(values.StrReconnect))
+	pg.sync = pg.Theme.Label(values.TextSize14, values.String(values.StrReconnect))
 	pg.sync.TextSize = values.TextSize14
 	pg.sync.Color = pg.Theme.Color.Text
 }
@@ -118,7 +118,7 @@ func (pg *AppOverviewPage) progressBarRow(gtx C, inset layout.Inset) D {
 		}
 		p := pg.Theme.ProgressBar(progress)
 		p.Height = values.MarginPadding8
-		p.Radius = decredmaterial.Radius(values.MarginPadding4.V)
+		p.Radius = decredmaterial.Radius(4)
 		p.Color = pg.Theme.Color.Success
 		p.TrackColor = pg.Theme.Color.Gray2
 		return p.Layout(gtx)
