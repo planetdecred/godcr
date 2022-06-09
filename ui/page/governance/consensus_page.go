@@ -117,7 +117,9 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 			Title(values.String(values.StrConsensusChange)).
 			Body(values.String(values.StrOnChainVote)).
 			SetCancelable(true).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {}).Show()
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			}).Show()
 	}
 
 	for pg.viewVotingDashboard.Clicked() {
@@ -167,7 +169,9 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 					}),
 				)
 			}).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
+			PositiveButton("Got it", func(isChecked bool) bool {
+				return true
+			})
 		pg.ShowModal(info)
 	}
 

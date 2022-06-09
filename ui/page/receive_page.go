@@ -462,7 +462,9 @@ func (pg *ReceivePage) HandleUserInteractions() {
 		info := modal.NewInfoModal(pg.Load).
 			Title(values.String(values.StrReceive)+" DCR").
 			Body(values.String(values.StrReceiveInfo)).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			})
 		pg.ShowModal(info)
 	}
 

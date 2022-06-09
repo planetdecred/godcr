@@ -235,9 +235,10 @@ func (pg *AppOverviewPage) showBackupInfo() {
 			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
 		}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
-		PositiveButton(values.String(values.StrBackupNow), func(isChecked bool) {
+		PositiveButton(values.String(values.StrBackupNow), func(isChecked bool) bool {
 			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
 			pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
+			return true
 		}).Show()
 }
 

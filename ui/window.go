@@ -113,6 +113,8 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	// app window. When the next FrameEvent is received,
 	// a new StartPage will be initialized and displayed.
 	l.ReloadApp = func() {
+		l.UIMu.Lock()
+		defer l.UIMu.Unlock()
 		if win.currentPage != nil {
 			win.currentPage.OnNavigatedFrom()
 			win.currentPage = nil
@@ -179,6 +181,8 @@ func (win *Window) HandleEvents() {
 // elements. This ensures that the proper interface is displayed to the user
 // based on their last performed action where applicable.
 func (win *Window) displayWindow(evt system.FrameEvent) {
+	win.load.UIMu.Lock()
+	defer win.load.UIMu.Unlock()
 	// Set up the StartPage the first time a FrameEvent is received.
 	if win.currentPage == nil {
 		win.currentPage = page.NewStartPage(win.load)

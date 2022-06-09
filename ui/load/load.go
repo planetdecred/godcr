@@ -6,6 +6,8 @@
 package load
 
 import (
+	"sync"
+
 	"golang.org/x/text/message"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -28,6 +30,7 @@ type Load struct {
 	CurrentAppWidth int
 
 	Toast *notification.Toast
+	UIMu  sync.Mutex // Mutex to sync concurrent access to UI components.
 
 	SelectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 

@@ -770,7 +770,9 @@ func (pg *TxDetailsPage) HandleUserInteractions() {
 					}),
 				)
 			}).
-			PositiveButton("Got it", func(isChecked bool) {})
+			PositiveButton("Got it", func(isChecked bool) bool {
+				return true
+			})
 		pg.ShowModal(info)
 	}
 

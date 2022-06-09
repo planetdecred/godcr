@@ -381,8 +381,9 @@ func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
 		Body(msg).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-		PositiveButton(values.String(values.StrRemove), func(isChecked bool) {
+		PositiveButton(values.String(values.StrRemove), func(isChecked bool) bool {
 			pg.WL.MultiWallet.DeleteUserConfigValueForKey(key)
+			return true
 		})
 	pg.ShowModal(info)
 }
@@ -434,13 +435,14 @@ func (pg *SettingsPage) HandleUserInteractions() {
 				Body(values.String(values.StrGovernanceSettingsInfo)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-				PositiveButton(values.String(values.StrDisable), func(isChecked bool) {
+				PositiveButton(values.String(values.StrDisable), func(isChecked bool) bool {
 					if pg.WL.MultiWallet.Politeia.IsSyncing() {
 						go pg.WL.MultiWallet.Politeia.StopSync()
 					}
 					pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, !pg.governance.IsChecked())
 					pg.WL.MultiWallet.Politeia.ClearSavedProposals()
 					pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrDisabled)))
+					return true
 				})
 			pg.ShowModal(info)
 		}
@@ -472,7 +474,9 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		info := modal.NewInfoModal(pg.Load).
 			Title(values.String(values.StrSetupStartupPassword)).
 			Body(values.String(values.StrStartupPasswordInfo)).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			})
 		pg.ShowModal(info)
 	}
 

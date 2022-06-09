@@ -32,7 +32,9 @@ func showInfoModal(conf *sharedModalConf, title, body, btnText string, isError, 
 		Icon(icon).
 		Title(title).
 		Body(body).
-		PositiveButton(btnText, func(isChecked bool) {})
+		PositiveButton(btnText, func(isChecked bool) bool {
+			return true
+		})
 
 	if alignCenter {
 		align := layout.Center
@@ -48,8 +50,9 @@ func showModalSetupMixerInfo(conf *sharedModalConf) {
 		SetupWithTemplate(modal.SetupMixerInfoTemplate).
 		CheckBox(conf.checkBox, false).
 		NegativeButton(values.String(values.StrCancel), func() {}).
-		PositiveButton("Begin setup", func(movefundsChecked bool) {
+		PositiveButton("Begin setup", func(movefundsChecked bool) bool {
 			showModalSetupMixerAcct(conf, movefundsChecked)
+			return true
 		})
 	conf.ShowModal(info)
 }
@@ -65,8 +68,9 @@ func showModalSetupMixerAcct(conf *sharedModalConf, movefundsChecked bool) {
 				Icon(alert).
 				Title("Account name is taken").
 				Body(txt).
-				PositiveButton("Go back & rename", func(movefundsChecked bool) {
+				PositiveButton("Go back & rename", func(movefundsChecked bool) bool {
 					conf.PopFragment()
+					return true
 				})
 			conf.ShowModal(info)
 			return

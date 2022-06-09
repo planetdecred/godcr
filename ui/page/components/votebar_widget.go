@@ -240,7 +240,9 @@ func (v *VoteBar) infoButtonModal() {
 		Title(values.String(values.StrProposalVoteDetails)).
 		Body(bodyText).
 		SetCancelable(true).
-		PositiveButton(values.String(values.StrGotIt), func(bool) {}).Show()
+		PositiveButton(values.String(values.StrGotIt), func(bool) bool {
+			return true
+		}).Show()
 }
 
 func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count int, col color.NRGBA) D {
