@@ -116,8 +116,16 @@ func (pg *SeedRestore) OnNavigatedTo() {}
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *SeedRestore) Layout(gtx layout.Context) layout.Dimensions {
-	body := pg.restore(gtx)
+func (pg *SeedRestore) Layout(gtx C) D {
+	var body D
+
+	pg.Load.SetCurrentAppWidth(gtx.Constraints.Max.X)
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		body = pg.restoreMobile(gtx)
+	} else {
+		body = pg.restore(gtx) 
+	}
+
 	pg.resetSeedFields.SetEnabled(pg.updateSeedResetBtn())
 	seedValid, _ := pg.validateSeeds()
 	pg.validateSeed.SetEnabled(seedValid)
@@ -140,7 +148,7 @@ func (pg *SeedRestore) restore(gtx C) D {
 						Bottom: values.MarginPadding10,
 					}.Layout(gtx, pg.Theme.Body1(values.String(values.StrClearAll)).Layout)
 				}),
-				layout.Rigid(pg.seedEditorView),
+				layout.Rigid(pg.seedEditorViewDesktop),
 				layout.Rigid(pg.resetSeedFields.Layout),
 			)
 		}),
@@ -153,6 +161,48 @@ func (pg *SeedRestore) restore(gtx C) D {
 	)
 }
 
+func (pg *SeedRestore) restoreMobile(gtx C) D {
+	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Flexed(0.9, func(gtx C) D {
+			return layout.Stack{Alignment: layout.N}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return decredmaterial.LinearLayout{
+						Orientation: layout.Vertical,
+						Width:       decredmaterial.MatchParent,
+						Height:      decredmaterial.WrapContent,
+						Background:  pg.Theme.Color.Surface,
+						Border:      decredmaterial.Border{Radius: decredmaterial.Radius(14)},
+						Padding:     layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{
+								Bottom: values.MarginPadding10,
+							}.Layout(gtx, pg.Theme.Body1("Enter your seed phrase").Layout)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Flexed(0.92, func(gtx C) D {
+									return pg.seedEditorViewMobile(gtx)
+								}),
+								layout.Flexed(0.08, func(gtx C) D {
+									return pg.resetSeedFields.Layout(gtx)
+								}),
+							)
+
+						}),
+					)
+				}),
+			)
+		}),
+		layout.Flexed(0.1, func(gtx C) D {
+			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+			return layout.S.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding1, Top: values.MarginPadding20}.Layout(gtx, pg.restoreButtonSection)
+			})
+		}),
+	)
+	return dims
+}
+
 func (pg *SeedRestore) restoreButtonSection(gtx C) D {
 	card := pg.Theme.Card()
 	card.Radius = decredmaterial.Radius(0)
@@ -162,7 +212,7 @@ func (pg *SeedRestore) restoreButtonSection(gtx C) D {
 	})
 }
 
-func (pg *SeedRestore) seedEditorView(gtx C) D {
+func (pg *SeedRestore) seedEditorViewDesktop(gtx C) D {
 	inset := layout.Inset{
 		Right: values.MarginPadding5,
 	}
@@ -193,6 +243,19 @@ func (pg *SeedRestore) seedEditorView(gtx C) D {
 	)
 }
 
+func (pg *SeedRestore) seedEditorViewMobile(gtx layout.Context) layout.Dimensions {
+	inset := layout.Inset{
+		Right: values.MarginPadding5,
+	}
+	return layout.Flex{}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return inset.Layout(gtx, func(gtx C) D {
+				return pg.inputsGroupMobile(gtx, pg.seedList, 33, 0)
+			})
+		}),
+	)
+}
+
 func (pg *SeedRestore) inputsGroup(gtx C, l *layout.List, len, startIndex int) D {
 	return layout.Stack{Alignment: layout.N}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
@@ -202,6 +265,23 @@ func (pg *SeedRestore) inputsGroup(gtx C, l *layout.List, len, startIndex int) D
 						return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 							pg.layoutSeedMenu(gtx, i*5+startIndex)
 							return pg.seedEditors.editors[i*5+startIndex].Layout(gtx)
+						})
+					}),
+				)
+			})
+		}),
+	)
+}
+
+func (pg *SeedRestore) inputsGroupMobile(gtx layout.Context, l *layout.List, len, startIndex int) layout.Dimensions {
+	return layout.Stack{Alignment: layout.N}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return l.Layout(gtx, len, func(gtx C, i int) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+							pg.layoutSeedMenu(gtx, i*1+startIndex)
+							return pg.seedEditors.editors[i*1+startIndex].Layout(gtx)
 						})
 					}),
 				)

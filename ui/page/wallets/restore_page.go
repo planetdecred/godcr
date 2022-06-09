@@ -133,7 +133,7 @@ func (pg *Restore) tabLayout(gtx C) D {
 						return D{}
 					}
 
-					tabHeight := gtx.Px(values.MarginPadding2)
+					tabHeight := gtx.Dp(values.MarginPadding2)
 					tabRect := image.Rect(0, 0, dims.Size.X, tabHeight)
 
 					return layout.Inset{
