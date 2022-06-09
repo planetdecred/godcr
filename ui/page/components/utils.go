@@ -90,7 +90,7 @@ func SeedWordsToHex(seedWords string) (string, error) {
 }
 
 // checksumByte returns the checksum byte used at the end of the seed mnemonic
-// encoding.  The "checksum" is the first byte of the double SHA256.
+// encoding. The "checksum" is the first byte of the double SHA256.
 func checksumByte(data []byte) byte {
 	intermediateHash := sha256.Sum256(data)
 	return sha256.Sum256(intermediateHash[:])[0]

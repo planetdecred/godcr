@@ -123,7 +123,7 @@ func (pg *SeedRestore) Layout(gtx C) D {
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		body = pg.restoreMobile(gtx)
 	} else {
-		body = pg.restore(gtx) 
+		body = pg.restore(gtx)
 	}
 
 	pg.resetSeedFields.SetEnabled(pg.updateSeedResetBtn())
