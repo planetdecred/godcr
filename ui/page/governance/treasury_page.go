@@ -30,23 +30,17 @@ type TreasuryPage struct {
 
 	multiWallet   *dcrlibwallet.MultiWallet
 	wallets       []*dcrlibwallet.Wallet
-	LiveTickets   []*dcrlibwallet.Transaction
 	treasuryItems []*components.TreasuryItem
 
 	listContainer       *widget.List
-	syncButton          *widget.Clickable
 	viewVotingDashboard *decredmaterial.Clickable
 	copyRedirectURL     *decredmaterial.Clickable
 	redirectIcon        *decredmaterial.Image
 
 	walletDropDown *decredmaterial.DropDown
-	treasuryList   *decredmaterial.ClickableList
 
-	searchEditor      decredmaterial.Editor
-	infoButton        decredmaterial.IconButton
-	optionsRadioGroup *widget.Enum
-
-	setChoiceButton decredmaterial.Button
+	searchEditor decredmaterial.Editor
+	infoButton   decredmaterial.IconButton
 
 	syncCompleted bool
 	isSyncing     bool
@@ -54,21 +48,16 @@ type TreasuryPage struct {
 
 func NewTreasuryPage(l *load.Load) *TreasuryPage {
 	pg := &TreasuryPage{
-		Load:         l,
-		multiWallet:  l.WL.MultiWallet,
-		wallets:      l.WL.SortedWalletList(),
-		treasuryList: l.Theme.NewClickableList(layout.Vertical),
+		Load:        l,
+		multiWallet: l.WL.MultiWallet,
+		wallets:     l.WL.SortedWalletList(),
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		syncButton:          new(widget.Clickable),
-		optionsRadioGroup:   new(widget.Enum),
 		redirectIcon:        l.Theme.Icons.RedirectIcon,
 		viewVotingDashboard: l.Theme.NewClickable(true),
 		copyRedirectURL:     l.Theme.NewClickable(false),
 	}
-
-	pg.setChoiceButton = l.Theme.Button("Set Choice")
 
 	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), values.String(values.StrSearch), l.Theme.Icons.SearchIcon, true)
 	pg.searchEditor.Editor.SingleLine, pg.searchEditor.Editor.Submit, pg.searchEditor.Bordered = true, true, false
@@ -77,21 +66,6 @@ func NewTreasuryPage(l *load.Load) *TreasuryPage {
 	pg.infoButton.Size = values.MarginPadding20
 
 	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
-
-	// update agenda options prefrence to that of the selected wallet
-	// selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-	// treasuryItems := components.LoadPolicies(pg.Load, selectedWallet, dcrlibwallet.PiKey)
-	// for _, treasuryItem := range treasuryItems {
-	// 	// voteChoices := make([]string, len(consensusItem.Agenda.Choices))
-	// 	voteChoices := [...]string{"Yes", "No", "Abstain"}
-	// 	initialValue := treasuryItem.Policy.Policy
-	// 	treasuryItem.VoteChoices = voteChoices
-
-	// 	treasuryItem.VoteChoices = voteChoices
-	// 	// avm.initialValue = consensusItem.Agenda.VotingPreference
-	// 	// avm.optionsRadioGroup.Value = avm.initialValue
-
-	// }
 
 	return pg
 }
@@ -116,16 +90,10 @@ func (pg *TreasuryPage) HandleUserInteractions() {
 		pg.FetchPolicies()
 	}
 
-	// for i := range pg.treasuryItems {
-	// 	if pg.treasuryItems[i].VoteButton.Clicked() {
-	// 		newAgendaVoteModal(pg.Load, &pg.treasuryItems[i].Agenda, func() {
-	// 			go pg.FetchAgendas() // re-fetch agendas when modal is dismissed
-	// 		}).Show()
-	// 	}
-	// }
-
-	for pg.syncButton.Clicked() {
-		go pg.FetchPolicies()
+	for i := range pg.treasuryItems {
+		if pg.treasuryItems[i].SetChoiceButton.Clicked() {
+			pg.updatePolicyPreference(pg.treasuryItems[i])
+		}
 	}
 
 	if pg.infoButton.Button.Clicked() {
@@ -138,9 +106,9 @@ func (pg *TreasuryPage) HandleUserInteractions() {
 
 	for pg.viewVotingDashboard.Clicked() {
 		host := "https://github.com/decred/dcrd/blob/master/chaincfg/mainnetparams.go#L485"
-		// if pg.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
-		// 	host = "https://voting.decred.org/testnet"
-		// }
+		if pg.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
+			host = "https://github.com/decred/dcrd/blob/master/chaincfg/testnetparams.go#L390"
+		}
 
 		info := modal.NewInfoModal(pg.Load).
 			Title(values.String(values.StrVerifyGovernanceKeys)).
@@ -200,17 +168,12 @@ func (pg *TreasuryPage) HandleUserInteractions() {
 }
 
 func (pg *TreasuryPage) FetchPolicies() {
-	// newestFirst := pg.orderDropDown.SelectedIndex() == 0
 	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-
-	pg.isSyncing = true
 
 	// Fetch (or re-fetch) treasury policies in background as this makes
 	// a network call. Refresh the window once the call completes.
 	go func() {
 		pg.treasuryItems = components.LoadPolicies(pg.Load, selectedWallet, dcrlibwallet.PiKey)
-		pg.isSyncing = false
-		pg.syncCompleted = true
 		pg.RefreshWindow()
 	}()
 
@@ -225,7 +188,7 @@ func (pg *TreasuryPage) Layout(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(pg.Theme.Label(values.TextSize20, values.String(values.StrTreasurySpending)).Layout), // Do we really need to display the title? nav is proposals already
+						layout.Rigid(pg.Theme.Label(values.TextSize20, values.String(values.StrTreasurySpending)).Layout),
 						layout.Rigid(pg.infoButton.Layout),
 					)
 				}),
@@ -241,18 +204,6 @@ func (pg *TreasuryPage) Layout(gtx C) D {
 						return layout.Inset{
 							Top: values.MarginPadding60,
 						}.Layout(gtx, pg.layoutContent)
-					}),
-					layout.Expanded(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.E.Layout(gtx, func(gtx C) D {
-							card := pg.Theme.Card()
-							card.Radius = decredmaterial.Radius(8)
-							return card.Layout(gtx, func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
-									return D{}
-								})
-							})
-						})
 					}),
 					layout.Expanded(func(gtx C) D {
 						return pg.walletDropDown.Layout(gtx, 45, true)
@@ -294,6 +245,7 @@ func (pg *TreasuryPage) layoutContent(gtx C) D {
 	if len(pg.treasuryItems) == 0 {
 		return components.LayoutNoPoliciesFound(gtx, pg.Load, pg.isSyncing)
 	}
+
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
@@ -317,4 +269,31 @@ func (pg *TreasuryPage) layoutContent(gtx C) D {
 			})
 		}),
 	)
+}
+
+func (pg *TreasuryPage) updatePolicyPreference(treasuryItem *components.TreasuryItem) {
+	modal.NewPasswordModal(pg.Load).
+		Title("Confirm to update voting policy").
+		NegativeButton("Cancel", func() {}).
+		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+			go func() {
+				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+				votingPreference := treasuryItem.OptionsRadioGroup.Value
+				err := selectedWallet.SetTreasuryPolicy(dcrlibwallet.PiKey, votingPreference, "", []byte(password))
+				if err != nil {
+					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+						pm.SetError(values.String(values.StrInvalidPassphrase))
+					} else {
+						pm.Toast.NotifyError(err.Error())
+					}
+					pm.SetLoading(false)
+					return
+				}
+
+				pm.Toast.Notify("Your treasury policy has been sucessfully updated!")
+				pm.Dismiss()
+			}()
+
+			return false
+		}).Show()
 }
