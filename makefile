@@ -18,7 +18,7 @@ freebsd:
 
 linux:
 	GOOS=linux GOARCH=amd64 go build -trimpath ${LDFLAGS} -o ${BINARY}-freebsd-${GOARCH}
-	GOOS=freebsd GOARCH=arm64 go build -trimpath ${LDFLAGS} -o ${BINARY}-freebsd-${GOARCH}
+	GOOS=linux GOARCH=arm64 go build -trimpath ${LDFLAGS} -o ${BINARY}-freebsd-${GOARCH}
 
 macos:
 	GOOS=darwin GOARCH=amd64 go build -trimpath ${LDFLAGS} -o ${BINARY}-darwin-${GOARCH}
