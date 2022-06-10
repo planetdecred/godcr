@@ -175,6 +175,14 @@ func (sp *startPage) OnNavigatedFrom() {}
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (sp *startPage) Layout(gtx C) D {
+	if sp.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return sp.layoutMobile(gtx)
+	}
+	return sp.layoutDesktop(gtx)
+}
+
+// Desktop layout
+func (sp *startPage) layoutDesktop(gtx C) D {
 	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width
 	return layout.Stack{Alignment: layout.N}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
@@ -186,8 +194,7 @@ func (sp *startPage) Layout(gtx C) D {
 					if sp.loading {
 						return D{}
 					}
-
-					return sp.buttonSection(gtx)
+					return sp.buttonSectionDesktop(gtx)
 				}),
 			)
 		}),
@@ -230,6 +237,7 @@ func (sp *startPage) loadingSection(gtx C) D {
 					}
 
 					welcomeText := sp.Theme.Label(values.TextSize24, values.String(values.StrWelcomeNote))
+					welcomeText.Alignment = text.Middle
 					return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, welcomeText.Layout)
 				}),
 			)
@@ -237,7 +245,7 @@ func (sp *startPage) loadingSection(gtx C) D {
 	)
 }
 
-func (sp *startPage) buttonSection(gtx C) D {
+func (sp *startPage) buttonSectionDesktop(gtx C) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X              // use maximum width
 	gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 35) / 100 // use 35% of view height
 	return layout.Stack{Alignment: layout.S}.Layout(gtx,
@@ -246,6 +254,57 @@ func (sp *startPage) buttonSection(gtx C) D {
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 
 					gtx.Constraints.Max.X = gtx.Dp(values.AppWidth) // set button with to app width
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+								return sp.createButton.Layout(gtx)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+								return sp.restoreButton.Layout(gtx)
+							})
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return layout.Inset{Top: values.MarginPadding24, Bottom: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+								return sp.watchOnlyWalletButton.Layout(gtx)
+							})
+						}),
+					)
+				}),
+			)
+		}),
+	)
+}
+
+// Mobile layout
+func (sp *startPage) layoutMobile(gtx C) D {
+	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width
+	return layout.Stack{Alignment: layout.N}.Layout(gtx,
+		layout.Stacked(func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, sp.loadingSection)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if sp.loading {
+						return D{}
+					}
+					return sp.buttonSectionMobile(gtx)
+				}),
+			)
+		}),
+	)
+}
+
+func (sp *startPage) buttonSectionMobile(gtx C) D {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X              // use maximum width
+	gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 35) / 100 // use 35% of view height
+	return layout.Stack{Alignment: layout.S}.Layout(gtx,
+		layout.Stacked(func(gtx C) D {
+			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
