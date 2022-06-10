@@ -22,7 +22,8 @@ type Icons struct {
 	AlertGray, ArrowDownIcon, WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, TransactionFingerprint,
 	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredSymbolIcon,
 	DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon, LogoDarkMode, TimerDarkMode, Rebroadcast,
-	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon, LockinInactiveIcon *Image
+	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon,
+	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon *Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -135,7 +136,11 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.DexIconInactive = NewImage(decredIcons["dex_icon_inactive"])
 	i.BTC = NewImage(decredIcons["dex_btc"])
 	i.DCR = NewImage(decredIcons["dex_dcr"])
-
+	i.SuccessIcon = NewImage(decredIcons["success_check"])
+	i.FailedIcon = NewImage(decredIcons["crossmark_red"])
+	i.ReceiveInactiveIcon = NewImage(decredIcons["receive_inactive"])
+	i.SendInactiveIcon = NewImage(decredIcons["send_inactive"])
+	i.DarkmodeIcon = NewImage(decredIcons["darkmodeIcon"])
 	return i
 }
 

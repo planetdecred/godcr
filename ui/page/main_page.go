@@ -9,6 +9,7 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -69,7 +70,6 @@ type MainPage struct {
 	*listeners.ProposalNotificationListener
 	ctx                  context.Context
 	ctxCancel            context.CancelFunc
-	appBarNav            components.NavDrawer
 	drawerNav            components.NavDrawer
 	bottomNavigationBar  components.BottomNavigationBar
 	floatingActionButton components.BottomNavigationBar
@@ -80,6 +80,8 @@ type MainPage struct {
 	receivePage *ReceivePage // pointer to receive page. to avoid duplication.
 
 	refreshExchangeRateBtn *decredmaterial.Clickable
+	darkmode               *decredmaterial.Clickable
+	openWalletSelector     *decredmaterial.Clickable
 
 	// page state variables
 	dcrUsdtBittrex load.DCRUSDTBittrex
@@ -103,6 +105,10 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp.hideBalanceItem.hideBalanceButton.Size = unit.Dp(19)
 	mp.hideBalanceItem.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
 	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
+
+	mp.darkmode = mp.Theme.NewClickable(false)
+	mp.openWalletSelector = mp.Theme.NewClickable(true)
+	mp.openWalletSelector.Radius = decredmaterial.Radius(8)
 
 	// init shared page functions
 	toggleSync := func() {
@@ -140,25 +146,6 @@ func (mp *MainPage) ID() string {
 }
 
 func (mp *MainPage) initNavItems() {
-	mp.appBarNav = components.NavDrawer{
-		Load:        mp.Load,
-		CurrentPage: mp.CurrentPageID(),
-		AppBarNavItems: []components.NavHandler{
-			{
-				Clickable: mp.Theme.NewClickable(true),
-				Image:     mp.Theme.Icons.SendIcon,
-				Title:     values.String(values.StrSend),
-				PageID:    send.PageID,
-			},
-			{
-				Clickable: mp.Theme.NewClickable(true),
-				Image:     mp.Theme.Icons.ReceiveIcon,
-				Title:     values.String(values.StrReceive),
-				PageID:    ReceivePageID,
-			},
-		},
-	}
-
 	mp.drawerNav = components.NavDrawer{
 		Load:        mp.Load,
 		CurrentPage: mp.CurrentPageID(),
@@ -169,6 +156,20 @@ func (mp *MainPage) initNavItems() {
 				ImageInactive: mp.Theme.Icons.OverviewIconInactive,
 				Title:         values.String(values.StrOverview),
 				PageID:        overview.OverviewPageID,
+			},
+			{
+				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.SendIcon,
+				Title:         values.String(values.StrSend),
+				ImageInactive: mp.Theme.Icons.SendInactiveIcon,
+				PageID:        send.SendPageID,
+			},
+			{
+				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.ReceiveIcon,
+				ImageInactive: mp.Theme.Icons.ReceiveInactiveIcon,
+				Title:         values.String(values.StrReceive),
+				PageID:        ReceivePageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -268,7 +269,7 @@ func (mp *MainPage) initNavItems() {
 				Clickable: mp.Theme.NewClickable(true),
 				Image:     mp.Theme.Icons.SendIcon,
 				Title:     values.String(values.StrSend),
-				PageID:    send.PageID,
+				PageID:    send.SendPageID,
 			},
 			{
 				Clickable: mp.Theme.NewClickable(true),
@@ -456,9 +457,21 @@ func (mp *MainPage) HandleUserInteractions() {
 		go mp.fetchExchangeRate()
 	}
 
+	// darkmode settings
+	for mp.darkmode.Clicked() {
+		isDarkModeOn := mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
+		if isDarkModeOn {
+			mp.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, false)
+		} else {
+			mp.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, true)
+		}
+
+		mp.RefreshTheme(mp.ParentWindow())
+	}
+
 	mp.drawerNav.CurrentPage = mp.CurrentPageID()
 	mp.bottomNavigationBar.CurrentPage = mp.CurrentPageID()
-	mp.appBarNav.CurrentPage = mp.CurrentPageID()
+	// mp.appBarNav.CurrentPage = mp.CurrentPageID()
 	mp.floatingActionButton.CurrentPage = mp.CurrentPageID()
 
 	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
@@ -471,41 +484,16 @@ func (mp *MainPage) HandleUserInteractions() {
 		mp.setNavExpanded()
 	}
 
-	for i, item := range mp.appBarNav.AppBarNavItems {
-		for item.Clickable.Clicked() {
-			var pg app.Page
-			if i == 0 {
-				if mp.sendPage == nil {
-					mp.sendPage = send.NewSendPage(mp.Load)
-				}
-				pg = mp.sendPage
-			} else {
-				if mp.receivePage == nil {
-					mp.receivePage = NewReceivePage(mp.Load)
-				}
-				pg = mp.receivePage
-			}
-
-			if pg.ID() == mp.CurrentPageID() {
-				continue
-			}
-
-			if mp.WL.MultiWallet.IsSynced() {
-				mp.Display(pg)
-			} else if mp.WL.MultiWallet.IsSyncing() {
-				mp.Toast.NotifyError(values.String(values.StrWalletSyncing))
-			} else {
-				mp.Toast.NotifyError(values.String(values.StrNotConnected))
-			}
-		}
-	}
-
 	for _, item := range mp.drawerNav.DrawerNavItems {
 		for item.Clickable.Clicked() {
 			var pg app.Page
 			switch item.PageID {
 			case overview.OverviewPageID:
 				pg = overview.NewOverviewPage(mp.Load)
+			case send.SendPageID:
+				pg = send.NewSendPage(mp.Load)
+			case ReceivePageID:
+				pg = NewReceivePage(mp.Load)
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
 			case wallets.WalletPageID:
@@ -525,12 +513,22 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = NewMorePage(mp.Load)
 			}
 
-			if pg == nil || pg.ID() == mp.CurrentPageID() {
+			if pg == nil || mp.ID() == mp.CurrentPageID() {
 				continue
 			}
 
-			// clear stack
-			mp.Display(pg)
+			if mp.ID() == send.SendPageID || mp.ID() == ReceivePageID {
+				if mp.WL.MultiWallet.IsSynced() {
+					mp.Display(pg)
+				} else if mp.WL.MultiWallet.IsSyncing() {
+					mp.Toast.NotifyError(values.String(values.StrNotConnected))
+				} else {
+					mp.Toast.NotifyError(values.String(values.StrWalletSyncing))
+				}
+			} else {
+				// clear stack
+				mp.Display(pg)
+			}
 		}
 	}
 
@@ -550,7 +548,7 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = NewMorePage(mp.Load)
 			}
 
-			if pg == nil || pg.ID() == mp.CurrentPageID() {
+			if pg == nil || mp.ID() == mp.CurrentPageID() {
 				continue
 			}
 
@@ -574,7 +572,7 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = mp.receivePage
 			}
 
-			if pg.ID() == mp.CurrentPageID() {
+			if mp.ID() == mp.CurrentPageID() {
 				continue
 			}
 
@@ -754,60 +752,113 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 		Orientation: layout.Vertical,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
+			h := values.MarginPadding24
+			v := values.MarginPadding8
 			return decredmaterial.LinearLayout{
 				Width:       decredmaterial.MatchParent,
 				Height:      decredmaterial.WrapContent,
-				Background:  mp.Theme.Color.Surface,
+				Background:  mp.Theme.Color.Danger,
 				Orientation: layout.Horizontal,
-			}.Layout(gtx,
+				Alignment:   layout.Middle,
+				Padding: layout.Inset{
+					Right:  h,
+					Left:   values.MarginPadding10,
+					Top:    v,
+					Bottom: v,
+				},
+			}.GradientLayout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.W.Layout(gtx, func(gtx C) D {
-						h := values.MarginPadding24
-						v := values.MarginPadding14
-						// Balance container
-						return components.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
-							func(gtx C) D {
+						return decredmaterial.LinearLayout{
+							Width:       decredmaterial.WrapContent,
+							Height:      decredmaterial.WrapContent,
+							Orientation: layout.Horizontal,
+							Alignment:   layout.Middle,
+						}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
 								return decredmaterial.LinearLayout{
-									Width:       decredmaterial.WrapContent,
-									Height:      decredmaterial.WrapContent,
-									Background:  mp.Theme.Color.Surface,
-									Orientation: layout.Horizontal,
-								}.Layout(gtx,
+									Width:  gtx.Dp(values.Size180),
+									Height: decredmaterial.WrapContent,
+									Padding: layout.Inset{
+										Right:  values.MarginPadding18,
+										Left:   values.MarginPadding18,
+										Top:    values.MarginPadding10,
+										Bottom: values.MarginPadding10,
+									},
+									Alignment: layout.Middle,
+									Clickable: mp.openWalletSelector,
+									Shadow:    mp.Theme.Shadow(),
+									Border: decredmaterial.Border{
+										Radius: mp.openWalletSelector.Radius,
+										Width:  values.MarginPadding2,
+										Color:  mp.Theme.Color.Gray3,
+									},
+								}.GradientLayout(gtx,
+									layout.Rigid(mp.Theme.Icons.WalletIcon.Layout24dp),
 									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
-											func(gtx C) D {
-												return mp.Theme.Icons.Logo.Layout24dp(gtx)
-											})
-									}),
-									layout.Rigid(func(gtx C) D {
-										return mp.totalDCRBalance(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										if !mp.isBalanceHidden {
-											return mp.LayoutUSDBalance(gtx)
-										}
-										return D{}
-									}),
-									layout.Rigid(func(gtx C) D {
-										mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
-										if mp.isBalanceHidden {
-											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
-										}
 										return layout.Inset{
-											Top:  values.MarginPadding1,
-											Left: values.MarginPadding9,
-										}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+											Left: values.MarginPadding10,
+										}.Layout(gtx, func(gtx C) D {
+											txt := mp.Theme.Body1("Wallet name") // todo
+											txt.Font.Weight = text.Bold
+											return txt.Layout(gtx)
+										})
 									}),
 								)
-							})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Right: values.MarginPadding16,
+									Left:  values.MarginPadding24,
+								}.Layout(gtx,
+									func(gtx C) D {
+										return mp.Theme.Icons.Logo.Layout24dp(gtx)
+									})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return mp.totalDCRBalance(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								if !mp.isBalanceHidden {
+									return mp.LayoutUSDBalance(gtx)
+								}
+								return D{}
+							}),
+							layout.Rigid(func(gtx C) D {
+								mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
+								if mp.isBalanceHidden {
+									mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
+								}
+								return layout.Inset{
+									Top:  values.MarginPadding1,
+									Left: values.MarginPadding9,
+								}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+							}),
+						)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					if mp.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
-						return D{}
-					}
-					return mp.appBarNav.LayoutTopBar(gtx)
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								//todo -- dex functionality
+								return mp.Theme.Icons.DexIcon.Layout24dp(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Right: values.MarginPadding24,
+									Left:  values.MarginPadding24,
+								}.Layout(gtx, func(gtx C) D {
+									//todo -- app level settings functionality
+									return mp.Theme.Icons.SettingsIcon.Layout24dp(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return mp.darkmode.Layout(gtx, mp.Theme.Icons.DarkmodeIcon.Layout24dp)
+							}),
+						)
+					})
 				}),
 			)
 		}),

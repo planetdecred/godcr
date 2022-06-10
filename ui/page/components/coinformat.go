@@ -36,7 +36,7 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 
 	mainText, subText := amount[:startIndex], amount[startIndex:]
 
-	subTextSize := unit.Sp(int(mainTextSize) * int(scale))
+	subTextSize := unit.Sp(float32(mainTextSize) * scale)
 
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {

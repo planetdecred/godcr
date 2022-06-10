@@ -6,6 +6,7 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 )
 
@@ -104,6 +105,41 @@ func (c Card) HoverableLayout(gtx layout.Context, btn *Clickable, w layout.Widge
 				}
 
 				return fill(gtx, background)
+			}),
+			layout.Stacked(w),
+		)
+	})
+
+	return dims
+}
+
+func (c Card) GradientLayout(gtx layout.Context, w layout.Widget) layout.Dimensions {
+	dims := c.Inset.Layout(gtx, func(gtx C) D {
+		return layout.Stack{}.Layout(gtx,
+			layout.Expanded(func(gtx C) D {
+				tr := gtx.Dp(unit.Dp(c.Radius.TopRight))
+				tl := gtx.Dp(unit.Dp(c.Radius.TopLeft))
+				br := gtx.Dp(unit.Dp(c.Radius.BottomRight))
+				bl := gtx.Dp(unit.Dp(c.Radius.BottomLeft))
+
+				// gtx.Constraints.Max.Y = gtx.Constraints.Min.Y
+
+				dr := image.Rectangle{Max: gtx.Constraints.Min}
+
+				paint.LinearGradientOp{
+					Stop1:  layout.FPt(dr.Min),
+					Stop2:  layout.FPt(dr.Max),
+					Color1: color.NRGBA{R: 0x10, G: 0xff, B: 0x10, A: 0xFF},
+					Color2: color.NRGBA{R: 0x10, G: 0x10, B: 0xff, A: 0xFF},
+				}.Add(gtx.Ops)
+				defer clip.RRect{
+					Rect: dr,
+					NW:   tl, NE: tr, SE: br, SW: bl,
+				}.Push(gtx.Ops).Pop()
+				paint.PaintOp{}.Add(gtx.Ops)
+				return layout.Dimensions{
+					Size: gtx.Constraints.Max,
+				}
 			}),
 			layout.Stacked(w),
 		)
