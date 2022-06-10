@@ -1,8 +1,6 @@
 package modal
 
 import (
-	"fmt"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -13,12 +11,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Password = "password_modal"
-
 type PasswordModal struct {
 	*load.Load
-	randomID string
-	modal    decredmaterial.Modal
+	*decredmaterial.Modal
+
 	password decredmaterial.Editor
 
 	dialogTitle string
@@ -43,8 +39,7 @@ type PasswordModal struct {
 func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm := &PasswordModal{
 		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", Password, decredmaterial.GenerateRandomNumber()),
-		modal:        *l.Theme.ModalFloatTitle(),
+		Modal:        l.Theme.ModalFloatTitle("password_modal"),
 		btnPositve:   l.Theme.Button(values.String(values.StrConfirm)),
 		btnNegative:  l.Theme.OutlineButton(values.String(values.StrCancel)),
 		isCancelable: true,
@@ -63,24 +58,12 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 	return pm
 }
 
-func (pm *PasswordModal) ModalID() string {
-	return pm.randomID
-}
-
 func (pm *PasswordModal) OnResume() {
 	pm.password.Editor.Focus()
 }
 
 func (pm *PasswordModal) OnDismiss() {
 
-}
-
-func (pm *PasswordModal) Show() {
-	pm.ShowModal(pm)
-}
-
-func (pm *PasswordModal) Dismiss() {
-	pm.DismissModal(pm)
 }
 
 func (pm *PasswordModal) Title(title string) *PasswordModal {
@@ -117,7 +100,7 @@ func (pm *PasswordModal) NegativeButton(text string, clicked func()) *PasswordMo
 
 func (pm *PasswordModal) SetLoading(loading bool) {
 	pm.isLoading = loading
-	pm.modal.SetDisabled(loading)
+	pm.Modal.SetDisabled(loading)
 }
 
 func (pm *PasswordModal) SetCancelable(min bool) *PasswordModal {
@@ -153,19 +136,19 @@ func (pm *PasswordModal) Handle() {
 		pm.SetLoading(true)
 		pm.SetError("")
 		if pm.positiveButtonClicked(pm.password.Editor.Text(), pm) {
-			pm.DismissModal(pm)
+			pm.Dismiss()
 		}
 	}
 
 	pm.btnNegative.SetEnabled(!pm.isLoading)
 	for pm.btnNegative.Clicked() {
 		if !pm.isLoading {
-			pm.DismissModal(pm)
+			pm.Dismiss()
 			pm.negativeButtonClicked()
 		}
 	}
 
-	if pm.modal.BackdropClicked(pm.isCancelable) {
+	if pm.Modal.BackdropClicked(pm.isCancelable) {
 		if !pm.isLoading {
 			pm.Dismiss()
 			pm.negativeButtonClicked()
@@ -230,5 +213,5 @@ func (pm *PasswordModal) Layout(gtx layout.Context) D {
 	w = append(w, editor)
 	w = append(w, actionButtons)
 
-	return pm.modal.Layout(gtx, w)
+	return pm.Modal.Layout(gtx, w)
 }

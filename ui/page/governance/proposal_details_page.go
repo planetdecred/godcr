@@ -13,6 +13,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -32,6 +33,12 @@ type proposalItemWidgets struct {
 
 type ProposalDetails struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	*listeners.ProposalNotificationListener //not needed.
 
 	ctx       context.Context // page context
@@ -61,7 +68,8 @@ type ProposalDetails struct {
 
 func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *ProposalDetails {
 	pg := &ProposalDetails{
-		Load: l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(ProposalDetailsPageID),
 
 		loadingDescription: false,
 		proposal:           proposal,
@@ -95,13 +103,6 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 	return pg
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *ProposalDetails) ID() string {
-	return ProposalDetailsPageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -126,7 +127,7 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 	}
 
 	if pg.vote.Clicked() {
-		newVoteModal(pg.Load, pg.proposal).Show()
+		pg.ParentWindow().ShowModal(newVoteModal(pg.Load, pg.proposal))
 	}
 
 	for pg.viewInPoliteiaBtn.Clicked() {
@@ -181,7 +182,7 @@ func (pg *ProposalDetails) HandleUserInteractions() {
 			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
 				return true
 			})
-		pg.ShowModal(info)
+		pg.ParentWindow().ShowModal(info)
 	}
 }
 
@@ -204,7 +205,7 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 					proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
 					if err == nil {
 						pg.proposal = proposal
-						pg.RefreshWindow()
+						pg.ParentWindow().Reload()
 					}
 				}
 			// is this really needed since listener has been set up on main.go
@@ -245,7 +246,7 @@ func (pg *ProposalDetails) layoutProposalVoteBar(gtx C) D {
 		SetYesNoVoteParams(yes, no).
 		SetVoteValidityParams(eligibleTickets, quorumPercent, passPercentage).
 		SetProposalDetails(proposal.NumComments, proposal.PublishedAt, proposal.Token).
-		Layout(gtx)
+		Layout(pg.ParentWindow(), gtx)
 }
 
 func (pg *ProposalDetails) layoutProposalVoteAction(gtx C) D {
@@ -548,7 +549,7 @@ func (pg *ProposalDetails) Layout(gtx C) D {
 			Title:      components.TruncateString(proposal.Name, 40),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -574,7 +575,7 @@ func (pg *ProposalDetails) Layout(gtx C) D {
 				})
 			},
 		}
-		return page.Layout(gtx)
+		return page.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, body)
 }

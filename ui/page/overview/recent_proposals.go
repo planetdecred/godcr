@@ -66,7 +66,7 @@ func (pg *AppOverviewPage) recentProposalsSection(gtx C) D {
 					return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return components.ProposalsList(gtx, pg.Load, proposalItems[i])
+								return components.ProposalsList(pg.ParentWindow(), gtx, pg.Load, proposalItems[i])
 							}),
 							layout.Rigid(pg.Theme.Separator().Layout),
 						)

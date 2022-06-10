@@ -8,6 +8,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -21,6 +22,11 @@ const AccountMixerPageID = "AccountMixer"
 
 type AccountMixerPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	*listeners.AccountMixerNotificationListener
 
@@ -42,6 +48,7 @@ type AccountMixerPage struct {
 func NewAccountMixerPage(l *load.Load, wallet *dcrlibwallet.Wallet) *AccountMixerPage {
 	pg := &AccountMixerPage{
 		Load:                    l,
+		GenericPageModal:        app.NewGenericPageModal(AccountMixerPageID),
 		wallet:                  wallet,
 		pageContainer:           layout.List{Axis: layout.Vertical},
 		toggleMixer:             l.Theme.Switch(),
@@ -51,13 +58,6 @@ func NewAccountMixerPage(l *load.Load, wallet *dcrlibwallet.Wallet) *AccountMixe
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *AccountMixerPage) ID() string {
-	return AccountMixerPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -86,7 +86,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			InfoTemplate: modal.PrivacyInfoTemplate,
 			Body: func(gtx layout.Context) layout.Dimensions {
@@ -155,7 +155,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, d)
 }
@@ -248,14 +248,14 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 					go pg.WL.MultiWallet.StopAccountMixer(pg.wallet.ID)
 					return true
 				})
-			pg.ShowModal(info)
+			pg.ParentWindow().ShowModal(info)
 		}
 	}
 
 	if pg.mixerCompleted {
 		pg.toggleMixer.SetChecked(false)
 		pg.mixerCompleted = false
-		pg.RefreshWindow()
+		pg.ParentWindow().Reload()
 	}
 
 	if pg.allowUnspendUnmixedAcct.Changed() {
@@ -279,24 +279,24 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 				NegativeButton("Cancel", func() {
 					pg.allowUnspendUnmixedAcct.SetChecked(false)
 				})
-			textModal.Show()
+			pg.ParentWindow().ShowModal(textModal)
 
 		} else {
 			pg.wallet.SetBoolConfigValueForKey(load.SpendUnmixedFundsKey, false)
 		}
 
 		if pg.dangerZoneCollapsible.IsExpanded() {
-			pg.RefreshWindow()
+			pg.ParentWindow().Reload()
 		}
 	}
 
 	if pg.backButton.Button.Clicked() {
-		pg.PopToFragment(components.WalletsPageID)
+		pg.ParentNavigator().ClosePagesAfter(components.WalletsPageID)
 	}
 }
 
 func (pg *AccountMixerPage) showModalPasswordStartAccountMixer() {
-	modal.NewPasswordModal(pg.Load).
+	passwordModal := modal.NewPasswordModal(pg.Load).
 		Title("Confirm to mix account").
 		NegativeButton("Cancel", func() {
 			pg.toggleMixer.SetChecked(false)
@@ -313,7 +313,8 @@ func (pg *AccountMixerPage) showModalPasswordStartAccountMixer() {
 			}()
 
 			return false
-		}).Show()
+		})
+	pg.ParentWindow().ShowModal(passwordModal)
 }
 
 func (pg *AccountMixerPage) listenForMixerNotifications() {
@@ -334,12 +335,12 @@ func (pg *AccountMixerPage) listenForMixerNotifications() {
 			case n := <-pg.MixerChan:
 				if n.RunStatus == wallet.MixerStarted {
 					pg.Toast.Notify("Mixer start Successfully")
-					pg.RefreshWindow()
+					pg.ParentWindow().Reload()
 				}
 
 				if n.RunStatus == wallet.MixerEnded {
 					pg.mixerCompleted = true
-					pg.RefreshWindow()
+					pg.ParentWindow().Reload()
 				}
 
 			case <-pg.ctx.Done():

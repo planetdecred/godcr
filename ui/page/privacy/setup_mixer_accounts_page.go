@@ -8,6 +8,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -19,6 +20,11 @@ const SetupMixerAccountsPageID = "SetupMixerAccounts"
 
 type SetupMixerAccountsPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -34,8 +40,9 @@ type SetupMixerAccountsPage struct {
 
 func NewSetupMixerAccountsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SetupMixerAccountsPage {
 	pg := &SetupMixerAccountsPage{
-		Load:   l,
-		wallet: wallet,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(SetupMixerAccountsPageID),
+		wallet:           wallet,
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -49,13 +56,6 @@ func NewSetupMixerAccountsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Setup
 	pg.manualSetupClickable = pg.Theme.NewClickable(true)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *SetupMixerAccountsPage) ID() string {
-	return SetupMixerAccountsPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -77,7 +77,7 @@ func (pg *SetupMixerAccountsPage) Layout(gtx layout.Context) layout.Dimensions {
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
@@ -150,7 +150,7 @@ func (pg *SetupMixerAccountsPage) Layout(gtx layout.Context) layout.Dimensions {
 				})
 			},
 		}
-		return page.Layout(gtx)
+		return page.Layout(pg.ParentWindow(), gtx)
 	}
 
 	return components.UniformPadding(gtx, body)
@@ -231,15 +231,17 @@ func (pg *SetupMixerAccountsPage) manualSetupLayout(gtx C) D {
 // Part of the load.Page interface.
 func (pg *SetupMixerAccountsPage) HandleUserInteractions() {
 	if pg.autoSetupClickable.Clicked() {
-		showModalSetupMixerInfo(&sharedModalConf{
-			Load:     pg.Load,
-			wallet:   pg.wallet,
-			checkBox: pg.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
+		showModalSetupMixerInfo(&sharedModalConfig{
+			Load:          pg.Load,
+			window:        pg.ParentWindow(),
+			pageNavigator: pg.ParentNavigator(),
+			wallet:        pg.wallet,
+			checkBox:      pg.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
 		})
 	}
 
 	if pg.manualSetupClickable.Clicked() {
-		pg.ChangeFragment(NewManualMixerSetupPage(pg.Load, pg.wallet))
+		pg.ParentNavigator().Display(NewManualMixerSetupPage(pg.Load, pg.wallet))
 	}
 }
 

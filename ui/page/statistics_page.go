@@ -11,6 +11,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -21,6 +22,12 @@ const StatisticsPageID = "Statistics"
 
 type StatPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	txs           []dcrlibwallet.Transaction
 	l             layout.List
 	scrollbarList *widget.List
@@ -32,8 +39,9 @@ type StatPage struct {
 
 func NewStatPage(l *load.Load) *StatPage {
 	pg := &StatPage{
-		Load: l,
-		l:    layout.List{Axis: layout.Vertical},
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(StatisticsPageID),
+		l:                layout.List{Axis: layout.Vertical},
 		scrollbarList: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -48,13 +56,6 @@ func NewStatPage(l *load.Load) *StatPage {
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *StatPage) ID() string {
-	return StatisticsPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -145,11 +146,11 @@ func (pg *StatPage) Layout(gtx C) D {
 			Title:      values.String(values.StrStatistics),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: pg.layoutStats,
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 
 	// Refresh frames every 1 second

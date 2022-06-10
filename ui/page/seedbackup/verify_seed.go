@@ -10,6 +10,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -27,6 +28,12 @@ type shuffledSeedWords struct {
 
 type VerifySeedPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	wallet        *dcrlibwallet.Wallet
 	seed          string
 	multiSeedList []shuffledSeedWords
@@ -39,9 +46,10 @@ type VerifySeedPage struct {
 
 func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *VerifySeedPage {
 	pg := &VerifySeedPage{
-		Load:   l,
-		wallet: wallet,
-		seed:   seed,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(VerifySeedPageID),
+		wallet:           wallet,
+		seed:             seed,
 
 		actionButton: l.Theme.Button("Verify"),
 		seedList:     &layout.List{Axis: layout.Vertical},
@@ -58,13 +66,6 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 	pg.backButton.Icon = l.Theme.Icons.ContentClear
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *VerifySeedPage) ID() string {
-	return VerifySeedPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -153,7 +154,7 @@ func (pg *VerifySeedPage) selectedSeedPhrase() string {
 }
 
 func (pg *VerifySeedPage) verifySeed() {
-	modal.NewPasswordModal(pg.Load).
+	passwordModal := modal.NewPasswordModal(pg.Load).
 		Title("Confirm to verify seed").
 		PositiveButton("Confirm", func(password string, m *modal.PasswordModal) bool {
 			go func() {
@@ -172,12 +173,13 @@ func (pg *VerifySeedPage) verifySeed() {
 				}
 				m.Dismiss()
 
-				pg.ChangeFragment(NewBackupSuccessPage(pg.Load))
+				pg.ParentNavigator().Display(NewBackupSuccessPage(pg.Load))
 			}()
 
 			return false
 		}).
-		NegativeButton("Cancel", func() {}).Show()
+		NegativeButton("Cancel", func() {})
+	pg.ParentWindow().ShowModal(passwordModal)
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -221,7 +223,7 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			promptToExit(pg.Load)
+			promptToExit(pg.Load, pg.ParentNavigator(), pg.ParentWindow())
 		},
 		Body: func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -246,7 +248,10 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 	}
 
 	pg.actionButton.SetEnabled(pg.allSeedsSelected())
-	return container(gtx, *pg.Theme, sp.Layout, "", pg.actionButton)
+	layout := func(gtx C) D {
+		return sp.Layout(pg.ParentWindow(), gtx)
+	}
+	return container(gtx, *pg.Theme, layout, "", pg.actionButton)
 }
 
 func (pg *VerifySeedPage) seedListRow(gtx C, index int, multiSeed shuffledSeedWords) D {

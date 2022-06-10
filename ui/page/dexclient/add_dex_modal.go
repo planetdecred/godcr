@@ -19,13 +19,11 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const addDexModalID = "add_dex_modal"
-
 const testDexHost = "dex-test.ssgen.io:7232"
 
 type addDexModal struct {
 	*load.Load
-	modal            *decredmaterial.Modal
+	*decredmaterial.Modal
 	addDexServer     decredmaterial.Button
 	dexServerAddress decredmaterial.Editor
 	isSending        bool
@@ -37,7 +35,7 @@ type addDexModal struct {
 func newAddDexModal(l *load.Load) *addDexModal {
 	md := &addDexModal{
 		Load:             l,
-		modal:            l.Theme.ModalFloatTitle(),
+		Modal:            l.Theme.ModalFloatTitle("add_dex_modal"),
 		dexServerAddress: l.Theme.Editor(new(widget.Editor), "DEX Address"),
 		cert:             l.Theme.Editor(new(widget.Editor), "Cert content"),
 		addDexServer:     l.Theme.Button("Submit"),
@@ -51,18 +49,6 @@ func newAddDexModal(l *load.Load) *addDexModal {
 	}
 
 	return md
-}
-
-func (md *addDexModal) ModalID() string {
-	return addDexModalID
-}
-
-func (md *addDexModal) Show() {
-	md.ShowModal(md)
-}
-
-func (md *addDexModal) Dismiss() {
-	md.DismissModal(md)
 }
 
 func (md *addDexModal) OnDismiss() {
@@ -84,12 +70,12 @@ func (md *addDexModal) Handle() {
 		}
 
 		md.isSending = true
-		md.modal.SetDisabled(true)
+		md.Modal.SetDisabled(true)
 		go func() {
 			cert := []byte(md.cert.Editor.Text())
 			dex, err := md.Dexc().DEXServerInfo(md.dexServerAddress.Editor.Text(), cert)
 			md.isSending = false
-			md.modal.SetDisabled(false)
+			md.Modal.SetDisabled(false)
 
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
@@ -118,7 +104,7 @@ func (md *addDexModal) Handle() {
 				return
 			}
 
-			newCreateWalletModal(md.Load,
+			createWalletModal := newCreateWalletModal(md.Load,
 				&walletInfoWidget{
 					image:    components.CoinImageBySymbol(md.Load, feeAssetName),
 					coinName: feeAssetName,
@@ -126,7 +112,8 @@ func (md *addDexModal) Handle() {
 				},
 				func() {
 					md.completeRegistration(dex, feeAssetName, cert)
-				}).Show()
+				})
+			md.ParentWindow().ShowModal(createWalletModal)
 		}()
 	}
 }
@@ -177,11 +164,11 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return md.modal.Layout(gtx, w)
+	return md.Modal.Layout(gtx, w)
 }
 
 func (md *addDexModal) completeRegistration(dex *core.Exchange, feeAssetName string, cert []byte) {
-	modal.NewPasswordModal(md.Load).
+	appPasswordModal := modal.NewPasswordModal(md.Load).
 		Title("Confirm Registration").
 		Hint("App password").
 		Description(confirmRegisterModalDesc(dex, feeAssetName)).
@@ -202,7 +189,8 @@ func (md *addDexModal) completeRegistration(dex *core.Exchange, feeAssetName str
 			}()
 
 			return false
-		}).Show()
+		})
+	md.ParentWindow().ShowModal(appPasswordModal)
 }
 
 func confirmRegisterModalDesc(dex *core.Exchange, selectedFeeAsset string) string {

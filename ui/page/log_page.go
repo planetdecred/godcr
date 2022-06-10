@@ -10,6 +10,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/nxadm/tail"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -23,6 +24,12 @@ const (
 
 type LogPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	tail *tail.Tail
 
 	copyLog    *decredmaterial.Clickable
@@ -35,7 +42,8 @@ type LogPage struct {
 
 func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
-		Load: l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(LogPageID),
 		logList: &widget.List{
 			List: layout.List{
 				Axis:        layout.Vertical,
@@ -50,13 +58,6 @@ func NewLogPage(l *load.Load) *LogPage {
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 	pg.watchLogs()
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *LogPage) ID() string {
-	return LogPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -104,7 +105,7 @@ func (pg *LogPage) watchLogs() {
 		}
 		for line := range t.Lines {
 			pg.fullLog += line.Text + "\n"
-			pg.RefreshWindow()
+			pg.ParentWindow().Reload()
 		}
 	}()
 }
@@ -119,7 +120,7 @@ func (pg *LogPage) Layout(gtx C) D {
 			Title:      values.String(values.StrWalletLog),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			ExtraItem: pg.copyLog,
 			Extra: func(gtx C) D {
@@ -148,7 +149,7 @@ func (pg *LogPage) Layout(gtx C) D {
 				})
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, container)
 }

@@ -3,6 +3,7 @@ package page
 import (
 	"gioui.org/layout"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -15,11 +16,17 @@ const DebugPageID = "Debug"
 type debugItem struct {
 	text   string
 	page   string
-	action func()
+	action func(parentPage app.PageNavigator)
 }
 
 type DebugPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	debugItems []debugItem
 	list       *decredmaterial.ClickableList
 
@@ -31,23 +38,24 @@ func NewDebugPage(l *load.Load) *DebugPage {
 		{
 			text: values.String(values.StrWalletLog),
 			page: LogPageID,
-			action: func() {
-				l.ChangeFragment(NewLogPage(l))
+			action: func(parentPage app.PageNavigator) {
+				parentPage.Display(NewLogPage(l))
 			},
 		},
 		{
 			text: values.String(values.StrCheckStatistics),
 			page: StatisticsPageID,
-			action: func() {
-				l.ChangeFragment(NewStatPage(l))
+			action: func(parentPage app.PageNavigator) {
+				parentPage.Display(NewStatPage(l))
 			},
 		},
 	}
 
 	pg := &DebugPage{
-		Load:       l,
-		debugItems: debugItems,
-		list:       l.Theme.NewClickableList(layout.Vertical),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(DebugPageID),
+		debugItems:       debugItems,
+		list:             l.Theme.NewClickableList(layout.Vertical),
 	}
 	pg.list.Radius = decredmaterial.Radius(14)
 	pg.list.IsShadowEnabled = true
@@ -66,13 +74,6 @@ func NewDebugPage(l *load.Load) *DebugPage {
 	return pg
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *DebugPage) ID() string {
-	return DebugPageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -88,7 +89,7 @@ func (pg *DebugPage) OnNavigatedTo() {
 // Part of the load.Page interface.
 func (pg *DebugPage) HandleUserInteractions() {
 	if clicked, item := pg.list.ItemClicked(); clicked {
-		pg.debugItems[item].action()
+		pg.debugItems[item].action(pg.ParentNavigator())
 	}
 }
 
@@ -151,14 +152,14 @@ func (pg *DebugPage) Layout(gtx C) D {
 			Title:      values.String(values.StrDebug),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				pg.layoutDebugItems(gtx)
 				return layout.Dimensions{Size: gtx.Constraints.Max}
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 
 	}
 	return components.UniformPadding(gtx, container)
@@ -178,5 +179,5 @@ func (pg *DebugPage) resetDexData() {
 			}
 			return true
 		})
-	pg.ShowModal(confirmModal)
+	pg.ParentWindow().ShowModal(confirmModal)
 }

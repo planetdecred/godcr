@@ -13,6 +13,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -34,6 +35,12 @@ type moreItem struct {
 
 type Page struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -84,9 +91,10 @@ type authoredTxData struct {
 
 func NewSendPage(l *load.Load) *Page {
 	pg := &Page{
-		Load:            l,
-		sendDestination: newSendDestination(l),
-		amount:          newSendAmount(l),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(PageID),
+		sendDestination:  newSendDestination(l),
+		amount:           newSendAmount(l),
 
 		exchangeRate: -1,
 
@@ -146,13 +154,6 @@ func (pg *Page) RestyleWidgets() {
 	pg.sendDestination.styleWidgets()
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *Page) ID() string {
-	return PageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -161,7 +162,7 @@ func (pg *Page) OnNavigatedTo() {
 	pg.RestyleWidgets()
 
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	pg.sourceAccountSelector.ListenForTxNotifications(pg.ctx)
+	pg.sourceAccountSelector.ListenForTxNotifications(pg.ctx, pg.ParentWindow())
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount(nil)
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()
@@ -215,7 +216,7 @@ func (pg *Page) fetchExchangeRate() {
 		}
 	}
 	pg.isFetchingExchangeRate = false
-	pg.RefreshWindow()
+	pg.ParentWindow().Reload()
 }
 
 func (pg *Page) validateAndConstructTx() {
@@ -355,7 +356,7 @@ func (pg *Page) HandleUserInteractions() {
 	pg.amount.handle()
 
 	if pg.backButton.Button.Clicked() {
-		pg.PopFragment()
+		pg.ParentNavigator().CloseCurrentPage()
 	}
 
 	if pg.infoButton.Button.Clicked() {
@@ -365,7 +366,7 @@ func (pg *Page) HandleUserInteractions() {
 			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
 				return true
 			})
-		pg.ShowModal(info)
+		pg.ParentWindow().ShowModal(info)
 	}
 
 	for pg.moreOption.Button.Clicked() {
@@ -378,7 +379,7 @@ func (pg *Page) HandleUserInteractions() {
 
 	for pg.nextButton.Clicked() {
 		if pg.txAuthor != nil {
-			pg.confirmTxModal = newSendConfirmModal(pg.Load, pg.authoredTxData).SetParent(pg)
+			pg.confirmTxModal = newSendConfirmModal(pg.Load, pg.authoredTxData)
 			pg.confirmTxModal.exchangeRateSet = pg.exchangeRate != -1 && pg.usdExchangeSet
 
 			pg.confirmTxModal.txSent = func() {
@@ -386,7 +387,7 @@ func (pg *Page) HandleUserInteractions() {
 				pg.clearEstimates()
 			}
 
-			pg.confirmTxModal.Show()
+			pg.ParentWindow().ShowModal(pg.confirmTxModal)
 		}
 	}
 
@@ -510,5 +511,5 @@ func (pg *Page) HandleKeyEvent(evt *key.Event) {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedFrom() {
-	pg.ctxCancel()
+	pg.ctxCancel() // causes crash if nil, when the main page is closed if send page is created but never displayed (because sync in progress)
 }

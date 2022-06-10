@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -27,6 +28,12 @@ type saveSeedRow struct {
 
 type SaveSeedPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	wallet *dcrlibwallet.Wallet
 
 	backButton   decredmaterial.IconButton
@@ -40,10 +47,11 @@ type SaveSeedPage struct {
 
 func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 	pg := &SaveSeedPage{
-		Load:         l,
-		wallet:       wallet,
-		infoText:     "You will be asked to enter the seed word on the next screen.",
-		actionButton: l.Theme.Button("I have written down all 33 words"),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(SaveSeedPageID),
+		wallet:           wallet,
+		infoText:         "You will be asked to enter the seed word on the next screen.",
+		actionButton:     l.Theme.Button("I have written down all 33 words"),
 		seedList: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -57,20 +65,13 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 	return pg
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *SaveSeedPage) ID() string {
-	return SaveSeedPageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *SaveSeedPage) OnNavigatedTo() {
 
-	modal.NewPasswordModal(pg.Load).
+	passwordModal := modal.NewPasswordModal(pg.Load).
 		Title("Confirm to show seed").
 		PositiveButton("Confirm", func(password string, m *modal.PasswordModal) bool {
 			go func() {
@@ -105,8 +106,9 @@ func (pg *SaveSeedPage) OnNavigatedTo() {
 			return false
 		}).
 		NegativeButton("Cancel", func() {
-			pg.PopToFragment(components.WalletsPageID)
-		}).Show()
+			pg.ParentNavigator().ClosePagesAfter(components.WalletsPageID)
+		})
+	pg.ParentWindow().ShowModal(passwordModal)
 
 }
 
@@ -117,7 +119,7 @@ func (pg *SaveSeedPage) OnNavigatedTo() {
 // Part of the load.Page interface.
 func (pg *SaveSeedPage) HandleUserInteractions() {
 	for pg.actionButton.Clicked() {
-		pg.ChangeFragment(NewVerifySeedPage(pg.Load, pg.wallet, pg.seed))
+		pg.ParentNavigator().Display(NewVerifySeedPage(pg.Load, pg.wallet, pg.seed))
 	}
 }
 
@@ -141,7 +143,7 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			promptToExit(pg.Load)
+			promptToExit(pg.Load, pg.ParentNavigator(), pg.ParentWindow())
 		},
 		Body: func(gtx C) D {
 
@@ -177,7 +179,10 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 		},
 	}
 
-	return container(gtx, *pg.Theme, sp.Layout, pg.infoText, pg.actionButton)
+	layout := func(gtx C) D {
+		return sp.Layout(pg.ParentWindow(), gtx)
+	}
+	return container(gtx, *pg.Theme, layout, pg.infoText, pg.actionButton)
 }
 
 func (pg *SaveSeedPage) seedRow(gtx C, row saveSeedRow) D {

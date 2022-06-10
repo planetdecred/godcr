@@ -5,6 +5,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -21,6 +22,12 @@ type (
 
 type BackupInstructionsPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	wallet *dcrlibwallet.Wallet
 
 	backButton  decredmaterial.IconButton
@@ -31,8 +38,9 @@ type BackupInstructionsPage struct {
 
 func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *BackupInstructionsPage {
 	bi := &BackupInstructionsPage{
-		Load:   l,
-		wallet: wallet,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(BackupInstructionsPageID),
+		wallet:           wallet,
 
 		viewSeedBtn: l.Theme.Button("View seed phrase"),
 	}
@@ -59,13 +67,6 @@ func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Backu
 	return bi
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *BackupInstructionsPage) ID() string {
-	return BackupInstructionsPageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -83,21 +84,22 @@ func (pg *BackupInstructionsPage) HandleUserInteractions() {
 	for pg.viewSeedBtn.Clicked() {
 		if pg.verifyCheckBoxes() {
 			// TODO: Will repeat the paint cycle, just queue the next fragment to be displayed
-			pg.ChangeFragment(NewSaveSeedPage(pg.Load, pg.wallet))
+			pg.ParentNavigator().Display(NewSaveSeedPage(pg.Load, pg.wallet))
 		}
 	}
 
 }
-func promptToExit(load *load.Load) {
-	modal.NewInfoModal(load).
+
+func promptToExit(load *load.Load, pageNavigator app.PageNavigator, window app.WindowNavigator) {
+	infoModal := modal.NewInfoModal(load).
 		Title("Exit?").
 		Body("Are you sure you want to exit the seed backup process?").
 		NegativeButton("No", func() {}).
 		PositiveButton("Yes", func(isChecked bool) bool {
-			load.PopToFragment(components.WalletsPageID)
+			pageNavigator.ClosePagesAfter(components.WalletsPageID)
 			return true
-		}).
-		Show()
+		})
+	window.ShowModal(infoModal)
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -119,7 +121,7 @@ func (pg *BackupInstructionsPage) Layout(gtx layout.Context) layout.Dimensions {
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			promptToExit(pg.Load)
+			promptToExit(pg.Load, pg.ParentNavigator(), pg.ParentWindow())
 		},
 		Body: func(gtx C) D {
 			return pg.infoList.Layout(gtx, len(pg.checkBoxes), func(gtx C, i int) D {
@@ -130,7 +132,10 @@ func (pg *BackupInstructionsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	pg.viewSeedBtn.SetEnabled(pg.verifyCheckBoxes())
 
-	return container(gtx, *pg.Theme, sp.Layout, "", pg.viewSeedBtn)
+	layout := func(gtx C) D {
+		return sp.Layout(pg.ParentWindow(), gtx)
+	}
+	return container(gtx, *pg.Theme, layout, "", pg.viewSeedBtn)
 }
 
 func (pg *BackupInstructionsPage) verifyCheckBoxes() bool {

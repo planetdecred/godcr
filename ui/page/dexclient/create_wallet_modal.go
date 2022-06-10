@@ -19,16 +19,14 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const dexCreateWalletModalID = "dex_create_wallet_modal"
-
 type createWalletModal struct {
 	*load.Load
+	*decredmaterial.Modal
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
 	sourceAccountSelector *components.AccountSelector
-	modal                 *decredmaterial.Modal
 	submit                decredmaterial.Button
 	cancel                decredmaterial.Button
 	walletPassword        decredmaterial.Editor
@@ -48,7 +46,7 @@ type walletInfoWidget struct {
 func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreated func()) *createWalletModal {
 	md := &createWalletModal{
 		Load:             l,
-		modal:            l.Theme.ModalFloatTitle(),
+		Modal:            l.Theme.ModalFloatTitle("dex_create_wallet_modal"),
 		walletPassword:   l.Theme.EditorPassword(new(widget.Editor), "Wallet Password"),
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App Password"),
 		submit:           l.Theme.Button("Add"),
@@ -77,25 +75,13 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, walletCreate
 	return md
 }
 
-func (md *createWalletModal) ModalID() string {
-	return dexCreateWalletModalID
-}
-
-func (md *createWalletModal) Show() {
-	md.ShowModal(md)
-}
-
-func (md *createWalletModal) Dismiss() {
-	md.DismissModal(md)
-}
-
 func (md *createWalletModal) OnDismiss() {
 	md.ctxCancel()
 }
 
 func (md *createWalletModal) OnResume() {
 	md.ctx, md.ctxCancel = context.WithCancel(context.TODO())
-	md.sourceAccountSelector.ListenForTxNotifications(md.ctx)
+	md.sourceAccountSelector.ListenForTxNotifications(md.ctx, md.ParentWindow())
 
 	err := md.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
 	if err != nil {
@@ -114,12 +100,12 @@ func (md *createWalletModal) Handle() {
 		}
 
 		md.isSending = true
-		md.modal.SetDisabled(true)
+		md.Modal.SetDisabled(true)
 
 		go func() {
 			defer func() {
 				md.isSending = false
-				md.modal.SetDisabled(false)
+				md.Modal.SetDisabled(false)
 			}()
 
 			coinID := md.walletInfoWidget.coinID
@@ -187,7 +173,7 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-									return md.sourceAccountSelector.Layout(gtx)
+									return md.sourceAccountSelector.Layout(md.ParentWindow(), gtx)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -232,5 +218,5 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return md.modal.Layout(gtx, w)
+	return md.Modal.Layout(gtx, w)
 }

@@ -5,6 +5,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -25,6 +26,11 @@ type row struct {
 
 type SettingsPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	pageContainer *widget.List
 	wal           *wallet.Wallet
@@ -61,7 +67,8 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 	chevronRightIcon := l.Theme.Icons.ChevronRight
 
 	pg := &SettingsPage{
-		Load: l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(SettingsPageID),
 		pageContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -93,13 +100,6 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 	return pg
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *SettingsPage) ID() string {
-	return SettingsPageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -120,7 +120,7 @@ func (pg *SettingsPage) Layout(gtx C) D {
 			Title:      values.String(values.StrSettings),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				pageContent := []func(gtx C) D{
@@ -135,7 +135,7 @@ func (pg *SettingsPage) Layout(gtx C) D {
 				})
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 
 	return components.UniformPadding(gtx, body)
@@ -385,7 +385,7 @@ func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
 			pg.WL.MultiWallet.DeleteUserConfigValueForKey(key)
 			return true
 		})
-	pg.ShowModal(info)
+	pg.ParentWindow().ShowModal(info)
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -396,28 +396,29 @@ func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
 func (pg *SettingsPage) HandleUserInteractions() {
 
 	for pg.language.Clicked() {
-		preference.NewListPreference(pg.Load,
+		langSelectorModal := preference.NewListPreference(pg.Load,
 			load.LanguagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
 			Title(values.StrLanguage).
 			UpdateValues(func() {
 				values.SetUserLanguage(pg.WL.MultiWallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(langSelectorModal)
 		break
 	}
 
 	for pg.currency.Clicked() {
-		preference.NewListPreference(pg.Load,
+		currencySelectorModal := preference.NewListPreference(pg.Load,
 			dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue,
 			values.ArrExchangeCurrencies).
 			Title(values.StrCurrencyConversion).
-			UpdateValues(func() {}).
-			Show()
+			UpdateValues(func() {})
+		pg.ParentWindow().ShowModal(currencySelectorModal)
 		break
 	}
 
 	if pg.isDarkModeOn.Changed() {
 		pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())
-		pg.RefreshTheme()
+		pg.RefreshTheme(pg.ParentWindow())
 	}
 
 	if pg.spendUnconfirmed.Changed() {
@@ -444,7 +445,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 					pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrDisabled)))
 					return true
 				})
-			pg.ShowModal(info)
+			pg.ParentWindow().ShowModal(info)
 		}
 	}
 
@@ -477,11 +478,11 @@ func (pg *SettingsPage) HandleUserInteractions() {
 			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
 				return true
 			})
-		pg.ShowModal(info)
+		pg.ParentWindow().ShowModal(info)
 	}
 
 	for pg.changeStartupPass.Clicked() {
-		modal.NewPasswordModal(pg.Load).
+		currentPasswordModal := modal.NewPasswordModal(pg.Load).
 			Title(values.String(values.StrConfirmStartupPass)).
 			Hint(values.String(values.StrCurrentStartupPass)).
 			NegativeButton(values.String(values.StrCancel), func() {}).
@@ -502,7 +503,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 					pm.Dismiss()
 
 					// change password
-					modal.NewCreatePasswordModal(pg.Load).
+					newPasswordModal := modal.NewCreatePasswordModal(pg.Load).
 						Title(values.String(values.StrCreateStartupPassword)).
 						EnableName(false).
 						PasswordHint(values.String(values.StrNewStartupPass)).
@@ -519,18 +520,19 @@ func (pg *SettingsPage) HandleUserInteractions() {
 								m.Dismiss()
 							}()
 							return false
-						}).Show()
-
+						})
+					pg.ParentWindow().ShowModal(newPasswordModal)
 				}()
 
 				return false
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(currentPasswordModal)
 		break
 	}
 
 	if pg.startupPassword.Changed() {
 		if pg.startupPassword.IsChecked() {
-			modal.NewCreatePasswordModal(pg.Load).
+			createPasswordModal := modal.NewCreatePasswordModal(pg.Load).
 				Title(values.String(values.StrCreateStartupPassword)).
 				EnableName(false).
 				PasswordHint(values.String(values.StrStartupPassword)).
@@ -547,9 +549,10 @@ func (pg *SettingsPage) HandleUserInteractions() {
 						m.Dismiss()
 					}()
 					return false
-				}).Show()
+				})
+			pg.ParentWindow().ShowModal(createPasswordModal)
 		} else {
-			modal.NewPasswordModal(pg.Load).
+			currentPasswordModal := modal.NewPasswordModal(pg.Load).
 				Title(values.String(values.StrConfirmRemoveStartupPass)).
 				Hint(values.String(values.StrStartupPassword)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
@@ -572,7 +575,8 @@ func (pg *SettingsPage) HandleUserInteractions() {
 					}()
 
 					return false
-				}).Show()
+				})
+			pg.ParentWindow().ShowModal(currentPasswordModal)
 		}
 	}
 
@@ -634,7 +638,7 @@ func (pg *SettingsPage) showSPVPeerDialog() {
 
 	textModal.Title(values.String(values.StrConnectToSpecificPeer)).
 		NegativeButton(values.String(values.StrCancel), func() {})
-	textModal.Show()
+	pg.ParentWindow().ShowModal(textModal)
 }
 
 func (pg *SettingsPage) showUserAgentDialog() {
@@ -650,7 +654,7 @@ func (pg *SettingsPage) showUserAgentDialog() {
 
 	textModal.Title(values.String(values.StrChangeUserAgent)).
 		NegativeButton(values.String(values.StrCancel), func() {})
-	textModal.Show()
+	pg.ParentWindow().ShowModal(textModal)
 }
 
 func (pg *SettingsPage) updateSettingOptions() {

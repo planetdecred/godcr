@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -15,6 +16,11 @@ const WalletSettingsPageID = "WalletSettings"
 
 type WalletSettingsPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	wallet *dcrlibwallet.Wallet
 
@@ -27,11 +33,12 @@ type WalletSettingsPage struct {
 
 func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettingsPage {
 	pg := &WalletSettingsPage{
-		Load:         l,
-		wallet:       wal,
-		changePass:   l.Theme.NewClickable(false),
-		rescan:       l.Theme.NewClickable(false),
-		deleteWallet: l.Theme.NewClickable(false),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(WalletSettingsPageID),
+		wallet:           wal,
+		changePass:       l.Theme.NewClickable(false),
+		rescan:           l.Theme.NewClickable(false),
+		deleteWallet:     l.Theme.NewClickable(false),
 
 		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
 	}
@@ -39,13 +46,6 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *WalletSettingsPage) ID() string {
-	return WalletSettingsPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -67,7 +67,7 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -82,7 +82,7 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 				)
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, body)
 }
@@ -173,7 +173,7 @@ func (pg *WalletSettingsPage) bottomSectionLabel(clickable *decredmaterial.Click
 // Part of the load.Page interface.
 func (pg *WalletSettingsPage) HandleUserInteractions() {
 	for pg.changePass.Clicked() {
-		modal.NewPasswordModal(pg.Load).
+		currentSpendingPasswordModal := modal.NewPasswordModal(pg.Load).
 			Title(values.String(values.StrChangeSpendingPass)).
 			Hint("Current spending password").
 			NegativeButton(values.String(values.StrCancel), func() {}).
@@ -189,7 +189,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 					pm.Dismiss()
 
 					// change password
-					modal.NewCreatePasswordModal(pg.Load).
+					newSpendingPasswordModal := modal.NewCreatePasswordModal(pg.Load).
 						Title(values.String(values.StrChangeSpendingPass)).
 						EnableName(false).
 						PasswordHint("New spending password").
@@ -207,12 +207,14 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 								m.Dismiss()
 							}()
 							return false
-						}).Show()
+						})
+					pg.ParentWindow().ShowModal(newSpendingPasswordModal)
 
 				}()
 
 				return false
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(currentSpendingPasswordModal)
 		break
 	}
 
@@ -238,7 +240,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 					return true
 				})
 
-			pg.ShowModal(info)
+			pg.ParentWindow().ShowModal(info)
 		}()
 		break
 	}
@@ -248,38 +250,38 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 		if pg.wallet.IsWatchingOnlyWallet() {
 			warningMsg = "The watch-only wallet will be removed from your app"
 		}
-		infoModal := modal.NewInfoModal(pg.Load)
-		infoModal.Title(values.String(values.StrRemoveWallet)).
+		confirmRemoveWalletModal := modal.NewInfoModal(pg.Load)
+		confirmRemoveWalletModal.Title(values.String(values.StrRemoveWallet)).
 			Body(warningMsg).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
 			PositiveButton(values.String(values.StrRemove), func(isChecked bool) bool {
 				walletDeleted := func() {
 					if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
-						pg.Toast.Notify("Wallet removed")
-						pg.PopFragment()
+						pg.Toast.Notify(values.String(values.StrWalletRemoved))
+						pg.ParentNavigator().CloseCurrentPage()
 					} else {
-						pg.Load.ReloadApp()
+						pg.ParentWindow().CloseAllPages()
 					}
 				}
 
 				if pg.wallet.IsWatchingOnlyWallet() {
-					infoModal.SetLoading(true)
+					confirmRemoveWalletModal.SetLoading(true)
 					go func() {
 						// no password is required for watching only wallets.
 						err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, nil)
 						if err != nil {
 							pg.Toast.NotifyError(err.Error())
-							infoModal.SetLoading(false)
+							confirmRemoveWalletModal.SetLoading(false)
 						} else {
 							walletDeleted()
-							infoModal.Dismiss()
+							confirmRemoveWalletModal.Dismiss()
 						}
 					}()
 					return false
 				}
 
-				modal.NewPasswordModal(pg.Load).
+				walletPasswordModal := modal.NewPasswordModal(pg.Load).
 					Title(values.String(values.StrConfirmToRemove)).
 					NegativeButton(values.String(values.StrCancel), func() {}).
 					PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
@@ -295,9 +297,11 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 							pm.Dismiss() // calls RefreshWindow.
 						}()
 						return false
-					}).Show()
+					})
+				pg.ParentWindow().ShowModal(walletPasswordModal)
 				return false
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(confirmRemoveWalletModal)
 	}
 
 	if pg.infoButton.Button.Clicked() {
@@ -307,7 +311,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
 				return true
 			})
-		pg.ShowModal(info)
+		pg.ParentWindow().ShowModal(info)
 	}
 }
 

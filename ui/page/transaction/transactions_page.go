@@ -10,6 +10,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -26,6 +27,12 @@ type (
 
 type TransactionsPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -47,7 +54,8 @@ type TransactionsPage struct {
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg := &TransactionsPage{
-		Load: l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(TransactionsPageID),
 		container: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -92,13 +100,6 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg.walletTabTitles = walletTitles
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *TransactionsPage) ID() string {
-	return TransactionsPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -357,7 +358,7 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 	}
 
 	if clicked, selectedItem := pg.transactionList.ItemClicked(); clicked {
-		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
+		pg.ParentNavigator().Display(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
 	}
 	decredmaterial.DisplayOneDropdown(pg.walletDropDown, pg.txTypeDropDown, pg.orderDropDown)
 
@@ -392,7 +393,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 					if selectedWallet.ID == n.Transaction.WalletID {
 						pg.loadTransactions(pg.walletDropDown.SelectedIndex())
-						pg.RefreshWindow()
+						pg.ParentWindow().Reload()
 					}
 				}
 			case <-pg.ctx.Done():

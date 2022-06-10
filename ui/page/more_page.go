@@ -3,6 +3,7 @@ package page
 import (
 	"gioui.org/layout"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -22,6 +23,12 @@ type morePageHandler struct {
 
 type MorePage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	container                layout.Flex
 	shadowBox                *decredmaterial.Shadow
 	morePageListItemsDesktop []morePageHandler
@@ -30,9 +37,10 @@ type MorePage struct {
 
 func NewMorePage(l *load.Load) *MorePage {
 	pg := &MorePage{
-		container: layout.Flex{Axis: layout.Vertical},
-		Load:      l,
-		shadowBox: l.Theme.Shadow(),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(MorePageID),
+		container:        layout.Flex{Axis: layout.Vertical},
+		shadowBox:        l.Theme.Shadow(),
 	}
 	pg.initPageItems()
 
@@ -46,7 +54,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.SettingsIcon,
 			page:      SettingsPageID,
 			action: func() {
-				pg.ChangeFragment(NewSettingsPage(pg.Load))
+				pg.ParentNavigator().Display(NewSettingsPage(pg.Load))
 			},
 		},
 		{
@@ -54,7 +62,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.SecurityIcon,
 			page:      SecurityToolsPageID,
 			action: func() {
-				pg.ChangeFragment(NewSecurityToolsPage(pg.Load))
+				pg.ParentNavigator().Display(NewSecurityToolsPage(pg.Load))
 			},
 		},
 		{
@@ -62,7 +70,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.HelpIcon,
 			page:      HelpPageID,
 			action: func() {
-				pg.ChangeFragment(NewHelpPage(pg.Load))
+				pg.ParentNavigator().Display(NewHelpPage(pg.Load))
 			},
 		},
 		{
@@ -70,7 +78,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.AboutIcon,
 			page:      AboutPageID,
 			action: func() {
-				pg.ChangeFragment(NewAboutPage(pg.Load))
+				pg.ParentNavigator().Display(NewAboutPage(pg.Load))
 			},
 		},
 		{
@@ -78,7 +86,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.DebugIcon,
 			page:      DebugPageID,
 			action: func() {
-				pg.ChangeFragment(NewDebugPage(pg.Load))
+				pg.ParentNavigator().Display(NewDebugPage(pg.Load))
 			},
 		},
 	}
@@ -89,7 +97,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.SettingsIcon,
 			page:      SettingsPageID,
 			action: func() {
-				pg.ChangeFragment(NewSettingsPage(pg.Load))
+				pg.ParentNavigator().Display(NewSettingsPage(pg.Load))
 			},
 		},
 		{
@@ -97,7 +105,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.SecurityIcon,
 			page:      SecurityToolsPageID,
 			action: func() {
-				pg.ChangeFragment(NewSecurityToolsPage(pg.Load))
+				pg.ParentNavigator().Display(NewSecurityToolsPage(pg.Load))
 			},
 		},
 		{
@@ -105,7 +113,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.StakeIcon,
 			page:      values.String(values.StrStaking),
 			action: func() {
-				pg.ChangeFragment(staking.NewStakingPage(pg.Load))
+				pg.ParentNavigator().Display(staking.NewStakingPage(pg.Load))
 			},
 		},
 		{
@@ -113,7 +121,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.GovernanceActiveIcon,
 			page:      "Governance",
 			action: func() {
-				pg.ChangeFragment(governance.NewGovernancePage(pg.Load))
+				pg.ParentNavigator().Display(governance.NewGovernancePage(pg.Load))
 			},
 		},
 		// Temp disabling. Will uncomment after release
@@ -135,7 +143,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.HelpIcon,
 			page:      HelpPageID,
 			action: func() {
-				pg.ChangeFragment(NewHelpPage(pg.Load))
+				pg.ParentNavigator().Display(NewHelpPage(pg.Load))
 			},
 		},
 		{
@@ -143,7 +151,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.AboutIcon,
 			page:      AboutPageID,
 			action: func() {
-				pg.ChangeFragment(NewAboutPage(pg.Load))
+				pg.ParentNavigator().Display(NewAboutPage(pg.Load))
 			},
 		},
 		{
@@ -151,17 +159,10 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.DebugIcon,
 			page:      DebugPageID,
 			action: func() {
-				pg.ChangeFragment(NewDebugPage(pg.Load))
+				pg.ParentNavigator().Display(NewDebugPage(pg.Load))
 			},
 		},
 	}
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *MorePage) ID() string {
-	return MorePageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and

@@ -6,6 +6,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -57,19 +58,19 @@ func (ts *ticketSelector) SelectedTicket() *dcrlibwallet.Transaction {
 	return ts.selectedTicket
 }
 
-func (ts *ticketSelector) handle() {
+func (ts *ticketSelector) handle(window app.WindowNavigator) {
 	if ts.showTicketModal.Clicked() {
-		newTicketSelectorModal(ts.Load, ts.liveTickets).
+		ticketSelectorModal := newTicketSelectorModal(ts.Load, ts.liveTickets).
 			title(values.String(values.StrSelectTicket)).
 			ticketSelected(func(ticket *dcrlibwallet.Transaction) {
 				ts.SelectTicket(ticket.Hash)
-			}).
-			Show()
+			})
+		window.ShowModal(ticketSelectorModal)
 	}
 }
 
-func (ts *ticketSelector) Layout(gtx layout.Context) layout.Dimensions {
-	ts.handle()
+func (ts *ticketSelector) Layout(gtx layout.Context, window app.WindowNavigator) layout.Dimensions {
+	ts.handle(window)
 
 	border := widget.Border{
 		Color:        ts.Theme.Color.Gray2,
@@ -107,14 +108,11 @@ func (ts *ticketSelector) Layout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-const TicketSelectorModalID = "TicketSelectorModal"
-
 type ticketSelectorModal struct {
 	*load.Load
+	*decredmaterial.Modal
 
 	dialogTitle string
-
-	modal decredmaterial.Modal
 
 	liveTickets    []*dcrlibwallet.Transaction
 	selectedTicket *dcrlibwallet.Transaction
@@ -125,10 +123,10 @@ type ticketSelectorModal struct {
 
 func newTicketSelectorModal(l *load.Load, lv []*dcrlibwallet.Transaction) *ticketSelectorModal {
 	tsm := &ticketSelectorModal{
-		Load: l,
+		Load:  l,
+		Modal: l.Theme.ModalFloatTitle("TicketSelectorModal"),
 
 		liveTickets: lv,
-		modal:       *l.Theme.ModalFloatTitle(),
 		ticketList:  l.Theme.NewClickableList(layout.Vertical),
 	}
 
@@ -137,20 +135,8 @@ func newTicketSelectorModal(l *load.Load, lv []*dcrlibwallet.Transaction) *ticke
 
 func (tsm *ticketSelectorModal) OnResume() {}
 
-func (tsm *ticketSelectorModal) ModalID() string {
-	return TicketSelectorModalID
-}
-
-func (tsm *ticketSelectorModal) Show() {
-	tsm.ShowModal(tsm)
-}
-
-func (tsm *ticketSelectorModal) Dismiss() {
-	tsm.DismissModal(tsm)
-}
-
 func (tsm *ticketSelectorModal) Handle() {
-	if tsm.modal.BackdropClicked(true) {
+	if tsm.Modal.BackdropClicked(true) {
 		tsm.Dismiss()
 	}
 
@@ -175,7 +161,7 @@ func (tsm *ticketSelectorModal) ticketSelected(callback func(*dcrlibwallet.Trans
 func (tsm *ticketSelectorModal) OnDismiss() {}
 
 func (tsm *ticketSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
-	return tsm.modal.Layout(gtx, []layout.Widget{
+	return tsm.Modal.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			title := tsm.Theme.Label(values.TextSize20, tsm.dialogTitle)
 			title.Font.Weight = text.SemiBold

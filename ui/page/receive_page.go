@@ -16,6 +16,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -29,6 +30,11 @@ const ReceivePageID = "Receive"
 
 type ReceivePage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -54,8 +60,9 @@ type ReceivePage struct {
 
 func NewReceivePage(l *load.Load) *ReceivePage {
 	pg := &ReceivePage{
-		Load:        l,
-		multiWallet: l.WL.MultiWallet,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(ReceivePageID),
+		multiWallet:      l.WL.MultiWallet,
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
@@ -128,20 +135,13 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	return pg
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *ReceivePage) ID() string {
-	return ReceivePageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *ReceivePage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	pg.selector.ListenForTxNotifications(pg.ctx)
+	pg.selector.ListenForTxNotifications(pg.ctx, pg.ParentWindow())
 	pg.selector.SelectFirstWalletValidAccount(nil) // Want to reset the user's selection everytime this page appears?
 	// might be better to track the last selection in a variable and reselect it.
 	selectedWallet := pg.multiWallet.WalletWithID(pg.selector.SelectedAccount().WalletID)
@@ -195,7 +195,7 @@ func (pg *ReceivePage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, func(gtx C) D {
-				return pg.selector.Layout(gtx)
+				return pg.selector.Layout(pg.ParentWindow(), gtx)
 			})
 		},
 		func(gtx C) D {
@@ -262,7 +262,7 @@ func (pg *ReceivePage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, func(gtx C) D {
-				return pg.selector.Layout(gtx)
+				return pg.selector.Layout(pg.ParentWindow(), gtx)
 			})
 		},
 		func(gtx C) D {
@@ -465,11 +465,11 @@ func (pg *ReceivePage) HandleUserInteractions() {
 			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
 				return true
 			})
-		pg.ShowModal(info)
+		pg.ParentWindow().ShowModal(info)
 	}
 
 	if pg.backButton.Button.Clicked() {
-		pg.PopFragment()
+		pg.ParentNavigator().CloseCurrentPage()
 	}
 }
 
