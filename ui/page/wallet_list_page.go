@@ -62,7 +62,6 @@ func NewWalletList(l *load.Load, onWalletSelected func()) *WalletList {
 			},
 		},
 		wallectSelected: onWalletSelected,
-
 		Load:      l,
 		shadowBox: l.Theme.Shadow(),
 	}
