@@ -36,31 +36,32 @@ func (pageStack *PageStack) Top() Page {
 // to the new page via newPage.OnNavigatedTo() while page.OnNavigatedFrom() is
 // called on the current page to signal that the current page is no longer the
 // displayed page.
-func (pageStack *PageStack) Push(newPage Page) {
+func (pageStack *PageStack) Push(newPage Page, navigator PageNavigator) {
 	pageStack.mtx.Lock()
 	defer pageStack.mtx.Unlock()
 
 	if l := len(pageStack.pages); l > 0 {
 		currentPage := pageStack.pages[l-1]
-		currentPage.OnNavigatedFrom()
+		if currentPage.ID() != newPage.ID() {
+			currentPage.OnNavigatedFrom() // if currentPage is another instance of newPage, it'll be closed below.
+		}
 	}
 
-	// Close all previous instances of this type, retain other pages.
-	// Use the Closed() method for instances that implement it, to signal that
-	// the instance will never be re-displayed.
-	otherPages := make([]Page, 0, len(pageStack.pages))
-	for _, existingPage := range pageStack.pages {
+	// Close any previous instance of this type. Use the Closed() method if
+	// implemented, to signal that the instance will never be re-displayed.
+	for i, existingPage := range pageStack.pages {
 		if existingPage.ID() == newPage.ID() {
 			existingPage.OnNavigatedFrom()
 			if closablePage, ok := existingPage.(Closable); ok {
 				closablePage.OnClosed()
 			}
-		} else {
-			otherPages = append(otherPages, existingPage)
+			pageStack.pages = append(pageStack.pages[:i], pageStack.pages[i+1:]...) // remove duplicate
+			break
 		}
 	}
 
-	pageStack.pages = append(otherPages, newPage)
+	pageStack.pages = append(pageStack.pages, newPage)
+	newPage.OnAttachedToNavigator(navigator)
 	newPage.OnNavigatedTo()
 }
 
@@ -100,6 +101,9 @@ func (pageStack *PageStack) Pop() bool {
 // displayed will receive an about-to-display signal via the OnNavigatedTo()
 // method.
 func (pageStack *PageStack) PopAfter(matcher func(Page) bool) bool {
+	pageStack.mtx.Lock()
+	defer pageStack.mtx.Unlock()
+
 	retainPageIndex := -1
 	for i := len(pageStack.pages) - 1; i >= 0; i-- {
 		if matcher(pageStack.pages[i]) {
@@ -136,11 +140,29 @@ func (pageStack *PageStack) Reset(newPages ...Page) {
 
 	// Close all the pages in the current stack before resetting.
 	for _, existingPage := range pageStack.pages {
-		existingPage.OnNavigatedFrom() // Rename to Close()
+		existingPage.OnNavigatedFrom()
+		if closeablePage, ok := existingPage.(Closable); ok {
+			closeablePage.OnClosed()
+		}
 	}
 
 	pageStack.pages = newPages
 	if l := len(newPages); l > 0 {
 		pageStack.pages[l-1].OnNavigatedTo()
 	}
+}
+
+func (pageStack *PageStack) pagesAfter(stopPageID *string) (pages []Page) {
+	pageStack.mtx.Lock()
+	defer pageStack.mtx.Unlock()
+
+	for i := len(pageStack.pages) - 1; i >= 0; i-- {
+		page := pageStack.pages[i]
+		if stopPageID != nil && page.ID() == *stopPageID {
+			break
+		}
+		pages = append(pages, page)
+	}
+
+	return pages
 }
