@@ -39,8 +39,9 @@ type CreatePasswordModal struct {
 
 	materialLoader material.LoaderStyle
 
-	btnPositve  decredmaterial.Button
-	btnNegative decredmaterial.Button
+	btnPositve            decredmaterial.Button
+	btnNegative           decredmaterial.Button
+	negativeButtonClicked func()
 
 	callback func(walletName, password string, m *CreatePasswordModal) bool // return true to dismiss dialog
 }
@@ -111,6 +112,11 @@ func (cm *CreatePasswordModal) ShowWalletInfoTip(show bool) *CreatePasswordModal
 
 func (cm *CreatePasswordModal) PasswordCreated(callback func(walletName, password string, m *CreatePasswordModal) bool) *CreatePasswordModal {
 	cm.callback = callback
+	return cm
+}
+
+func (cm *CreatePasswordModal) NegativeButton(callback func()) *CreatePasswordModal {
+	cm.negativeButtonClicked = callback
 	return cm
 }
 
@@ -203,12 +209,14 @@ func (cm *CreatePasswordModal) Handle() {
 				cm.parent.OnNavigatedTo()
 			}
 			cm.Dismiss()
+			cm.negativeButtonClicked()
 		}
 	}
 
 	if cm.Modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {
 			cm.Dismiss()
+			cm.negativeButtonClicked()
 		}
 	}
 

@@ -188,9 +188,8 @@ func (pg *Restore) showHexRestoreModal() {
 		PositiveButton(values.String(values.StrSubmit), func(hex string, hm *modal.TextInputModal) bool {
 			go func() {
 				if !pg.verifyHex(hex) {
-					hm.Dismiss()
-					pg.tabIndex = 0
-					pg.switchTab(pg.tabIndex)
+					hm.SetError(values.String(values.StrInvalidHex))
+					hm.SetLoading(false)
 					return
 				}
 
@@ -199,6 +198,10 @@ func (pg *Restore) showHexRestoreModal() {
 					EnableName(true).
 					ShowWalletInfoTip(true).
 					SetParent(pg).
+					NegativeButton(func() {
+						pg.tabIndex = 0
+						pg.switchTab(pg.tabIndex)
+					}).
 					PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
 						go func() {
 							_, err := pg.WL.MultiWallet.RestoreWallet(walletName, hex, password, dcrlibwallet.PassphraseTypePass)
@@ -235,7 +238,6 @@ func (pg *Restore) showHexRestoreModal() {
 
 func (pg *Restore) verifyHex(hex string) bool {
 	if !dcrlibwallet.VerifySeed(hex) {
-		pg.Toast.NotifyError(values.String(values.StrInvalidHex))
 		return false
 	}
 
