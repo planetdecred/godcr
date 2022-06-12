@@ -22,6 +22,7 @@ linux:
 
 macos:
 	GOOS=darwin GOARCH=amd64 go build -trimpath ${LDFLAGS} -o ${BINARY}-darwin-${GOARCH}
+	GOOS=darwin GOARCH=arm64 go build -trimpath ${LDFLAGS} -o ${BINARY}-darwin-${GOARCH}
 
 windows:
 	GOOS=windows GOARCH=amd64 go build -trimpath ${LDFLAGSWIN} -o ${BINARY}-windows-${GOARCH}.exe
