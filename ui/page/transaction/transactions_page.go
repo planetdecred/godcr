@@ -43,16 +43,13 @@ type TransactionsPage struct {
 	walletTabTitles       []string
 	changed               bool
 
-	orderDropDown    *decredmaterial.DropDown
-	txTypeDropDown   *decredmaterial.DropDown
-	walletDropDown   *decredmaterial.DropDown
-	transactionList  *decredmaterial.ClickableList
-	container        *widget.List
-	transactions     []dcrlibwallet.Transaction
-	wallets          []*dcrlibwallet.Wallet
-	viewMoreButton   decredmaterial.Button
-	paginatedTxns    [][]dcrlibwallet.Transaction
-	currentPageIndex int // position tracker for paginated transactions
+	orderDropDown   *decredmaterial.DropDown
+	txTypeDropDown  *decredmaterial.DropDown
+	walletDropDown  *decredmaterial.DropDown
+	transactionList *decredmaterial.ClickableList
+	container       *widget.List
+	transactions    []dcrlibwallet.Transaction
+	wallets         []*dcrlibwallet.Wallet
 }
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
@@ -65,7 +62,6 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 		separator:       l.Theme.Separator(),
 		transactionList: l.Theme.NewClickableList(layout.Vertical),
 		walletTabList:   l.Theme.NewClickableList(layout.Horizontal),
-		viewMoreButton:  l.Theme.Button("View more"),
 	}
 
 	pg.walletTabList.IsHoverable = false
@@ -139,23 +135,8 @@ func (pg *TransactionsPage) loadTransactions(selectedWalletIndex int) {
 	if err != nil {
 		// log.Error("Error loading transactions:", err)
 	} else {
-		pg.checkForPagination(wallTxs)
+		pg.transactions = wallTxs
 	}
-}
-
-func (pg *TransactionsPage) checkForPagination(txns []dcrlibwallet.Transaction) bool {
-	if len(txns) > 20 {
-		pg.currentPageIndex = 0
-		pg.paginatedTxns = pg.splitTxns(txns)
-		pg.transactions = pg.paginatedTxns[pg.currentPageIndex]
-		return true
-	}
-
-	pg.currentPageIndex = 0
-	pg.paginatedTxns = nil
-	pg.transactions = txns
-
-	return false
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -173,77 +154,54 @@ func (pg *TransactionsPage) layoutDesktop(gtx layout.Context) layout.Dimensions 
 		wallTxs := pg.transactions
 		return layout.Stack{Alignment: layout.N}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Top:    values.MarginPadding60,
-							Bottom: values.MarginPadding60,
-						}.Layout(gtx, func(gtx C) D {
-							return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
-								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+				return layout.Inset{
+					Top: values.MarginPadding60,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
+						return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+							return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+
+								// return "No transactions yet" text if there are no transactions
+								if len(wallTxs) == 0 {
+									padding := values.MarginPadding16
+									txt := pg.Theme.Body1(values.String(values.StrNoTransactions))
+									txt.Color = pg.Theme.Color.GrayText3
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									return layout.Center.Layout(gtx, func(gtx C) D {
+										return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
+									})
+								}
+
+								return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
+									var row = components.TransactionRow{
+										Transaction: wallTxs[index],
+										Index:       index,
+										ShowBadge:   false,
+									}
+
 									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-												// return "No transactions yet" text if there are no transactions
-												if len(wallTxs) == 0 {
-													padding := values.MarginPadding16
-													txt := pg.Theme.Body1(values.String(values.StrNoTransactions))
-													txt.Color = pg.Theme.Color.GrayText3
-													gtx.Constraints.Min.X = gtx.Constraints.Max.X
-													return layout.Center.Layout(gtx, func(gtx C) D {
-														return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
-													})
-												}
-
-												return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
-													var row = components.TransactionRow{
-														Transaction: wallTxs[index],
-														Index:       index,
-														ShowBadge:   false,
-													}
-
-													return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-														layout.Rigid(func(gtx C) D {
-															return components.LayoutTransactionRow(gtx, pg.Load, row)
-														}),
-														layout.Rigid(func(gtx C) D {
-															// No divider for last row
-															if row.Index == len(wallTxs)-1 {
-																return layout.Dimensions{}
-															}
-
-															gtx.Constraints.Min.X = gtx.Constraints.Max.X
-															separator := pg.Theme.Separator()
-															return layout.E.Layout(gtx, func(gtx C) D {
-																// Show bottom divider for all rows except last
-																return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
-															})
-														}),
-													)
-												})
-											})
+											return components.LayoutTransactionRow(gtx, pg.Load, row)
 										}),
 										layout.Rigid(func(gtx C) D {
-											if len(pg.paginatedTxns) > 1 {
-												gtx.Constraints.Max.X = 110
-												return layout.S.Layout(gtx, func(gtx C) D {
-													return layout.Inset{
-														Top: values.MarginPadding20,
-													}.Layout(gtx, func(gtx C) D {
-														return pg.viewMoreButton.Layout(gtx)
-													})
-												})
+											// No divider for last row
+											if row.Index == len(wallTxs)-1 {
+												return layout.Dimensions{}
 											}
 
-											return D{}
+											gtx.Constraints.Min.X = gtx.Constraints.Max.X
+											separator := pg.Theme.Separator()
+											return layout.E.Layout(gtx, func(gtx C) D {
+												// Show bottom divider for all rows except last
+												return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
+											})
 										}),
 									)
 								})
 							})
 						})
-					}),
-				)
-
+					})
+				})
 			}),
 			layout.Expanded(func(gtx C) D {
 				return pg.walletDropDown.Layout(gtx, 0, false)
@@ -412,16 +370,6 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 
 		pg.loadTransactions(pg.selectedCategoryIndex)
 		pg.changed = false
-		if pg.viewMoreButton.Clicked() {
-			pg.currentPageIndex = pg.currentPageIndex + 1
-			for i := 0; i < len(pg.paginatedTxns[pg.currentPageIndex]); i++ {
-				pg.transactions = append(pg.transactions, pg.paginatedTxns[pg.currentPageIndex][i])
-			}
-		}
-
-		if pg.currentPageIndex == len(pg.paginatedTxns)-1 {
-			pg.paginatedTxns = nil
-		}
 	}
 }
 
