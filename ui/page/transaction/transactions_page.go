@@ -43,15 +43,6 @@ type TransactionsPage struct {
 	walletTabTitles       []string
 	changed               bool
 
-	orderDropDown   *decredmaterial.DropDown
-	txTypeDropDown  *decredmaterial.DropDown
-	walletDropDown  *decredmaterial.DropDown
-	transactionList *decredmaterial.ClickableList
-	container       *widget.List
-	transactions    []dcrlibwallet.Transaction
-	wallets         []*dcrlibwallet.Wallet
-	viewMoreButton  decredmaterial.Button
-	paginatedTxns   [][]dcrlibwallet.Transaction
 	orderDropDown    *decredmaterial.DropDown
 	txTypeDropDown   *decredmaterial.DropDown
 	walletDropDown   *decredmaterial.DropDown
@@ -421,15 +412,16 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 
 		pg.loadTransactions(pg.selectedCategoryIndex)
 		pg.changed = false
-	if pg.viewMoreButton.Clicked() {
-		pg.currentPageIndex = pg.currentPageIndex + 1
-		for i := 0; i < len(pg.paginatedTxns[pg.currentPageIndex]); i++ {
-			pg.transactions = append(pg.transactions, pg.paginatedTxns[pg.currentPageIndex][i])
+		if pg.viewMoreButton.Clicked() {
+			pg.currentPageIndex = pg.currentPageIndex + 1
+			for i := 0; i < len(pg.paginatedTxns[pg.currentPageIndex]); i++ {
+				pg.transactions = append(pg.transactions, pg.paginatedTxns[pg.currentPageIndex][i])
+			}
 		}
-	}
 
-	if pg.currentPageIndex == len(pg.paginatedTxns)-1 {
-		pg.paginatedTxns = nil
+		if pg.currentPageIndex == len(pg.paginatedTxns)-1 {
+			pg.paginatedTxns = nil
+		}
 	}
 }
 
