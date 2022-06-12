@@ -100,7 +100,7 @@ func (sp *startPage) openWallets(password string) error {
 		return err
 	}
 
-	sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
+	sp.ParentNavigator().ClearStackAndDisplay(NewWalletList(sp.Load))
 	return nil
 }
 

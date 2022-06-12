@@ -14,10 +14,10 @@ type Icons struct {
 	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ConcealIcon, RevealIcon,
 	SearchIcon, PlayIcon *widget.Icon
 
-	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
+	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive, MixerInactive,
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
 	PendingIcon, Logo, RedirectIcon, ConfirmIcon, NewWalletIcon, WalletAlertIcon, ArrowForward,
-	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, Mixer,
+	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, Mixer, DcrWatchOnly,
 	Next, SettingsIcon, SecurityIcon, HelpIcon, AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon,
 	AlertGray, ArrowDownIcon, WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, TransactionFingerprint,
 	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredSymbolIcon,
@@ -141,6 +141,8 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.ReceiveInactiveIcon = NewImage(decredIcons["receive_inactive"])
 	i.SendInactiveIcon = NewImage(decredIcons["send_inactive"])
 	i.DarkmodeIcon = NewImage(decredIcons["darkmodeIcon"])
+	i.MixerInactive = NewImage(decredIcons["mixer_inactive"])
+	i.DcrWatchOnly = NewImage(decredIcons["dcr_watch_only"])
 	return i
 }
 

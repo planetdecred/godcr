@@ -570,4 +570,5 @@ const (
 	StrSendWarning                 = "sendWarning"
 	StrDestAddr                    = "destAddr"
 	StrMyAcct                      = "myAcct"
+	StrSelectWalletToOpen          = "selectWalletToOpen"
 )

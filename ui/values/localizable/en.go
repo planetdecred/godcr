@@ -462,4 +462,5 @@ unlockWithPassword = "Unlock with password"
 "sendWarning" = "Your DCR will be sent after this step."
 "destAddr" = "Destination Address"
 "myAcct" = "My account"
+"selectWalletToOpen" = "Select the wallet you would like to open."
 `

@@ -26,6 +26,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/dexclient"
 	"github.com/planetdecred/godcr/ui/page/governance"
 	"github.com/planetdecred/godcr/ui/page/overview"
+	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/page/transaction"
@@ -180,10 +181,10 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Theme.Icons.WalletIcon,
-				ImageInactive: mp.Theme.Icons.WalletIconInactive,
-				Title:         values.String(values.StrWallets),
-				PageID:        wallets.WalletPageID,
+				Image:         mp.Theme.Icons.Mixer,
+				ImageInactive: mp.Theme.Icons.MixerInactive,
+				Title:         values.String(values.StrStakeShuffle),
+				PageID:        privacy.AccountMixerPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -469,6 +470,13 @@ func (mp *MainPage) HandleUserInteractions() {
 		mp.RefreshTheme(mp.ParentWindow())
 	}
 
+	for mp.openWalletSelector.Clicked() {
+		// afterRestore := func() {
+		// 	pg.ParentNavigator().CloseCurrentPage()
+		// }
+		mp.ParentWindow().Display(NewWalletList(mp.Load))
+	}
+
 	mp.drawerNav.CurrentPage = mp.CurrentPageID()
 	mp.bottomNavigationBar.CurrentPage = mp.CurrentPageID()
 	// mp.appBarNav.CurrentPage = mp.CurrentPageID()
@@ -489,15 +497,17 @@ func (mp *MainPage) HandleUserInteractions() {
 			var pg app.Page
 			switch item.PageID {
 			case overview.OverviewPageID:
-				pg = overview.NewOverviewPage(mp.Load)
+				pg = wallets.NewWalletPage(mp.Load)
+				// pg = overview.NewOverviewPage(mp.Load) // todo :current overview page is deprecated.
 			case send.SendPageID:
 				pg = send.NewSendPage(mp.Load)
 			case ReceivePageID:
 				pg = NewReceivePage(mp.Load)
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
-			case wallets.WalletPageID:
+			case privacy.AccountMixerPageID:
 				pg = wallets.NewWalletPage(mp.Load)
+				// pg = privacy.NewAccountMixerPage(mp.Load) // todo after wallet selector
 			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
 			case governance.GovernancePageID:
