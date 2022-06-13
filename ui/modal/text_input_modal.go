@@ -127,6 +127,7 @@ func (tm *TextInputModal) Handle() {
 	if tm.Modal.BackdropClicked(tm.isCancelable) {
 		if !tm.isLoading {
 			tm.Dismiss()
+			tm.negativeButtonClicked()
 		}
 	}
 }

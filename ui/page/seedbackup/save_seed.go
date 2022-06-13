@@ -2,8 +2,11 @@ package seedbackup
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
+	"time"
 
+	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -39,6 +42,8 @@ type SaveSeedPage struct {
 	backButton   decredmaterial.IconButton
 	actionButton decredmaterial.Button
 	seedList     *widget.List
+	hexLabel     decredmaterial.Label
+	copy         decredmaterial.Button
 
 	infoText string
 	seed     string
@@ -50,12 +55,21 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(SaveSeedPageID),
 		wallet:           wallet,
+		hexLabel:         l.Theme.Label(values.TextSize12, ""),
+		copy:             l.Theme.Button("Copy"),
 		infoText:         "You will be asked to enter the seed word on the next screen.",
 		actionButton:     l.Theme.Button("I have written down all 33 words"),
 		seedList: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
 	}
+
+	pg.copy.TextSize = values.TextSize12
+	pg.hexLabel.MaxLines = 1
+	pg.copy.Background = color.NRGBA{}
+	pg.copy.HighlightColor = pg.Theme.Color.SurfaceHighlight
+	pg.copy.Color = pg.Theme.Color.Primary
+	pg.copy.Inset = layout.UniformInset(values.MarginPadding16)
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = l.Theme.Icons.ContentClear
@@ -153,7 +167,7 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 					label.Color = pg.Theme.Color.GrayText1
 					return label.Layout(gtx)
 				}),
-				layout.Rigid(func(gtx C) D {
+				layout.Flexed(1, func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize14, "Your 33-word seed word")
 					label.Color = pg.Theme.Color.GrayText1
 
@@ -163,9 +177,8 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 						Orientation: layout.Vertical,
 						Background:  pg.Theme.Color.Surface,
 						Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
-						// bottom margin accounts for action button's height + components.UniformPadding bottom margin 24dp + 16dp
-						Margin:  layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding120},
-						Padding: layout.Inset{Top: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding8, Left: values.MarginPadding16},
+						Margin:      layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding2},
+						Padding:     layout.Inset{Top: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding8, Left: values.MarginPadding16},
 					}.Layout(gtx,
 						layout.Rigid(label.Layout),
 						layout.Rigid(func(gtx C) D {
@@ -175,6 +188,7 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 						}),
 					)
 				}),
+				layout.Flexed(1, pg.hexLayout),
 			)
 		},
 	}
@@ -183,6 +197,69 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return container(gtx, *pg.Theme, layout, pg.infoText, pg.actionButton)
+}
+
+func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
+	pg.handleCopyEvent(gtx)
+	card := decredmaterial.Card{
+		Color: pg.Theme.Color.Gray4,
+	}
+
+	return decredmaterial.LinearLayout{
+		Width:       decredmaterial.MatchParent,
+		Height:      decredmaterial.WrapContent,
+		Orientation: layout.Vertical,
+		Background:  pg.Theme.Color.Surface,
+		Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
+		Margin:      layout.Inset{Top: values.MarginPadding0, Bottom: values.MarginPadding16},
+		Padding:     layout.Inset{Top: values.MarginPadding5, Right: values.MarginPadding16, Bottom: values.MarginPadding16, Left: values.MarginPadding16},
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			label := pg.Theme.Label(values.TextSize14, "Seed hex")
+			label.Color = pg.Theme.Color.GrayText1
+
+			return label.Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					card.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 8, BottomRight: 0, BottomLeft: 8}
+
+					return card.Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+							seedString := pg.seed
+							if seedString != "" {
+								hexString, _ := components.SeedWordsToHex(pg.seed)
+								pg.hexLabel.Text = hexString
+							}
+							return pg.hexLabel.Layout(gtx)
+
+						})
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					card.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 8, BottomLeft: 0}
+					return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
+						return card.Layout(gtx, pg.copy.Layout)
+					})
+				}),
+			)
+		}),
+	)
+}
+
+func (pg *SaveSeedPage) handleCopyEvent(gtx layout.Context) {
+	if pg.copy.Clicked() {
+		clipboard.WriteOp{Text: pg.hexLabel.Text}.Add(gtx.Ops)
+
+		pg.copy.Text = "Copied!"
+		pg.copy.Color = pg.Theme.Color.Success
+		time.AfterFunc(time.Second*3, func() {
+			pg.copy.Text = "Copy"
+			pg.copy.Color = pg.Theme.Color.Primary
+			pg.ParentWindow().Reload()
+		})
+	}
 }
 
 func (pg *SaveSeedPage) seedRow(gtx C, row saveSeedRow) D {

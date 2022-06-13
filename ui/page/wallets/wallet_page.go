@@ -260,10 +260,7 @@ func (pg *WalletPage) initializeFloatingMenu() {
 			text:   values.String(values.StrImportExistingWallet),
 			button: pg.Theme.NewClickable(true),
 			action: func(l *load.Load) {
-				afterRestore := func() {
-					pg.ParentNavigator().CloseCurrentPage()
-				}
-				pg.ParentWindow().Display(NewRestorePage(pg.Load, afterRestore))
+				pg.ParentWindow().Display(NewRestorePage(pg.Load, nil))
 			},
 		},
 		{
