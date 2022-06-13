@@ -12,7 +12,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
-	// "github.com/planetdecred/godcr/ui/page/wallets"
 )
 
 const StartPageID = "start_page"
@@ -41,10 +40,6 @@ func NewStartPage(l *load.Load) app.Page {
 		loading:          true,
 
 		addWalletButton: l.Theme.Button(values.String(values.StrAddWallet)),
-
-		// to be removed after full layout migration
-		newlayout:    l.Theme.Button("Continue v2 layout"),
-		legacyLayout: l.Theme.Button("Continue legacy layout"),
 	}
 
 	return sp
@@ -113,110 +108,9 @@ func (sp *startPage) openWallets(password string) error {
 // displayed.
 // Part of the load.Page interface.
 func (sp *startPage) HandleUserInteractions() {
-	// <<<<<<< HEAD
-	// 	for sp.createButton.Clicked() {
-	// 		spendingPasswordModal := modal.NewCreatePasswordModal(sp.Load).
-	// 			Title(values.String(values.StrCreateANewWallet)).
-	// 			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
-	// 				go func() {
-	// 					wal, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
-	// 					if err != nil {
-	// 						m.SetError(err.Error())
-	// 						m.SetLoading(false)
-	// 						return
-	// 					}
-	// 					err = wal.CreateMixerAccounts("mixed", "unmixed", password)
-	// 					if err != nil {
-	// 						m.SetError(err.Error())
-	// 						m.SetLoading(false)
-	// 						return
-	// 					}
-	// 					sp.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
-	// 					m.Dismiss()
-
-	// 					sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
-	// 				}()
-	// 				return false
-	// 			})
-	// 		sp.ParentWindow().ShowModal(spendingPasswordModal)
-	// 	}
-
-	// 	for sp.restoreButton.Clicked() {
-	// =======
-	// for sp.createButton.Clicked() {
-	// 	modal.NewCreatePasswordModal(sp.Load).
-	// 		Title(values.String(values.StrCreateANewWallet)).
-	// 		PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
-	// 			go func() {
-	// 				wal, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
-	// 				if err != nil {
-	// 					m.SetError(err.Error())
-	// 					m.SetLoading(false)
-	// 					return
-	// 				}
-	// 				err = wal.CreateMixerAccounts("mixed", "unmixed", password)
-	// 				if err != nil {
-	// 					m.SetError(err.Error())
-	// 					m.SetLoading(false)
-	// 					return
-	// 				}
-	// 				sp.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
-	// 				m.Dismiss()
-
-	// 				sp.ChangeWindowPage(NewMainPage(sp.Load), false)
-	// 			}()
-	// 			return false
-	// 		}).Show()
-	// }
-
-	// 	for sp.addWalletButton.Clicked() {
-	// >>>>>>> temp
-	// 		afterRestore := func() {
-	// 			sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
-	// 		}
-	// 		sp.ParentNavigator().Display(wallets.NewRestorePage(sp.Load, afterRestore))
-	// 	}
-
-	// <<<<<<< HEAD
-	// 	for sp.watchOnlyWalletButton.Clicked() {
-	// 		createWatchOnlyModal := modal.NewCreateWatchOnlyModal(sp.Load).
-	// 			EnableName(false).
-	// 			WatchOnlyCreated(func(_, password string, m *modal.CreateWatchOnlyModal) bool {
-	// 				go func() {
-	// 					_, err := sp.WL.MultiWallet.CreateWatchOnlyWallet("mywallet", password)
-	// 					if err != nil {
-	// 						m.SetError(err.Error())
-	// 						m.SetLoading(false)
-	// 						return
-	// 					}
-	// 					m.Dismiss()
-
-	// 					sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
-	// 				}()
-	// 				return false
-	// 			})
-	// 		sp.ParentWindow().ShowModal(createWatchOnlyModal)
-	// 	}
-	// =======
-	// for sp.watchOnlyWalletButton.Clicked() {
-	// 	modal.NewCreateWatchOnlyModal(sp.Load).
-	// 		EnableName(false).
-	// 		WatchOnlyCreated(func(_, password string, m *modal.CreateWatchOnlyModal) bool {
-	// 			go func() {
-	// 				_, err := sp.WL.MultiWallet.CreateWatchOnlyWallet("mywallet", password)
-	// 				if err != nil {
-	// 					m.SetError(err.Error())
-	// 					m.SetLoading(false)
-	// 					return
-	// 				}
-	// 				m.Dismiss()
-
-	// 				sp.ChangeWindowPage(NewMainPage(sp.Load), false)
-	// 			}()
-	// 			return false
-	// 		}).Show()
-	// }
-	// >>>>>>> temp
+	for sp.addWalletButton.Clicked() {
+		// todo -- navigate to wallet creation page
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -298,40 +192,3 @@ func (sp *startPage) loadingSection(gtx C) D {
 		}),
 	)
 }
-
-// <<<<<<< HEAD
-
-// func (sp *startPage) buttonSection(gtx C) D {
-// 	gtx.Constraints.Min.X = gtx.Constraints.Max.X              // use maximum width
-// 	gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 35) / 100 // use 35% of view height
-// 	return layout.Stack{Alignment: layout.S}.Layout(gtx,
-// 		layout.Stacked(func(gtx C) D {
-// 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
-// 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-
-// 					gtx.Constraints.Max.X = gtx.Dp(values.AppWidth) // set button with to app width
-// 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-// 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 						layout.Rigid(func(gtx C) D {
-// 							return layout.Inset{Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-// 								return sp.createButton.Layout(gtx)
-// 							})
-// 						}),
-// 						layout.Rigid(func(gtx C) D {
-// 							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-// 								return sp.restoreButton.Layout(gtx)
-// 							})
-// 						}),
-// 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-// 							return layout.Inset{Top: values.MarginPadding24, Bottom: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-// 								return sp.watchOnlyWalletButton.Layout(gtx)
-// 							})
-// 						}),
-// 					)
-// 				}),
-// 			)
-// 		}),
-// 	)
-// }
-// =======
-// >>>>>>> temp

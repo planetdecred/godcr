@@ -1,20 +1,29 @@
 package page
 
 import (
+	"context"
 	"sync"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v4"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/app"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 const WalletListID = "wallet_list"
+
+type badWalletListItem struct {
+	*dcrlibwallet.Wallet
+	deleteBtn decredmaterial.Button
+}
 
 type WalletList struct {
 	*load.Load
@@ -24,11 +33,16 @@ type WalletList struct {
 	// and the root WindowNavigator.
 	*app.GenericPageModal
 
+	*listeners.TxAndBlockNotificationListener
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+
 	listLock        sync.Mutex
 	scrollContainer *widget.List
 
 	mainWalletList      []*load.WalletItem
 	watchOnlyWalletList []*load.WalletItem
+	badWalletsList      []*badWalletListItem
 
 	shadowBox            *decredmaterial.Shadow
 	walletsList          *decredmaterial.ClickableList
@@ -70,6 +84,9 @@ func NewWalletList(l *load.Load, onWalletSelected func()) *WalletList {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *WalletList) OnNavigatedTo() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
+	pg.listenForTxNotifications()
 	pg.loadWallets()
 }
 
@@ -112,7 +129,43 @@ func (pg *WalletList) loadWallets() {
 	pg.watchOnlyWalletList = watchOnlyWalletList
 	pg.listLock.Unlock()
 
-	// pg.loadBadWallets()
+	pg.loadBadWallets()
+}
+
+func (pg *WalletList) loadBadWallets() {
+	badWallets := pg.WL.MultiWallet.BadWallets()
+	pg.badWalletsList = make([]*badWalletListItem, 0, len(badWallets))
+	for _, badWallet := range badWallets {
+		listItem := &badWalletListItem{
+			Wallet:    badWallet,
+			deleteBtn: pg.Theme.OutlineButton(values.String(values.StrDeleted)),
+		}
+		listItem.deleteBtn.Color = pg.Theme.Color.Danger
+		listItem.deleteBtn.Inset = layout.Inset{}
+		pg.badWalletsList = append(pg.badWalletsList, listItem)
+	}
+}
+
+func (pg *WalletList) deleteBadWallet(badWalletID int) {
+	warningModal := modal.NewInfoModal(pg.Load).
+		Title(values.String(values.StrRemoveWallet)).
+		Body(values.String(values.StrWalletRestoreMsg)).
+		NegativeButton(values.String(values.StrCancel), func() {}).
+		PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
+		PositiveButton(values.String(values.StrRemove), func(isChecked bool) bool {
+			go func() {
+				err := pg.WL.MultiWallet.DeleteBadWallet(badWalletID)
+				if err != nil {
+					pg.Toast.NotifyError(err.Error())
+					return
+				}
+				pg.Toast.Notify(values.String(values.StrWalletRemoved))
+				pg.loadBadWallets() // refresh bad wallets list
+				pg.ParentWindow().Reload()
+			}()
+			return true
+		})
+	pg.ParentWindow().ShowModal(warningModal)
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -136,6 +189,12 @@ func (pg *WalletList) HandleUserInteractions() {
 		pg.WL.SelectedWallet = watchOnlyWalletList[selectedItem]
 		pg.wallectSelected()
 	}
+
+	for _, badWallet := range pg.badWalletsList {
+		if badWallet.deleteBtn.Clicked() {
+			pg.deleteBadWallet(badWallet.ID)
+		}
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -146,7 +205,7 @@ func (pg *WalletList) HandleUserInteractions() {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *WalletList) OnNavigatedFrom() {
-	// pg.ctxCancel()
+	pg.ctxCancel()
 }
 
 // Layout draws the page UI components into the provided C
@@ -214,13 +273,13 @@ func (pg *WalletList) walletSection(gtx C) D {
 		pg.walletList,
 	}
 
-	if len(pg.watchOnlyWalletList) > 0 {
+	if len(pg.watchOnlyWalletList) != 0 {
 		walletSections = append(walletSections, pg.watchOnlyWalletSection)
 	}
 
-	// if len(pg.badWalletsList) != 0 {
-	// 	pg = append(pg, pg.badWalletsSection)
-	// }
+	if len(pg.badWalletsList) != 0 {
+		walletSections = append(walletSections, pg.badWalletsSection)
+	}
 
 	return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(walletSections), func(gtx C, i int) D {
 		return walletSections[i](gtx)
@@ -244,6 +303,61 @@ func (pg *WalletList) watchOnlyWalletSection(gtx C) D {
 
 	return pg.watchOnlyWalletsList.Layout(gtx, len(watchOnlyWalletList), func(gtx C, i int) D {
 		return pg.walletWrapper(gtx, watchOnlyWalletList[i], true)
+	})
+}
+
+func (pg *WalletList) badWalletsSection(gtx layout.Context) layout.Dimensions {
+	m20 := values.MarginPadding20
+	m10 := values.MarginPadding10
+
+	layoutBadWallet := func(gtx C, badWallet *badWalletListItem, lastItem bool) D {
+		return layout.Inset{Top: m10, Bottom: m10}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(pg.Theme.Body2(badWallet.Name).Layout),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, badWallet.deleteBtn.Layout)
+							})
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if lastItem {
+						return D{}
+					}
+					return layout.Inset{Top: values.MarginPadding10, Left: values.MarginPadding38, Right: values.MarginPaddingMinus10}.Layout(gtx, func(gtx C) D {
+						return pg.Theme.Separator().Layout(gtx)
+					})
+				}),
+			)
+		})
+	}
+
+	card := pg.Theme.Card()
+	card.Color = pg.Theme.Color.Surface
+	card.Radius = decredmaterial.Radius(10)
+
+	sectionTitleLabel := pg.Theme.Body1("Bad Wallets") // TODO: localize string
+	sectionTitleLabel.Color = pg.Theme.Color.GrayText2
+
+	return card.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Top: m20, Left: m20}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(sectionTitleLabel.Layout),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: m10, Bottom: m10}.Layout(gtx, pg.Theme.Separator().Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return pg.Theme.NewClickableList(layout.Vertical).Layout(gtx, len(pg.badWalletsList), func(gtx C, i int) D {
+							return layoutBadWallet(gtx, pg.badWalletsList[i], i == len(pg.badWalletsList)-1)
+						})
+					})
+				}),
+			)
+		})
 	})
 }
 
@@ -351,64 +465,82 @@ func (pg *WalletList) layoutAddWalletSection(gtx C) D {
 	)
 }
 
-// func (pg *WalletPage) listenForTxNotifications() {
-// 	if pg.TxAndBlockNotificationListener != nil {
-// 		return
-// 	}
-// 	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-// 	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, WalletPageID)
-// 	if err != nil {
-// 		log.Errorf("Error adding tx and block notification listener: %v", err)
-// 		return
-// 	}
+func (pg *WalletList) listenForTxNotifications() {
+	if pg.TxAndBlockNotificationListener != nil {
+		return
+	}
+	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
+	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, WalletListID)
+	if err != nil {
+		log.Errorf("Error adding tx and block notification listener: %v", err)
+		return
+	}
 
-// 	go func() {
-// 		for {
-// 			select {
-// 			case n := <-pg.TxAndBlockNotifChan:
-// 				switch n.Type {
-// 				case listeners.BlockAttached:
-// 					// refresh wallet account and balance on every new block
-// 					// only if sync is completed.
-// 					if pg.WL.MultiWallet.IsSynced() {
-// 						pg.updateAccountBalance()
-// 						pg.ParentWindow().Reload()
-// 					}
-// 				case listeners.NewTransaction:
-// 					// refresh wallets when new transaction is received
-// 					pg.updateAccountBalance()
-// 					pg.ParentWindow().Reload()
-// 				}
-// 			case <-pg.ctx.Done():
-// 				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(WalletPageID)
-// 				close(pg.TxAndBlockNotifChan)
-// 				pg.TxAndBlockNotificationListener = nil
+	go func() {
+		for {
+			select {
+			case n := <-pg.TxAndBlockNotifChan:
+				switch n.Type {
+				case listeners.BlockAttached:
+					// refresh wallet account and balance on every new block
+					// only if sync is completed.
+					if pg.WL.MultiWallet.IsSynced() {
+						pg.updateAccountBalance()
+						pg.ParentWindow().Reload()
+					}
+				case listeners.NewTransaction:
+					// refresh wallets when new transaction is received
+					pg.updateAccountBalance()
+					pg.ParentWindow().Reload()
+				}
+			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(WalletListID)
+				close(pg.TxAndBlockNotifChan)
+				pg.TxAndBlockNotificationListener = nil
 
-// 				return
-// 			}
-// 		}
-// 	}()
-// }
+				return
+			}
+		}
+	}()
+}
 
-// func (pg *WalletPage) updateAccountBalance() {
-// 	pg.listLock.Lock()
-// 	defer pg.listLock.Unlock()
+func (pg *WalletList) updateAccountBalance() {
+	pg.listLock.Lock()
+	defer pg.listLock.Unlock()
 
-// 	for _, item := range pg.mainWalletList {
-// 		wal := pg.WL.MultiWallet.WalletWithID(item.wal.ID)
-// 		if wal != nil {
-// 			accountsResult, err := wal.GetAccountsRaw()
-// 			if err != nil {
-// 				continue
-// 			}
+	// update main wallets balance
+	for _, item := range pg.mainWalletList {
+		wal := pg.WL.MultiWallet.WalletWithID(item.Wallet.ID)
+		if wal != nil {
+			accountsResult, err := wal.GetAccountsRaw()
+			if err != nil {
+				continue
+			}
 
-// 			var totalBalance int64
-// 			for _, acc := range accountsResult.Acc {
-// 				totalBalance += acc.TotalBalance
-// 			}
+			var totalBalance int64
+			for _, acc := range accountsResult.Acc {
+				totalBalance += acc.TotalBalance
+			}
 
-// 			item.totalBalance = dcrutil.Amount(totalBalance).String()
-// 			item.accounts = accountsResult.Acc
-// 		}
-// 	}
-// }
+			item.TotalBalance = dcrutil.Amount(totalBalance).String()
+		}
+	}
+
+	// update watch only wallets balance
+	for _, item := range pg.watchOnlyWalletList {
+		wal := pg.WL.MultiWallet.WalletWithID(item.Wallet.ID)
+		if wal != nil {
+			accountsResult, err := wal.GetAccountsRaw()
+			if err != nil {
+				continue
+			}
+
+			var totalBalance int64
+			for _, acc := range accountsResult.Acc {
+				totalBalance += acc.TotalBalance
+			}
+
+			item.TotalBalance = dcrutil.Amount(totalBalance).String()
+		}
+	}
+}

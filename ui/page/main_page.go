@@ -173,6 +173,14 @@ func (mp *MainPage) initNavItems() {
 				PageID:        ReceivePageID,
 			},
 			{
+				// TODO -- deprectated in v2 layout
+				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.WalletIcon,
+				ImageInactive: mp.Theme.Icons.WalletIconInactive,
+				Title:         values.String(values.StrWallets),
+				PageID:        wallets.WalletPageID,
+			},
+			{
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.TransactionsIcon,
 				ImageInactive: mp.Theme.Icons.TransactionsIconInactive,
@@ -479,7 +487,6 @@ func (mp *MainPage) HandleUserInteractions() {
 
 	mp.drawerNav.CurrentPage = mp.CurrentPageID()
 	mp.bottomNavigationBar.CurrentPage = mp.CurrentPageID()
-	// mp.appBarNav.CurrentPage = mp.CurrentPageID()
 	mp.floatingActionButton.CurrentPage = mp.CurrentPageID()
 
 	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
@@ -497,17 +504,17 @@ func (mp *MainPage) HandleUserInteractions() {
 			var pg app.Page
 			switch item.PageID {
 			case overview.OverviewPageID:
-				pg = wallets.NewWalletPage(mp.Load)
-				// pg = overview.NewOverviewPage(mp.Load) // todo :current overview page is deprecated.
+				pg = overview.NewOverviewPage(mp.Load) // todo :New wallet ui --- current overview page is deprecated.
 			case send.SendPageID:
 				pg = send.NewSendPage(mp.Load)
 			case ReceivePageID:
 				pg = NewReceivePage(mp.Load)
+			case wallets.WalletPageID:
+				pg = wallets.NewWalletPage(mp.Load)
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
 			case privacy.AccountMixerPageID:
-				pg = wallets.NewWalletPage(mp.Load)
-				// pg = privacy.NewAccountMixerPage(mp.Load) // todo after wallet selector
+				pg = privacy.NewAccountMixerPage(mp.Load, mp.WL.SelectedWallet.Wallet) // todo implement new staking ui
 			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
 			case governance.GovernancePageID:
@@ -527,6 +534,7 @@ func (mp *MainPage) HandleUserInteractions() {
 				continue
 			}
 
+			// check if wallet is synced and clear stack
 			if mp.ID() == send.SendPageID || mp.ID() == ReceivePageID {
 				if mp.WL.MultiWallet.IsSynced() {
 					mp.Display(pg)
@@ -536,7 +544,6 @@ func (mp *MainPage) HandleUserInteractions() {
 					mp.Toast.NotifyError(values.String(values.StrWalletSyncing))
 				}
 			} else {
-				// clear stack
 				mp.Display(pg)
 			}
 		}
@@ -767,7 +774,6 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 			return decredmaterial.LinearLayout{
 				Width:       decredmaterial.MatchParent,
 				Height:      decredmaterial.WrapContent,
-				Background:  mp.Theme.Color.Danger,
 				Orientation: layout.Horizontal,
 				Alignment:   layout.Middle,
 				Padding: layout.Inset{

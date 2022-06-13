@@ -122,8 +122,6 @@ func (c Card) GradientLayout(gtx layout.Context, w layout.Widget) layout.Dimensi
 				br := gtx.Dp(unit.Dp(c.Radius.BottomRight))
 				bl := gtx.Dp(unit.Dp(c.Radius.BottomLeft))
 
-				// gtx.Constraints.Max.Y = gtx.Constraints.Min.Y
-
 				dr := image.Rectangle{Max: gtx.Constraints.Min}
 
 				paint.LinearGradientOp{
