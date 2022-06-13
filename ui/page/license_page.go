@@ -64,6 +64,13 @@ func (pg *LicensePage) OnNavigatedTo() {}
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *LicensePage) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *LicensePage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -87,6 +94,32 @@ func (pg *LicensePage) Layout(gtx C) D {
 		return sp.Layout(gtx)
 	}
 	return components.UniformPadding(gtx, d)
+}
+
+func (pg *LicensePage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	d := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      values.String(values.StrLicense),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.PopFragment()
+			},
+			Body: func(gtx C) D {
+				return pg.Theme.List(pg.pageContainer).Layout(gtx, 1, func(gtx C, i int) D {
+					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
+							licenseText := pg.Theme.Body1(license)
+							licenseText.Color = pg.Theme.Color.GrayText2
+							return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, licenseText.Layout)
+						})
+					})
+				})
+			},
+		}
+		return sp.Layout(gtx)
+	}
+	return components.UniformMobile(gtx, d)
 }
 
 // HandleUserInteractions is called just before Layout() to determine

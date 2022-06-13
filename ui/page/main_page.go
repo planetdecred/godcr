@@ -749,7 +749,7 @@ func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(mp.LayoutTopBar),
-		layout.Flexed(0.9, func(gtx C) D {
+		layout.Flexed(1, func(gtx C) D {
 			return layout.Stack{Alignment: layout.N}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
 					if mp.currentPage == nil {
@@ -762,7 +762,7 @@ func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 				}),
 			)
 		}),
-		layout.Flexed(0.1, mp.bottomNavigationBar.LayoutBottomNavigationBar),
+		layout.Rigid(mp.bottomNavigationBar.LayoutBottomNavigationBar),
 	)
 }
 

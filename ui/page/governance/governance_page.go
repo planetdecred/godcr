@@ -125,6 +125,13 @@ func (pg *Page) HandleUserInteractions() {
 }
 
 func (pg *Page) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) {
 		return components.UniformPadding(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -140,6 +147,24 @@ func (pg *Page) Layout(gtx C) D {
 		})
 	}
 	return components.UniformPadding(gtx, pg.splashScreenLayout)
+}
+
+func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
+	if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) {
+		return components.UniformMobile(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(pg.layoutPageTopNav),
+				layout.Rigid(pg.layoutTabs),
+				layout.Rigid(pg.Theme.Separator().Layout),
+				layout.Flexed(1, func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+						return pg.switchTab(gtx, pg.selectedCategoryIndex)
+					})
+				}),
+			)
+		})
+	}
+	return components.UniformMobile(gtx, pg.splashScreenLayout)
 }
 
 func (pg *Page) switchTab(gtx C, selectedCategoryIndex int) D {

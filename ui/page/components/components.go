@@ -109,6 +109,14 @@ func UniformHorizontalPadding(gtx layout.Context, body layout.Widget) layout.Dim
 	}.Layout(gtx, body)
 }
 
+func UniformMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return layout.Inset{
+		Top:   values.MarginPadding24,
+		Right: values.MarginPadding10,
+		Left:  values.MarginPadding10,
+	}.Layout(gtx, body)
+}
+
 func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, ticketSpender *dcrlibwallet.Transaction) *TxStatus {
 	var txStatus TxStatus
 

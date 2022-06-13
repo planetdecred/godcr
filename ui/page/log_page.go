@@ -113,6 +113,13 @@ func (pg *LogPage) watchLogs() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *LogPage) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *LogPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -151,6 +158,47 @@ func (pg *LogPage) Layout(gtx C) D {
 		return sp.Layout(gtx)
 	}
 	return components.UniformPadding(gtx, container)
+}
+
+func (pg *LogPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	container := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      values.String(values.StrWalletLog),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.PopFragment()
+			},
+			ExtraItem: pg.copyLog,
+			Extra: func(gtx C) D {
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					return pg.copyLog.Layout(gtx, func(gtx C) D {
+						return pg.copyIcon.Layout24dp(gtx)
+					})
+
+				})
+			},
+			HandleExtra: func() {
+				pg.copyLogEntries(gtx)
+				pg.Toast.Notify(values.String(values.StrCopied))
+			},
+			Body: func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+				return pg.Theme.List(pg.logList).Layout(gtx, 1, func(gtx C, index int) D {
+					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+								return pg.Theme.Body1(pg.fullLog).Layout(gtx)
+							})
+						})
+					})
+				})
+			},
+		}
+		return sp.Layout(gtx)
+	}
+	return components.UniformMobile(gtx, container)
 }
 
 // HandleUserInteractions is called just before Layout() to determine
