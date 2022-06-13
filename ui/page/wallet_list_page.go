@@ -8,7 +8,6 @@ import (
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v4"
-	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -95,10 +94,6 @@ func (pg *WalletList) loadWallets() {
 	watchOnlyWalletList := make([]*load.WalletItem, 0)
 
 	for _, wal := range wallets {
-		if wal.IsWatchingOnlyWallet() {
-			pg.hasWatchOnly = true
-		}
-
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
 			continue
