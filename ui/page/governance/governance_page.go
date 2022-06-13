@@ -151,7 +151,7 @@ func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 
 func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 	if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) {
-		return components.UniformMobile(gtx, func(gtx C) D {
+		return components.UniformMobile(gtx, true, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.layoutPageTopNav),
 				layout.Rigid(pg.layoutTabs),
@@ -164,7 +164,7 @@ func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 			)
 		})
 	}
-	return components.UniformMobile(gtx, pg.splashScreenLayout)
+	return components.UniformMobile(gtx, true, pg.splashScreenLayout)
 }
 
 func (pg *Page) switchTab(gtx C, selectedCategoryIndex int) D {

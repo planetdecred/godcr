@@ -180,7 +180,7 @@ func (pg *StatPage) layoutMobile(gtx C) D {
 
 	// Refresh frames every 1 second
 	op.InvalidateOp{At: time.Now().Add(time.Second * 1)}.Add(gtx.Ops)
-	return components.UniformMobile(gtx, container)
+	return components.UniformMobile(gtx, true, container)
 }
 
 func (pg *StatPage) appStartTime() {

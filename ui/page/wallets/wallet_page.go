@@ -441,6 +441,13 @@ func (pg *WalletPage) moreOptionPositionEvent(gtx layout.Context) {
 // Layout lays out the widgets for the main wallets pg.
 func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.moreOptionPositionEvent(gtx)
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *WalletPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		pg.walletSection,
 	}
@@ -481,6 +488,60 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return components.UniformPadding(gtx, body)
+		}),
+		layout.Expanded(func(gtx C) D {
+			if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
+				return pg.backdrop.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					semantic.Button.Add(gtx.Ops)
+					return layout.Dimensions{Size: gtx.Constraints.Min}
+				})
+			}
+			return D{}
+		}),
+	)
+}
+
+func (pg *WalletPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	pageContent := []func(gtx C) D{
+		pg.walletSection,
+	}
+
+	if pg.hasWatchOnly {
+		pageContent = append(pageContent, pg.watchOnlyWalletSection)
+	}
+
+	if len(pg.badWalletsList) != 0 {
+		pageContent = append(pageContent, pg.badWalletsSection)
+	}
+
+	body := func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Flexed(0.85, func(gtx C) D {
+				return pg.Theme.List(pg.container).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+						defer clip.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops).Pop()
+						pg.click.Add(gtx.Ops)
+						return pageContent[i](gtx)
+					})
+				})
+			}),
+			layout.Flexed(0.15, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Flexed(1, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+								return pg.layoutAddWalletSection(gtx)
+							})
+						})
+					}),
+				)
+			}),
+		)
+	}
+
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return components.UniformMobile(gtx, true, body)
 		}),
 		layout.Expanded(func(gtx C) D {
 			if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {

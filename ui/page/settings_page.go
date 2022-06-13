@@ -172,7 +172,7 @@ func (pg *SettingsPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 		return sp.Layout(gtx)
 	}
 
-	return components.UniformMobile(gtx, body)
+	return components.UniformMobile(gtx, true, body)
 }
 
 func (pg *SettingsPage) general() layout.Widget {

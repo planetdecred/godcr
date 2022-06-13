@@ -108,7 +108,18 @@ func (pg *VerifyMessagePage) Layout(gtx C) D {
 		}
 		return sp.Layout(gtx)
 	}
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx, body)
+	}
+	return pg.layoutDesktop(gtx, body)
+}
+
+func (pg *VerifyMessagePage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *VerifyMessagePage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return components.UniformMobile(gtx, false, body)
 }
 
 func (pg *VerifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widget {

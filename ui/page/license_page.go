@@ -119,7 +119,7 @@ func (pg *LicensePage) layoutMobile(gtx layout.Context) layout.Dimensions {
 		}
 		return sp.Layout(gtx)
 	}
-	return components.UniformMobile(gtx, d)
+	return components.UniformMobile(gtx, false, d)
 }
 
 // HandleUserInteractions is called just before Layout() to determine

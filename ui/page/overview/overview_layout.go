@@ -142,6 +142,13 @@ func (pg *AppOverviewPage) OnNavigatedTo() {
 // context to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *AppOverviewPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			if len(pg.mixerWallets) == 0 {
@@ -211,6 +218,90 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	return components.UniformPadding(gtx, func(gtx C) D {
+		return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+			m := values.MarginPadding5
+			if i == len(pageContent) {
+				// remove padding after the last item
+				m = values.MarginPadding0
+			}
+			return layout.Inset{
+				Right:  values.MarginPadding2,
+				Bottom: m,
+			}.Layout(gtx, pageContent[i])
+		})
+	})
+}
+
+func (pg *AppOverviewPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	pageContent := []func(gtx C) D{
+		func(gtx C) D {
+			if len(pg.mixerWallets) == 0 {
+				return D{}
+			}
+
+			return components.MixerInfoLayout(gtx, pg.Load, true, pg.toMixer.Layout, func(gtx C) D {
+				return pg.listMixer.Layout(gtx, len(pg.mixerWallets), func(gtx C, i int) D {
+					return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+						accounts, _ := pg.mixerWallets[i].GetAccountsRaw()
+						var unmixedBalance string
+						for _, acct := range accounts.Acc {
+							if acct.Number == pg.mixerWallets[i].UnmixedAccountNumber() {
+								unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
+							}
+						}
+
+						return components.MixerInfoContentWrapper(gtx, pg.Load, func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									txt := pg.Theme.Label(values.TextSize14, pg.mixerWallets[i].Name)
+									txt.Font.Weight = text.Medium
+
+									return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, txt.Layout)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											t := pg.Theme.Label(values.TextSize14, values.String(values.StrUnmixedBalance))
+											t.Color = pg.Theme.Color.GrayText2
+											return t.Layout(gtx)
+										}),
+										layout.Rigid(func(gtx C) D {
+											return components.LayoutBalanceSize(gtx, pg.Load, unmixedBalance, values.TextSize20)
+										}),
+									)
+								}),
+							)
+						})
+					})
+				})
+			})
+		},
+		func(gtx C) D {
+			// allow the recentTransactionsSection to extend the entire width of the display area.
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return pg.recentTransactionsSection(gtx)
+		},
+		func(gtx C) D {
+			if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) && len(pg.proposalItems) != 0 {
+				return pg.recentProposalsSection(gtx)
+			}
+			return D{}
+		},
+		func(gtx C) D {
+			return pg.syncStatusSection(gtx)
+		},
+	}
+
+	if pg.WL.MultiWallet.IsSyncing() || pg.WL.MultiWallet.IsRescanning() || pg.WL.MultiWallet.Politeia.IsSyncing() {
+		// Will refresh the overview page every 2 seconds while
+		// sync is active. When sync/rescan is started or ended,
+		// sync is considered inactive and no refresh occurs. A
+		// sync state change listener is used to refresh the display
+		// when the sync state changes.
+		op.InvalidateOp{At: gtx.Now.Add(2 * time.Second)}.Add(gtx.Ops)
+	}
+
+	return components.UniformMobile(gtx, true, func(gtx C) D {
 		return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
 			m := values.MarginPadding5
 			if i == len(pageContent) {
