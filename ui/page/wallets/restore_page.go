@@ -39,11 +39,11 @@ type Restore struct {
 func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 	pg := &Restore{
 		Load:             l,
-		GenericPageModal: app.NewGenericPageModal(CreateRestorePageID),           l,
-		seedRestorePage: NewSeedRestorePage(l, onRestoreComplete),
-		tabIndex:        0,
-		tabList:         l.Theme.NewClickableList(layout.Horizontal),
-		restoreComplete: onRestoreComplete,
+		GenericPageModal: app.NewGenericPageModal(CreateRestorePageID),
+		seedRestorePage:  NewSeedRestorePage(l, onRestoreComplete),
+		tabIndex:         0,
+		tabList:          l.Theme.NewClickableList(layout.Horizontal),
+		restoreComplete:  onRestoreComplete,
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -160,7 +160,7 @@ func (pg *Restore) tabLayout(gtx C) D {
 func (pg *Restore) OnNavigatedFrom() {
 	pg.seedRestorePage.OnNavigatedFrom()
 
-	pg.PopWindowPage()
+	//pg.PopWindowPage()
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -193,7 +193,7 @@ func (pg *Restore) showHexRestoreModal() {
 					return
 				}
 
-				modal.NewCreatePasswordModal(pg.Load).
+				passwordModal := modal.NewCreatePasswordModal(pg.Load).
 					Title(values.String(values.StrEnterWalDetails)).
 					EnableName(true).
 					ShowWalletInfoTip(true).
@@ -213,16 +213,15 @@ func (pg *Restore) showHexRestoreModal() {
 
 							pg.Toast.Notify(values.String(values.StrWalletRestored))
 							m.Dismiss()
-							// Close this page and return to the previous page (most likely wallets page)
-							// if there's no restoreComplete callback function.
 							if pg.restoreComplete == nil {
-								pg.PopWindowPage()
+								pg.ParentNavigator().CloseCurrentPage()
 							} else {
 								pg.restoreComplete()
 							}
 						}()
 						return false
-					}).Show()
+					})
+				pg.ParentWindow().ShowModal(passwordModal)
 
 				hm.Dismiss()
 			}()
@@ -233,7 +232,7 @@ func (pg *Restore) showHexRestoreModal() {
 			pg.tabIndex = 0
 			pg.switchTab(pg.tabIndex)
 		})
-	hexModal.Show()
+	pg.ParentWindow().ShowModal(hexModal)
 }
 
 func (pg *Restore) verifyHex(hex string) bool {
@@ -256,5 +255,3 @@ func (pg *Restore) verifyHex(hex string) bool {
 
 	return true
 }
-
-func (pg *Restore) OnNavigatedFrom() {}

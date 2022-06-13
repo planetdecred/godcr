@@ -52,13 +52,13 @@ type SaveSeedPage struct {
 
 func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 	pg := &SaveSeedPage{
-		Load:         l,
+		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(SaveSeedPageID),
-		wallet:       wallet,
-		hexLabel:     l.Theme.Label(values.TextSize12, ""),
-		copy:         l.Theme.Button("Copy"),
-		infoText:     "You will be asked to enter the seed word on the next screen.",
-		actionButton: l.Theme.Button("I have written down all 33 words"),
+		wallet:           wallet,
+		hexLabel:         l.Theme.Label(values.TextSize12, ""),
+		copy:             l.Theme.Button("Copy"),
+		infoText:         "You will be asked to enter the seed word on the next screen.",
+		actionButton:     l.Theme.Button("I have written down all 33 words"),
 		seedList: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -257,7 +257,7 @@ func (pg *SaveSeedPage) handleCopyEvent(gtx layout.Context) {
 		time.AfterFunc(time.Second*3, func() {
 			pg.copy.Text = "Copy"
 			pg.copy.Color = pg.Theme.Color.Primary
-			pg.RefreshWindow()
+			pg.ParentWindow().Reload()
 		})
 	}
 }

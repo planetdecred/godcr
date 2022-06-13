@@ -12,6 +12,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -36,6 +37,13 @@ type seedItemMenu struct {
 
 type SeedRestore struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the ParentNavigator that displayed this page
+	// and the root WindowNavigator. The ParentNavigator is also the root
+	// WindowNavigator if this page is displayed from the StartPage, otherwise
+	// the ParentNavigator is the MainPage.
+	*app.GenericPageModal
 	isRestoring     bool
 	restoreComplete func()
 
@@ -67,11 +75,12 @@ type SeedRestore struct {
 
 func NewSeedRestorePage(l *load.Load, onRestoreComplete func()) *SeedRestore {
 	pg := &SeedRestore{
-		Load:            l,
-		restoreComplete: onRestoreComplete,
-		seedList:        &layout.List{Axis: layout.Vertical},
-		suggestionLimit: 3,
-		openPopupIndex:  -1,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(SeedRestorePageID),
+		restoreComplete:  onRestoreComplete,
+		seedList:         &layout.List{Axis: layout.Vertical},
+		suggestionLimit:  3,
+		openPopupIndex:   -1,
 	}
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
@@ -552,7 +561,7 @@ func (pg *SeedRestore) HandleUserInteractions() {
 		}
 
 		pg.isRestoring = true
-		modal.NewCreatePasswordModal(pg.Load).
+		walletPasswordModal := modal.NewCreatePasswordModal(pg.Load).
 			Title(values.String(values.StrEnterWalDetails)).
 			EnableName(true).
 			ShowWalletInfoTip(true).
@@ -570,16 +579,15 @@ func (pg *SeedRestore) HandleUserInteractions() {
 					pg.Toast.Notify(values.String(values.StrWalletRestored))
 					pg.resetSeeds()
 					m.Dismiss()
-					// Close this page and return to the previous page (most likely wallets page)
-					// if there's no restoreComplete callback function.
 					if pg.restoreComplete == nil {
-						pg.PopWindowPage()
+						pg.ParentNavigator().CloseCurrentPage()
 					} else {
 						pg.restoreComplete()
 					}
 				}()
 				return false
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(walletPasswordModal)
 	}
 
 	for pg.resetSeedFields.Clicked() {
