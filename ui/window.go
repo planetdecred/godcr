@@ -34,8 +34,7 @@ type Window struct {
 
 	load *load.Load
 
-	selectedAccount int
-	txAuthor        dcrlibwallet.TxAuthor
+	txAuthor dcrlibwallet.TxAuthor
 
 	walletAcctMixerStatus chan *wallet.AccountMixer
 }

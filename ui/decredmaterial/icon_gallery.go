@@ -14,7 +14,7 @@ type Icons struct {
 	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ConcealIcon, RevealIcon,
 	SearchIcon, PlayIcon *widget.Icon
 
-	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive, MixerInactive,
+	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive, MixerInactive, RedAlert,
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
 	PendingIcon, Logo, RedirectIcon, ConfirmIcon, NewWalletIcon, WalletAlertIcon, ArrowForward,
 	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, Mixer, DcrWatchOnly,
@@ -143,6 +143,7 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.DarkmodeIcon = NewImage(decredIcons["darkmodeIcon"])
 	i.MixerInactive = NewImage(decredIcons["mixer_inactive"])
 	i.DcrWatchOnly = NewImage(decredIcons["dcr_watch_only"])
+	i.RedAlert = NewImage(decredIcons["red_alert"])
 	return i
 }
 

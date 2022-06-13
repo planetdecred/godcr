@@ -13,6 +13,11 @@ import (
 // ErrIDNotExist is returned when a given ID does not exist
 var ErrIDNotExist = errors.New("ID does not exist")
 
+type WalletItem struct {
+	Wallet       *dcrlibwallet.Wallet
+	TotalBalance string
+}
+
 type WalletLoad struct {
 	MultiWallet *dcrlibwallet.MultiWallet
 	TxAuthor    dcrlibwallet.TxAuthor
@@ -20,7 +25,7 @@ type WalletLoad struct {
 	UnspentOutputs *wallet.UnspentOutputs
 	Wallet         *wallet.Wallet
 
-	SelectedWallet  *int
+	SelectedWallet  *WalletItem
 	SelectedAccount *int
 }
 

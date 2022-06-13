@@ -471,10 +471,10 @@ func (mp *MainPage) HandleUserInteractions() {
 	}
 
 	for mp.openWalletSelector.Clicked() {
-		// afterRestore := func() {
-		// 	pg.ParentNavigator().CloseCurrentPage()
-		// }
-		mp.ParentWindow().Display(NewWalletList(mp.Load))
+		onWalSelected := func() {
+			mp.ParentNavigator().CloseCurrentPage()
+		}
+		mp.ParentWindow().Display(NewWalletList(mp.Load, onWalSelected))
 	}
 
 	mp.drawerNav.CurrentPage = mp.CurrentPageID()
@@ -809,7 +809,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 										return layout.Inset{
 											Left: values.MarginPadding10,
 										}.Layout(gtx, func(gtx C) D {
-											txt := mp.Theme.Body1("Wallet name") // todo
+											txt := mp.Theme.Body1(mp.WL.SelectedWallet.Wallet.Name)
 											txt.Font.Weight = text.Bold
 											return txt.Layout(gtx)
 										})
