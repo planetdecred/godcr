@@ -12,7 +12,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
-	// "github.com/planetdecred/godcr/ui/page/wallets"
 )
 
 const StartPageID = "start_page"
