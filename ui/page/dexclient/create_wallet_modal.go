@@ -8,7 +8,6 @@ import (
 	"decred.org/dcrdex/client/asset/btc"
 	"decred.org/dcrdex/client/asset/dcr"
 
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -37,7 +36,8 @@ type createWalletModal struct {
 	isSending             bool
 	dexClientPassword     string
 	isRegisterAction      bool
-	walletCreated         func(md *createWalletModal)
+	walletCreated         func()
+	cancelClicked         func()
 }
 
 type walletInfoWidget struct {
@@ -46,7 +46,7 @@ type walletInfoWidget struct {
 	coinID   uint32
 }
 
-func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, appPass string, walletCreated func(md *createWalletModal)) *createWalletModal {
+func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, appPass string) *createWalletModal {
 	md := &createWalletModal{
 		Load:             l,
 		Modal:            l.Theme.ModalFloatTitle("dex_create_wallet_modal"),
@@ -60,7 +60,7 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget, appPass stri
 	}
 	md.submitBtn.SetEnabled(false)
 	md.sourceAccountSelector = components.NewAccountSelector(md.Load, nil).
-		Title(strSellectAccountForDex).
+		Title(strSelectAccountForDex).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 			// Filter out imported account and mixed.
@@ -94,6 +94,16 @@ func (md *createWalletModal) SetRegisterAction(registerAction bool) *createWalle
 	return md
 }
 
+func (md *createWalletModal) CancelClicked(clicked func()) *createWalletModal {
+	md.cancelClicked = clicked
+	return md
+}
+
+func (md *createWalletModal) WalletCreated(walletCreated func()) *createWalletModal {
+	md.walletCreated = walletCreated
+	return md
+}
+
 func (md *createWalletModal) validateInputs(isRequiredWalletPassword bool) (bool, string, string) {
 	appPass := md.dexClientPassword
 	if appPass == "" {
@@ -116,32 +126,24 @@ func (md *createWalletModal) validateInputs(isRequiredWalletPassword bool) (bool
 }
 
 func (md *createWalletModal) Handle() {
-	isRequiredWalletPassword := md.walletInfoWidget.coinID == dcr.BipID
-	canSubmit, appPass, walletPass := md.validateInputs(isRequiredWalletPassword)
+	canSubmit, appPass, walletPass := md.validateInputs(md.walletInfoWidget.coinID == dcr.BipID)
 
 	if isWalletPasswordSubmit, _ := decredmaterial.HandleEditorEvents(md.walletPassword.Editor); isWalletPasswordSubmit {
-		if md.dexClientPassword != "" && canSubmit {
-			if isRequiredWalletPassword {
-				md.doCreateWallet([]byte(appPass), []byte(walletPass))
-			} else {
-				md.doCreateWallet([]byte(appPass), nil)
-			}
-		} else {
+		if canSubmit {
+			md.doCreateWallet([]byte(appPass), []byte(walletPass))
+		} else if md.dexClientPassword == "" {
 			md.appPassword.Editor.Focus()
 		}
 	}
 
 	isSubmit, _ := decredmaterial.HandleEditorEvents(md.appPassword.Editor)
-	if canSubmit && (md.submitBtn.Button.Clicked() || isSubmit) {
-		if isRequiredWalletPassword {
-			md.doCreateWallet([]byte(appPass), []byte(walletPass))
-		} else {
-			md.doCreateWallet([]byte(appPass), nil)
-		}
+	if canSubmit && (md.submitBtn.Clicked() || isSubmit) {
+		md.doCreateWallet([]byte(appPass), []byte(walletPass))
 	}
 
-	if md.cancelBtn.Button.Clicked() && !md.isSending {
+	if md.cancelBtn.Clicked() && !md.isSending {
 		md.Dismiss()
+		md.cancelClicked()
 	}
 }
 
@@ -175,7 +177,7 @@ func (md *createWalletModal) doCreateWallet(appPass, walletPass []byte) {
 			}()
 
 		md.Dismiss()
-		md.walletCreated(md)
+		md.walletCreated()
 	}()
 }
 
