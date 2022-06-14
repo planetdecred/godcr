@@ -20,16 +20,13 @@ const testDexHost = "dex-test.ssgen.io:7232"
 type addDexModal struct {
 	*load.Load
 	*decredmaterial.Modal
-	addDexServer     decredmaterial.Button
+	addDexServerBtn  decredmaterial.Button
 	dexServerAddress decredmaterial.Editor
 	isSending        bool
 	cancelBtn        decredmaterial.Button
 	materialLoader   material.LoaderStyle
 	cert             decredmaterial.Editor
 
-	// dexClientPassword will be used if set, without requesting password input on UI.
-	dexClientPassword     string
-	appPassword           decredmaterial.Editor
 	onDexAdded            func()
 	knownServers          map[string]*decredmaterial.Clickable
 	selectedServer        string
@@ -39,25 +36,30 @@ type addDexModal struct {
 }
 
 func newAddDexModal(l *load.Load) *addDexModal {
-	md := &addDexModal{
-		Load:             l,
-		Modal:            l.Theme.ModalFloatTitle("add_dex_modal"),
-		dexServerAddress: l.Theme.Editor(new(widget.Editor), "DEX Address"),
-		cert:             l.Theme.Editor(new(widget.Editor), "Cert content"),
-		addDexServer:     l.Theme.Button("Submit"),
-		cancel:           l.Theme.OutlineButton("Cancel"),
-		materialLoader:   material.Loader(l.Theme.Base),
+	tabButton := func(text string, active bool) decredmaterial.Button {
+		btn := l.Theme.OutlineButton(text)
+		btn.CornerRadius = values.MarginPadding0
+		btn.Inset = layout.Inset{
+			Top:    values.MarginPadding5,
+			Bottom: values.MarginPadding5,
+			Left:   values.MarginPadding9,
+			Right:  values.MarginPadding9,
+		}
+		btn.TextSize = values.TextSize14
+		if !active {
+			btn.Background = l.Theme.Color.Background
+		}
+		return btn
 	}
 
 	md := &addDexModal{
 		Load:                  l,
-		modal:                 l.Theme.ModalFloatTitle(),
+		Modal:                 l.Theme.ModalFloatTitle("add_dex_modal"),
 		dexServerAddress:      l.Theme.Editor(&widget.Editor{Submit: true}, strDexAddr),
 		cert:                  l.Theme.Editor(new(widget.Editor), strTLSCert),
 		addDexServerBtn:       l.Theme.Button(strSubmit),
 		cancelBtn:             l.Theme.OutlineButton(values.String(values.StrCancel)),
 		materialLoader:        material.Loader(l.Theme.Base),
-		appPassword:           l.Theme.EditorPassword(&widget.Editor{Submit: true}, strAppPassword),
 		pickServerFromListBtn: tabButton(strPickAServer, true),
 		useCustomServerBtn:    tabButton(strCustomServer, false),
 	}
@@ -81,32 +83,18 @@ func newAddDexModal(l *load.Load) *addDexModal {
 	return md
 }
 
-func (md *addDexModal) OnDismiss() {
-	md.appPassword.Editor.SetText("")
-}
+func (md *addDexModal) OnDismiss() {}
 
-func (md *addDexModal) WithAppPassword(appPass string) *addDexModal {
-	md.dexClientPassword = appPass
-	return md
-}
-
-func (md *addDexModal) OnResume() {
-	md.appPassword.Editor.Focus()
-}
+func (md *addDexModal) OnResume() {}
 
 func (md *addDexModal) OnDexAdded(callback func()) *addDexModal {
 	md.onDexAdded = callback
 	return md
 }
 
-func (md *addDexModal) validateInputs() (bool, string, string) {
+func (md *addDexModal) validateInputs() (bool, string) {
 	if md.isSending {
-		return false, "", ""
-	}
-
-	appPass := md.dexClientPassword
-	if appPass == "" {
-		appPass = md.appPassword.Editor.Text()
+		return false, ""
 	}
 
 	dexServer := md.selectedServer
@@ -114,29 +102,24 @@ func (md *addDexModal) validateInputs() (bool, string, string) {
 		dexServer = md.dexServerAddress.Editor.Text()
 	}
 
-	if appPass == "" || dexServer == "" {
+	if dexServer == "" {
 		md.addDexServerBtn.SetEnabled(false)
-		return false, "", ""
+		return false, ""
 	}
 
 	md.addDexServerBtn.SetEnabled(true)
-	return true, appPass, dexServer
+	return true, dexServer
 }
 
 func (md *addDexModal) Handle() {
-	canSubmit, appPass, dexServer := md.validateInputs()
+	canSubmit, dexServer := md.validateInputs()
 
-	if isDexServerSubmit, _ := decredmaterial.HandleEditorEvents(md.dexServerAddress.Editor); isDexServerSubmit {
-		if canSubmit {
-			md.doAddDexServer(dexServer, appPass)
-		} else if md.dexClientPassword == "" {
-			md.appPassword.Editor.Focus()
-		}
+	if isDexSubmit, _ := decredmaterial.HandleEditorEvents(md.dexServerAddress.Editor); isDexSubmit && canSubmit {
+		md.doAddDexServer(dexServer)
 	}
 
-	isSubmit, _ := decredmaterial.HandleEditorEvents(md.appPassword.Editor)
-	if canSubmit && (md.addDexServerBtn.Clicked() || isSubmit) {
-		md.doAddDexServer(dexServer, appPass)
+	if canSubmit && md.addDexServerBtn.Clicked() {
+		md.doAddDexServer(dexServer)
 	}
 
 	if md.pickServerFromListBtn.Clicked() {
@@ -168,17 +151,17 @@ func (md *addDexModal) Handle() {
 	}
 }
 
-func (md *addDexModal) doAddDexServer(serverAddr, appPass string) {
+func (md *addDexModal) doAddDexServer(serverAddr string) {
 	if md.isSending {
 		return
 	}
 
 	md.isSending = true
-	md.modal.SetDisabled(true)
+	md.Modal.SetDisabled(true)
 	go func() {
 		defer func() {
 			md.isSending = false
-			md.modal.SetDisabled(false)
+			md.Modal.SetDisabled(false)
 		}()
 
 		var cert []byte
@@ -186,52 +169,20 @@ func (md *addDexModal) doAddDexServer(serverAddr, appPass string) {
 			cert = []byte(md.cert.Editor.Text())
 		}
 
-		dexServer, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(appPass), cert)
+		dexServer, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(DEXClientPass), cert)
 		if err != nil {
 			md.Toast.NotifyError(err.Error())
 			return
 		}
 
-		md.isSending = true
-		md.Modal.SetDisabled(true)
-		go func() {
-			cert := []byte(md.cert.Editor.Text())
-			dex, err := md.Dexc().DEXServerInfo(md.dexServerAddress.Editor.Text(), cert)
-			md.isSending = false
-			md.Modal.SetDisabled(false)
+		md.Dismiss()
+		if paid {
+			md.onDexAdded()
+			return
+		}
 
-		newFeeAssetSelectorModal(md.Load, dexServer).
-			OnAssetSelected(func(asset *core.SupportedAsset) {
-				cfReg := &confirmRegistration{
-					Load:      md.Load,
-					dexServer: dexServer,
-					isSending: &md.isSending,
-					Show:      md.Show,
-					completed: md.onDexAdded,
-					Dismiss:   md.Dismiss,
-				}
-			}
-
-			// Dismiss this modal before displaying a new one for adding a wallet
-			// or completing the registration.
-			md.Dismiss()
-			if md.Dexc().HasWallet(int32(feeAsset.ID)) {
-				md.completeRegistration(dex, feeAssetName, cert)
-				return
-			}
-
-			createWalletModal := newCreateWalletModal(md.Load,
-				&walletInfoWidget{
-					image:    components.CoinImageBySymbol(md.Load, feeAssetName),
-					coinName: feeAssetName,
-					coinID:   feeAsset.ID,
-				},
-				func() {
-					md.completeRegistration(dex, feeAssetName, cert)
-				})
-			md.ParentWindow().ShowModal(createWalletModal)
-		}()
-	}
+		md.payFeeAndRegister(dexServer, cert)
+	}()
 }
 
 func (md *addDexModal) Layout(gtx layout.Context) D {
@@ -256,12 +207,6 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 			return md.serversLayout(gtx)
 		},
 		md.Theme.Separator().Layout,
-		func(gtx C) D {
-			if md.dexClientPassword != "" {
-				return D{}
-			}
-			return md.appPassword.Layout(gtx)
-		},
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -308,7 +253,7 @@ func (md *addDexModal) serversLayout(gtx C) D {
 				}.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.Y = 45
 					return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(md.Theme.Label(values.MarginPadding14, host).Layout),
+						layout.Rigid(md.Theme.Label(values.TextSize14, host).Layout),
 						layout.Rigid(func(gtx C) D {
 							if md.selectedServer != host {
 								return D{}
@@ -336,37 +281,44 @@ func (md *addDexModal) customServerLayout(gtx C) D {
 	)
 }
 
-func payFeeAndRegister(l *load.Load, dexServer *core.Exchange, cert []byte, appPass string, onDexAdded func()) {
+func (md *addDexModal) payFeeAndRegister(dexServer *core.Exchange, cert []byte) {
 	// Create the assetSelectorModal now, it'll remain open/visible
 	// until the fee is paid and registration is completed or the
 	// user manually closes it.
-	assetSelectorModal := newFeeAssetSelectorModal(l, dexServer)
+	assetSelectorModal := newFeeAssetSelectorModal(md.Load, dexServer)
 
 	confirmAndRegister := func(feeAsset *core.SupportedAsset) {
-		modal.NewInfoModal(l).
+		infoModal := modal.NewInfoModal(md.Load).
 			Title(strConfirmReg).
 			Body(confirmRegisterModalDesc(dexServer, feeAsset.Symbol)).
 			SetCancelable(false).
-			NegativeButton(values.String(values.StrCancel), assetSelectorModal.Show).
-			PositiveButton(strRegister, func(_ bool) {
-				assetSelectorModal.Show()
+			NegativeButton(values.String(values.StrCancel), func() {
+				md.ParentWindow().ShowModal(assetSelectorModal)
+			}).
+			PositiveButton(strRegister, func(_ bool) bool {
+				md.ParentWindow().ShowModal(assetSelectorModal)
 				go func() {
-					assetSelectorModal.modal.SetDisabled(true) // prevent re-selecting a fee asset
+					assetSelectorModal.SetLoading(true)
+					assetSelectorModal.Modal.SetDisabled(true) // prevent re-selecting a fee asset
 					regFeeAsset := dexServer.RegFees[feeAsset.Symbol]
-					_, err := l.Dexc().RegisterWithDEXServer(dexServer.Host,
+					_, err := md.Load.Dexc().RegisterWithDEXServer(dexServer.Host,
 						cert,
 						int64(regFeeAsset.Amt),
 						int32(regFeeAsset.ID),
-						[]byte(appPass))
+						[]byte(DEXClientPass))
 					if err != nil {
-						assetSelectorModal.modal.SetDisabled(false) // re-enable fee asset selection
+						assetSelectorModal.SetLoading(false)
+						assetSelectorModal.Modal.SetDisabled(false) // re-enable fee asset selection
 						assetSelectorModal.Toast.NotifyError(err.Error())
 						return
 					}
 					assetSelectorModal.Dismiss()
-					onDexAdded()
+					md.onDexAdded()
 				}()
-			}).Show()
+				return true
+			})
+
+		md.ParentWindow().ShowModal(infoModal)
 	}
 
 	assetSelectorModal.
@@ -377,20 +329,24 @@ func payFeeAndRegister(l *load.Load, dexServer *core.Exchange, cert []byte, appP
 			}
 
 			feeAssetName := asset.Symbol
-			newCreateWalletModal(l,
+			createWalletModal := newCreateWalletModal(md.Load,
 				&walletInfoWidget{
-					image:    components.CoinImageBySymbol(l, feeAssetName),
+					image:    components.CoinImageBySymbol(md.Load, feeAssetName),
 					coinName: feeAssetName,
 					coinID:   asset.ID,
-				}, appPass).
+				}).
 				WalletCreated(func() {
 					confirmAndRegister(asset)
 				}).
-				CancelClicked(assetSelectorModal.Show).
-				SetRegisterAction(true).
-				Show()
-		}).
-		Show()
+				CancelClicked(func() {
+					md.ParentWindow().ShowModal(assetSelectorModal)
+				}).
+				SetRegisterAction(true)
+
+			md.ParentWindow().ShowModal(createWalletModal)
+		})
+
+	md.ParentWindow().ShowModal(assetSelectorModal)
 }
 
 func confirmRegisterModalDesc(dexServer *core.Exchange, selectedFeeAsset string) string {

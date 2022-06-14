@@ -63,7 +63,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 	// Add a "Reset DEX Client" option.
 	pg.debugItems = append(pg.debugItems, debugItem{
 		text: "Reset DEX Client",
-		action: func() {
+		action: func(_ app.PageNavigator) {
 			pg.resetDexData()
 		},
 	})

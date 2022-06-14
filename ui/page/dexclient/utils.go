@@ -12,13 +12,14 @@ import (
 	"decred.org/dcrdex/dex"
 )
 
+// TODO: move this to the dcrlibwallet
+// DEXClientPass use for DEX since the UI not required password.
+const DEXClientPass = "DEXClientPass"
+
 // TODO: add localizable support for all these strings values
 const (
 	strLogin                    = "Login"
-	strStartUseDex              = "Start using now"
 	strStartSyncToUse           = "Start sync to continue"
-	strAppPassword              = "App Password"
-	strConfirmPassword          = "Confirm Password"
 	strWalletPassword           = "Wallet Password"
 	strSelectAccountForDex      = "Select DCR account to use with DEX"
 	strWaitingConfirms          = "Waiting for confirmations..."
@@ -38,8 +39,6 @@ const (
 	strMarket                   = "Market"
 	strAllMarketAt              = "All markets at"
 	strLotSize                  = "Lot Size"
-	strSetAppPassword           = "Set App Password"
-	strInitDexPasswordDesc      = "Set your app password. This password will protect your DEX account keys and connected wallets."
 	strSuccessful               = "Successfully!"
 
 	nStrNameWallet           = "%s Wallet"

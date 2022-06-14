@@ -12,7 +12,6 @@ import (
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -26,11 +25,14 @@ const MarketPageID = "Markets"
 
 type Page struct {
 	*load.Load
-	ctx       context.Context
-	ctxCancel context.CancelFunc
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
-	loginBtn       decredmaterial.Button
-	initializeBtn  decredmaterial.Button
+	ctx            context.Context
+	ctxCancel      context.CancelFunc
 	addDexBtn      decredmaterial.Button
 	syncBtn        decredmaterial.Button
 	materialLoader material.LoaderStyle
@@ -40,10 +42,9 @@ func NewMarketPage(l *load.Load) *Page {
 	pg := &Page{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(MarketPageID),
-		login:            l.Theme.Button("Login"),
-		initialize:       l.Theme.Button("Start using now"),
-		addDex:           l.Theme.Button("Add a dex"),
-		sync:             l.Theme.Button("Start sync to continue"),
+		addDexBtn:        l.Theme.Button(strAddADex),
+		syncBtn:          l.Theme.Button(strStartSyncToUse),
+		materialLoader:   material.Loader(l.Theme.Base),
 	}
 
 	return pg
@@ -55,14 +56,10 @@ func NewMarketPage(l *load.Load) *Page {
 func (pg *Page) Layout(gtx C) D {
 	body := func(gtx C) D {
 		switch {
-		case pg.Dexc().Core() == nil: // Need start DEX client
-			return pg.pageSections(gtx, pg.welcomeLayout(nil))
 		case !pg.WL.MultiWallet.IsConnectedToDecredNetwork():
 			return pg.pageSections(gtx, pg.welcomeLayout(&pg.syncBtn))
-		case !pg.Dexc().Initialized():
-			return pg.pageSections(gtx, pg.welcomeLayout(&pg.initializeBtn))
-		case !pg.Dexc().IsLoggedIn():
-			return pg.pageSections(gtx, pg.welcomeLayout(&pg.loginBtn))
+		case pg.isLoadingDexClient(): // Need start DEX client
+			return pg.pageSections(gtx, pg.welcomeLayout(nil))
 		case pg.dexServer() == nil:
 			return pg.pageSections(gtx, pg.welcomeLayout(&pg.addDexBtn))
 		default:
@@ -101,7 +98,7 @@ func (pg *Page) welcomeLayout(button *decredmaterial.Button) layout.Widget {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					if pg.Dexc().Core() == nil {
+					if pg.isLoadingDexClient() {
 						return layout.Center.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = 50
 							return pg.materialLoader.Layout(gtx)
@@ -140,9 +137,9 @@ func (pg *Page) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	if pg.Dexc().Core() == nil {
 		go pg.startDexClient()
-		return
+	} else {
+		go pg.readNotifications()
 	}
-	go pg.readNotifications()
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -169,68 +166,45 @@ func (pg *Page) HandleUserInteractions() {
 		}
 	}
 
-	if pg.login.Button.Clicked() {
-		appPasswordModal := modal.NewPasswordModal(pg.Load).
-			Title("Login").
-			Hint("App password").
-			NegativeButton(values.String(values.StrCancel), func() {}).
-			PositiveButton(strLogin, func(password string, pm *modal.PasswordModal) bool {
-				go func() {
-					err := pg.Dexc().Login([]byte(password))
-					if err != nil {
-						pm.SetError(err.Error())
-						pm.SetLoading(false)
-						return
-					}
-					pm.Dismiss()
-					// Check if there is no dex registered, show modal to register one
-					if len(pg.Dexc().DEXServers()) == 0 {
-						pg.ParentWindow().ShowModal(newAddDexModal(pg.Load))
-					}
-				}()
-				return false
-			})
-		pg.ParentWindow().ShowModal(appPasswordModal)
-	}
-
-	if pg.initialize.Button.Clicked() {
-		setAppPasswordModal := modal.NewCreatePasswordModal(pg.Load).
-			Title("Set App Password").
-			SetDescription("Set your app password. This password will protect your DEX account keys and connected wallets.").
-			EnableName(false).
-			PasswordHint(strAppPassword).
-			ConfirmPasswordHint(strConfirmPassword).
-			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
-				go func() {
-					err := pg.Dexc().InitializeWithPassword([]byte(password))
-					if err != nil {
-						m.SetError(err.Error())
-						m.SetLoading(false)
-						return
-					}
-					pg.Toast.Notify(strSuccessful)
-
-					m.Dismiss()
-					// Check if there is no dex registered, show modal to register one
-					if len(pg.Dexc().DEXServers()) == 0 {
-						pg.ParentWindow().ShowModal(newAddDexModal(pg.Load))
-					}
-				}()
-				return false
-			})
-		pg.ParentWindow().ShowModal(setAppPasswordModal)
-	}
-
-	if pg.addDex.Button.Clicked() {
-		pg.ParentWindow().ShowModal(newAddDexModal(pg.Load))
+	if pg.addDexBtn.Button.Clicked() {
+		newAddDexModal := newAddDexModal(pg.Load).OnDexAdded(func() {
+			pg.ParentWindow().Reload()
+		})
+		pg.ParentWindow().ShowModal(newAddDexModal)
 	}
 }
 
+// isLoadingDexClient check for Dexc start, initialized, loggedin status,
+// since Dex client UI not required for app password, IsInitialized and IsLoggedIn should be done at dcrlibwallet.
+func (pg *Page) isLoadingDexClient() bool {
+	return pg.Dexc().Core() == nil || !pg.Dexc().Core().IsInitialized() || !pg.Dexc().IsLoggedIn()
+}
+
+// startDexClient do start DEX client,
+// initialize and login to DEX,
+// since Dex client UI not required for app password, initialize and login should be done at dcrlibwallet.
 func (pg *Page) startDexClient() {
 	_, err := pg.WL.MultiWallet.StartDexClient()
 	if err != nil {
 		pg.Toast.NotifyError(err.Error())
 		return
+	}
+
+	// TODO: move to dcrlibwallet sine bypass Dex password by DEXClientPass
+	if !pg.Dexc().Initialized() {
+		err = pg.Dexc().InitializeWithPassword([]byte(DEXClientPass))
+		if err != nil {
+			pg.Toast.NotifyError(err.Error())
+			return
+		}
+	}
+
+	if !pg.Dexc().IsLoggedIn() {
+		err := pg.Dexc().Login([]byte(DEXClientPass))
+		if err != nil {
+			pg.Toast.NotifyError(err.Error())
+			return
+		}
 	}
 
 	pg.readNotifications()

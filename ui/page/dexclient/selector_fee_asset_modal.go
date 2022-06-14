@@ -7,6 +7,7 @@ import (
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/dex"
 	"gioui.org/layout"
+	"gioui.org/widget/material"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -17,34 +18,26 @@ const dexAssetSelectorModalID = "dex_asset_selector_modal"
 
 type assetSelectorModal struct {
 	*load.Load
+	*decredmaterial.Modal
 	dexServer             *core.Exchange
+	materialLoader        material.LoaderStyle
 	listFeeAssetClickable map[uint32]*decredmaterial.Clickable
-	modal                 *decredmaterial.Modal
 	cancelBtn             decredmaterial.Button
 	onAssetSelected       func(*core.SupportedAsset)
+	isLoading             bool
 }
 
 func newFeeAssetSelectorModal(l *load.Load, d *core.Exchange) *assetSelectorModal {
 	amd := &assetSelectorModal{
-		Load:      l,
-		dexServer: d,
-		modal:     l.Theme.ModalFloatTitle(),
-		cancelBtn: l.Theme.OutlineButton(values.String(values.StrCancel)),
+		Load:           l,
+		Modal:          l.Theme.ModalFloatTitle("dex_asset_selector_modal"),
+		dexServer:      d,
+		materialLoader: material.Loader(l.Theme.Base),
+		cancelBtn:      l.Theme.OutlineButton(values.String(values.StrCancel)),
+		isLoading:      false,
 	}
 
 	return amd
-}
-
-func (amd *assetSelectorModal) ModalID() string {
-	return dexAssetSelectorModalID
-}
-
-func (amd *assetSelectorModal) Show() {
-	amd.ShowModal(amd)
-}
-
-func (amd *assetSelectorModal) Dismiss() {
-	amd.DismissModal(amd)
 }
 
 func (amd *assetSelectorModal) OnDismiss() {}
@@ -70,6 +63,10 @@ func (amd *assetSelectorModal) OnResume() {
 	}
 }
 
+func (amd *assetSelectorModal) SetLoading(loading bool) {
+	amd.isLoading = loading
+}
+
 func (amd *assetSelectorModal) Handle() {
 	if amd.cancelBtn.Button.Clicked() {
 		amd.Dismiss()
@@ -91,11 +88,19 @@ func (amd *assetSelectorModal) Layout(gtx layout.Context) D {
 		amd.Theme.Separator().Layout,
 		amd.marketSummaryLayout(),
 		func(gtx C) D {
-			return layout.E.Layout(gtx, amd.cancelBtn.Layout)
+			return layout.E.Layout(gtx, func(gtx C) D {
+				if amd.isLoading {
+					return layout.Inset{
+						Top:    values.MarginPadding10,
+						Bottom: values.MarginPadding15,
+					}.Layout(gtx, amd.materialLoader.Layout)
+				}
+				return amd.cancelBtn.Layout(gtx)
+			})
 		},
 	}
 
-	return amd.modal.Layout(gtx, w)
+	return amd.Modal.Layout(gtx, w)
 }
 
 func (amd *assetSelectorModal) assetsInfoLayout() layout.Widget {
