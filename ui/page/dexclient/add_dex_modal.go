@@ -15,8 +15,6 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const testDexHost = "dex-test.ssgen.io:7232"
-
 type addDexModal struct {
 	*load.Load
 	*decredmaterial.Modal

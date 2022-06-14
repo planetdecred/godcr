@@ -14,8 +14,6 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const dexAssetSelectorModalID = "dex_asset_selector_modal"
-
 type assetSelectorModal struct {
 	*load.Load
 	*decredmaterial.Modal
