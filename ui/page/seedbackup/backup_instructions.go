@@ -128,8 +128,8 @@ func (pg *BackupInstructionsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	pg.viewSeedBtn.SetEnabled(pg.verifyCheckBoxes())
-
-	return container(gtx, *pg.Theme, sp.Layout, "", pg.viewSeedBtn)
+	isMobile := pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView)
+	return container(gtx, isMobile, *pg.Theme, sp.Layout, "", pg.viewSeedBtn)
 }
 
 func (pg *BackupInstructionsPage) verifyCheckBoxes() bool {
@@ -141,8 +141,8 @@ func (pg *BackupInstructionsPage) verifyCheckBoxes() bool {
 	return true
 }
 
-func container(gtx C, theme decredmaterial.Theme, body layout.Widget, infoText string, actionBtn decredmaterial.Button) D {
-	return components.UniformPadding(gtx, func(gtx C) D {
+func container(gtx C, isMobile bool, theme decredmaterial.Theme, body layout.Widget, infoText string, actionBtn decredmaterial.Button) D {
+	bodyLayout := func(gtx C) D {
 		return layout.Stack{}.Layout(gtx,
 			layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 				return body(gtx)
@@ -175,5 +175,9 @@ func container(gtx C, theme decredmaterial.Theme, body layout.Widget, infoText s
 					}))
 			}),
 		)
-	})
+	}
+	if isMobile {
+		return components.UniformMobile(gtx, false, bodyLayout)
+	}
+	return components.UniformPadding(gtx, bodyLayout)
 }

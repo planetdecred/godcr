@@ -111,7 +111,13 @@ func (pg *AcctDetailsPage) Layout(gtx C) D {
 			return pg.accountInfoLayout(gtx)
 		},
 	}
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx, widgets)
+	}
+	return pg.layoutDesktop(gtx, widgets)
+}
 
+func (pg *AcctDetailsPage) layoutDesktop(gtx layout.Context, widgets []func(gtx C) D) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -148,6 +154,45 @@ func (pg *AcctDetailsPage) Layout(gtx C) D {
 		return sp.Layout(gtx)
 	}
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *AcctDetailsPage) layoutMobile(gtx layout.Context, widgets []func(gtx C) D) layout.Dimensions {
+	body := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      pg.account.Name,
+			WalletName: pg.wallet.Name,
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.PopFragment()
+			},
+			Body: func(gtx C) D {
+				return pg.Theme.List(pg.list).Layout(gtx, 1, func(gtx C, i int) D {
+					return layout.Inset{
+						Bottom: values.MarginPadding7,
+						Right:  values.MarginPadding2,
+					}.Layout(gtx, func(gtx C) D {
+						return pg.theme.Card().Layout(gtx, func(gtx C) D {
+							return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+								return pg.acctDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
+									return layout.Inset{}.Layout(gtx, widgets[i])
+								})
+							})
+						})
+					})
+				})
+			},
+			ExtraItem: pg.renameAccount,
+			Extra: func(gtx C) D {
+				return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					edit := pg.Theme.Icons.EditIcon
+					return layout.E.Layout(gtx, edit.Layout24dp)
+				})
+			},
+		}
+		return sp.Layout(gtx)
+	}
+	return components.UniformMobile(gtx, true, body)
 }
 
 func (pg *AcctDetailsPage) accountBalanceLayout(gtx C) D {

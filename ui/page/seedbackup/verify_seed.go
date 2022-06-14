@@ -216,6 +216,13 @@ func (pg *VerifySeedPage) OnNavigatedFrom() {}
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *VerifySeedPage) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *VerifySeedPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	sp := components.SubPage{
 		Load:       pg.Load,
 		Title:      "Verify seed word",
@@ -248,7 +255,41 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 	}
 
 	pg.actionButton.SetEnabled(pg.allSeedsSelected())
-	return container(gtx, *pg.Theme, sp.Layout, "", pg.actionButton)
+	return container(gtx, false, *pg.Theme, sp.Layout, "", pg.actionButton)
+}
+
+func (pg *VerifySeedPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	sp := components.SubPage{
+		Load:       pg.Load,
+		Title:      "Verify seed word",
+		SubTitle:   "Step 2/2",
+		WalletName: pg.wallet.Name,
+		BackButton: pg.backButton,
+		Back: func() {
+			promptToExit(pg.Load)
+		},
+		Body: func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					label := pg.Theme.Label(values.TextSize16, "Select the correct words to verify.")
+					label.Color = pg.Theme.Color.GrayText1
+					return label.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Bottom: values.MarginPadding96,
+					}.Layout(gtx, func(gtx C) D {
+						return pg.Theme.List(pg.list).Layout(gtx, len(pg.multiSeedList), func(gtx C, i int) D {
+							return pg.seedListRow(gtx, i, pg.multiSeedList[i])
+						})
+					})
+				}),
+			)
+		},
+	}
+
+	pg.actionButton.SetEnabled(pg.allSeedsSelected())
+	return container(gtx, true, *pg.Theme, sp.Layout, "", pg.actionButton)
 }
 
 func (pg *VerifySeedPage) seedListRow(gtx C, index int, multiSeed shuffledSeedWords) D {

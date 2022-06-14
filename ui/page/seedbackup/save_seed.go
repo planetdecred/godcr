@@ -201,7 +201,7 @@ func (pg *SaveSeedPage) layoutDesktop(gtx C) D {
 		},
 	}
 
-	return container(gtx, *pg.Theme, sp.Layout, pg.infoText, pg.actionButton)
+	return container(gtx, false, *pg.Theme, sp.Layout, pg.infoText, pg.actionButton)
 }
 
 func (pg *SaveSeedPage) layoutMobile(gtx C) D {
@@ -247,7 +247,7 @@ func (pg *SaveSeedPage) layoutMobile(gtx C) D {
 		},
 	}
 
-	return container(gtx, *pg.Theme, sp.Layout, pg.infoText, pg.actionButton)
+	return container(gtx, true, *pg.Theme, sp.Layout, pg.infoText, pg.actionButton)
 }
 
 func (pg *SaveSeedPage) mobileSeedRow(gtx C, row saveSeedRow) D {
