@@ -50,6 +50,10 @@ type TransactionsPage struct {
 	container       *widget.List
 	transactions    []dcrlibwallet.Transaction
 	wallets         []*dcrlibwallet.Wallet
+	paginatedTxns   [][]dcrlibwallet.Transaction
+	currentPage     int
+	paginated       bool
+	pageEnd         bool
 }
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
@@ -110,6 +114,7 @@ func (pg *TransactionsPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
 	pg.listenForTxNotifications()
+	pg.paginated = false
 	pg.loadTransactions(pg.walletDropDown.SelectedIndex())
 }
 
@@ -132,10 +137,19 @@ func (pg *TransactionsPage) loadTransactions(selectedWalletIndex int) {
 	}
 
 	wallTxs, err := selectedWallet.GetTransactionsRaw(0, 0, txFilter, newestFirst) //TODO
+	pg.currentPage = 0
 	if err != nil {
 		// log.Error("Error loading transactions:", err)
 	} else {
-		pg.transactions = wallTxs
+		if len(wallTxs) > 20 {
+			pg.paginatedTxns = pg.splitTxns(wallTxs)
+			pg.transactions = pg.paginatedTxns[0]
+			pg.paginated = true
+		} else {
+			pg.paginated = false
+			pg.paginatedTxns = nil
+			pg.transactions = wallTxs
+		}
 	}
 }
 
@@ -177,6 +191,16 @@ func (pg *TransactionsPage) layoutDesktop(gtx layout.Context) layout.Dimensions 
 										Transaction: wallTxs[index],
 										Index:       index,
 										ShowBadge:   false,
+									}
+									offsetNum := []int{1, 2, 3, 4, 5}
+									if pg.paginated {
+										for _, offset := range offsetNum {
+											if pg.transactionList.Clickables[len(pg.transactions)-offset].IsHovered() {
+												pg.pageEnd = true
+											} else {
+												pg.pageEnd = false
+											}
+										}
 									}
 
 									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -370,6 +394,13 @@ func (pg *TransactionsPage) HandleUserInteractions() {
 
 		pg.loadTransactions(pg.selectedCategoryIndex)
 		pg.changed = false
+	}
+
+	if pg.pageEnd && pg.currentPage != len(pg.paginatedTxns)-1 {
+		pg.currentPage = pg.currentPage + 1
+		for i := 0; i < len(pg.paginatedTxns[pg.currentPage]); i++ {
+			pg.transactions = append(pg.transactions, pg.paginatedTxns[pg.currentPage][i])
+		}
 	}
 }
 
