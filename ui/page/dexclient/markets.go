@@ -7,6 +7,7 @@ import (
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/client/db"
 	"gioui.org/layout"
+	"gioui.org/widget/material"
 
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -25,28 +26,16 @@ const MarketPageID = "Markets"
 
 type Page struct {
 	*load.Load
-	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
-	// that helps this Page satisfy the app.Page interface. It also defines
-	// helper methods for accessing the PageNavigator that displayed this page
-	// and the root WindowNavigator.
-	*app.GenericPageModal
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+	dexServer *core.Exchange
 
-	ctx        context.Context
-	ctxCancel  context.CancelFunc
-	login      decredmaterial.Button
-	initialize decredmaterial.Button
-	addDex     decredmaterial.Button
-	sync       decredmaterial.Button
-}
-
-// TODO: Add collapsible button to select a market.
-// Use mktName="DCR-BTC" in the meantime.
-func (pg *Page) dexMarket(mktName string) *core.Market {
-	dex := pg.dex()
-	if dex == nil {
-		return nil
-	}
-	return dex.Markets[mktName]
+	loginBtn       decredmaterial.Button
+	initializeBtn  decredmaterial.Button
+	addDexBtn      decredmaterial.Button
+	syncBtn        decredmaterial.Button
+	shouldStartDex bool
+	materialLoader material.LoaderStyle
 }
 
 func NewMarketPage(l *load.Load) *Page {
@@ -66,36 +55,29 @@ func NewMarketPage(l *load.Load) *Page {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *Page) Layout(gtx C) D {
-	var body func(gtx C) D
+	body := func(gtx C) D {
+		switch {
+		case pg.Dexc().Core() == nil: // Need start DEX client
+			return pg.pageSections(gtx, pg.welcomeLayout(nil))
+		case !pg.WL.MultiWallet.IsConnectedToDecredNetwork():
+			return pg.pageSections(gtx, pg.welcomeLayout(&pg.syncBtn))
+		case !pg.Dexc().Initialized():
+			return pg.pageSections(gtx, pg.welcomeLayout(&pg.initializeBtn))
+		case !pg.Dexc().IsLoggedIn():
+			return pg.pageSections(gtx, pg.welcomeLayout(&pg.loginBtn))
+		case pg.dexServer == nil:
+			return pg.pageSections(gtx, pg.welcomeLayout(&pg.addDexBtn))
+		default:
+			if !pg.dexServer.Connected {
+				return pg.pageSections(gtx,
+					pg.Theme.Label(values.TextSize16, fmt.Sprintf(nStrConnHostError, pg.dexServer.Host)).Layout)
+			}
+			if pg.dexServer.PendingFee != nil {
+				return pg.pageSections(gtx, pg.registrationStatusLayout())
+			}
 
-	switch {
-	case !pg.WL.MultiWallet.IsConnectedToDecredNetwork():
-		body = func(gtx C) D {
-			return pg.pageSections(gtx, func(gtx C) D {
-				return pg.welcomeLayout(gtx, pg.sync)
-			})
-		}
-	case !pg.Dexc().Initialized():
-		body = func(gtx C) D {
-			return pg.pageSections(gtx, func(gtx C) D {
-				return pg.welcomeLayout(gtx, pg.initialize)
-			})
-		}
-	case !pg.Dexc().IsLoggedIn():
-		body = func(gtx C) D {
-			return pg.pageSections(gtx, func(gtx C) D {
-				return pg.welcomeLayout(gtx, pg.login)
-			})
-		}
-	case len(pg.Dexc().DEXServers()) == 0:
-		body = func(gtx C) D {
-			return pg.pageSections(gtx, func(gtx C) D {
-				return pg.welcomeLayout(gtx, pg.addDex)
-			})
-		}
-	default:
-		body = func(gtx C) D {
-			return pg.pageSections(gtx, pg.registrationStatusLayout)
+			// TODO: remove this and render trade UI
+			return pg.pageSections(gtx, pg.Theme.Label(values.TextSize14, "Registration fee payment successful!").Layout)
 		}
 	}
 
@@ -109,55 +91,45 @@ func (pg *Page) pageSections(gtx layout.Context, body layout.Widget) layout.Dime
 	})
 }
 
-func (pg *Page) welcomeLayout(gtx C, button decredmaterial.Button) D {
-	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				description := "Trade crypto peer-to-peer."
-				return layout.Inset{Bottom: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-					return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
-				})
-			}),
-			layout.Rigid(button.Layout),
+func (pg *Page) welcomeLayout(button *decredmaterial.Button) layout.Widget {
+	return func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					description := "Trade crypto peer-to-peer."
+					return layout.Inset{Bottom: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+						return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					if pg.shouldStartDex {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							gtx.Constraints.Min.X = 50
+							return pg.materialLoader.Layout(gtx)
+						})
+					}
+					if button == nil {
+						return D{}
+					}
+					return button.Layout(gtx)
+				}),
+			)
+		})
+	}
+}
+
+func (pg *Page) registrationStatusLayout() layout.Widget {
+	return func(gtx C) D {
+		txtLabel := func(txt string) layout.Widget {
+			return pg.Theme.Label(values.TextSize14, txt).Layout
+		}
+		reqConfirms, currentConfs := pg.dexServer.Fee.Confs, pg.dexServer.PendingFee.Confs
+		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+			layout.Rigid(txtLabel(strWaitingConfirms)),
+			layout.Rigid(txtLabel(fmt.Sprintf(nStrConfirmationsStatus, pg.dexServer.Host, reqConfirms))),
+			layout.Rigid(txtLabel(fmt.Sprintf("%d/%d", currentConfs, reqConfirms))),
 		)
-	})
-}
-
-func (pg *Page) dex() *core.Exchange {
-	// TODO: Should ideally pick a DEX by host, but this currently
-	// picks the first DEX in the map, if one has been previously
-	// connected. This is okay because there's only one DEX that
-	// can be connected for now.
-	for _, dex := range pg.Dexc().DEXServers() {
-		return dex
 	}
-	return nil
-}
-
-func (pg *Page) registrationStatusLayout(gtx C) D {
-	dex := pg.dex()
-	if !dex.Connected {
-		// TODO: render error or UI to connect to dex
-		return pg.Theme.Label(values.TextSize14, fmt.Sprintf("%s not connected yet", dex.Host)).Layout(gtx)
-	}
-
-	if dex.PendingFee == nil {
-		// TODO: render trade UI
-		return pg.Theme.Label(values.TextSize14, "Registration fee payment successful!").Layout(gtx)
-	}
-
-	reqConfirms, currentConfs := dex.Fee.Confs, dex.PendingFee.Confs
-	return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(pg.Theme.Label(values.TextSize14, "Waiting for confirmations...").Layout),
-		layout.Rigid(func(gtx C) D {
-			t := fmt.Sprintf("In order to trade at %s, the registration fee payment needs %d confirmations.", dex.Host, reqConfirms)
-			return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			t := fmt.Sprintf("%d/%d", currentConfs, reqConfirms)
-			return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
-		}),
-	)
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -166,7 +138,14 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	if pg.Dexc().Core() == nil {
+		go pg.startDexClient()
+		return
+	}
 	go pg.readNotifications()
+	if pg.Dexc().IsLoggedIn() {
+		pg.setDefaultDexServer()
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -186,7 +165,7 @@ func (pg *Page) OnNavigatedFrom() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *Page) HandleUserInteractions() {
-	if pg.sync.Button.Clicked() {
+	if pg.syncBtn.Button.Clicked() {
 		err := pg.WL.MultiWallet.SpvSync()
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
@@ -198,7 +177,7 @@ func (pg *Page) HandleUserInteractions() {
 			Title("Login").
 			Hint("App password").
 			NegativeButton(values.String(values.StrCancel), func() {}).
-			PositiveButton("Login", func(password string, pm *modal.PasswordModal) bool {
+			PositiveButton(strLogin, func(password string, pm *modal.PasswordModal) bool {
 				go func() {
 					err := pg.Dexc().Login([]byte(password))
 					if err != nil {
@@ -211,6 +190,7 @@ func (pg *Page) HandleUserInteractions() {
 					if len(pg.Dexc().DEXServers()) == 0 {
 						pg.ParentWindow().ShowModal(newAddDexModal(pg.Load))
 					}
+					pg.setDefaultDexServer()
 				}()
 				return false
 			})
@@ -222,9 +202,9 @@ func (pg *Page) HandleUserInteractions() {
 			Title("Set App Password").
 			SetDescription("Set your app password. This password will protect your DEX account keys and connected wallets.").
 			EnableName(false).
-			PasswordHint("Password").
-			ConfirmPasswordHint("Confirm password").
-			PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
+			PasswordHint(strAppPassword).
+			ConfirmPasswordHint(strConfirmPassword).
+			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
 					err := pg.Dexc().InitializeWithPassword([]byte(password))
 					if err != nil {
@@ -232,7 +212,7 @@ func (pg *Page) HandleUserInteractions() {
 						m.SetLoading(false)
 						return
 					}
-					pg.Toast.Notify("App password created")
+					pg.Toast.Notify(strSuccessful)
 
 					m.Dismiss()
 					// Check if there is no dex registered, show modal to register one
@@ -248,6 +228,19 @@ func (pg *Page) HandleUserInteractions() {
 	if pg.addDex.Button.Clicked() {
 		pg.ParentWindow().ShowModal(newAddDexModal(pg.Load))
 	}
+
+}
+
+func (pg *Page) startDexClient() {
+	_, err := pg.WL.MultiWallet.StartDexClient()
+	pg.shouldStartDex = false
+
+	if err != nil {
+		pg.Toast.NotifyError(err.Error())
+		return
+	}
+
+	pg.readNotifications()
 }
 
 // readNotifications reads from the Core notification channel.
@@ -264,8 +257,28 @@ func (pg *Page) readNotifications() {
 				pg.Toast.NotifyError(n.Details())
 			}
 
+			if pg.dexServer != nil {
+				dexServer, found := pg.Dexc().DEXServers()[pg.dexServer.Host]
+				if found {
+					pg.setDexServer(dexServer)
+				}
+			}
+
 		case <-pg.ctx.Done():
 			return
 		}
 	}
+}
+
+func (pg *Page) setDefaultDexServer() {
+	exchanges := sortServers(pg.Dexc().DEXServers())
+	if len(exchanges) == 0 {
+		return
+	}
+	pg.setDexServer(exchanges[0])
+}
+
+func (pg *Page) setDexServer(sv *core.Exchange) {
+	pg.dexServer = sv
+	pg.RefreshWindow()
 }

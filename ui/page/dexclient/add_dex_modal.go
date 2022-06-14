@@ -2,16 +2,14 @@ package dexclient
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
-	"decred.org/dcrdex/client/asset"
 	"decred.org/dcrdex/client/core"
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -27,9 +25,19 @@ type addDexModal struct {
 	addDexServer     decredmaterial.Button
 	dexServerAddress decredmaterial.Editor
 	isSending        bool
-	cert             decredmaterial.Editor
-	cancel           decredmaterial.Button
+	cancelBtn        decredmaterial.Button
 	materialLoader   material.LoaderStyle
+	cert             decredmaterial.Editor
+
+	// dexClientPassword will be used if set, without requesting password input on UI.
+	dexClientPassword     string
+	appPassword           decredmaterial.Editor
+	onDexAdded            func(*core.Exchange)
+	knownServers          map[string]*decredmaterial.Clickable
+	selectedServer        string
+	pickServerFromListBtn decredmaterial.Button
+	useCustomServerBtn    decredmaterial.Button
+	isUseCustomServer     bool
 }
 
 func newAddDexModal(l *load.Load) *addDexModal {
@@ -43,29 +51,146 @@ func newAddDexModal(l *load.Load) *addDexModal {
 		materialLoader:   material.Loader(l.Theme.Base),
 	}
 
-	md.dexServerAddress.Editor.SingleLine = true
-	if l.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
-		md.dexServerAddress.Editor.SetText(testDexHost)
+	md := &addDexModal{
+		Load:                  l,
+		modal:                 l.Theme.ModalFloatTitle(),
+		dexServerAddress:      l.Theme.Editor(&widget.Editor{Submit: true}, strDexAddr),
+		cert:                  l.Theme.Editor(new(widget.Editor), strTLSCert),
+		addDexServerBtn:       l.Theme.Button(strSubmit),
+		cancelBtn:             l.Theme.OutlineButton(values.String(values.StrCancel)),
+		materialLoader:        material.Loader(material.NewTheme(gofont.Collection())),
+		appPassword:           l.Theme.EditorPassword(&widget.Editor{Submit: true}, strAppPassword),
+		pickServerFromListBtn: tabButton(strPickAServer, true),
+		useCustomServerBtn:    tabButton(strCustomServer, false),
 	}
+	md.addDexServerBtn.SetEnabled(false)
 
 	return md
 }
 
 func (md *addDexModal) OnDismiss() {
-	md.dexServerAddress.Editor.SetText("")
+	md.appPassword.Editor.SetText("")
+}
+
+func (md *addDexModal) WithAppPassword(appPass string) *addDexModal {
+	md.dexClientPassword = appPass
+	return md
 }
 
 func (md *addDexModal) OnResume() {
-	md.dexServerAddress.Editor.Focus()
+	md.appPassword.Editor.Focus()
+
+	clickable := func() *decredmaterial.Clickable {
+		cl := md.Theme.NewClickable(true)
+		cl.Radius = decredmaterial.Radius(0)
+		return cl
+	}
+
+	dexServers := sortExchanges(core.CertStore[md.Dexc().Core().Network()])
+	md.knownServers = make(map[string]*decredmaterial.Clickable, len(dexServers))
+	for _, server := range dexServers {
+		md.knownServers[server] = clickable()
+	}
+	if len(dexServers) > 0 {
+		md.selectedServer = dexServers[0]
+	}
+}
+
+func (md *addDexModal) OnDexAdded(callback func(*core.Exchange)) *addDexModal {
+	md.onDexAdded = callback
+	return md
+}
+
+func (md *addDexModal) validateInputs() (bool, string, string) {
+	if md.isSending {
+		return false, "", ""
+	}
+
+	appPass := md.dexClientPassword
+	if appPass == "" {
+		appPass = md.appPassword.Editor.Text()
+	}
+
+	dexServer := md.selectedServer
+	if md.isUseCustomServer {
+		dexServer = md.dexServerAddress.Editor.Text()
+	}
+
+	if appPass == "" || dexServer == "" {
+		md.addDexServerBtn.SetEnabled(false)
+		return false, "", ""
+	}
+
+	md.addDexServerBtn.SetEnabled(true)
+	return true, appPass, dexServer
 }
 
 func (md *addDexModal) Handle() {
-	if md.cancel.Button.Clicked() && !md.isSending {
+	canSubmit, appPass, dexServer := md.validateInputs()
+
+	if isDexServerSubmit, _ := decredmaterial.HandleEditorEvents(md.dexServerAddress.Editor); isDexServerSubmit {
+		if canSubmit {
+			md.doAddDexServer(dexServer, appPass)
+		} else if md.dexClientPassword == "" {
+			md.appPassword.Editor.Focus()
+		}
+	}
+
+	isSubmit, _ := decredmaterial.HandleEditorEvents(md.appPassword.Editor)
+	if canSubmit && (md.addDexServerBtn.Button.Clicked() || isSubmit) {
+		md.doAddDexServer(dexServer, appPass)
+	}
+
+	if md.pickServerFromListBtn.Clicked() {
+		md.isUseCustomServer = false
+		md.pickServerFromListBtn.Background = md.Theme.Color.Surface
+		md.useCustomServerBtn.Background = md.Theme.Color.Background
+	}
+
+	if md.useCustomServerBtn.Clicked() {
+		md.isUseCustomServer = true
+		md.dexServerAddress.Editor.Focus()
+		md.useCustomServerBtn.Background = md.Theme.Color.Surface
+		md.pickServerFromListBtn.Background = md.Theme.Color.Background
+	}
+
+	if md.cancelBtn.Button.Clicked() && !md.isSending {
 		md.Dismiss()
 	}
 
-	if md.addDexServer.Button.Clicked() {
-		if md.dexServerAddress.Editor.Text() == "" || md.isSending {
+	for host, cl := range md.knownServers {
+		if cl.Clicked() {
+			if md.selectedServer == host {
+				md.selectedServer = ""
+				break
+			}
+			md.selectedServer = host
+			break
+		}
+	}
+}
+
+func (md *addDexModal) doAddDexServer(serverAddr, appPass string) {
+	if md.isSending {
+		return
+	}
+
+	md.isSending = true
+	md.modal.SetDisabled(true)
+	go func() {
+		defer func() {
+			md.isSending = false
+			md.modal.SetDisabled(false)
+		}()
+
+		var cert []byte
+		if md.isUseCustomServer {
+			cert = []byte(md.cert.Editor.Text())
+		}
+
+		dexServer, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(appPass), cert)
+		if err != nil {
+			md.Toast.NotifyError(err.Error())
 			return
 		}
 
@@ -77,22 +202,15 @@ func (md *addDexModal) Handle() {
 			md.isSending = false
 			md.Modal.SetDisabled(false)
 
-			if err != nil {
-				md.Toast.NotifyError(err.Error())
-				return
-			}
-
-			// Ensure a wallet is connected that can be used to pay the fees.
-			// TODO: This automatically selects the dcr wallet if the DEX
-			// supports it for fee payment, otherwise picks a random wallet
-			// to use for fee payment. Should instead update the modal UI
-			// to show the options and let the user choose which wallet to
-			// set up and use for fee payment.
-			feeAssetName := "dcr"
-			feeAsset := dex.RegFees[feeAssetName]
-			if feeAsset == nil {
-				for feeAssetName, feeAsset = range dex.RegFees {
-					break
+		newFeeAssetSelectorModal(md.Load, dexServer).
+			OnAssetSelected(func(asset *core.SupportedAsset) {
+				cfReg := &confirmRegistration{
+					Load:      md.Load,
+					dexServer: dexServer,
+					isSending: &md.isSending,
+					Show:      md.Show,
+					completed: md.onDexAdded,
+					Dismiss:   md.Dismiss,
 				}
 			}
 
@@ -120,23 +238,31 @@ func (md *addDexModal) Handle() {
 
 func (md *addDexModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
+		md.Load.Theme.Label(values.TextSize20, strAddADex).Layout,
 		func(gtx C) D {
-			return md.Load.Theme.Label(values.TextSize20, "Add a dex").Layout(gtx)
+			return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+				layout.Flexed(.5, md.pickServerFromListBtn.Layout),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Left:  values.MarginPadding1,
+						Right: values.MarginPadding1,
+					}.Layout(gtx, func(gtx C) D { return D{} })
+				}),
+				layout.Flexed(.5, md.useCustomServerBtn.Layout),
+			)
 		},
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return md.dexServerAddress.Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Max.Y = 350
-						return md.cert.Layout(gtx)
-					})
-				}),
-			)
+			if md.isUseCustomServer {
+				return md.customServerLayout(gtx)
+			}
+			return md.serversLayout(gtx)
+		},
+		md.Theme.Separator().Layout,
+		func(gtx C) D {
+			if md.dexClientPassword != "" {
+				return D{}
+			}
+			return md.appPassword.Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
@@ -148,7 +274,7 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 						return layout.Inset{
 							Right:  values.MarginPadding4,
 							Bottom: values.MarginPadding15,
-						}.Layout(gtx, md.cancel.Layout)
+						}.Layout(gtx, md.cancelBtn.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if md.isSending {
@@ -157,7 +283,7 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 								Bottom: values.MarginPadding15,
 							}.Layout(gtx, md.materialLoader.Layout)
 						}
-						return md.addDexServer.Layout(gtx)
+						return md.addDexServerBtn.Layout(gtx)
 					}),
 				)
 			})
@@ -173,19 +299,23 @@ func (md *addDexModal) completeRegistration(dex *core.Exchange, feeAssetName str
 		Hint("App password").
 		Description(confirmRegisterModalDesc(dex, feeAssetName)).
 		NegativeButton(values.String(values.StrCancel), func() {}).
-		PositiveButton("Register", func(password string, pm *modal.PasswordModal) bool {
+		PositiveButton(strRegister, func() {
 			go func() {
-				_, err := md.Dexc().RegisterWithDEXServer(dex.Host,
+				// Show previous modal and display loading status or error messages
+				cfReg.Show()
+				*cfReg.isSending = true
+				_, err := cfReg.Dexc().RegisterWithDEXServer(cfReg.dexServer.Host,
 					cert,
-					int64(dex.Fee.Amt),
-					int32(dex.Fee.ID),
+					int64(cfReg.dexServer.Fee.Amt),
+					int32(cfReg.dexServer.Fee.ID),
 					[]byte(password))
 				if err != nil {
-					pm.SetError(err.Error())
-					pm.SetLoading(false)
+					*cfReg.isSending = false
+					cfReg.Toast.NotifyError(err.Error())
 					return
 				}
-				pm.Dismiss()
+				cfReg.completed(cfReg.dexServer)
+				cfReg.Dismiss()
 			}()
 
 			return false
@@ -193,24 +323,14 @@ func (md *addDexModal) completeRegistration(dex *core.Exchange, feeAssetName str
 	md.ParentWindow().ShowModal(appPasswordModal)
 }
 
-func confirmRegisterModalDesc(dex *core.Exchange, selectedFeeAsset string) string {
-	feeAsset := dex.RegFees[selectedFeeAsset]
-	feeAmt := formatAmount(feeAsset.ID, selectedFeeAsset, feeAsset.Amt)
-	txt := fmt.Sprintf("Enter your app password to confirm DEX registration. When you submit this form, %s will be spent from your wallet to pay registration fees.", feeAmt)
-	markets := make([]string, 0, len(dex.Markets))
-	for _, mkt := range dex.Markets {
-		lotSize := formatAmount(mkt.BaseID, mkt.BaseSymbol, mkt.LotSize)
+func confirmRegisterModalDesc(dexServer *core.Exchange, selectedFeeAsset string) string {
+	feeAsset := dexServer.RegFees[selectedFeeAsset]
+	feeAmt := formatAmountUnit(feeAsset.ID, selectedFeeAsset, feeAsset.Amt)
+	txt := fmt.Sprintf("Confirm DEX registration. When you submit this form, %s will be spent from your wallet to pay registration fees.", feeAmt)
+	markets := make([]string, 0, len(dexServer.Markets))
+	for _, mkt := range dexServer.Markets {
+		lotSize := formatAmountUnit(mkt.BaseID, mkt.BaseSymbol, mkt.LotSize)
 		markets = append(markets, fmt.Sprintf("Base: %s\tQuote: %s\tLot Size: %s", strings.ToUpper(mkt.BaseSymbol), strings.ToUpper(mkt.QuoteSymbol), lotSize))
 	}
 	return fmt.Sprintf("%s\n\nThis DEX supports the following markets. All trades are in multiples of each market's lot size.\n\n%s", txt, strings.Join(markets, "\n"))
-}
-
-func formatAmount(assetID uint32, assetName string, amount uint64) string {
-	assetInfo, err := asset.Info(assetID)
-	if err != nil {
-		return fmt.Sprintf("%d [%s units]", amount, assetName)
-	}
-	unitInfo := assetInfo.UnitInfo
-	convertedLotSize := float64(amount) / float64(unitInfo.Conventional.ConversionFactor)
-	return fmt.Sprintf("%s %s", strconv.FormatFloat(convertedLotSize, 'f', -1, 64), unitInfo.Conventional.Unit)
 }
