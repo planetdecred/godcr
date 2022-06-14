@@ -84,9 +84,19 @@ func (tb *ticketBuyerModal) OnResume() {
 				tb.Toast.NotifyError(err.Error())
 			}
 
+			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
+				!wal.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) &&
+				(tbConfig.PurchaseAccount == wal.MixedAccountNumber()) {
+				tb.accountSelector.SetSelectedAccount(acct)
+			} else {
+				err := tb.accountSelector.SelectFirstWalletValidAccount(nil)
+				if err != nil {
+					tb.Toast.NotifyError(err.Error())
+				}
+			}
+
 			tb.vspSelector.SelectVSP(tbConfig.VspHost)
 			tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain), 'f', 0, 64))
-			tb.accountSelector.SetSelectedAccount(acct)
 			break
 		}
 	}

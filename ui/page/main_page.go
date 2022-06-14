@@ -493,9 +493,9 @@ func (mp *MainPage) HandleUserInteractions() {
 			if mp.WL.MultiWallet.IsSynced() {
 				mp.Display(pg)
 			} else if mp.WL.MultiWallet.IsSyncing() {
-				mp.Toast.NotifyError(values.String(values.StrNotConnected))
-			} else {
 				mp.Toast.NotifyError(values.String(values.StrWalletSyncing))
+			} else {
+				mp.Toast.NotifyError(values.String(values.StrNotConnected))
 			}
 		}
 	}
@@ -581,9 +581,9 @@ func (mp *MainPage) HandleUserInteractions() {
 			if mp.WL.MultiWallet.IsSynced() {
 				mp.Display(pg)
 			} else if mp.WL.MultiWallet.IsSyncing() {
-				mp.Toast.NotifyError("Wallet is syncing, please wait")
+				mp.Toast.NotifyError(values.String(values.StrWalletSyncing))
 			} else {
-				mp.Toast.NotifyError("Not connected to the Decred network")
+				mp.Toast.NotifyError(values.String(values.StrNotConnected))
 			}
 		}
 	}
