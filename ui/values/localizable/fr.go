@@ -431,4 +431,5 @@ const FR = `
 "sendWarning" = "Votre DCR sera envoyé après cette étape."
 "destAddr" = "Adresse de destination"
 "myAcct" = "Mon compte"
+"selectWalletToOpen" = "Select the wallet you would like to open."
 `

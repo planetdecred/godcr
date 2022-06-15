@@ -14,15 +14,16 @@ type Icons struct {
 	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ConcealIcon, RevealIcon,
 	SearchIcon, PlayIcon *widget.Icon
 
-	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
+	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive, MixerInactive, RedAlert,
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
 	PendingIcon, Logo, RedirectIcon, ConfirmIcon, NewWalletIcon, WalletAlertIcon, ArrowForward,
-	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, Mixer,
+	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, Mixer, DcrWatchOnly,
 	Next, SettingsIcon, SecurityIcon, HelpIcon, AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon,
 	AlertGray, ArrowDownIcon, WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, TransactionFingerprint,
 	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredSymbolIcon,
 	DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon, LogoDarkMode, TimerDarkMode, Rebroadcast,
-	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon, LockinInactiveIcon *Image
+	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon,
+	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon *Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -135,7 +136,14 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.DexIconInactive = NewImage(decredIcons["dex_icon_inactive"])
 	i.BTC = NewImage(decredIcons["dex_btc"])
 	i.DCR = NewImage(decredIcons["dex_dcr"])
-
+	i.SuccessIcon = NewImage(decredIcons["success_check"])
+	i.FailedIcon = NewImage(decredIcons["crossmark_red"])
+	i.ReceiveInactiveIcon = NewImage(decredIcons["receive_inactive"])
+	i.SendInactiveIcon = NewImage(decredIcons["send_inactive"])
+	i.DarkmodeIcon = NewImage(decredIcons["darkmodeIcon"])
+	i.MixerInactive = NewImage(decredIcons["mixer_inactive"])
+	i.DcrWatchOnly = NewImage(decredIcons["dcr_watch_only"])
+	i.RedAlert = NewImage(decredIcons["red_alert"])
 	return i
 }
 

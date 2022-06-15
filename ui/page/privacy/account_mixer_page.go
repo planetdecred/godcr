@@ -81,7 +81,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      "StakeShuffle",
+			Title:      values.String(values.StrStakeShuffle),
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,

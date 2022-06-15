@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	PageID = "Send"
+	SendPageID = "Send"
 )
 
 type moreItem struct {
@@ -92,7 +92,7 @@ type authoredTxData struct {
 func NewSendPage(l *load.Load) *Page {
 	pg := &Page{
 		Load:             l,
-		GenericPageModal: app.NewGenericPageModal(PageID),
+		GenericPageModal: app.NewGenericPageModal(SendPageID),
 		sendDestination:  newSendDestination(l),
 		amount:           newSendAmount(l),
 

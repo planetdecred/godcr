@@ -7,6 +7,7 @@ import (
 	"gioui.org/io/semantic"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 )
 
@@ -76,6 +77,95 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 						return ll.Clickable.button.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 							semantic.Button.Add(gtx.Ops)
 							return layout.Dimensions{Size: gtx.Constraints.Min}
+						})
+					}),
+					layout.Stacked(func(gtx C) D {
+						ll.applyDimension(&gtx)
+						return ll.Border.Layout(gtx, func(gtx C) D {
+							// draw padding
+							return ll.Padding.Layout(gtx, func(gtx C) D {
+								// draw layout direction
+								return ll.Direction.Layout(gtx, func(gtx C) D {
+									return layout.Flex{Axis: ll.Orientation, Alignment: ll.Alignment, Spacing: ll.Spacing}.Layout(gtx, children...)
+								})
+							})
+						})
+					}),
+				)
+			}
+
+			if ll.Shadow != nil {
+				if ll.Clickable != nil && ll.Clickable.Hoverable {
+					if ll.Clickable.button.Hovered() {
+						return ll.Shadow.Layout(gtx, wdg)
+					}
+					return wdg(gtx)
+				}
+
+				return ll.Shadow.Layout(gtx, wdg)
+			}
+
+			return wdg(gtx)
+		})
+	})
+}
+
+func (ll LinearLayout) GradientLayout(gtx C, children ...layout.FlexChild) D {
+
+	// draw layout direction
+	return ll.Direction.Layout(gtx, func(gtx C) D {
+		// draw margin
+		return ll.Margin.Layout(gtx, func(gtx C) D {
+
+			wdg := func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Expanded(func(gtx C) D {
+						ll.applyDimension(&gtx)
+						// draw background and clip the background to border radius
+
+						tr := gtx.Dp(unit.Dp(ll.Border.Radius.TopRight))
+						tl := gtx.Dp(unit.Dp(ll.Border.Radius.TopLeft))
+						br := gtx.Dp(unit.Dp(ll.Border.Radius.BottomRight))
+						bl := gtx.Dp(unit.Dp(ll.Border.Radius.BottomLeft))
+
+						dr := image.Rectangle{Max: image.Point{
+							X: gtx.Constraints.Min.X,
+							Y: gtx.Constraints.Min.Y,
+						}}
+
+						paint.LinearGradientOp{
+							Stop1:  layout.FPt(dr.Min),
+							Stop2:  layout.FPt(dr.Max),
+							Color1: color.NRGBA{R: 0x29, G: 0x70, B: 0xff, A: 0xBA},
+							Color2: color.NRGBA{R: 0x2D, G: 0xD8, B: 0xA3, A: 0xBA},
+						}.Add(gtx.Ops)
+
+						defer clip.RRect{
+							Rect: dr,
+							NW:   tl, NE: tr, SE: br, SW: bl,
+						}.Push(gtx.Ops).Pop()
+						paint.PaintOp{}.Add(gtx.Ops)
+
+						if ll.Clickable == nil {
+							return layout.Dimensions{
+								Size: gtx.Constraints.Min,
+							}
+						}
+
+						if ll.Clickable.Hoverable && ll.Clickable.button.Hovered() {
+							fill(gtx, ll.Background)
+						}
+
+						for _, c := range ll.Clickable.button.History() {
+							drawInk(gtx, c, ll.Clickable.style.Color)
+						}
+
+						return ll.Clickable.button.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+							semantic.Button.Add(gtx.Ops)
+
+							return layout.Dimensions{
+								Size: gtx.Constraints.Min,
+							}
 						})
 					}),
 					layout.Stacked(func(gtx C) D {
