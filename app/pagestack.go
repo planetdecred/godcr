@@ -36,15 +36,16 @@ func (pageStack *PageStack) Top() Page {
 // to the new page via newPage.OnNavigatedTo() while page.OnNavigatedFrom() is
 // called on the current page to signal that the current page is no longer the
 // displayed page.
-func (pageStack *PageStack) Push(newPage Page, navigator PageNavigator) {
+func (pageStack *PageStack) Push(newPage Page, navigator PageNavigator) bool {
 	pageStack.mtx.Lock()
 	defer pageStack.mtx.Unlock()
 
 	if l := len(pageStack.pages); l > 0 {
 		currentPage := pageStack.pages[l-1]
-		if currentPage.ID() != newPage.ID() {
-			currentPage.OnNavigatedFrom() // if currentPage is another instance of newPage, it'll be closed below.
+		if currentPage.ID() == newPage.ID() {
+			return false
 		}
+		currentPage.OnNavigatedFrom()
 	}
 
 	// Close any previous instance of this type. Use the Closed() method if
@@ -63,6 +64,7 @@ func (pageStack *PageStack) Push(newPage Page, navigator PageNavigator) {
 	pageStack.pages = append(pageStack.pages, newPage)
 	newPage.OnAttachedToNavigator(navigator)
 	newPage.OnNavigatedTo()
+	return true
 }
 
 // Pop removes the page at the top of the stack and gets the next page ready for

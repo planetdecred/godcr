@@ -275,7 +275,7 @@ func TestSimpleWindowNavigator(mainT *testing.T) {
 		case "display":
 			testName = fmt.Sprintf("display %s", tt.id)
 			runTest = func(t *testing.T) {
-				testWindowNavigator_Display(t, tt.id, windowNavigator)
+				testWindowNavigatorDisplay(t, tt.id, windowNavigator)
 			}
 
 		case "closeCurrentPage":
@@ -285,7 +285,7 @@ func TestSimpleWindowNavigator(mainT *testing.T) {
 				if !tt.expectEmptyStackAfter {
 					finalPageID = &tt.id
 				}
-				testWindowNavigator_CloseCurrentPage(t, finalPageID, windowNavigator)
+				testWindowNavigatorCloseCurrentPage(t, finalPageID, windowNavigator)
 			}
 
 		case "closePagesAfter":
@@ -298,7 +298,7 @@ func TestSimpleWindowNavigator(mainT *testing.T) {
 				if tt.id != "" && tt.id != windowNavigator.CurrentPageID() {
 					pagesToBeClosed = windowNavigator.subPages.pagesAfter(&tt.id)
 				}
-				testWindowNavigator_ClosePagesAfter(t, tt.id, pagesToBeClosed, windowNavigator)
+				testWindowNavigatorClosePagesAfter(t, tt.id, pagesToBeClosed, windowNavigator)
 			}
 
 		case "closeAllPages":
@@ -306,21 +306,21 @@ func TestSimpleWindowNavigator(mainT *testing.T) {
 			tt.expectEmptyStackAfter = true // ensures that all pages are closed
 			runTest = func(t *testing.T) {
 				pagesToBeClosed := windowNavigator.subPages.pagesAfter(nil) // all pages
-				testWindowNavigator_CloseAllPages(t, pagesToBeClosed, windowNavigator)
+				testWindowNavigatorCloseAllPages(t, pagesToBeClosed, windowNavigator)
 			}
 
 		case "clearStackAndDisplay":
 			testName = fmt.Sprintf("clearStackAndDisplay %s", tt.id)
 			runTest = func(t *testing.T) {
 				pagesToBeClosed := windowNavigator.subPages.pagesAfter(nil) // all pages
-				testWindowNavigator_ClearStackAndDisplay(t, tt.id, pagesToBeClosed, windowNavigator)
+				testWindowNavigatorClearStackAndDisplay(t, tt.id, pagesToBeClosed, windowNavigator)
 			}
 
 		case "showModal":
 			testName = fmt.Sprintf("showModal %s", tt.id)
 			runTest = func(t *testing.T) {
 				validateModalCountDifference(t, windowNavigator, 1, func() {
-					testWindowNavigator_ShowModal(t, tt.id, windowNavigator)
+					testWindowNavigatorShowModal(t, tt.id, windowNavigator)
 				})
 			}
 
@@ -341,7 +341,7 @@ func TestSimpleWindowNavigator(mainT *testing.T) {
 				windowNavigator.modalMutex.Unlock()
 
 				validateModalCountDifference(t, windowNavigator, modalCountDiff, func() {
-					testWindowNavigator_DismissModal(t, tt.id, modalToDismiss, windowNavigator)
+					testWindowNavigatorDismissModal(t, tt.id, modalToDismiss, windowNavigator)
 				})
 			}
 
@@ -391,19 +391,37 @@ func TestSimpleWindowNavigator(mainT *testing.T) {
 	}
 }
 
-func testWindowNavigator_Display(t *testing.T, newPageID string, windowNavigator WindowNavigator) {
+func testWindowNavigatorDisplay(t *testing.T, newPageID string, windowNavigator WindowNavigator) {
 	pageBeforeDisplay := windowNavigator.CurrentPage()
 	newPage := newTestPage(newPageID, t.Logf)
 	windowNavigator.Display(newPage)
 
+	if pageBeforeDisplay != nil && pageBeforeDisplay.ID() == newPage.ID() {
+		// new page should not be displayed
+		if newPage.parentNav != nil {
+			t.Fatalf("found wrong parentNav for new page that wasn't displayed: %T", newPage.parentNav)
+		}
+
+		// Confirm that no new methods are called on the previously displayed page.
+		previousPage, ok := pageBeforeDisplay.(*testPage)
+		if !ok {
+			t.Fatalf("previous page of unexpected type %T", previousPage)
+		}
+		previousPageCalledMethods := previousPage.calledMethods()
+		if len(previousPageCalledMethods) != 0 {
+			t.Fatalf("unexpected methods called on the previous page: %s",
+				combinePageMethods(previousPageCalledMethods))
+		}
+		return
+	}
+
 	validateDisplayedPage(t, newPage, false)
 	if pageBeforeDisplay != nil {
-		wasClosed := pageBeforeDisplay.ID() == newPage.ID()
-		validateDismissedPage(t, pageBeforeDisplay, wasClosed)
+		validateDismissedPage(t, pageBeforeDisplay, false)
 	}
 }
 
-func testWindowNavigator_CloseCurrentPage(t *testing.T, finalPageID *string, windowNavigator WindowNavigator) {
+func testWindowNavigatorCloseCurrentPage(t *testing.T, finalPageID *string, windowNavigator WindowNavigator) {
 	pageToClose := windowNavigator.CurrentPage()
 	windowNavigator.CloseCurrentPage()
 	finalPage := windowNavigator.CurrentPage()
@@ -444,7 +462,7 @@ func testWindowNavigator_CloseCurrentPage(t *testing.T, finalPageID *string, win
 	}
 }
 
-func testWindowNavigator_ClosePagesAfter(t *testing.T, finalPageID string, pagesToBeClosed []Page, windowNavigator WindowNavigator) {
+func testWindowNavigatorClosePagesAfter(t *testing.T, finalPageID string, pagesToBeClosed []Page, windowNavigator WindowNavigator) {
 	pageBeforeClosing := windowNavigator.CurrentPage()
 	windowNavigator.ClosePagesAfter(finalPageID)
 	finalPage := windowNavigator.CurrentPage()
@@ -500,14 +518,14 @@ func testWindowNavigator_ClosePagesAfter(t *testing.T, finalPageID string, pages
 	}
 }
 
-func testWindowNavigator_CloseAllPages(t *testing.T, pagesToBeClosed []Page, windowNavigator WindowNavigator) {
+func testWindowNavigatorCloseAllPages(t *testing.T, pagesToBeClosed []Page, windowNavigator WindowNavigator) {
 	windowNavigator.CloseAllPages()
 	for _, page := range pagesToBeClosed {
 		validateDismissedPage(t, page, true)
 	}
 }
 
-func testWindowNavigator_ClearStackAndDisplay(t *testing.T, newPageID string, pagesToBeClosed []Page, windowNavigator WindowNavigator) {
+func testWindowNavigatorClearStackAndDisplay(t *testing.T, newPageID string, pagesToBeClosed []Page, windowNavigator WindowNavigator) {
 	newPage := newTestPage(newPageID, t.Logf)
 	windowNavigator.ClearStackAndDisplay(newPage)
 
@@ -532,7 +550,7 @@ func validateModalCountDifference(t *testing.T, windowNavigator *SimpleWindowNav
 	}
 }
 
-func testWindowNavigator_ShowModal(t *testing.T, modalID string, windowNavigator WindowNavigator) {
+func testWindowNavigatorShowModal(t *testing.T, modalID string, windowNavigator WindowNavigator) {
 	modalBeforeNew := windowNavigator.TopModal()
 	newModal := newTestModal(modalID, t.Logf)
 	windowNavigator.ShowModal(newModal)
@@ -578,7 +596,7 @@ func testWindowNavigator_ShowModal(t *testing.T, modalID string, windowNavigator
 	}
 }
 
-func testWindowNavigator_DismissModal(t *testing.T, modalID string, modalToBeClosed Modal, windowNavigator WindowNavigator) {
+func testWindowNavigatorDismissModal(t *testing.T, modalID string, modalToBeClosed Modal, windowNavigator WindowNavigator) {
 	windowNavigator.DismissModal(modalID)
 
 	// Confirm that the correct parentNav is set for the new top modal

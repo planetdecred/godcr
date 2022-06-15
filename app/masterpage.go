@@ -43,8 +43,10 @@ func (masterPage *MasterPage) CurrentPageID() string {
 // from the backstack.
 // Part of the PageNavigator interface.
 func (masterPage *MasterPage) Display(newPage Page) {
-	masterPage.subPages.Push(newPage, masterPage)
-	masterPage.ParentWindow().Reload()
+	pushed := masterPage.subPages.Push(newPage, masterPage)
+	if pushed {
+		masterPage.ParentWindow().Reload()
+	}
 }
 
 // CloseCurrentPage dismisses the page at the top of the stack and gets the next
