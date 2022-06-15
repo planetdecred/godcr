@@ -20,23 +20,13 @@ const GovernancePageID = "Governance"
 
 type Page struct {
 	*load.Load
-	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
-	// that helps this Page satisfy the app.Page interface. It also defines
-	// helper methods for accessing the PageNavigator that displayed this page
-	// and the root WindowNavigator.
-	*app.GenericPageModal
+	*app.MasterPage
 
 	multiWallet *dcrlibwallet.MultiWallet
 
 	tabCategoryList        *decredmaterial.ClickableList
 	splashScreenInfoButton decredmaterial.IconButton
 	enableGovernanceBtn    decredmaterial.Button
-
-	proposalsPage *ProposalsPage
-	consensusPage *ConsensusPage
-
-	selectedCategoryIndex int
-	changed               bool
 }
 
 var governanceTabTitles = []string{
@@ -46,13 +36,10 @@ var governanceTabTitles = []string{
 
 func NewGovernancePage(l *load.Load) *Page {
 	pg := &Page{
-		Load:                  l,
-		GenericPageModal:      app.NewGenericPageModal(GovernancePageID),
-		multiWallet:           l.WL.MultiWallet,
-		selectedCategoryIndex: -1,
-		proposalsPage:         NewProposalsPage(l),
-		consensusPage:         NewConsensusPage(l),
-		tabCategoryList:       l.Theme.NewClickableList(layout.Horizontal),
+		Load:            l,
+		MasterPage:      app.NewMasterPage(GovernancePageID),
+		multiWallet:     l.WL.MultiWallet,
+		tabCategoryList: l.Theme.NewClickableList(layout.Horizontal),
 	}
 
 	pg.tabCategoryList.IsHoverable = false
@@ -67,17 +54,15 @@ func NewGovernancePage(l *load.Load) *Page {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedTo() {
-	selectedCategory := pg.selectedCategoryIndex
-
-	if selectedCategory == -1 {
-		pg.selectedCategoryIndex = 0
+	if activeTab := pg.CurrentPage(); activeTab != nil {
+		activeTab.OnNavigatedTo()
+	} else if pg.isGovernanceFeatureEnabled() {
+		pg.Display(NewProposalsPage(pg.Load))
 	}
+}
 
-	if pg.selectedCategoryIndex == 1 {
-		pg.consensusPage.OnNavigatedTo()
-	} else {
-		pg.proposalsPage.OnNavigatedTo()
-	}
+func (pg *Page) isGovernanceFeatureEnabled() bool {
+	return pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false)
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -88,8 +73,9 @@ func (pg *Page) OnNavigatedTo() {
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
 func (pg *Page) OnNavigatedFrom() {
-	pg.consensusPage.OnNavigatedFrom()
-	pg.proposalsPage.OnNavigatedFrom()
+	if activeTab := pg.CurrentPage(); activeTab != nil {
+		activeTab.OnNavigatedFrom()
+	}
 }
 
 func (pg *Page) HandleUserInteractions() {
@@ -98,68 +84,58 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	for pg.enableGovernanceBtn.Clicked() {
-		go pg.consensusPage.FetchAgendas()
 		go pg.WL.MultiWallet.Politeia.Sync()
-		pg.proposalsPage.isSyncing = pg.multiWallet.Politeia.IsSyncing()
+		pg.Display(NewProposalsPage(pg.Load))
 		pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, true)
 	}
 
-	if clicked, selectedItem := pg.tabCategoryList.ItemClicked(); clicked {
-		if pg.selectedCategoryIndex != selectedItem {
-			pg.selectedCategoryIndex = selectedItem
-			pg.changed = true
+	if tabItemClicked, clickedTabIndex := pg.tabCategoryList.ItemClicked(); tabItemClicked {
+		if clickedTabIndex == 0 {
+			pg.Display(NewProposalsPage(pg.Load)) // Display should do nothing if the page is already displayed.
+		} else if clickedTabIndex == 1 {
+			pg.Display(NewConsensusPage(pg.Load))
 		}
-
-		// call selected page OnNavigatedTo() only once
-		if pg.changed && pg.selectedCategoryIndex == 0 {
-			pg.proposalsPage.OnNavigatedTo()
-		} else if pg.changed && pg.selectedCategoryIndex == 1 {
-			pg.consensusPage.OnNavigatedTo()
-		}
-		pg.changed = false
-	}
-
-	// handle individual page user interactions
-	if pg.selectedCategoryIndex == 0 {
-		pg.proposalsPage.HandleUserInteractions()
-	} else {
-		pg.consensusPage.HandleUserInteractions()
 	}
 }
 
 func (pg *Page) Layout(gtx C) D {
-	if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) {
-		return components.UniformPadding(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.layoutPageTopNav),
-				layout.Rigid(pg.layoutTabs),
-				layout.Rigid(pg.Theme.Separator().Layout),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-						return pg.switchTab(gtx, pg.selectedCategoryIndex)
-					})
-				}),
-			)
-		})
+	if !pg.isGovernanceFeatureEnabled() {
+		return components.UniformPadding(gtx, pg.splashScreenLayout)
 	}
-	return components.UniformPadding(gtx, pg.splashScreenLayout)
+
+	return components.UniformPadding(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.layoutPageTopNav),
+			layout.Rigid(pg.layoutTabs),
+			layout.Rigid(pg.Theme.Separator().Layout),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+					return pg.CurrentPage().Layout(gtx)
+				})
+			}),
+		)
+	})
 }
 
-func (pg *Page) switchTab(gtx C, selectedCategoryIndex int) D {
-	if selectedCategoryIndex == 0 {
-		return pg.proposalsPage.Layout(gtx)
+func (pg *Page) selectedTabIndex() int {
+	switch pg.CurrentPageID() {
+	case ProposalsPageID:
+		return 0
+	case ConsensusPageID:
+		return 1
+	default:
+		return -1
 	}
-
-	return pg.consensusPage.Layout(gtx)
 }
 
 func (pg *Page) layoutTabs(gtx C) D {
-	var dims layout.Dimensions
+	var selectedTabDims layout.Dimensions
 
 	return layout.Inset{
 		Top: values.MarginPadding20,
 	}.Layout(gtx, func(gtx C) D {
 		return pg.tabCategoryList.Layout(gtx, len(governanceTabTitles), func(gtx C, i int) D {
+			isSelectedTab := pg.selectedTabIndex() == i
 			return layout.Stack{Alignment: layout.S}.Layout(gtx,
 				layout.Stacked(func(gtx C) D {
 					return layout.Inset{
@@ -169,9 +145,9 @@ func (pg *Page) layoutTabs(gtx C) D {
 						return layout.Center.Layout(gtx, func(gtx C) D {
 							lbl := pg.Theme.Label(values.TextSize16, governanceTabTitles[i])
 							lbl.Color = pg.Theme.Color.GrayText1
-							if pg.selectedCategoryIndex == i {
+							if isSelectedTab {
 								lbl.Color = pg.Theme.Color.Primary
-								dims = lbl.Layout(gtx)
+								selectedTabDims = lbl.Layout(gtx)
 							}
 
 							return lbl.Layout(gtx)
@@ -179,19 +155,19 @@ func (pg *Page) layoutTabs(gtx C) D {
 					})
 				}),
 				layout.Stacked(func(gtx C) D {
-					if pg.selectedCategoryIndex != i {
+					if !isSelectedTab {
 						return D{}
 					}
 
 					tabHeight := gtx.Dp(values.MarginPadding2)
-					tabRect := image.Rect(0, 0, dims.Size.X, tabHeight)
+					tabRect := image.Rect(0, 0, selectedTabDims.Size.X, tabHeight)
 
 					return layout.Inset{
 						Left: values.MarginPaddingMinus22,
 					}.Layout(gtx, func(gtx C) D {
 						paint.FillShape(gtx.Ops, pg.Theme.Color.Primary, clip.Rect(tabRect).Op())
 						return layout.Dimensions{
-							Size: image.Point{X: dims.Size.X, Y: tabHeight},
+							Size: image.Point{X: selectedTabDims.Size.X, Y: tabHeight},
 						}
 					})
 				}),
