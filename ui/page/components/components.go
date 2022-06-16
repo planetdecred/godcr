@@ -109,6 +109,17 @@ func UniformHorizontalPadding(gtx layout.Context, body layout.Widget) layout.Dim
 	}.Layout(gtx, body)
 }
 
+func UniformMobileHorizontalPadding(gtx layout.Context, withList bool, body layout.Widget) layout.Dimensions {
+	padding := values.MarginPadding10
+	if withList {
+		padding = 0
+	}
+	return layout.Inset{
+		Right: padding,
+		Left:  values.MarginPadding10,
+	}.Layout(gtx, body)
+}
+
 func UniformMobile(gtx layout.Context, withList bool, body layout.Widget) layout.Dimensions {
 
 	padding := values.MarginPadding10
