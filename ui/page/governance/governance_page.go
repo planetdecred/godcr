@@ -99,6 +99,8 @@ func (pg *Page) HandleUserInteractions() {
 			pg.Display(NewProposalsPage(pg.Load)) // Display should do nothing if the page is already displayed.
 		} else if clickedTabIndex == 1 {
 			pg.Display(NewConsensusPage(pg.Load))
+		} else {
+			pg.Display(NewTreasuryPage(pg.Load))
 		}
 	}
 }
@@ -153,6 +155,8 @@ func (pg *Page) selectedTabIndex() int {
 		return 0
 	case ConsensusPageID:
 		return 1
+	case TreasuryPageID:
+		return 2
 	default:
 		return -1
 	}

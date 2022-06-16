@@ -42,12 +42,12 @@ func layoutPiKey(gtx C, l *load.Load, treasuryKeyPolicy dcrlibwallet.TreasuryKey
 
 	var backgroundColor color.NRGBA
 
-	statusLabel := l.Theme.Label(values.MarginPadding14, treasuryKeyPolicy.Key)
+	statusLabel := l.Theme.Label(values.TextSize14, treasuryKeyPolicy.Key)
 	backgroundColor = l.Theme.Color.LightBlue
 
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			lbl := l.Theme.Label(values.MarginPadding20, "Pi key")
+			lbl := l.Theme.Label(values.TextSize20, "Pi key")
 			lbl.Font.Weight = text.SemiBold
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(lbl.Layout),
@@ -73,7 +73,7 @@ func layoutVoteChoice(l *load.Load, treasuryItem *TreasuryItem) layout.Widget {
 	return func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				lbl := l.Theme.Label(values.MarginPadding16, "Set vote choice")
+				lbl := l.Theme.Label(values.TextSize16, "Set vote choice")
 				lbl.Font.Weight = text.SemiBold
 				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, lbl.Layout)
 			}),
@@ -99,7 +99,7 @@ func layoutItems(l *load.Load, treasuryItem *TreasuryItem) []layout.FlexChild {
 }
 
 func layoutPolicyVoteAction(gtx C, l *load.Load, treasuryItem *TreasuryItem) D {
-	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Px(unit.Dp(100)), gtx.Px(unit.Dp(150))
+	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Dp(unit.Dp(100)), gtx.Dp(unit.Dp(150))
 	treasuryItem.SetChoiceButton.Background = l.Theme.Color.Gray3
 	treasuryItem.SetChoiceButton.SetEnabled(false)
 

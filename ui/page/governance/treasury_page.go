@@ -13,6 +13,7 @@ import (
 	// "gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -24,6 +25,11 @@ const TreasuryPageID = "Treasury"
 
 type TreasuryPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -48,9 +54,10 @@ type TreasuryPage struct {
 
 func NewTreasuryPage(l *load.Load) *TreasuryPage {
 	pg := &TreasuryPage{
-		Load:        l,
-		multiWallet: l.WL.MultiWallet,
-		wallets:     l.WL.SortedWalletList(),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(TreasuryPageID),
+		multiWallet:      l.WL.MultiWallet,
+		wallets:          l.WL.SortedWalletList(),
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -97,11 +104,14 @@ func (pg *TreasuryPage) HandleUserInteractions() {
 	}
 
 	if pg.infoButton.Button.Clicked() {
-		modal.NewInfoModal(pg.Load).
+		infoModal := modal.NewInfoModal(pg.Load).
 			Title(values.String(values.StrTreasurySpending)).
 			Body(values.String(values.StrTreasurySpendingInfo)).
 			SetCancelable(true).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {}).Show()
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			})
+		pg.ParentWindow().ShowModal(infoModal)
 	}
 
 	for pg.viewVotingDashboard.Clicked() {
@@ -151,14 +161,16 @@ func (pg *TreasuryPage) HandleUserInteractions() {
 					}),
 				)
 			}).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
-		pg.ShowModal(info)
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			})
+		pg.ParentWindow().ShowModal(info)
 	}
 
 	if pg.syncCompleted {
 		time.AfterFunc(time.Second*1, func() {
 			pg.syncCompleted = false
-			pg.RefreshWindow()
+			pg.ParentWindow().Reload()
 		})
 	}
 
@@ -174,12 +186,12 @@ func (pg *TreasuryPage) FetchPolicies() {
 	// a network call. Refresh the window once the call completes.
 	go func() {
 		pg.treasuryItems = components.LoadPolicies(pg.Load, selectedWallet, dcrlibwallet.PiKey)
-		pg.RefreshWindow()
+		pg.ParentWindow().Reload()
 	}()
 
 	// Refresh the window now to signify that the syncing
 	// has started with pg.isSyncing set to true above.
-	pg.RefreshWindow()
+	pg.ParentWindow().Reload()
 }
 
 func (pg *TreasuryPage) Layout(gtx C) D {
@@ -272,7 +284,7 @@ func (pg *TreasuryPage) layoutContent(gtx C) D {
 }
 
 func (pg *TreasuryPage) updatePolicyPreference(treasuryItem *components.TreasuryItem) {
-	modal.NewPasswordModal(pg.Load).
+	passwordModal := modal.NewPasswordModal(pg.Load).
 		Title("Confirm to update voting policy").
 		NegativeButton("Cancel", func() {}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
@@ -295,5 +307,6 @@ func (pg *TreasuryPage) updatePolicyPreference(treasuryItem *components.Treasury
 			}()
 
 			return false
-		}).Show()
+		})
+	pg.ParentWindow().ShowModal(passwordModal)
 }
