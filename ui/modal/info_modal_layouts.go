@@ -18,7 +18,7 @@ const (
 	WalletBackupInfoTemplate       = "WalletBackupInfo"
 	AllowUnmixedSpendingTemplate   = "AllowUnmixedSpending"
 	TicketPriceErrorTemplate       = "TicketPriceError"
-	SecurityToolsInfoTemplate ="SecurityToolsInfo"
+	SecurityToolsInfoTemplate      = "SecurityToolsInfo"
 )
 
 func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
