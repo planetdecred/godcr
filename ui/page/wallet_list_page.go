@@ -62,8 +62,8 @@ func NewWalletList(l *load.Load, onWalletSelected func()) *WalletList {
 			},
 		},
 		wallectSelected: onWalletSelected,
-		Load:      l,
-		shadowBox: l.Theme.Shadow(),
+		Load:            l,
+		shadowBox:       l.Theme.Shadow(),
 	}
 
 	pg.walletsList = l.Theme.NewClickableList(layout.Vertical)
@@ -205,38 +205,6 @@ func (pg *WalletList) HandleUserInteractions() {
 // Part of the load.Page interface.
 func (pg *WalletList) OnNavigatedFrom() {
 	pg.ctxCancel()
-}
-
-// Layout draws the page UI components into the provided C
-// to be eventually drawn on screen.
-// Part of the load.Page interface.
-func (pg *WalletList) Layout(gtx C) D {
-	pageContent := []func(gtx C) D{
-		pg.Theme.Label(values.TextSize20, values.String(values.StrSelectWalletToOpen)).Layout,
-		pg.walletSection, // wallet list layout
-		func(gtx C) D {
-			return layout.Inset{
-				Left:   values.MarginPadding5,
-				Bottom: values.MarginPadding10,
-			}.Layout(gtx, pg.layoutAddWalletSection)
-		},
-	}
-
-	gtx.Constraints.Min = gtx.Constraints.Max
-	return components.UniformPadding(gtx, func(gtx C) D {
-		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
-		list := &layout.List{
-			Axis: layout.Vertical,
-		}
-
-		return layout.Center.Layout(gtx, func(gtx C) D {
-			return list.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-				return layout.Inset{Top: values.MarginPadding26}.Layout(gtx, func(gtx C) D {
-					return pageContent[i](gtx)
-				})
-			})
-		})
-	})
 }
 
 // Layout draws the page UI components into the provided C
