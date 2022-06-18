@@ -8,6 +8,7 @@ import (
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -24,7 +25,9 @@ type SecurityToolsPage struct {
 
 	verifyMessage   *decredmaterial.Clickable
 	validateAddress *decredmaterial.Clickable
+	signMsg         *decredmaterial.Clickable
 	shadowBox       *decredmaterial.Shadow
+	infoButton      decredmaterial.IconButton
 
 	backButton decredmaterial.IconButton
 }
@@ -35,6 +38,7 @@ func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 		GenericPageModal: app.NewGenericPageModal(SecurityToolsPageID),
 		verifyMessage:    l.Theme.NewClickable(true),
 		validateAddress:  l.Theme.NewClickable(true),
+		signMsg:          l.Theme.NewClickable(true),
 	}
 
 	pg.shadowBox = l.Theme.Shadow()
@@ -42,8 +46,9 @@ func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 
 	pg.verifyMessage.Radius = decredmaterial.Radius(14)
 	pg.validateAddress.Radius = decredmaterial.Radius(14)
+	pg.signMsg.Radius = decredmaterial.Radius(14)
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -65,22 +70,19 @@ func (pg *SecurityToolsPage) Layout(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
 			Title:      values.String(values.StrSecurityTools),
+			InfoButton: pg.infoButton,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.ParentNavigator().CloseCurrentPage()
 			},
-			Body: func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-						layout.Flexed(.5, pg.message()),
-						layout.Rigid(func(gtx C) D {
-							size := image.Point{X: 15, Y: gtx.Constraints.Min.Y}
-							return D{Size: size}
-						}),
-						layout.Flexed(.5, pg.address()),
-					)
-				})
+			Body: func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(pg.message()),
+					layout.Rigid(pg.address()),
+					layout.Rigid(pg.signMessage()),
+				)
 			},
+			InfoTemplate: modal.SecurityToolsInfoTemplate,
 		}
 		return sp.Layout(pg.ParentWindow(), gtx)
 	}
@@ -96,6 +98,12 @@ func (pg *SecurityToolsPage) message() layout.Widget {
 func (pg *SecurityToolsPage) address() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, pg.Theme.Icons.LocationPinIcon, pg.validateAddress, values.String(values.StrValidateMsg))
+	}
+}
+
+func (pg *SecurityToolsPage) signMessage() layout.Widget {
+	return func(gtx C) D {
+		return pg.pageSections(gtx, pg.Theme.Icons.SignMessageIcon, pg.signMsg, values.String(values.StrSignMessage))
 	}
 }
 

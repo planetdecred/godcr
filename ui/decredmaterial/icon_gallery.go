@@ -18,7 +18,7 @@ type Icons struct {
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
 	PendingIcon, Logo, RedirectIcon, ConfirmIcon, NewWalletIcon, WalletAlertIcon, ArrowForward,
 	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, Mixer, DcrWatchOnly,
-	Next, SettingsIcon, SecurityIcon, HelpIcon, AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon,
+	Next, SettingsIcon, SecurityIcon, HelpIcon, AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, SignMessageIcon,
 	AlertGray, ArrowDownIcon, WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, TransactionFingerprint,
 	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredSymbolIcon,
 	DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon, LogoDarkMode, TimerDarkMode, Rebroadcast,
@@ -97,6 +97,7 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.DebugIcon = NewImage(decredIcons["debug"])
 	i.VerifyMessageIcon = NewImage(decredIcons["verify_message"])
 	i.LocationPinIcon = NewImage(decredIcons["location_pin"])
+	i.SignMessageIcon = NewImage(decredIcons["signMessage"])
 	i.AlertGray = NewImage(decredIcons["alert_gray"])
 	i.ArrowDownIcon = NewImage(decredIcons["arrow_down"])
 	i.WatchOnlyWalletIcon = NewImage(decredIcons["watch_only_wallet"])

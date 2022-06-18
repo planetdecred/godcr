@@ -571,4 +571,5 @@ const (
 	StrDestAddr                    = "destAddr"
 	StrMyAcct                      = "myAcct"
 	StrSelectWalletToOpen          = "selectWalletToOpen"
+	StrSecurityToolsInfo           = "securityToolsInfo"
 )
