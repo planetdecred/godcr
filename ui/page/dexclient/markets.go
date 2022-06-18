@@ -216,7 +216,7 @@ func (pg *Page) readNotifications() {
 	for {
 		select {
 		case n := <-ch:
-			if n.Type() == core.NoteTypeFeePayment {
+			if n.Type() == core.NoteTypeFeePayment || n.Type() == core.NoteTypeConnEvent {
 				pg.ParentWindow().Reload()
 			}
 

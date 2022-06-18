@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"decred.org/dcrdex/client/core"
-	"decred.org/dcrdex/dex"
 	"gioui.org/layout"
 	"gioui.org/widget/material"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -83,8 +82,6 @@ func (amd *assetSelectorModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		amd.Load.Theme.Label(values.TextSize20, strConfirmSelectAssetPayFee).Layout,
 		amd.assetsInfoLayout(),
-		amd.Theme.Separator().Layout,
-		amd.marketSummaryLayout(),
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if amd.isLoading {
@@ -133,19 +130,17 @@ func (amd *assetSelectorModal) assetsInfoLayout() layout.Widget {
 										return amd.Theme.Label(values.TextSize16, strings.ToUpper(convertedAmountSymbol)).Layout(gtx)
 									}),
 									layout.Rigid(amd.Theme.Label(values.TextSize12, fmt.Sprintf(nStrNumberConfirmations, feeAsset.Confs)).Layout),
-									layout.Rigid(func(gtx C) D {
-										walletReady := amd.Theme.Label(values.TextSize12, strSetupNeeded)
-										walletReady.Color = amd.Theme.Color.Yellow
-										if asset.Wallet != nil {
-											walletReady.Text = strWalletReady
-											walletReady.Color = amd.Theme.Color.Success
-										}
-										return walletReady.Layout(gtx)
-									}),
 								)
 							}),
-							layout.Rigid(amd.marketInfoLayout(feeAsset)),
-							layout.Rigid(amd.lotSizeLayout()),
+							layout.Rigid(func(gtx C) D {
+								walletReady := amd.Theme.Label(values.TextSize12, strSetupNeeded)
+								walletReady.Color = amd.Theme.Color.Yellow
+								if asset.Wallet != nil {
+									walletReady.Text = strWalletReady
+									walletReady.Color = amd.Theme.Color.Success
+								}
+								return walletReady.Layout(gtx)
+							}),
 						)
 					})
 				})
@@ -153,114 +148,5 @@ func (amd *assetSelectorModal) assetsInfoLayout() layout.Widget {
 		}
 
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, feeAssetWidgets...)
-	}
-}
-
-func (amd *assetSelectorModal) marketInfoLayout(feeAsset *core.FeeAsset) layout.Widget {
-	return func(gtx C) D {
-		wdgs := []layout.FlexChild{
-			layout.Rigid(amd.Theme.Label(values.TextSize12, strMarket).Layout),
-		}
-
-		for _, mkt := range amd.dexServer.Markets {
-			if !supportedMarket(mkt) {
-				continue
-			}
-			if mkt.BaseID != feeAsset.ID && mkt.QuoteID != feeAsset.ID {
-				continue
-			}
-
-			mkt := mkt
-			var ic *decredmaterial.Image
-			if excludeBase := feeAsset.ID == mkt.BaseID; excludeBase {
-				ic = components.CoinImageBySymbol(amd.Load, dex.BipIDSymbol(mkt.QuoteID))
-			} else {
-				ic = components.CoinImageBySymbol(amd.Load, dex.BipIDSymbol(mkt.BaseID))
-			}
-			ic.Scale = .11
-			wdgs = append(wdgs, layout.Rigid(func(gtx C) D {
-				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, ic.Layout)
-					}),
-					layout.Rigid(func(gtx C) D {
-						txt := fmt.Sprintf("%s-%s", mkt.BaseSymbol, mkt.QuoteSymbol)
-						return amd.Theme.Label(values.TextSize10, strings.ToUpper(txt)).Layout(gtx)
-					}),
-				)
-			}))
-		}
-
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, wdgs...)
-	}
-}
-
-func (amd *assetSelectorModal) marketSummaryLayout() layout.Widget {
-	return func(gtx C) D {
-		return layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(amd.Theme.Label(values.TextSize14, strAllMarketAt).Layout),
-					layout.Rigid(amd.Theme.Label(values.TextSize12, amd.dexServer.Host).Layout),
-				)
-			}),
-			layout.Rigid(func(gtx C) D {
-				wdgs := []layout.FlexChild{
-					layout.Rigid(amd.Theme.Label(values.TextSize12, strMarket).Layout),
-				}
-				for _, mkt := range amd.dexServer.Markets {
-					if !supportedMarket(mkt) {
-						continue
-					}
-					mkt := mkt
-					baseIc := components.CoinImageBySymbol(amd.Load, dex.BipIDSymbol(mkt.BaseID))
-					quoteIc := components.CoinImageBySymbol(amd.Load, dex.BipIDSymbol(mkt.QuoteID))
-					baseIc.Scale, quoteIc.Scale = .11, .11
-					wdgs = append(wdgs, layout.Rigid(func(gtx C) D {
-						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, baseIc.Layout)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, quoteIc.Layout)
-									}),
-								)
-							}),
-							layout.Rigid(func(gtx C) D {
-								txt := fmt.Sprintf("%s-%s", mkt.BaseSymbol, mkt.QuoteSymbol)
-								return amd.Theme.Label(values.TextSize10, strings.ToUpper(txt)).Layout(gtx)
-							}),
-						)
-					}))
-				}
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx, wdgs...)
-			}),
-			layout.Rigid(amd.lotSizeLayout()),
-		)
-	}
-}
-
-func (amd *assetSelectorModal) lotSizeLayout() layout.Widget {
-	return func(gtx C) D {
-		wdgs := []layout.FlexChild{
-			layout.Rigid(amd.Theme.Label(values.TextSize12, strLotSize).Layout),
-		}
-
-		for _, mkt := range amd.dexServer.Markets {
-			if !supportedMarket(mkt) {
-				continue
-			}
-			asset := amd.Dexc().Core().SupportedAssets()[mkt.BaseID]
-			if asset == nil {
-				continue
-			}
-			baseUnitInfo := asset.Info.UnitInfo
-			txt := fmt.Sprintf("%s %s", formatAmount(mkt.LotSize, &baseUnitInfo), baseUnitInfo.Conventional.Unit)
-			wdgs = append(wdgs, layout.Rigid(amd.Theme.Label(values.TextSize10, strings.ToUpper(txt)).Layout))
-		}
-
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, wdgs...)
 	}
 }
