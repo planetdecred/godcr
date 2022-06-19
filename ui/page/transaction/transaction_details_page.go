@@ -225,7 +225,18 @@ func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 		return sp.Layout(gtx)
 	}
 
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx, body)
+	}
+	return pg.layoutDesktop(gtx, body)
+}
+
+func (pg *TxDetailsPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *TxDetailsPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return components.UniformMobile(gtx, false, body)
 }
 
 func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensions {

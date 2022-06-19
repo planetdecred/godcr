@@ -164,7 +164,7 @@ func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 			)
 		})
 	}
-	return components.UniformMobile(gtx, true, pg.splashScreenLayout)
+	return components.UniformMobile(gtx, false, pg.splashScreenLayout)
 }
 
 func (pg *Page) switchTab(gtx C, selectedCategoryIndex int) D {

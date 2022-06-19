@@ -224,7 +224,18 @@ func (pg *ListPage) Layout(gtx C) D {
 		return page.Layout(gtx)
 	}
 
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx, body)
+	}
+	return pg.layoutDesktop(gtx, body)
+}
+
+func (pg *ListPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *ListPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return components.UniformMobile(gtx, false, body)
 }
 
 func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionItem) layout.Dimensions {

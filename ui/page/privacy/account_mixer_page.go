@@ -157,7 +157,19 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return sp.Layout(gtx)
 	}
-	return components.UniformPadding(gtx, d)
+
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx, d)
+	}
+	return pg.layoutDesktop(gtx, d)
+}
+
+func (pg *AccountMixerPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return components.UniformPadding(gtx, body)
+}
+
+func (pg *AccountMixerPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return components.UniformMobile(gtx, false, body)
 }
 
 func (pg *AccountMixerPage) mixerSettingsLayout(gtx layout.Context) layout.Dimensions {
