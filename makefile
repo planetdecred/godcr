@@ -31,3 +31,4 @@ windows:
 clean:
 	-rm -f ${BINARY}-*
 
+.PHONY: clean darwin windows linux freebsd
