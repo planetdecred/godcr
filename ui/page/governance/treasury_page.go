@@ -289,7 +289,7 @@ func (pg *TreasuryPage) updatePolicyPreference(treasuryItem *components.Treasury
 					pm.SetLoading(false)
 					return
 				}
-
+				go pg.FetchPolicies() // re-fetch policies when voting is done.
 				pm.Toast.Notify(values.String(values.StrPolicySetSuccessful))
 				pm.Dismiss()
 			}()
