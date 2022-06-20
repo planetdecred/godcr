@@ -260,12 +260,13 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count int, 
 				return lbl.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				percentage := (count / v.totalVotes) * 100
+				count := float64(count)
+				percentage := (count / float64(v.totalVotes)) * 100
 				if percentage < 0 {
 					percentage = 0
 				}
-				percentageStr := strconv.FormatFloat(float64(percentage), 'f', 1, 64) + "%"
-				countStr := strconv.FormatFloat(float64(count), 'f', 0, 64)
+				percentageStr := strconv.FormatFloat(percentage, 'f', 1, 64) + "%"
+				countStr := strconv.FormatFloat(count, 'f', 0, 64)
 
 				return v.Theme.Body1(fmt.Sprintf("%s (%s)", countStr, percentageStr)).Layout(gtx)
 			}),
