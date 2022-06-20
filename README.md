@@ -50,4 +50,4 @@ See [CONTRIBUTING.md](https://github.com/planetdecred/godcr/blob/master/.github/
 
 ## Other
 
-Earlier experimental work with other user interface toolkits can be found at [godcr-old](https://github.com/planetdecred/godcr-old).
+Earlier experimental work with other user interface toolkits can be found at [godcr-old](https://github.com/raedahgroup/godcr-old).
