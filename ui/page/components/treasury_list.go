@@ -2,6 +2,7 @@ package components
 
 import (
 	"image/color"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -47,7 +48,7 @@ func layoutPiKey(gtx C, l *load.Load, treasuryKeyPolicy dcrlibwallet.TreasuryKey
 
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			lbl := l.Theme.Label(values.TextSize20, "Pi key")
+			lbl := l.Theme.Label(values.TextSize20, values.String(values.StrPiKey))
 			lbl.Font.Weight = text.SemiBold
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(lbl.Layout),
@@ -73,7 +74,7 @@ func layoutVoteChoice(l *load.Load, treasuryItem *TreasuryItem) layout.Widget {
 	return func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				lbl := l.Theme.Label(values.TextSize16, "Set vote choice")
+				lbl := l.Theme.Label(values.TextSize16, values.String(values.StrSetTreasuryPolicy))
 				lbl.Font.Weight = text.SemiBold
 				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, lbl.Layout)
 			}),
@@ -87,7 +88,7 @@ func layoutVoteChoice(l *load.Load, treasuryItem *TreasuryItem) layout.Widget {
 }
 
 func layoutItems(l *load.Load, treasuryItem *TreasuryItem) []layout.FlexChild {
-	voteChoices := [...]string{"yes", "no", "abstain"}
+	voteChoices := [...]string{strings.ToLower(values.String(values.StrYes)), strings.ToLower(values.String(values.StrNo)), strings.ToLower(values.String(values.StrAbstain))}
 	items := make([]layout.FlexChild, 0)
 	for _, voteChoice := range voteChoices {
 		radioBtn := l.Theme.RadioButton(treasuryItem.OptionsRadioGroup, voteChoice, voteChoice, l.Theme.Color.DeepBlue, l.Theme.Color.Primary)
@@ -99,7 +100,7 @@ func layoutItems(l *load.Load, treasuryItem *TreasuryItem) []layout.FlexChild {
 }
 
 func layoutPolicyVoteAction(gtx C, l *load.Load, treasuryItem *TreasuryItem) D {
-	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Dp(unit.Dp(100)), gtx.Dp(unit.Dp(150))
+	gtx.Constraints.Min.X, gtx.Constraints.Max.X = gtx.Dp(unit.Dp(150)), gtx.Dp(unit.Dp(200))
 	treasuryItem.SetChoiceButton.Background = l.Theme.Color.Gray3
 	treasuryItem.SetChoiceButton.SetEnabled(false)
 
@@ -112,10 +113,10 @@ func layoutPolicyVoteAction(gtx C, l *load.Load, treasuryItem *TreasuryItem) D {
 
 func LayoutNoPoliciesFound(gtx C, l *load.Load, syncing bool) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	text := l.Theme.Body1("No Policies yet")
+	text := l.Theme.Body1(values.String(values.StrNoPoliciesYet))
 	text.Color = l.Theme.Color.GrayText3
 	if syncing {
-		text = l.Theme.Body1("Fetching Policies")
+		text = l.Theme.Body1(values.String(values.StrFetchingPolicies))
 	}
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
@@ -136,7 +137,7 @@ func LoadPolicies(l *load.Load, selectedWallet *dcrlibwallet.Wallet, pikey strin
 		treasuryItems[i] = &TreasuryItem{
 			Policy:            *policies[i],
 			OptionsRadioGroup: new(widget.Enum),
-			SetChoiceButton:   l.Theme.Button("Set Choice"),
+			SetChoiceButton:   l.Theme.Button(values.String(values.StrUpdatePreference)),
 		}
 
 		treasuryItems[i].OptionsRadioGroup.Value = treasuryItems[i].Policy.Policy

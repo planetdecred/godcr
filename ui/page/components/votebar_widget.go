@@ -206,11 +206,11 @@ func (v *VoteBar) Layout(window app.WindowNavigator, gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								yesLabel := v.Theme.Body1(values.String(values.StrYes))
+								yesLabel := v.Theme.Body1(values.String(values.StrYes) + values.String(values.StrColon))
 								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes, v.yesColor)
 							}),
 							layout.Rigid(func(gtx C) D {
-								noLabel := v.Theme.Body1(values.String(values.StrNo))
+								noLabel := v.Theme.Body1(values.String(values.StrNo) + values.String(values.StrColon))
 								return v.layoutIconAndText(gtx, noLabel, v.noVotes, v.noColor)
 							}),
 							layout.Flexed(1, func(gtx C) D {

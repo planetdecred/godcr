@@ -4,13 +4,9 @@ import (
 	"context"
 	"time"
 
-	// "gioui.org/font/gofont"
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
-	// "gioui.org/unit"
 	"gioui.org/widget"
-
-	// "gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/app"
@@ -38,18 +34,15 @@ type TreasuryPage struct {
 	wallets       []*dcrlibwallet.Wallet
 	treasuryItems []*components.TreasuryItem
 
-	listContainer       *widget.List
-	viewVotingDashboard *decredmaterial.Clickable
-	copyRedirectURL     *decredmaterial.Clickable
-	redirectIcon        *decredmaterial.Image
-
-	walletDropDown *decredmaterial.DropDown
+	listContainer      *widget.List
+	viewGovernanceKeys *decredmaterial.Clickable
+	copyRedirectURL    *decredmaterial.Clickable
+	redirectIcon       *decredmaterial.Image
 
 	searchEditor decredmaterial.Editor
 	infoButton   decredmaterial.IconButton
 
-	syncCompleted bool
-	isSyncing     bool
+	isPolicyFetchInProgress bool
 }
 
 func NewTreasuryPage(l *load.Load) *TreasuryPage {
@@ -61,9 +54,9 @@ func NewTreasuryPage(l *load.Load) *TreasuryPage {
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		redirectIcon:        l.Theme.Icons.RedirectIcon,
-		viewVotingDashboard: l.Theme.NewClickable(true),
-		copyRedirectURL:     l.Theme.NewClickable(false),
+		redirectIcon:       l.Theme.Icons.RedirectIcon,
+		viewGovernanceKeys: l.Theme.NewClickable(true),
+		copyRedirectURL:    l.Theme.NewClickable(false),
 	}
 
 	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), values.String(values.StrSearch), l.Theme.Icons.SearchIcon, true)
@@ -71,8 +64,6 @@ func NewTreasuryPage(l *load.Load) *TreasuryPage {
 
 	_, pg.infoButton = components.SubpageHeaderButtons(l)
 	pg.infoButton.Size = values.MarginPadding20
-
-	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
 
 	return pg
 }
@@ -93,10 +84,6 @@ func (pg *TreasuryPage) OnNavigatedFrom() {
 }
 
 func (pg *TreasuryPage) HandleUserInteractions() {
-	for pg.walletDropDown.Changed() {
-		pg.FetchPolicies()
-	}
-
 	for i := range pg.treasuryItems {
 		if pg.treasuryItems[i].SetChoiceButton.Clicked() {
 			pg.updatePolicyPreference(pg.treasuryItems[i])
@@ -114,8 +101,8 @@ func (pg *TreasuryPage) HandleUserInteractions() {
 		pg.ParentWindow().ShowModal(infoModal)
 	}
 
-	for pg.viewVotingDashboard.Clicked() {
-		host := "https://github.com/decred/dcrd/blob/master/chaincfg/mainnetparams.go#L485"
+	for pg.viewGovernanceKeys.Clicked() {
+		host := "https://github.com/decred/dcrd/blob/master/chaincfg/mainnetparams.go#L477"
 		if pg.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
 			host = "https://github.com/decred/dcrd/blob/master/chaincfg/testnetparams.go#L390"
 		}
@@ -167,9 +154,8 @@ func (pg *TreasuryPage) HandleUserInteractions() {
 		pg.ParentWindow().ShowModal(info)
 	}
 
-	if pg.syncCompleted {
+	if pg.isPolicyFetchInProgress {
 		time.AfterFunc(time.Second*1, func() {
-			pg.syncCompleted = false
 			pg.ParentWindow().Reload()
 		})
 	}
@@ -180,12 +166,19 @@ func (pg *TreasuryPage) HandleUserInteractions() {
 }
 
 func (pg *TreasuryPage) FetchPolicies() {
-	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+	selectedWallet := pg.WL.SelectedWallet.Wallet
+
+	pg.isPolicyFetchInProgress = true
 
 	// Fetch (or re-fetch) treasury policies in background as this makes
 	// a network call. Refresh the window once the call completes.
 	go func() {
-		pg.treasuryItems = components.LoadPolicies(pg.Load, selectedWallet, dcrlibwallet.PiKey)
+		PiKey := dcrlibwallet.MainnetPiKeys[0]
+		if pg.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
+			PiKey = dcrlibwallet.TestnetPiKeys[0]
+		}
+		pg.treasuryItems = components.LoadPolicies(pg.Load, selectedWallet, PiKey)
+		pg.isPolicyFetchInProgress = true
 		pg.ParentWindow().Reload()
 	}()
 
@@ -205,7 +198,7 @@ func (pg *TreasuryPage) Layout(gtx C) D {
 					)
 				}),
 				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, pg.layoutRedirectVoting)
+					return layout.E.Layout(gtx, pg.layoutVerifyGovernanceKeys)
 				}),
 			)
 		}),
@@ -214,11 +207,8 @@ func (pg *TreasuryPage) Layout(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
 						return layout.Inset{
-							Top: values.MarginPadding60,
+							Top: values.MarginPadding10,
 						}.Layout(gtx, pg.layoutContent)
-					}),
-					layout.Expanded(func(gtx C) D {
-						return pg.walletDropDown.Layout(gtx, 45, true)
 					}),
 				)
 			})
@@ -232,30 +222,28 @@ func (pg *TreasuryPage) lineSeparator(inset layout.Inset) layout.Widget {
 	}
 }
 
-func (pg *TreasuryPage) layoutRedirectVoting(gtx C) D {
-	return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return pg.viewVotingDashboard.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Right: values.MarginPadding10,
-						}.Layout(gtx, pg.redirectIcon.Layout16dp)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Top: values.MarginPaddingMinus2,
-						}.Layout(gtx, pg.Theme.Label(values.TextSize16, values.String(values.StrVerifyGovernanceKeys)).Layout)
-					}),
-				)
-			})
-		}),
-	)
+func (pg *TreasuryPage) layoutVerifyGovernanceKeys(gtx C) D {
+	return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+		return pg.viewGovernanceKeys.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Right: values.MarginPadding10,
+					}.Layout(gtx, pg.redirectIcon.Layout16dp)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Top: values.MarginPaddingMinus2,
+					}.Layout(gtx, pg.Theme.Label(values.TextSize16, values.String(values.StrVerifyGovernanceKeys)).Layout)
+				}),
+			)
+		})
+	})
 }
 
 func (pg *TreasuryPage) layoutContent(gtx C) D {
 	if len(pg.treasuryItems) == 0 {
-		return components.LayoutNoPoliciesFound(gtx, pg.Load, pg.isSyncing)
+		return components.LayoutNoPoliciesFound(gtx, pg.Load, pg.isPolicyFetchInProgress)
 	}
 
 	return layout.Stack{}.Layout(gtx,
@@ -285,13 +273,13 @@ func (pg *TreasuryPage) layoutContent(gtx C) D {
 
 func (pg *TreasuryPage) updatePolicyPreference(treasuryItem *components.TreasuryItem) {
 	passwordModal := modal.NewPasswordModal(pg.Load).
-		Title("Confirm to update voting policy").
-		NegativeButton("Cancel", func() {}).
-		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+		Title(values.String(values.StrConfirmVote)).
+		NegativeButton(values.String(values.StrCancel), func() {}).
+		PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+				selectedWallet := pg.WL.SelectedWallet.Wallet
 				votingPreference := treasuryItem.OptionsRadioGroup.Value
-				err := selectedWallet.SetTreasuryPolicy(dcrlibwallet.PiKey, votingPreference, "", []byte(password))
+				err := selectedWallet.SetTreasuryPolicy(treasuryItem.Policy.Key, votingPreference, "", []byte(password))
 				if err != nil {
 					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 						pm.SetError(values.String(values.StrInvalidPassphrase))
@@ -302,7 +290,7 @@ func (pg *TreasuryPage) updatePolicyPreference(treasuryItem *components.Treasury
 					return
 				}
 
-				pm.Toast.Notify("Your treasury policy has been sucessfully updated!")
+				pm.Toast.Notify(values.String(values.StrPolicySetSuccessful))
 				pm.Dismiss()
 			}()
 

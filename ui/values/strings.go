@@ -598,4 +598,12 @@ const (
 	StrTreasurySpending            = "treasurySpending"
 	StrTreasurySpendingInfo        = "treasurySpendingInfo"
 	StrVerifyGovernanceKeys        = "verifyGovernanceKeys"
+	StrPiKey                       = "piKey"
+	StrNoPoliciesYet               = "noPoliciesYet"
+	StrFetchingPolicies            = "fetchingPolicies"
+	StrSetTreasuryPolicy           = "setTreasuryPolicy"
+	StrAbstain                     = "abstain"
+	StrConfirmVote                 = "confirmVote"
+	StrPolicySetSuccessful         = "policySetSuccessfully"
+	StrColon                       = "colon"
 )
