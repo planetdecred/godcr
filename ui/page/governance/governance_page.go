@@ -103,6 +103,11 @@ func (pg *Page) HandleUserInteractions() {
 			pg.Display(NewTreasuryPage(pg.Load))
 		}
 	}
+
+	// Handle individual page user interactions.
+	if activeTab := pg.CurrentPage(); activeTab != nil {
+		activeTab.HandleUserInteractions()
+	}
 }
 
 func (pg *Page) Layout(gtx C) D {
