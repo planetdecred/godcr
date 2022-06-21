@@ -537,6 +537,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 				EnableName(false).
 				PasswordHint(values.String(values.StrStartupPassword)).
 				ConfirmPasswordHint(values.String(values.StrConfirmStartupPass)).
+				NegativeButton(func() {}).
 				PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
 					go func() {
 						err := pg.wal.GetMultiWallet().SetStartupPassphrase([]byte(password), dcrlibwallet.PassphraseTypePass)
