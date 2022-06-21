@@ -10,6 +10,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -27,6 +28,11 @@ const OverviewPageID = "staking"
 
 type Page struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	list *widget.List
 
@@ -51,7 +57,8 @@ type Page struct {
 
 func NewStakingPage(l *load.Load) *Page {
 	pg := &Page{
-		Load: l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(OverviewPageID),
 	}
 
 	pg.list = &widget.List{
@@ -67,13 +74,6 @@ func NewStakingPage(l *load.Load) *Page {
 	pg.loadPageData()
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *Page) ID() string {
-	return OverviewPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -128,7 +128,7 @@ func (pg *Page) setTBWallet() {
 		}
 	}
 
-	// if there are no tickets with config set, select the first wallet.
+	// if there are no wallets with config set, select the first wallet.
 	if pg.ticketBuyerWallet == nil {
 		pg.ticketBuyerWallet = pg.WL.SortedWalletList()[0]
 	}
@@ -157,7 +157,7 @@ func (pg *Page) loadPageData() {
 			pg.ticketOverview = overview
 		}
 
-		pg.RefreshWindow()
+		pg.ParentWindow().Reload()
 	}()
 
 	go func() {
@@ -186,7 +186,7 @@ func (pg *Page) loadPageData() {
 		}
 
 		pg.liveTickets = txItems
-		pg.RefreshWindow()
+		pg.ParentWindow().Reload()
 	}()
 }
 
@@ -275,7 +275,7 @@ func (pg *Page) HandleUserInteractions() {
 	pg.setStakingButtonsState()
 
 	if pg.stakeBtn.Clicked() {
-		newStakingModal(pg.Load).
+		stakingModal := newStakingModal(pg.Load).
 			TicketPurchased(func() {
 				align := layout.Center
 				successIcon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
@@ -284,38 +284,42 @@ func (pg *Page) HandleUserInteractions() {
 					Icon(successIcon).
 					Title(values.String(values.StrTicketConfirmed)).
 					SetContentAlignment(align, align).
-					PositiveButton(values.String(values.StrBackStaking), func(isChecked bool) {})
-				pg.ShowModal(info)
+					PositiveButton(values.String(values.StrBackStaking), func(isChecked bool) bool {
+						return true
+					})
+				pg.ParentWindow().ShowModal(info)
 				pg.loadPageData()
-			}).Show()
+			})
+		pg.ParentWindow().ShowModal(stakingModal)
 	}
 
 	if pg.toTickets.Button.Clicked() {
-		pg.ChangeFragment(newListPage(pg.Load))
+		pg.ParentNavigator().Display(newListPage(pg.Load))
 	}
 
 	if clicked, selectedItem := pg.ticketsLive.ItemClicked(); clicked {
-		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
+		pg.ParentNavigator().Display(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
 	}
 
-	if pg.autoPurchase.Changed() {
-		if pg.autoPurchase.IsChecked() {
-			if pg.ticketBuyerWallet.TicketBuyerConfigIsSet() {
+	if pg.autoPurchase.Changed() && pg.autoPurchase.IsChecked() {
+		if pg.ticketBuyerWallet.TicketBuyerConfigIsSet() {
+			// get ticket buyer config to check if the saved wallet account is mixed
+			//check if mixer is set, if yes check if allow spend from unmixed account
+			//if not set, check if the saved account is mixed before opening modal
+			// if it is not, open stake config modal
+			tbConfig := pg.ticketBuyerWallet.AutoTicketsBuyerConfig()
+			if pg.ticketBuyerWallet.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
+				!pg.ticketBuyerWallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) &&
+				(tbConfig.PurchaseAccount == pg.ticketBuyerWallet.MixedAccountNumber()) {
 				pg.startTicketBuyerPasswordModal()
 			} else {
-				newTicketBuyerModal(pg.Load).
-					OnCancel(func() {
-						pg.autoPurchase.SetChecked(false)
-					}).
-					OnSettingsSaved(func() {
-						pg.startTicketBuyerPasswordModal()
-						pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
-					}).
-					Show()
+				pg.ticketBuyerSettingsModal()
 			}
 		} else {
-			pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
+			pg.ticketBuyerSettingsModal()
 		}
+	} else {
+		pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
 	}
 
 	if pg.autoPurchaseSettings.Clicked() {
@@ -324,7 +328,15 @@ func (pg *Page) HandleUserInteractions() {
 			return
 		}
 
-		pg.ticketBuyerSettingsModal()
+		ticketBuyerModal := newTicketBuyerModal(pg.Load).
+			OnSettingsSaved(func() {
+				pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
+				pg.setTBWallet()
+			}).
+			OnCancel(func() {
+				pg.autoPurchase.SetChecked(false)
+			})
+		pg.ParentWindow().ShowModal(ticketBuyerModal)
 	}
 
 	secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
@@ -338,15 +350,15 @@ func (pg *Page) HandleUserInteractions() {
 }
 
 func (pg *Page) ticketBuyerSettingsModal() {
-	newTicketBuyerModal(pg.Load).
-		OnSettingsSaved(func() {
-			pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
-			pg.setTBWallet()
-		}).
+	ticketBuyerModal := newTicketBuyerModal(pg.Load).
 		OnCancel(func() {
 			pg.autoPurchase.SetChecked(false)
 		}).
-		Show()
+		OnSettingsSaved(func() {
+			pg.startTicketBuyerPasswordModal()
+			pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
+		})
+	pg.ParentWindow().ShowModal(ticketBuyerModal)
 }
 
 func (pg *Page) startTicketBuyerPasswordModal() {
@@ -358,7 +370,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 		return
 	}
 
-	modal.NewPasswordModal(pg.Load).
+	walletPasswordModal := modal.NewPasswordModal(pg.Load).
 		Title(values.String(values.StrConfirmPurchase)).
 		SetCancelable(false).
 		UseCustomWidget(func(gtx C) D {
@@ -416,12 +428,13 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 				}
 
 				pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
-				pg.RefreshWindow()
+				pg.ParentWindow().Reload()
 			}()
 			pm.Dismiss()
 
 			return false
-		}).Show()
+		})
+	pg.ParentWindow().ShowModal(walletPasswordModal)
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from

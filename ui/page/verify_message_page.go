@@ -6,6 +6,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -17,6 +18,11 @@ const VerifyMessagePageID = "VerifyMessage"
 
 type VerifyMessagePage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	addressEditor          decredmaterial.Editor
 	messageEditor          decredmaterial.Editor
@@ -36,6 +42,7 @@ type VerifyMessagePage struct {
 func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg := &VerifyMessagePage{
 		Load:               l,
+		GenericPageModal:   app.NewGenericPageModal(VerifyMessagePageID),
 		verifyMessage:      l.Theme.Body1(""),
 		EnableEditorSwitch: false,
 	}
@@ -62,13 +69,6 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	return pg
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *VerifyMessagePage) ID() string {
-	return VerifyMessagePageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -88,7 +88,7 @@ func (pg *VerifyMessagePage) Layout(gtx C) D {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
@@ -106,7 +106,7 @@ func (pg *VerifyMessagePage) Layout(gtx C) D {
 			},
 			InfoTemplate: modal.VerifyMessageInfoTemplate,
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx, body)

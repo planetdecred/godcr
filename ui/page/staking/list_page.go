@@ -8,6 +8,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -32,7 +33,13 @@ const (
 
 type ListPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 	*listeners.TxAndBlockNotificationListener
+
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -50,8 +57,9 @@ type ListPage struct {
 
 func newListPage(l *load.Load) *ListPage {
 	pg := &ListPage{
-		Load:        l,
-		ticketsList: l.Theme.NewClickableList(layout.Vertical),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(listPageID),
+		ticketsList:      l.Theme.NewClickableList(layout.Vertical),
 		scrollBar: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -72,13 +80,6 @@ func newListPage(l *load.Load) *ListPage {
 	}, values.StakingDropdownGroup, 2)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *ListPage) ID() string {
-	return listPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -111,7 +112,7 @@ func (pg *ListPage) listenForTxNotifications() {
 					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 					if selectedWallet.ID == n.WalletID {
 						pg.fetchTickets()
-						pg.RefreshWindow()
+						pg.ParentWindow().Reload()
 					}
 				}
 			case <-pg.ctx.Done():
@@ -183,7 +184,7 @@ func (pg *ListPage) Layout(gtx C) D {
 			Title:      values.String(values.StrAllTickets),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
@@ -221,7 +222,7 @@ func (pg *ListPage) Layout(gtx C) D {
 				)
 			},
 		}
-		return page.Layout(gtx)
+		return page.Layout(pg.ParentWindow(), gtx)
 	}
 
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
@@ -266,7 +267,7 @@ func (pg *ListPage) HandleUserInteractions() {
 
 	if clicked, selectedItem := pg.ticketsList.ItemClicked(); clicked {
 		ticketTx := pg.tickets[selectedItem].transaction
-		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, ticketTx))
+		pg.ParentNavigator().Display(tpage.NewTransactionDetailsPage(pg.Load, ticketTx))
 
 		// Check if this ticket is fully registered with a VSP
 		// and log any discrepancies.

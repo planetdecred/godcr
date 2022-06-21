@@ -10,6 +10,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -58,19 +59,19 @@ func (v *VSPSelector) SelectedVSP() *dcrlibwallet.VSP {
 	return v.selectedVSP
 }
 
-func (v *VSPSelector) handle() {
+func (v *VSPSelector) handle(window app.WindowNavigator) {
 	if v.showVSPModal.Clicked() {
-		newVSPSelectorModal(v.Load).
+		modal := newVSPSelectorModal(v.Load).
 			title(values.String(values.StrVotingServiceProvider)).
 			vspSelected(func(info *dcrlibwallet.VSP) {
 				v.SelectVSP(info.Host)
-			}).
-			Show()
+			})
+		window.ShowModal(modal)
 	}
 }
 
-func (v *VSPSelector) Layout(gtx layout.Context) layout.Dimensions {
-	v.handle()
+func (v *VSPSelector) Layout(window app.WindowNavigator, gtx layout.Context) layout.Dimensions {
+	v.handle(window)
 
 	border := widget.Border{
 		Color:        v.Theme.Color.Gray2,
@@ -119,14 +120,12 @@ func (v *VSPSelector) Layout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-const VSPSelectorModalID = "VSPSelectorModal"
-
 type vspSelectorModal struct {
 	*load.Load
+	*decredmaterial.Modal
 
 	dialogTitle string
 
-	modal    decredmaterial.Modal
 	inputVSP decredmaterial.Editor
 	addVSP   decredmaterial.Button
 
@@ -138,11 +137,11 @@ type vspSelectorModal struct {
 
 func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 	v := &vspSelectorModal{
-		Load: l,
+		Load:  l,
+		Modal: l.Theme.ModalFloatTitle("VSPSelectorModal"),
 
 		inputVSP: l.Theme.Editor(new(widget.Editor), values.String(values.StrAddVSP)),
 		addVSP:   l.Theme.Button(values.String(values.StrSave)),
-		modal:    *l.Theme.ModalFloatTitle(),
 		vspList:  l.Theme.NewClickableList(layout.Vertical),
 	}
 	v.inputVSP.Editor.SingleLine = true
@@ -156,21 +155,9 @@ func (v *vspSelectorModal) OnResume() {
 	if len(v.WL.MultiWallet.KnownVSPs()) == 0 {
 		go func() {
 			v.WL.MultiWallet.ReloadVSPList(context.TODO())
-			v.RefreshWindow()
+			v.ParentWindow().Reload()
 		}()
 	}
-}
-
-func (v *vspSelectorModal) ModalID() string {
-	return VSPSelectorModalID
-}
-
-func (v *vspSelectorModal) Show() {
-	v.ShowModal(v)
-}
-
-func (v *vspSelectorModal) Dismiss() {
-	v.DismissModal(v)
 }
 
 func (v *vspSelectorModal) Handle() {
@@ -186,7 +173,7 @@ func (v *vspSelectorModal) Handle() {
 		}()
 	}
 
-	if v.modal.BackdropClicked(true) {
+	if v.Modal.BackdropClicked(true) {
 		v.Dismiss()
 	}
 
@@ -209,7 +196,7 @@ func (v *vspSelectorModal) vspSelected(callback func(*dcrlibwallet.VSP)) *vspSel
 }
 
 func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
-	return v.modal.Layout(gtx, []layout.Widget{
+	return v.Modal.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			title := v.Theme.Label(values.TextSize20, v.dialogTitle)
 			title.Font.Weight = text.SemiBold

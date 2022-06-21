@@ -11,6 +11,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -73,7 +74,7 @@ func (as *AccountSelector) Changed() bool {
 	return changed
 }
 
-func (as *AccountSelector) Handle() {
+func (as *AccountSelector) Handle(window app.WindowNavigator) {
 	for as.openSelectorDialog.Clicked() {
 		as.selectorModal = newAccountSelectorModal(as.Load, as.selectedAccount, as.selectedWallet).
 			title(as.dialogTitle).
@@ -88,7 +89,7 @@ func (as *AccountSelector) Handle() {
 			onModalExit(func() {
 				as.selectorModal = nil
 			})
-		as.ShowModal(as.selectorModal)
+		window.ShowModal(as.selectorModal)
 	}
 }
 
@@ -157,8 +158,8 @@ func (as *AccountSelector) SelectedAccount() *dcrlibwallet.Account {
 	return as.selectedAccount
 }
 
-func (as *AccountSelector) Layout(gtx C) D {
-	as.Handle()
+func (as *AccountSelector) Layout(window app.WindowNavigator, gtx C) D {
+	as.Handle(window)
 
 	return decredmaterial.LinearLayout{
 		Width:     decredmaterial.MatchParent,
@@ -226,7 +227,7 @@ func (as *AccountSelector) Layout(gtx C) D {
 	)
 }
 
-func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
+func (as *AccountSelector) ListenForTxNotifications(ctx context.Context, window app.WindowNavigator) {
 	if as.TxAndBlockNotificationListener != nil {
 		return
 	}
@@ -250,7 +251,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 						if as.selectorModal != nil {
 							as.selectorModal.setupWalletAccounts()
 						}
-						as.RefreshWindow()
+						window.Reload()
 					}
 				case listeners.NewTransaction:
 					// refresh accounts list when new transaction is received
@@ -258,7 +259,7 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 					if as.selectorModal != nil {
 						as.selectorModal.setupWalletAccounts()
 					}
-					as.RefreshWindow()
+					window.Reload()
 				}
 			case <-ctx.Done():
 				as.WL.MultiWallet.RemoveTxAndBlockNotificationListener(AccoutSelectorID)
@@ -270,16 +271,14 @@ func (as *AccountSelector) ListenForTxNotifications(ctx context.Context) {
 	}()
 }
 
-const ModalAccountSelector = "AccountSelectorModal"
-
 type AccountSelectorModal struct {
 	*load.Load
+	*decredmaterial.Modal
 
 	accountIsValid func(*dcrlibwallet.Account) bool
 	callback       func(*dcrlibwallet.Account)
 	onExit         func()
 
-	modal            decredmaterial.Modal
 	walletInfoButton decredmaterial.IconButton
 	walletsList      layout.List
 	accountsList     layout.List
@@ -304,7 +303,7 @@ type selectorAccount struct {
 func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Account, selectedWallet *dcrlibwallet.Wallet) *AccountSelectorModal {
 	asm := &AccountSelectorModal{
 		Load:         l,
-		modal:        *l.Theme.ModalFloatTitle(),
+		Modal:        l.Theme.ModalFloatTitle("AccountSelectorModal"),
 		walletsList:  layout.List{Axis: layout.Vertical},
 		accountsList: layout.List{Axis: layout.Vertical},
 
@@ -317,7 +316,7 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 	asm.walletInfoButton.Size = values.MarginPadding15
 	asm.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
-	asm.modal.ShowScrollbar(true)
+	asm.Modal.ShowScrollbar(true)
 	return asm
 }
 
@@ -376,18 +375,6 @@ func (asm *AccountSelectorModal) setupWalletAccounts() {
 	asm.accounts = walletAccounts
 }
 
-func (asm *AccountSelectorModal) ModalID() string {
-	return ModalAccountSelector
-}
-
-func (asm *AccountSelectorModal) Show() {
-	asm.ShowModal(asm)
-}
-
-func (asm *AccountSelectorModal) Dismiss() {
-	asm.DismissModal(asm)
-}
-
 func (asm *AccountSelectorModal) SetCancelable(min bool) *AccountSelectorModal {
 	asm.isCancelable = min
 	return asm
@@ -406,7 +393,7 @@ func (asm *AccountSelectorModal) Handle() {
 		}
 	}
 
-	if asm.modal.BackdropClicked(asm.isCancelable) {
+	if asm.Modal.BackdropClicked(asm.isCancelable) {
 		asm.onExit()
 		asm.Dismiss()
 	}
@@ -517,7 +504,7 @@ func (asm *AccountSelectorModal) Layout(gtx C) D {
 		},
 	}
 
-	return asm.modal.Layout(gtx, w)
+	return asm.Modal.Layout(gtx, w)
 }
 
 func (asm *AccountSelectorModal) walletAccountLayout(gtx C, account *selectorAccount) D {

@@ -9,6 +9,7 @@ import (
 	"gioui.org/text"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -21,7 +22,7 @@ type ProposalItem struct {
 	voteBar      *VoteBar
 }
 
-func ProposalsList(gtx C, l *load.Load, prop *ProposalItem) D {
+func ProposalsList(window app.WindowNavigator, gtx C, l *load.Load, prop *ProposalItem) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 		proposal := prop.Proposal
@@ -36,7 +37,7 @@ func ProposalsList(gtx C, l *load.Load, prop *ProposalItem) D {
 				if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
 					proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
 					proposal.Category == dcrlibwallet.ProposalCategoryRejected {
-					return layoutProposalVoteBar(gtx, prop)
+					return layoutProposalVoteBar(window, gtx, prop)
 				}
 				return D{}
 			}),
@@ -150,7 +151,7 @@ func layoutTitle(gtx C, l *load.Load, proposal dcrlibwallet.Proposal) D {
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
-func layoutProposalVoteBar(gtx C, item *ProposalItem) D {
+func layoutProposalVoteBar(window app.WindowNavigator, gtx C, item *ProposalItem) D {
 	proposal := item.Proposal
 	yes := int(proposal.YesVotes)
 	no := int(proposal.NoVotes)
@@ -162,7 +163,7 @@ func layoutProposalVoteBar(gtx C, item *ProposalItem) D {
 		SetYesNoVoteParams(yes, no).
 		SetVoteValidityParams(eligibleTickets, quorumPercent, passPercentage).
 		SetProposalDetails(proposal.NumComments, proposal.PublishedAt, proposal.Token).
-		Layout(gtx)
+		Layout(window, gtx)
 }
 
 func layoutInfoTooltip(gtx C, rect image.Rectangle, item ProposalItem) {

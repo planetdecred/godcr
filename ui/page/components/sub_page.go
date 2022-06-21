@@ -4,6 +4,7 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -40,19 +41,19 @@ func SubpageHeaderButtons(l *load.Load) (decredmaterial.IconButton, decredmateri
 	return backButton, infoButton
 }
 
-func (sp *SubPage) Layout(gtx layout.Context) layout.Dimensions {
+func (sp *SubPage) Layout(window app.WindowNavigator, gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				return sp.Header(gtx)
+				return sp.Header(window, gtx)
 			})
 		}),
 		layout.Rigid(sp.Body),
 	)
 }
 
-func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
-	sp.EventHandler()
+func (sp *SubPage) Header(window app.WindowNavigator, gtx layout.Context) layout.Dimensions {
+	sp.EventHandler(window)
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -116,25 +117,28 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (sp *SubPage) SplitLayout(gtx layout.Context) layout.Dimensions {
+func (sp *SubPage) SplitLayout(window app.WindowNavigator, gtx layout.Context) layout.Dimensions {
 	card := sp.Theme.Card()
 	card.Color = color.NRGBA{}
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D { return sp.Header(gtx) }),
+			layout.Rigid(func(gtx C) D { return sp.Header(window, gtx) }),
 			layout.Rigid(sp.Body),
 		)
 	})
 }
 
-func (sp *SubPage) EventHandler() {
+func (sp *SubPage) EventHandler(window app.WindowNavigator) {
 	if sp.InfoTemplate != "" {
 		if sp.InfoButton.Button.Clicked() {
-			modal.NewInfoModal(sp.Load).
+			infoModal := modal.NewInfoModal(sp.Load).
 				Title(sp.Title).
 				SetupWithTemplate(sp.InfoTemplate).
 				SetCancelable(true).
-				PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {}).Show()
+				PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+					return true
+				})
+			window.ShowModal(infoModal)
 		}
 	}
 

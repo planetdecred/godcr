@@ -11,6 +11,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -31,6 +32,11 @@ type transactionWdg struct {
 
 type TxDetailsPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	list *widget.List
 
@@ -67,7 +73,8 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 	rebroadcast.TextSize = values.TextSize14
 	rebroadcast.Color = l.Theme.Color.Text
 	pg := &TxDetailsPage{
-		Load: l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(TransactionDetailsPageID),
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -129,13 +136,6 @@ func (pg *TxDetailsPage) getTXSourceAccountAndDirection() {
 	}
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *TxDetailsPage) ID() string {
-	return TransactionDetailsPageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -167,14 +167,14 @@ func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			InfoButton: pg.infoButton,
 			Back: func() {
 				if pg.txBackStack == nil {
-					pg.PopFragment()
+					pg.ParentNavigator().CloseCurrentPage()
 					return
 				}
 				pg.transaction = pg.txBackStack
 				pg.getTXSourceAccountAndDirection()
 				pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
 				pg.txBackStack = nil
-				pg.RefreshWindow()
+				pg.ParentWindow().Reload()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				widgets := []func(gtx C) D{
@@ -222,7 +222,7 @@ func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			},
 			InfoTemplate: modal.TransactionDetailsInfoTemplate,
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
@@ -781,8 +781,10 @@ func (pg *TxDetailsPage) HandleUserInteractions() {
 					}),
 				)
 			}).
-			PositiveButton("Got it", func(isChecked bool) {})
-		pg.ShowModal(info)
+			PositiveButton("Got it", func(isChecked bool) bool {
+				return true
+			})
+		pg.ParentWindow().ShowModal(info)
 	}
 
 	for pg.associatedTicketClickable.Clicked() {
@@ -791,7 +793,7 @@ func (pg *TxDetailsPage) HandleUserInteractions() {
 			pg.transaction = pg.ticketSpent
 			pg.getTXSourceAccountAndDirection()
 			pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
-			pg.RefreshWindow()
+			pg.ParentWindow().Reload()
 		}
 	}
 

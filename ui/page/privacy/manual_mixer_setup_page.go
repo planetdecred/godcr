@@ -6,6 +6,7 @@ import (
 	"gioui.org/layout"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -18,6 +19,11 @@ const ManualMixerSetupPageID = "ManualMixerSetup"
 
 type ManualMixerSetupPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -33,9 +39,10 @@ type ManualMixerSetupPage struct {
 
 func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualMixerSetupPage {
 	pg := &ManualMixerSetupPage{
-		Load:           l,
-		wallet:         wallet,
-		toPrivacySetup: l.Theme.Button("Set up"),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(ManualMixerSetupPageID),
+		wallet:           wallet,
+		toPrivacySetup:   l.Theme.Button("Set up"),
 	}
 
 	// Mixed account picker
@@ -88,13 +95,6 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 	return pg
 }
 
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *ManualMixerSetupPage) ID() string {
-	return ManualMixerSetupPageID
-}
-
 // OnNavigatedTo is called when the page is about to be displayed and
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
@@ -117,7 +117,7 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
@@ -126,11 +126,15 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 						layout.Flexed(1, func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return pg.mixerAccountSections(gtx, "Mixed account", pg.mixedAccountSelector.Layout)
+									return pg.mixerAccountSections(gtx, "Mixed account", func(gtx layout.Context) layout.Dimensions {
+										return pg.mixedAccountSelector.Layout(pg.ParentWindow(), gtx)
+									})
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Top: values.MarginPaddingMinus15}.Layout(gtx, func(gtx C) D {
-										return pg.mixerAccountSections(gtx, "Unmixed account", pg.unmixedAccountSelector.Layout)
+										return pg.mixerAccountSections(gtx, "Unmixed account", func(gtx layout.Context) layout.Dimensions {
+											return pg.unmixedAccountSelector.Layout(pg.ParentWindow(), gtx)
+										})
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -162,7 +166,7 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 				})
 			},
 		}
-		return page.Layout(gtx)
+		return page.Layout(pg.ParentWindow(), gtx)
 	}
 
 	return components.UniformPadding(gtx, body)
@@ -189,7 +193,7 @@ func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
 		return
 	}
 
-	modal.NewPasswordModal(pg.Load).
+	passwordModal := modal.NewPasswordModal(pg.Load).
 		Title("Confirm to set mixer accounts").
 		NegativeButton("Cancel", func() {}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
@@ -218,11 +222,12 @@ func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
 
 				pm.Dismiss()
 
-				pg.ChangeFragment(NewAccountMixerPage(pg.Load, pg.wallet))
+				pg.ParentNavigator().Display(NewAccountMixerPage(pg.Load, pg.wallet))
 			}()
 
 			return false
-		}).Show()
+		})
+	pg.ParentWindow().ShowModal(passwordModal)
 }
 
 // HandleUserInteractions is called just before Layout() to determine

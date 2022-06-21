@@ -155,7 +155,9 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.pageSections(gtx, values.String(values.StrFrom), false, pg.sourceAccountSelector.Layout)
+			return pg.pageSections(gtx, values.String(values.StrFrom), false, func(gtx C) D {
+				return pg.sourceAccountSelector.Layout(pg.ParentWindow(), gtx)
+			})
 		},
 		func(gtx C) D {
 			return pg.toSection(gtx)
@@ -212,7 +214,9 @@ func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.pageSections(gtx, values.String(values.StrFrom), false, pg.sourceAccountSelector.Layout)
+			return pg.pageSections(gtx, values.String(values.StrFrom), false, func(gtx C) D {
+				return pg.sourceAccountSelector.Layout(pg.ParentWindow(), gtx)
+			})
 		},
 		func(gtx C) D {
 			return pg.toSection(gtx)
@@ -306,7 +310,7 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 					Bottom: values.MarginPadding16,
 				}.Layout(gtx, func(gtx C) D {
 					if !pg.sendDestination.sendToAddress {
-						return pg.sendDestination.destinationAccountSelector.Layout(gtx)
+						return pg.sendDestination.destinationAccountSelector.Layout(pg.ParentWindow(), gtx)
 					}
 					return pg.sendDestination.destinationAddressEditor.Layout(gtx)
 				})

@@ -1,23 +1,22 @@
 package modal
 
 import (
-	"fmt"
 	"image/color"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget/material"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Info = "info_modal"
-
 type InfoModal struct {
 	*load.Load
-	randomID        string
-	modal           decredmaterial.Modal
+	*decredmaterial.Modal
+
 	enterKeyPressed bool
 
 	dialogIcon *decredmaterial.Icon
@@ -28,7 +27,7 @@ type InfoModal struct {
 	customWidget   layout.Widget
 
 	positiveButtonText    string
-	positiveButtonClicked func(isChecked bool)
+	positiveButtonClicked func(isChecked bool) bool
 	btnPositve            decredmaterial.Button
 
 	negativeButtonText    string
@@ -39,37 +38,34 @@ type InfoModal struct {
 	mustBeChecked bool
 
 	titleAlignment, btnAlignment layout.Direction
+	materialLoader               material.LoaderStyle
 
 	isCancelable bool
+	isLoading    bool
 }
 
 func NewInfoModal(l *load.Load) *InfoModal {
+	return NewInfoModalWithKey(l, "info_modal")
+}
+
+func NewInfoModalWithKey(l *load.Load, key string) *InfoModal {
+
 	in := &InfoModal{
 		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", Info, decredmaterial.GenerateRandomNumber()),
-		modal:        *l.Theme.ModalFloatTitle(),
+		Modal:        l.Theme.ModalFloatTitle(key),
 		btnPositve:   l.Theme.OutlineButton(values.String(values.StrYes)),
 		btnNegative:  l.Theme.OutlineButton(values.String(values.StrNo)),
 		isCancelable: true,
+		isLoading:    false,
 		btnAlignment: layout.E,
 	}
 
 	in.btnPositve.Font.Weight = text.Medium
 	in.btnNegative.Font.Weight = text.Medium
 
+	in.materialLoader = material.Loader(l.Theme.Base)
+
 	return in
-}
-
-func (in *InfoModal) ModalID() string {
-	return in.randomID
-}
-
-func (in *InfoModal) Show() {
-	in.ShowModal(in)
-}
-
-func (in *InfoModal) Dismiss() {
-	in.DismissModal(in)
 }
 
 func (in *InfoModal) OnResume() {}
@@ -98,6 +94,11 @@ func (in *InfoModal) CheckBox(checkbox decredmaterial.CheckBoxStyle, mustBeCheck
 	return in
 }
 
+func (in *InfoModal) SetLoading(loading bool) {
+	in.isLoading = loading
+	in.Modal.SetDisabled(loading)
+}
+
 func (in *InfoModal) Title(title string) *InfoModal {
 	in.dialogTitle = title
 	return in
@@ -108,7 +109,7 @@ func (in *InfoModal) Body(subtitle string) *InfoModal {
 	return in
 }
 
-func (in *InfoModal) PositiveButton(text string, clicked func(isChecked bool)) *InfoModal {
+func (in *InfoModal) PositiveButton(text string, clicked func(isChecked bool) bool) *InfoModal {
 	in.positiveButtonText = text
 	in.positiveButtonClicked = clicked
 	return in
@@ -163,28 +164,36 @@ func (in *InfoModal) UseCustomWidget(layout layout.Widget) *InfoModal {
 func (in *InfoModal) HandleKeyEvent(evt *key.Event) {
 	if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && evt.State == key.Press {
 		in.btnPositve.Click()
-		in.RefreshWindow()
+		in.ParentWindow().Reload()
 	}
 }
 
 func (in *InfoModal) Handle() {
 	for in.btnPositve.Clicked() {
-		in.DismissModal(in)
+		if in.isLoading {
+			return
+		}
 		isChecked := false
 		if in.checkbox.CheckBox != nil {
 			isChecked = in.checkbox.CheckBox.Value
 		}
 
-		in.positiveButtonClicked(isChecked)
+		if in.positiveButtonClicked(isChecked) {
+			in.Dismiss()
+		}
 	}
 
 	for in.btnNegative.Clicked() {
-		in.DismissModal(in)
-		in.negativeButtonClicked()
+		if !in.isLoading {
+			in.Dismiss()
+			in.negativeButtonClicked()
+		}
 	}
 
-	if in.modal.BackdropClicked(in.isCancelable) {
-		in.Dismiss()
+	if in.Modal.BackdropClicked(in.isCancelable) {
+		if !in.isLoading {
+			in.Dismiss()
+		}
 	}
 
 	if in.checkbox.CheckBox != nil {
@@ -260,7 +269,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 		w = append(w, in.actionButtonsLayout())
 	}
 
-	return in.modal.Layout(gtx, w)
+	return in.Modal.Layout(gtx, w)
 }
 
 func (in *InfoModal) titleLayout() layout.Widget {
@@ -276,7 +285,7 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 		return in.btnAlignment.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if in.negativeButtonText == "" {
+					if in.negativeButtonText == "" || in.isLoading {
 						return layout.Dimensions{}
 					}
 
@@ -285,6 +294,10 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 					return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, in.btnNegative.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
+					if in.isLoading {
+						return in.materialLoader.Layout(gtx)
+					}
+
 					if in.positiveButtonText == "" {
 						return layout.Dimensions{}
 					}

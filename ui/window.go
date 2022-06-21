@@ -2,9 +2,8 @@ package ui
 
 import (
 	"errors"
-	"sync"
 
-	"gioui.org/app"
+	giouiApp "gioui.org/app"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
 	"gioui.org/layout"
@@ -13,6 +12,7 @@ import (
 	"golang.org/x/text/message"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -26,21 +26,15 @@ import (
 // Window maintains an internal state of variables to determine what to display at
 // any point in time.
 type Window struct {
-	*app.Window
+	*giouiApp.Window
+	navigator app.WindowNavigator
 
 	wallet               *wallet.Wallet
 	walletUnspentOutputs *wallet.UnspentOutputs
 
 	load *load.Load
 
-	modalMutex sync.Mutex
-	modals     []load.Modal
-
-	currentPage   load.Page
-	pageBackStack []load.Page
-
-	selectedAccount int
-	txAuthor        dcrlibwallet.TxAuthor
+	txAuthor dcrlibwallet.TxAuthor
 
 	walletAcctMixerStatus chan *wallet.AccountMixer
 }
@@ -66,8 +60,10 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 		netType = wal.Net
 	}
 
+	giouiWindow := giouiApp.NewWindow(giouiApp.MinSize(values.AppWidth, values.AppHeight), giouiApp.Title(values.StringF(values.StrAppTitle, netType)))
 	win := &Window{
-		Window:                app.NewWindow(app.MinSize(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType))),
+		Window:                giouiWindow,
+		navigator:             app.NewSimpleWindowNavigator(giouiWindow.Invalidate),
 		wallet:                wal,
 		walletUnspentOutputs:  new(wallet.UnspentOutputs),
 		walletAcctMixerStatus: make(chan *wallet.AccountMixer),
@@ -88,11 +84,17 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		return nil, errors.New("unexpected error while loading theme")
 	}
 
+	mw := win.wallet.GetMultiWallet()
+
+	// Set the user-configured theme colors on app load.
+	isDarkModeOn := mw.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
+	th.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)
+
 	l := &load.Load{
 		Theme: th,
 
 		WL: &load.WalletLoad{
-			MultiWallet:    win.wallet.GetMultiWallet(),
+			MultiWallet:    mw,
 			Wallet:         win.wallet,
 			UnspentOutputs: win.walletUnspentOutputs,
 			TxAuthor:       win.txAuthor,
@@ -103,29 +105,13 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		Printer: message.NewPrinter(language.English),
 	}
 
-	l.RefreshWindow = win.Invalidate
-	l.ShowModal = win.showModal
-	l.DismissModal = win.dismissModal
-	l.PopWindowPage = win.popPage
-	l.ChangeWindowPage = win.changePage
-
-	// ReloadApp closes the current page active on the
-	// app window. When the next FrameEvent is received,
-	// a new StartPage will be initialized and displayed.
-	l.ReloadApp = func() {
-		if win.currentPage != nil {
-			win.currentPage.OnNavigatedFrom()
-			win.currentPage = nil
-		}
-	}
-
 	// DarkModeSettingChanged checks if any page or any
 	// modal implements the AppSettingsChangeHandler
 	l.DarkModeSettingChanged = func(isDarkModeOn bool) {
-		if page, ok := win.currentPage.(load.AppSettingsChangeHandler); ok {
+		if page, ok := win.navigator.CurrentPage().(load.AppSettingsChangeHandler); ok {
 			page.OnDarkModeChanged(isDarkModeOn)
 		}
-		for _, modal := range win.modals {
+		if modal := win.navigator.TopModal(); modal != nil {
 			if modal, ok := modal.(load.AppSettingsChangeHandler); ok {
 				modal.OnDarkModeChanged(isDarkModeOn)
 			}
@@ -133,13 +119,13 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	}
 
 	l.LanguageSettingChanged = func() {
-		if page, ok := win.currentPage.(load.AppSettingsChangeHandler); ok {
+		if page, ok := win.navigator.CurrentPage().(load.AppSettingsChangeHandler); ok {
 			page.OnLanguageChanged()
 		}
 	}
 
 	l.CurrencySettingChanged = func() {
-		if page, ok := win.currentPage.(load.AppSettingsChangeHandler); ok {
+		if page, ok := win.navigator.CurrentPage().(load.AppSettingsChangeHandler); ok {
 			page.OnCurrencyChanged()
 		}
 	}
@@ -155,10 +141,7 @@ func (win *Window) HandleEvents() {
 		switch evt := e.(type) {
 
 		case system.DestroyEvent:
-			if win.currentPage != nil {
-				win.currentPage.OnNavigatedFrom()
-				win.currentPage = nil
-			}
+			win.navigator.CloseAllPages()
 			return // exits the loop, caller will exit the program.
 
 		case system.FrameEvent:
@@ -180,17 +163,17 @@ func (win *Window) HandleEvents() {
 // based on their last performed action where applicable.
 func (win *Window) displayWindow(evt system.FrameEvent) {
 	// Set up the StartPage the first time a FrameEvent is received.
-	if win.currentPage == nil {
-		win.currentPage = page.NewStartPage(win.load)
-		win.currentPage.OnNavigatedTo()
+	if win.navigator.CurrentPage() == nil {
+		win.navigator.Display(page.NewStartPage(win.load))
+		return
 	}
 
 	// A FrameEvent may be generated because of a user interaction
 	// with the current page such as a button click. First handle
 	// any such user interaction before rendering the page.
-	win.currentPage.HandleUserInteractions()
-	for _, modal := range win.modals {
-		modal.Handle() // TODO: Just the top-most modal should do.
+	win.navigator.CurrentPage().HandleUserInteractions()
+	if modal := win.navigator.TopModal(); modal != nil {
+		modal.Handle()
 	}
 
 	// Draw the window's UI components into an op.Ops.
@@ -214,102 +197,33 @@ func (win *Window) drawWindowUI(gtx C) {
 		return decredmaterial.Fill(gtx, win.load.Theme.Color.Gray4)
 	})
 
-	// TODO: Should suffice to just draw the top-most modal?
-	modals := layout.Stacked(func(gtx C) D {
-		modals := win.modals
-		if len(modals) == 0 {
+	topModalLayout := layout.Stacked(func(gtx C) D {
+		modal := win.navigator.TopModal()
+		if modal == nil {
 			return layout.Dimensions{}
 		}
-
-		modalLayouts := make([]layout.StackChild, 0)
-		for _, modal := range modals {
-			widget := modal.Layout(gtx)
-			l := layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-				return widget
-			})
-			modalLayouts = append(modalLayouts, l)
-		}
-
-		return layout.Stack{Alignment: layout.Center}.Layout(gtx, modalLayouts...)
+		return modal.Layout(gtx)
 	})
 
 	viewsHolder.Layout(
 		gtx,
 		background,
-		layout.Stacked(win.currentPage.Layout),
-		modals,
+		layout.Stacked(win.navigator.CurrentPage().Layout),
+		topModalLayout,
 		layout.Stacked(win.load.Toast.Layout),
 	)
 }
 
 func (win *Window) handleKeyEvent(evt *key.Event) {
-	// Handle key events on any displayed modals first.
-	for _, modal := range win.modals {
+	// Handle key events on the top modal if a modal is displayed.
+	// Only handle key events on the current page if no modal is displayed.
+	if modal := win.navigator.TopModal(); modal != nil {
 		if handler, ok := modal.(load.KeyEventHandler); ok {
 			handler.HandleKeyEvent(evt)
 		}
-	}
-	// Only handle key events on the current page if no modal is displayed.
-	if len(win.modals) == 0 {
-		if handler, ok := win.currentPage.(load.KeyEventHandler); ok {
+	} else {
+		if handler, ok := win.navigator.CurrentPage().(load.KeyEventHandler); ok {
 			handler.HandleKeyEvent(evt)
-		}
-	}
-}
-
-// changePage displays the provided page on the window and optionally adds
-// the current page to the backstack. This automatically refreshes the display,
-// callers should not re-refresh the display.
-func (win *Window) changePage(page load.Page, keepBackStack bool) {
-	if win.currentPage != nil && keepBackStack {
-		win.currentPage.OnNavigatedFrom()
-		win.pageBackStack = append(win.pageBackStack, win.currentPage)
-	}
-
-	win.currentPage = page
-	win.currentPage.OnNavigatedTo()
-	win.Invalidate()
-}
-
-// popPage goes back to the previous page. This automatically refreshes the
-// display, callers should not re-refresh the display.
-// Returns true if page was popped.
-func (win *Window) popPage() bool {
-	if len(win.pageBackStack) == 0 {
-		return false
-	}
-
-	// get and remove last page
-	previousPageIndex := len(win.pageBackStack) - 1
-	previousPage := win.pageBackStack[previousPageIndex]
-	win.pageBackStack = win.pageBackStack[:previousPageIndex]
-
-	// close the current page and display the previous page
-	win.currentPage.OnNavigatedFrom()
-	previousPage.OnNavigatedTo()
-	win.currentPage = previousPage
-	win.Invalidate()
-
-	return true
-}
-
-// TODO: showModal should refresh display, callers shouldn't.
-func (win *Window) showModal(modal load.Modal) {
-	modal.OnResume() // setup display data
-	win.modalMutex.Lock()
-	win.modals = append(win.modals, modal)
-	win.modalMutex.Unlock()
-}
-
-func (win *Window) dismissModal(modal load.Modal) {
-	win.modalMutex.Lock()
-	defer win.modalMutex.Unlock()
-	for i, m := range win.modals {
-		if m.ModalID() == modal.ModalID() {
-			modal.OnDismiss() // do garbage collection in modal
-			win.modals = append(win.modals[:i], win.modals[i+1:]...)
-			win.Invalidate()
-			return
 		}
 	}
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -20,6 +21,12 @@ const AccountDetailsPageID = "AccountDetails"
 
 type AcctDetailsPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	wallet  *dcrlibwallet.Wallet
 	account *dcrlibwallet.Account
 
@@ -42,9 +49,10 @@ type AcctDetailsPage struct {
 
 func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetailsPage {
 	pg := &AcctDetailsPage{
-		Load:    l,
-		wallet:  l.WL.MultiWallet.WalletWithID(account.WalletID),
-		account: account,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(AccountDetailsPageID),
+		wallet:           l.WL.MultiWallet.WalletWithID(account.WalletID),
+		account:          account,
 
 		theme:                    l.Theme,
 		acctDetailsPageContainer: layout.List{Axis: layout.Vertical},
@@ -58,13 +66,6 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *AcctDetailsPage) ID() string {
-	return AccountDetailsPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -125,7 +126,7 @@ func (pg *AcctDetailsPage) layoutDesktop(gtx layout.Context, widgets []func(gtx 
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.Theme.List(pg.list).Layout(gtx, 1, func(gtx C, i int) D {
@@ -151,7 +152,7 @@ func (pg *AcctDetailsPage) layoutDesktop(gtx layout.Context, widgets []func(gtx 
 				})
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, body)
 }
@@ -164,7 +165,7 @@ func (pg *AcctDetailsPage) layoutMobile(gtx layout.Context, widgets []func(gtx C
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.Theme.List(pg.list).Layout(gtx, 1, func(gtx C, i int) D {
@@ -190,7 +191,7 @@ func (pg *AcctDetailsPage) layoutMobile(gtx layout.Context, widgets []func(gtx C
 				})
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformMobile(gtx, true, body)
 }
@@ -351,7 +352,7 @@ func (pg *AcctDetailsPage) HandleUserInteractions() {
 
 		textModal.Title(values.String(values.StrRenameAcct)).
 			NegativeButton(values.String(values.StrCancel), func() {})
-		textModal.Show()
+		pg.ParentWindow().ShowModal(textModal)
 	}
 }
 

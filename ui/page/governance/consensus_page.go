@@ -11,6 +11,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -22,6 +23,11 @@ const ConsensusPageID = "Consensus"
 
 type ConsensusPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -50,10 +56,11 @@ type ConsensusPage struct {
 
 func NewConsensusPage(l *load.Load) *ConsensusPage {
 	pg := &ConsensusPage{
-		Load:          l,
-		multiWallet:   l.WL.MultiWallet,
-		wallets:       l.WL.SortedWalletList(),
-		consensusList: l.Theme.NewClickableList(layout.Vertical),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(ConsensusPageID),
+		multiWallet:      l.WL.MultiWallet,
+		wallets:          l.WL.SortedWalletList(),
+		consensusList:    l.Theme.NewClickableList(layout.Vertical),
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -74,10 +81,6 @@ func NewConsensusPage(l *load.Load) *ConsensusPage {
 	pg.orderDropDown = components.CreateOrderDropDown(l, values.ConsensusDropdownGroup, 0)
 
 	return pg
-}
-
-func (pg *ConsensusPage) ID() string {
-	return ConsensusPageID
 }
 
 func (pg *ConsensusPage) OnNavigatedTo() {
@@ -102,9 +105,10 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 
 	for i := range pg.consensusItems {
 		if pg.consensusItems[i].VoteButton.Clicked() {
-			newAgendaVoteModal(pg.Load, &pg.consensusItems[i].Agenda, func() {
+			voteModal := newAgendaVoteModal(pg.Load, &pg.consensusItems[i].Agenda, func() {
 				go pg.FetchAgendas() // re-fetch agendas when modal is dismissed
-			}).Show()
+			})
+			pg.ParentWindow().ShowModal(voteModal)
 		}
 	}
 
@@ -113,11 +117,14 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 	}
 
 	if pg.infoButton.Button.Clicked() {
-		modal.NewInfoModal(pg.Load).
+		infoModal := modal.NewInfoModal(pg.Load).
 			Title(values.String(values.StrConsensusChange)).
 			Body(values.String(values.StrOnChainVote)).
 			SetCancelable(true).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {}).Show()
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			})
+		pg.ParentWindow().ShowModal(infoModal)
 	}
 
 	for pg.viewVotingDashboard.Clicked() {
@@ -167,14 +174,16 @@ func (pg *ConsensusPage) HandleUserInteractions() {
 					}),
 				)
 			}).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) {})
-		pg.ShowModal(info)
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			})
+		pg.ParentWindow().ShowModal(info)
 	}
 
 	if pg.syncCompleted {
 		time.AfterFunc(time.Second*1, func() {
 			pg.syncCompleted = false
-			pg.RefreshWindow()
+			pg.ParentWindow().Reload()
 		})
 	}
 
@@ -195,12 +204,12 @@ func (pg *ConsensusPage) FetchAgendas() {
 		pg.consensusItems = components.LoadAgendas(pg.Load, selectedWallet, newestFirst)
 		pg.isSyncing = false
 		pg.syncCompleted = true
-		pg.RefreshWindow()
+		pg.ParentWindow().Reload()
 	}()
 
 	// Refresh the window now to signify that the syncing
 	// has started with pg.isSyncing set to true above.
-	pg.RefreshWindow()
+	pg.ParentWindow().Reload()
 }
 
 func (pg *ConsensusPage) Layout(gtx C) D {

@@ -8,6 +8,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -19,6 +20,12 @@ const SignMessagePageID = "SignMessage"
 
 type SignMessagePage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	container layout.List
 	wallet    *dcrlibwallet.Wallet
 
@@ -55,8 +62,9 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	copyIcon := l.Theme.Icons.CopyIcon
 
 	pg := &SignMessagePage{
-		Load:   l,
-		wallet: wallet,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(SignMessagePageID),
+		wallet:           wallet,
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
@@ -77,13 +85,6 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *SignMessagePage) ID() string {
-	return SignMessagePageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -107,7 +108,7 @@ func (pg *SignMessagePage) Layout(gtx C) D {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
@@ -124,7 +125,7 @@ func (pg *SignMessagePage) Layout(gtx C) D {
 			},
 			InfoTemplate: modal.SignMessageInfoTemplate,
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
@@ -273,7 +274,7 @@ func (pg *SignMessagePage) HandleUserInteractions() {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()
 
-			modal.NewPasswordModal(pg.Load).
+			walletPasswordModal := modal.NewPasswordModal(pg.Load).
 				Title(values.String(values.StrConfirmToSign)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
@@ -290,7 +291,8 @@ func (pg *SignMessagePage) HandleUserInteractions() {
 
 					}()
 					return false
-				}).Show()
+				})
+			pg.ParentWindow().ShowModal(walletPasswordModal)
 		}
 	}
 }

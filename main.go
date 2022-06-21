@@ -64,15 +64,15 @@ func main() {
 		return
 	}
 
-	win, err := ui.CreateWindow(wal)
-	if err != nil {
-		log.Errorf("Could not initialize window: %s\ns", err)
-		return
-	}
-
 	err = wal.InitMultiWallet()
 	if err != nil {
 		log.Errorf("init multiwallet error: %v", err)
+		return
+	}
+
+	win, err := ui.CreateWindow(wal)
+	if err != nil {
+		log.Errorf("Could not initialize window: %s\ns", err)
 		return
 	}
 

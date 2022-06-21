@@ -333,6 +333,10 @@ const (
 	StrWalletRestored              = "walletRestored"
 	StrWalletExist                 = "walletExist"
 	StrWalletNotExist              = "walletNotExist"
+	StrInvalidHex                  = "invalidHex"
+	StrRestoreWithHex              = "restoreWithHex"
+	StrEnterHex                    = "enterHex"
+	StrSubmit                      = "submit"
 	StrEnterWalDetails             = "enterWalletDetails"
 	StrCopy                        = "copy"
 	StrHowToCopy                   = "howToCopy"
@@ -566,4 +570,5 @@ const (
 	StrSendWarning                 = "sendWarning"
 	StrDestAddr                    = "destAddr"
 	StrMyAcct                      = "myAcct"
+	StrSelectWalletToOpen          = "selectWalletToOpen"
 )

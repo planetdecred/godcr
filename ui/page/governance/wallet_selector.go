@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -58,17 +59,17 @@ func (as *WalletSelector) WalletSelected(callback func(*dcrlibwallet.Wallet)) *W
 	return as
 }
 
-func (as *WalletSelector) Handle() {
+func (as *WalletSelector) Handle(window app.WindowNavigator) {
 	for as.openSelectorDialog.Clicked() {
-		newWalletSelectorModal(as.Load, as.selectedWallet).
+		walletSelectorModal := newWalletSelectorModal(as.Load, as.selectedWallet).
 			title(as.dialogTitle).
 			accountValidator(as.walletIsValid).
 			accountSelected(func(wallet *dcrlibwallet.Wallet) {
 				as.selectedWallet = wallet
 				as.setupSelectedWallet(wallet)
 				as.callback(wallet)
-			}).Show()
-
+			})
+		window.ShowModal(walletSelectorModal)
 	}
 }
 
@@ -105,8 +106,8 @@ func (as *WalletSelector) SelectedWallet() *dcrlibwallet.Wallet {
 	return as.selectedWallet
 }
 
-func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
-	as.Handle()
+func (as *WalletSelector) Layout(gtx layout.Context, window app.WindowNavigator) layout.Dimensions {
+	as.Handle(window)
 
 	border := widget.Border{
 		Color:        as.Theme.Color.Gray2,
@@ -147,10 +148,10 @@ func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-const ModalWalletSelector = "WalletSelectorModal"
-
 type WalletSelectorModal struct {
 	*load.Load
+	*decredmaterial.Modal
+
 	dialogTitle string
 
 	isCancelable bool
@@ -158,7 +159,6 @@ type WalletSelectorModal struct {
 	walletIsValid func(*dcrlibwallet.Wallet) bool
 	callback      func(*dcrlibwallet.Wallet)
 
-	modal       decredmaterial.Modal
 	walletsList *decredmaterial.ClickableList
 
 	currentSelectedWallet *dcrlibwallet.Wallet
@@ -168,7 +168,7 @@ type WalletSelectorModal struct {
 func newWalletSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Wallet) *WalletSelectorModal {
 	asm := &WalletSelectorModal{
 		Load:        l,
-		modal:       *l.Theme.ModalFloatTitle(),
+		Modal:       l.Theme.ModalFloatTitle("WalletSelectorModal"),
 		walletsList: l.Theme.NewClickableList(layout.Vertical),
 
 		currentSelectedWallet: currentSelectedAccount,
@@ -190,25 +190,13 @@ func (asm *WalletSelectorModal) OnResume() {
 	asm.filteredWallets = wallets
 }
 
-func (asm *WalletSelectorModal) ModalID() string {
-	return ModalWalletSelector
-}
-
-func (asm *WalletSelectorModal) Show() {
-	asm.ShowModal(asm)
-}
-
-func (asm *WalletSelectorModal) Dismiss() {
-	asm.DismissModal(asm)
-}
-
 func (asm *WalletSelectorModal) Handle() {
 	if clicked, index := asm.walletsList.ItemClicked(); clicked {
 		asm.callback(asm.filteredWallets[index])
 		asm.Dismiss()
 	}
 
-	if asm.modal.BackdropClicked(asm.isCancelable) {
+	if asm.Modal.BackdropClicked(asm.isCancelable) {
 		asm.Dismiss()
 	}
 }
@@ -266,7 +254,7 @@ func (asm *WalletSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return asm.modal.Layout(gtx, w)
+	return asm.Modal.Layout(gtx, w)
 }
 
 func (asm *WalletSelectorModal) walletAccountLayout(gtx layout.Context, wallet *dcrlibwallet.Wallet) layout.Dimensions {

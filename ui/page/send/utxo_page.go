@@ -10,6 +10,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -23,8 +24,13 @@ const UTXOPageID = "unspentTransactionOutput"
 
 type UTXOPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	utxoListContainer      layout.List
-	txAuthor               *dcrlibwallet.TxAuthor
 	backButton             decredmaterial.IconButton
 	useUTXOButton          decredmaterial.Button
 	unspentOutputs         **wallet.UnspentOutputs
@@ -44,12 +50,12 @@ type UTXOPage struct {
 
 func NewUTXOPage(l *load.Load, account *dcrlibwallet.Account) *UTXOPage {
 	pg := &UTXOPage{
-		Load:           l,
-		unspentOutputs: &l.WL.UnspentOutputs,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(UTXOPageID),
+		unspentOutputs:   &l.WL.UnspentOutputs,
 		utxoListContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		// txAuthor:               &l.WL.TxAuthor,
 		unspentOutputsSelected: &l.SelectedUTXO,
 		selectAllChexBox:       l.Theme.CheckBox(new(widget.Bool), ""),
 		separator:              l.Theme.Separator(),
@@ -61,13 +67,6 @@ func NewUTXOPage(l *load.Load, account *dcrlibwallet.Account) *UTXOPage {
 	pg.useUTXOButton = l.Theme.Button("OK")
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *UTXOPage) ID() string {
-	return UTXOPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -104,7 +103,7 @@ func (pg *UTXOPage) HandleUserInteractions() {
 
 	if pg.backButton.Button.Clicked() {
 		pg.clearPageData()
-		pg.PopFragment()
+		pg.ParentNavigator().CloseCurrentPage()
 	}
 
 	/*if pg.useUTXOButton.Button.Clicked() {
@@ -162,8 +161,6 @@ func (pg *UTXOPage) calculateAmountAndFeeUTXO() {
 	pg.txnAmount = dcrutil.Amount(totalAmount).String()
 	pg.txnFee = dcrutil.Amount(feeAndSize.Fee.AtomValue).String()
 	pg.txnAmountAfterFee = dcrutil.Amount(totalAmount - feeAndSize.Fee.AtomValue).String()
-
-	pg.txAuthor = unsignedTx
 }
 
 func (pg *UTXOPage) clearPageData() {

@@ -4,7 +4,6 @@
 package components
 
 import (
-	"errors"
 	"fmt"
 	"image/color"
 	"os/exec"
@@ -762,26 +761,19 @@ func CalculateTotalWalletsBalance(l *load.Load) (*CummulativeWalletsBalance, err
 	var totalBalance, spandableBalance, immatureReward, votingAuthority,
 		immatureStakeGeneration, lockedByTickets, unConfirmed int64
 
-	wallets := l.WL.SortedWalletList()
-	if len(wallets) == 0 {
-		return nil, errors.New("no wallets found")
+	accountsResult, err := l.WL.SelectedWallet.Wallet.GetAccountsRaw()
+	if err != nil {
+		return nil, err
 	}
 
-	for _, wallet := range wallets {
-		accountsResult, err := wallet.GetAccountsRaw()
-		if err != nil {
-			return nil, err
-		}
-
-		for _, account := range accountsResult.Acc {
-			totalBalance += account.TotalBalance
-			spandableBalance += account.Balance.Spendable
-			immatureReward += account.Balance.ImmatureReward
-			immatureStakeGeneration += account.Balance.ImmatureStakeGeneration
-			lockedByTickets += account.Balance.LockedByTickets
-			votingAuthority += account.Balance.VotingAuthority
-			unConfirmed += account.Balance.UnConfirmed
-		}
+	for _, account := range accountsResult.Acc {
+		totalBalance += account.TotalBalance
+		spandableBalance += account.Balance.Spendable
+		immatureReward += account.Balance.ImmatureReward
+		immatureStakeGeneration += account.Balance.ImmatureStakeGeneration
+		lockedByTickets += account.Balance.LockedByTickets
+		votingAuthority += account.Balance.VotingAuthority
+		unConfirmed += account.Balance.UnConfirmed
 	}
 
 	cumm := &CummulativeWalletsBalance{

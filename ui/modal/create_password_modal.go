@@ -1,7 +1,6 @@
 package modal
 
 import (
-	"fmt"
 	"strconv"
 
 	"gioui.org/io/key"
@@ -11,17 +10,16 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const CreateWallet = "create_wallet_modal"
-
 type CreatePasswordModal struct {
 	*load.Load
+	*decredmaterial.Modal
 
-	modal                 decredmaterial.Modal
 	walletName            decredmaterial.Editor
 	passwordEditor        decredmaterial.Editor
 	confirmPasswordEditor decredmaterial.Editor
@@ -34,16 +32,16 @@ type CreatePasswordModal struct {
 	isEnabled          bool
 
 	dialogTitle string
-	randomID    string
 	serverError string
 	description string
 
-	parent load.Page
+	parent app.Page
 
 	materialLoader material.LoaderStyle
 
-	btnPositve  decredmaterial.Button
-	btnNegative decredmaterial.Button
+	btnPositve            decredmaterial.Button
+	btnNegative           decredmaterial.Button
+	negativeButtonClicked func()
 
 	callback func(walletName, password string, m *CreatePasswordModal) bool // return true to dismiss dialog
 }
@@ -51,8 +49,7 @@ type CreatePasswordModal struct {
 func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	cm := &CreatePasswordModal{
 		Load:             l,
-		randomID:         fmt.Sprintf("%s-%d", CreateWallet, decredmaterial.GenerateRandomNumber()),
-		modal:            *l.Theme.ModalFloatTitle(),
+		Modal:            l.Theme.ModalFloatTitle("create_wallet_modal"),
 		passwordStrength: l.Theme.ProgressBar(0),
 		btnPositve:       l.Theme.Button(values.String(values.StrConfirm)),
 		btnNegative:      l.Theme.OutlineButton(values.String(values.StrCancel)),
@@ -78,10 +75,6 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	return cm
 }
 
-func (cm *CreatePasswordModal) ModalID() string {
-	return cm.randomID
-}
-
 func (cm *CreatePasswordModal) OnResume() {
 	if cm.walletNameEnabled {
 		cm.walletName.Editor.Focus()
@@ -91,14 +84,6 @@ func (cm *CreatePasswordModal) OnResume() {
 }
 
 func (cm *CreatePasswordModal) OnDismiss() {}
-
-func (cm *CreatePasswordModal) Show() {
-	cm.ShowModal(cm)
-}
-
-func (cm *CreatePasswordModal) Dismiss() {
-	cm.DismissModal(cm)
-}
 
 func (cm *CreatePasswordModal) Title(title string) *CreatePasswordModal {
 	cm.dialogTitle = title
@@ -130,9 +115,14 @@ func (cm *CreatePasswordModal) PasswordCreated(callback func(walletName, passwor
 	return cm
 }
 
+func (cm *CreatePasswordModal) NegativeButton(callback func()) *CreatePasswordModal {
+	cm.negativeButtonClicked = callback
+	return cm
+}
+
 func (cm *CreatePasswordModal) SetLoading(loading bool) {
 	cm.isLoading = loading
-	cm.modal.SetDisabled(loading)
+	cm.Modal.SetDisabled(loading)
 }
 
 func (cm *CreatePasswordModal) SetCancelable(min bool) *CreatePasswordModal {
@@ -160,7 +150,7 @@ func (cm *CreatePasswordModal) validToCreate() bool {
 }
 
 // SetParent sets the page that created PasswordModal as it's parent.
-func (cm *CreatePasswordModal) SetParent(parent load.Page) *CreatePasswordModal {
+func (cm *CreatePasswordModal) SetParent(parent app.Page) *CreatePasswordModal {
 	cm.parent = parent
 	return cm
 }
@@ -219,12 +209,14 @@ func (cm *CreatePasswordModal) Handle() {
 				cm.parent.OnNavigatedTo()
 			}
 			cm.Dismiss()
+			cm.negativeButtonClicked()
 		}
 	}
 
-	if cm.modal.BackdropClicked(cm.isCancelable) {
+	if cm.Modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {
 			cm.Dismiss()
+			cm.negativeButtonClicked()
 		}
 	}
 
@@ -339,5 +331,5 @@ func (cm *CreatePasswordModal) Layout(gtx C) D {
 		})
 	})
 
-	return cm.modal.Layout(gtx, w)
+	return cm.Modal.Layout(gtx, w)
 }

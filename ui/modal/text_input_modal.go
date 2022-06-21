@@ -1,7 +1,6 @@
 package modal
 
 import (
-	"fmt"
 	"image/color"
 
 	"gioui.org/layout"
@@ -12,8 +11,6 @@ import (
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
 )
-
-const TextInput = "text_input_modal"
 
 type TextInputModal struct {
 	*InfoModal
@@ -32,11 +29,9 @@ type TextInputModal struct {
 
 func NewTextInputModal(l *load.Load) *TextInputModal {
 	tm := &TextInputModal{
-		InfoModal:    NewInfoModal(l),
+		InfoModal:    NewInfoModalWithKey(l, "text_input_modal"),
 		isCancelable: true,
 	}
-
-	tm.randomID = fmt.Sprintf("%s-%d", TextInput, decredmaterial.GenerateRandomNumber())
 
 	tm.textInput = l.Theme.Editor(new(widget.Editor), values.String(values.StrHint))
 	tm.textInput.Editor.SingleLine, tm.textInput.Editor.Submit = true, true
@@ -44,16 +39,8 @@ func NewTextInputModal(l *load.Load) *TextInputModal {
 	return tm
 }
 
-func (tm *TextInputModal) Show() {
-	tm.ShowModal(tm)
-}
-
 func (tm *TextInputModal) OnResume() {
 	tm.textInput.Editor.Focus()
-}
-
-func (tm *TextInputModal) Dismiss() {
-	tm.DismissModal(tm)
 }
 
 func (tm *TextInputModal) Hint(hint string) *TextInputModal {
@@ -63,7 +50,7 @@ func (tm *TextInputModal) Hint(hint string) *TextInputModal {
 
 func (tm *TextInputModal) SetLoading(loading bool) {
 	tm.isLoading = loading
-	tm.modal.SetDisabled(loading)
+	tm.Modal.SetDisabled(loading)
 }
 
 func (tm *TextInputModal) ShowAccountInfoTip(show bool) *TextInputModal {
@@ -137,9 +124,10 @@ func (tm *TextInputModal) Handle() {
 		}
 	}
 
-	if tm.modal.BackdropClicked(tm.isCancelable) {
+	if tm.Modal.BackdropClicked(tm.isCancelable) {
 		if !tm.isLoading {
 			tm.Dismiss()
+			tm.negativeButtonClicked()
 		}
 	}
 }
@@ -182,5 +170,5 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 		w = append(w, tm.actionButtonsLayout())
 	}
 
-	return tm.modal.Layout(gtx, w)
+	return tm.Modal.Layout(gtx, w)
 }

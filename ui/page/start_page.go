@@ -7,10 +7,10 @@ import (
 	"gioui.org/text"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
-	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -18,32 +18,31 @@ const StartPageID = "start_page"
 
 type startPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
 
-	createButton          decredmaterial.Button
-	restoreButton         decredmaterial.Button
-	watchOnlyWalletButton decredmaterial.Button
+	addWalletButton decredmaterial.Button
+
+	// to be removed after full layout migration
+	newlayout    decredmaterial.Button
+	legacyLayout decredmaterial.Button
 
 	loading bool
 }
 
-func NewStartPage(l *load.Load) load.Page {
+func NewStartPage(l *load.Load) app.Page {
 	sp := &startPage{
-		Load:    l,
-		loading: true,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(StartPageID),
+		loading:          true,
 
-		watchOnlyWalletButton: l.Theme.Button(values.String(values.StrImportWatchingOnlyWallet)),
-		createButton:          l.Theme.Button(values.String(values.StrCreateANewWallet)),
-		restoreButton:         l.Theme.Button(values.String(values.StrRestoreExistingWallet)),
+		addWalletButton: l.Theme.Button(values.String(values.StrAddWallet)),
 	}
 
 	return sp
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (sp *startPage) ID() string {
-	return StartPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -53,23 +52,19 @@ func (sp *startPage) ID() string {
 func (sp *startPage) OnNavigatedTo() {
 	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
 
-	// refresh theme now that config is available
-	sp.RefreshTheme()
-
 	if sp.WL.MultiWallet.LoadedWalletsCount() > 0 {
 		if sp.WL.MultiWallet.IsStartupSecuritySet() {
 			sp.unlock()
 		} else {
 			go sp.openWallets("")
 		}
-
 	} else {
 		sp.loading = false
 	}
 }
 
 func (sp *startPage) unlock() {
-	modal.NewPasswordModal(sp.Load).
+	startupPasswordModal := modal.NewPasswordModal(sp.Load).
 		Title(values.String(values.StrUnlockWithPassword)).
 		Hint(values.String(values.StrStartupPassword)).
 		NegativeButton(values.String(values.StrExit), func() {
@@ -88,7 +83,8 @@ func (sp *startPage) unlock() {
 				m.Dismiss()
 			}()
 			return false
-		}).Show()
+		})
+	sp.ParentWindow().ShowModal(startupPasswordModal)
 }
 
 func (sp *startPage) openWallets(password string) error {
@@ -99,7 +95,10 @@ func (sp *startPage) openWallets(password string) error {
 		return err
 	}
 
-	sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+	onWalSelected := func() {
+		sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
+	}
+	sp.ParentNavigator().ClearStackAndDisplay(NewWalletList(sp.Load, onWalSelected))
 	return nil
 }
 
@@ -109,56 +108,8 @@ func (sp *startPage) openWallets(password string) error {
 // displayed.
 // Part of the load.Page interface.
 func (sp *startPage) HandleUserInteractions() {
-	for sp.createButton.Clicked() {
-		modal.NewCreatePasswordModal(sp.Load).
-			Title(values.String(values.StrCreateANewWallet)).
-			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
-				go func() {
-					wal, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
-					if err != nil {
-						m.SetError(err.Error())
-						m.SetLoading(false)
-						return
-					}
-					err = wal.CreateMixerAccounts("mixed", "unmixed", password)
-					if err != nil {
-						m.SetError(err.Error())
-						m.SetLoading(false)
-						return
-					}
-					sp.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
-					m.Dismiss()
-
-					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
-				}()
-				return false
-			}).Show()
-	}
-
-	for sp.restoreButton.Clicked() {
-		afterRestore := func() {
-			sp.ChangeWindowPage(NewMainPage(sp.Load), false)
-		}
-		sp.ChangeWindowPage(wallets.NewRestorePage(sp.Load, afterRestore), true)
-	}
-
-	for sp.watchOnlyWalletButton.Clicked() {
-		modal.NewCreateWatchOnlyModal(sp.Load).
-			EnableName(false).
-			WatchOnlyCreated(func(_, password string, m *modal.CreateWatchOnlyModal) bool {
-				go func() {
-					_, err := sp.WL.MultiWallet.CreateWatchOnlyWallet("mywallet", password)
-					if err != nil {
-						m.SetError(err.Error())
-						m.SetLoading(false)
-						return
-					}
-					m.Dismiss()
-
-					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
-				}()
-				return false
-			}).Show()
+	for sp.addWalletButton.Clicked() {
+		// todo -- navigate to wallet creation page
 	}
 }
 
@@ -184,19 +135,23 @@ func (sp *startPage) Layout(gtx C) D {
 // Desktop layout
 func (sp *startPage) layoutDesktop(gtx C) D {
 	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width
-	return layout.Stack{Alignment: layout.N}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return sp.loadingSection(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					if sp.loading {
-						return D{}
-					}
-					return sp.buttonSectionDesktop(gtx)
-				}),
-			)
+	return layout.Flex{
+		Alignment: layout.Middle,
+		Axis:      layout.Vertical,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return sp.loadingSection(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if sp.loading {
+				return D{}
+			}
+
+			gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding350)
+			return layout.Inset{
+				Left:  values.MarginPadding24,
+				Right: values.MarginPadding24,
+			}.Layout(gtx, sp.addWalletButton.Layout)
 		}),
 	)
 }
@@ -222,9 +177,10 @@ func (sp *startPage) loadingSection(gtx C) D {
 					if sp.WL.Wallet.Net == dcrlibwallet.Testnet3 {
 						netType = "Testnet"
 					}
+
 					nType := sp.Theme.Label(values.TextSize20, netType)
 					nType.Font.Weight = text.Medium
-					return nType.Layout(gtx)
+					return layout.Inset{Top: values.MarginPadding14}.Layout(gtx, nType.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					if sp.loading {
@@ -245,86 +201,26 @@ func (sp *startPage) loadingSection(gtx C) D {
 	)
 }
 
-func (sp *startPage) buttonSectionDesktop(gtx C) D {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X              // use maximum width
-	gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 35) / 100 // use 35% of view height
-	return layout.Stack{Alignment: layout.S}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-
-					gtx.Constraints.Max.X = gtx.Dp(values.AppWidth) // set button with to app width
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-								return sp.createButton.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-								return sp.restoreButton.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return layout.Inset{Top: values.MarginPadding24, Bottom: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-								return sp.watchOnlyWalletButton.Layout(gtx)
-							})
-						}),
-					)
-				}),
-			)
-		}),
-	)
-}
-
 // Mobile layout
 func (sp *startPage) layoutMobile(gtx C) D {
 	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width
-	return layout.Stack{Alignment: layout.N}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, sp.loadingSection)
-				}),
-				layout.Rigid(func(gtx C) D {
-					if sp.loading {
-						return D{}
-					}
-					return sp.buttonSectionMobile(gtx)
-				}),
-			)
+	return layout.Flex{
+		Alignment: layout.Middle,
+		Axis:      layout.Vertical,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return sp.loadingSection(gtx)
 		}),
-	)
-}
+		layout.Rigid(func(gtx C) D {
+			if sp.loading {
+				return D{}
+			}
 
-func (sp *startPage) buttonSectionMobile(gtx C) D {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X              // use maximum width
-	gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 35) / 100 // use 35% of view height
-	return layout.Stack{Alignment: layout.S}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-								return sp.createButton.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-								return sp.restoreButton.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return layout.Inset{Top: values.MarginPadding24, Bottom: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-								return sp.watchOnlyWalletButton.Layout(gtx)
-							})
-						}),
-					)
-				}),
-			)
+			gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding350)
+			return layout.Inset{
+				Left:  values.MarginPadding24,
+				Right: values.MarginPadding24,
+			}.Layout(gtx, sp.addWalletButton.Layout)
 		}),
 	)
 }

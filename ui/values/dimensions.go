@@ -39,6 +39,7 @@ var (
 	MarginPadding25       = unit.Dp(25)
 	MarginPadding26       = unit.Dp(26)
 	MarginPadding30       = unit.Dp(30)
+	MarginPaddingMinus30  = unit.Dp(-30)
 	MarginPadding35       = unit.Dp(35)
 	MarginPadding36       = unit.Dp(36)
 	MarginPadding38       = unit.Dp(38)
@@ -91,7 +92,7 @@ var (
 	TextSize32   = unit.Sp(32)
 
 	AppWidth  = unit.Dp(800)
-	AppHeight = unit.Dp(600)
+	AppHeight = unit.Dp(700)
 
 	// These define the dimensions at which we consider the user to be using a
 	// mobile device. The dimensions specified are the default viewport for

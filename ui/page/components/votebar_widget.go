@@ -13,6 +13,7 @@ import (
 	"gioui.org/unit"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -197,7 +198,7 @@ func (v *VoteBar) requiredYesVotesIndicator(gtx C) D {
 	}
 }
 
-func (v *VoteBar) Layout(gtx C) D {
+func (v *VoteBar) Layout(window app.WindowNavigator, gtx C) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -214,7 +215,7 @@ func (v *VoteBar) Layout(gtx C) D {
 							}),
 							layout.Flexed(1, func(gtx C) D {
 								return layout.E.Layout(gtx, func(gtx C) D {
-									return v.layoutInfo(gtx)
+									return v.layoutInfo(window, gtx)
 								})
 							}),
 						)
@@ -228,7 +229,7 @@ func (v *VoteBar) Layout(gtx C) D {
 	)
 }
 
-func (v *VoteBar) infoButtonModal() {
+func (v *VoteBar) infoButtonModal() *modal.InfoModal {
 	text1 := values.StringF(values.StrTotalVotes, v.totalVotes)
 	text2 := values.StringF(values.StrQuorumRequirement, (v.requiredPercentage/100)*v.eligibleVotes)
 	text3 := values.StringF(values.StrDiscussions, v.numComment)
@@ -236,11 +237,13 @@ func (v *VoteBar) infoButtonModal() {
 	text5 := values.StringF(values.StrToken, v.token)
 
 	bodyText := fmt.Sprintf("%s\n %v\n %s\n %s\n %s", text1, text2, text3, text4, text5)
-	modal.NewInfoModal(v.Load).
+	return modal.NewInfoModal(v.Load).
 		Title(values.String(values.StrProposalVoteDetails)).
 		Body(bodyText).
 		SetCancelable(true).
-		PositiveButton(values.String(values.StrGotIt), func(bool) {}).Show()
+		PositiveButton(values.String(values.StrGotIt), func(bool) bool {
+			return true
+		})
 }
 
 func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count int, col color.NRGBA) D {
@@ -270,12 +273,12 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count int, 
 	})
 }
 
-func (v *VoteBar) layoutInfo(gtx C) D {
+func (v *VoteBar) layoutInfo(window app.WindowNavigator, gtx C) D {
 	dims := layout.Flex{}.Layout(gtx,
 		layout.Rigid(v.Theme.Body2(values.StringF(values.StrTotalVotesReverse, v.totalVotes)).Layout),
 		layout.Rigid(func(gtx C) D {
 			if v.infoButton.Button.Clicked() {
-				v.infoButtonModal()
+				window.ShowModal(v.infoButtonModal())
 			}
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 				return v.infoButton.Layout(gtx)

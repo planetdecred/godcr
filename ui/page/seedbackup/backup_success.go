@@ -3,6 +3,7 @@ package seedbackup
 import (
 	"gioui.org/layout"
 	"gioui.org/text"
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -13,25 +14,25 @@ const BackupSuccessPageID = "backup_success"
 
 type BackupSuccessPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	actionButton decredmaterial.Button
 }
 
 func NewBackupSuccessPage(l *load.Load) *BackupSuccessPage {
 	pg := &BackupSuccessPage{
-		Load: l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(BackupSuccessPageID),
 
 		actionButton: l.Theme.OutlineButton("Back to Wallets"),
 	}
 	pg.actionButton.Font.Weight = text.Medium
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *BackupSuccessPage) ID() string {
-	return BackupSuccessPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -47,7 +48,7 @@ func (pg *BackupSuccessPage) OnNavigatedTo() {}
 // Part of the load.Page interface.
 func (pg *BackupSuccessPage) HandleUserInteractions() {
 	for pg.actionButton.Clicked() {
-		pg.PopToFragment(components.WalletsPageID)
+		pg.ParentNavigator().ClosePagesAfter(components.WalletsPageID)
 	}
 }
 

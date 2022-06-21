@@ -5,6 +5,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -22,6 +23,12 @@ const (
 
 type ValidateAddressPage struct {
 	*load.Load
+	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
+	// that helps this Page satisfy the app.Page interface. It also defines
+	// helper methods for accessing the PageNavigator that displayed this page
+	// and the root WindowNavigator.
+	*app.GenericPageModal
+
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
 	stateValidate         int
@@ -32,7 +39,8 @@ type ValidateAddressPage struct {
 
 func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 	pg := &ValidateAddressPage{
-		Load: l,
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(ValidateAddressPageID),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -50,13 +58,6 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 	pg.stateValidate = none
 
 	return pg
-}
-
-// ID is a unique string that identifies the page and may be used
-// to differentiate this page from other pages.
-// Part of the load.Page interface.
-func (pg *ValidateAddressPage) ID() string {
-	return ValidateAddressPageID
 }
 
 // OnNavigatedTo is called when the page is about to be displayed and
@@ -77,7 +78,7 @@ func (pg *ValidateAddressPage) Layout(gtx C) D {
 			Title:      values.String(values.StrValidateAddr),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.PopFragment()
+				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -87,7 +88,7 @@ func (pg *ValidateAddressPage) Layout(gtx C) D {
 				})
 			},
 		}
-		return sp.Layout(gtx)
+		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx, body)
