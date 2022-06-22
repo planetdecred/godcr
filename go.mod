@@ -3,7 +3,7 @@ module github.com/planetdecred/godcr
 go 1.17
 
 require (
-	decred.org/dcrdex v0.4.1
+	decred.org/dcrdex v0.4.3
 	gioui.org v0.0.0-20220601100144-a896a467ecae
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
@@ -121,7 +121,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
-	go.etcd.io/bbolt v1.3.6 // indirect
+	go.etcd.io/bbolt v1.3.7-0.20220130032806-d5db64bdbfde // indirect
 	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
