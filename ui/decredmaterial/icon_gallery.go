@@ -18,7 +18,7 @@ type Icons struct {
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
 	PendingIcon, Logo, RedirectIcon, ConfirmIcon, NewWalletIcon, WalletAlertIcon, ArrowForward,
 	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, Mixer, DcrWatchOnly,
-	Next, SettingsIcon, SecurityIcon, HelpIcon, AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon,
+	Next, HeaderSettingsIcon, SettingsIcon, SecurityIcon, HelpIcon, AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon,
 	AlertGray, ArrowDownIcon, WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, TransactionFingerprint,
 	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredSymbolIcon,
 	DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon, LogoDarkMode, TimerDarkMode, Rebroadcast,
@@ -90,6 +90,7 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.MixedTx = NewImage(decredIcons["mixed_tx"])
 	i.Mixer = NewImage(decredIcons["mixer"])
 	i.Next = NewImage(decredIcons["ic_next"])
+	i.HeaderSettingsIcon = NewImage(decredIcons["header_settings"])
 	i.SettingsIcon = NewImage(decredIcons["settings"])
 	i.SecurityIcon = NewImage(decredIcons["security"])
 	i.HelpIcon = NewImage(decredIcons["help_icon"])
