@@ -119,7 +119,7 @@ func (pg *VerifyMessagePage) layoutDesktop(gtx layout.Context, body layout.Widge
 }
 
 func (pg *VerifyMessagePage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *VerifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widget {

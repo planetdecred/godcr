@@ -303,7 +303,7 @@ func (pg *AppOverviewPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 		op.InvalidateOp{At: gtx.Now.Add(2 * time.Second)}.Add(gtx.Ops)
 	}
 
-	return components.UniformMobile(gtx, true, func(gtx C) D {
+	return components.UniformMobile(gtx, false, true, func(gtx C) D {
 		return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
 			m := values.MarginPadding5
 			if i == len(pageContent) {

@@ -101,7 +101,7 @@ func (pg *ValidateAddressPage) layoutDesktop(gtx layout.Context, body layout.Wid
 }
 
 func (pg *ValidateAddressPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *ValidateAddressPage) addressSection() layout.Widget {

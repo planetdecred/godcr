@@ -230,7 +230,7 @@ func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 		layout.Expanded(func(gtx C) D {
 			return layout.Stack{Alignment: layout.NE}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					return components.UniformMobile(gtx, true, func(gtx C) D {
+					return components.UniformMobile(gtx, false, true, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Bottom: values.MarginPadding16, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {

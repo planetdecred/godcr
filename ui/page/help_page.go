@@ -60,6 +60,13 @@ func (pg *HelpPage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *HelpPage) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *HelpPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -79,18 +86,30 @@ func (pg *HelpPage) Layout(gtx C) D {
 		}
 		return sp.Layout(pg.ParentWindow(), gtx)
 	}
-	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
-		return pg.layoutMobile(gtx, body)
-	}
-	return pg.layoutDesktop(gtx, body)
-}
-
-func (pg *HelpPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *HelpPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+func (pg *HelpPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	body := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      values.String(values.StrHelp),
+			SubTitle:   values.String(values.StrHelpInfo),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.ParentNavigator().CloseCurrentPage()
+			},
+			Body: func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Spacing: layout.SpaceBetween, WeightSum: 1}.Layout(gtx,
+						layout.Flexed(1, pg.document()),
+					)
+				})
+			},
+		}
+		return sp.Layout(pg.ParentWindow(), gtx)
+	}
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *HelpPage) document() layout.Widget {

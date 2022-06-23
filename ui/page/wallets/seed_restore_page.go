@@ -172,7 +172,7 @@ func (pg *SeedRestore) restore(gtx C) D {
 
 func (pg *SeedRestore) restoreMobile(gtx C) D {
 	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Flexed(0.9, func(gtx C) D {
+		layout.Flexed(1, func(gtx C) D {
 			return layout.Stack{Alignment: layout.N}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
 					return decredmaterial.LinearLayout{
@@ -189,10 +189,10 @@ func (pg *SeedRestore) restoreMobile(gtx C) D {
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Flexed(0.92, func(gtx C) D {
+								layout.Flexed(1, func(gtx C) D {
 									return pg.seedEditorViewMobile(gtx)
 								}),
-								layout.Flexed(0.08, func(gtx C) D {
+								layout.Rigid(func(gtx C) D {
 									return pg.resetSeedFields.Layout(gtx)
 								}),
 							)
@@ -202,11 +202,8 @@ func (pg *SeedRestore) restoreMobile(gtx C) D {
 				}),
 			)
 		}),
-		layout.Flexed(0.1, func(gtx C) D {
-			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			return layout.S.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Left: values.MarginPadding1, Top: values.MarginPadding20}.Layout(gtx, pg.restoreButtonSection)
-			})
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Left: values.MarginPadding1, Top: values.MarginPadding20}.Layout(gtx, pg.restoreButtonSection)
 		}),
 	)
 	return dims

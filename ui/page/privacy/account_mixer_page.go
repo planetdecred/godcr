@@ -169,7 +169,7 @@ func (pg *AccountMixerPage) layoutDesktop(gtx layout.Context, body layout.Widget
 }
 
 func (pg *AccountMixerPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *AccountMixerPage) mixerSettingsLayout(gtx layout.Context) layout.Dimensions {

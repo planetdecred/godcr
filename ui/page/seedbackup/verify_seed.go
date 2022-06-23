@@ -38,10 +38,10 @@ type VerifySeedPage struct {
 	seed          string
 	multiSeedList []shuffledSeedWords
 
-	backButton   decredmaterial.IconButton
-	actionButton decredmaterial.Button
-	listSeedList []*layout.List
-	list         *widget.List
+	backButton    decredmaterial.IconButton
+	actionButton  decredmaterial.Button
+	listGroupSeed []*layout.List
+	list          *widget.List
 }
 
 func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *VerifySeedPage {
@@ -74,19 +74,19 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 func (pg *VerifySeedPage) OnNavigatedTo() {
 	allSeeds := dcrlibwallet.PGPWordList()
 
-	listSeedList := make([]*layout.List, 0)
+	listGroupSeed := make([]*layout.List, 0)
 	multiSeedList := make([]shuffledSeedWords, 0)
 	seedWords := strings.Split(pg.seed, " ")
 	rand.Seed(time.Now().UnixNano())
 	for _, word := range seedWords {
-		listSeedList = append(listSeedList, &layout.List{Axis: layout.Horizontal})
+		listGroupSeed = append(listGroupSeed, &layout.List{Axis: layout.Horizontal})
 		index := seedPosition(word, allSeeds)
 		shuffledSeed := pg.getMultiSeed(index, dcrlibwallet.PGPWordList()) // using allSeeds here modifies the slice
 		multiSeedList = append(multiSeedList, shuffledSeed)
 	}
 
 	pg.multiSeedList = multiSeedList
-	pg.listSeedList = listSeedList
+	pg.listGroupSeed = listGroupSeed
 }
 
 func (pg *VerifySeedPage) getMultiSeed(realSeedIndex int, allSeeds []string) shuffledSeedWords {
@@ -327,7 +327,7 @@ func (pg *VerifySeedPage) seedListRow(gtx C, index int, multiSeed shuffledSeedWo
 					func(gtx C) D { return pg.seedButton(gtx, 2, multiSeed) },
 					func(gtx C) D { return pg.seedButton(gtx, 3, multiSeed) },
 				}
-				return pg.listSeedList[index].Layout(gtx, len(widgets), func(gtx C, i int) D {
+				return pg.listGroupSeed[index].Layout(gtx, len(widgets), func(gtx C, i int) D {
 					return layout.UniformInset(values.MarginPadding0).Layout(gtx, widgets[i])
 				})
 			})

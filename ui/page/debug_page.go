@@ -173,7 +173,7 @@ func (pg *DebugPage) layoutDesktop(gtx layout.Context, body layout.Widget) layou
 }
 
 func (pg *DebugPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *DebugPage) resetDexData() {

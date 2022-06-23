@@ -294,7 +294,7 @@ func (pg *TransactionsPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 		)
 
 	}
-	return components.UniformMobile(gtx, true, container)
+	return components.UniformMobile(gtx, false, true, container)
 }
 
 func (pg *TransactionsPage) layoutTabs(gtx C) D {

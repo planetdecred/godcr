@@ -126,9 +126,9 @@ func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 
 func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 	if !pg.isGovernanceFeatureEnabled() {
-		return components.UniformMobile(gtx, false, pg.splashScreenLayout)
+		return components.UniformMobile(gtx, false, false, pg.splashScreenLayout)
 	}
-	return components.UniformMobile(gtx, true, func(gtx C) D {
+	return components.UniformMobile(gtx, false, true, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.layoutPageTopNav),
 			layout.Rigid(pg.layoutTabs),

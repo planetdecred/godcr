@@ -696,7 +696,7 @@ func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 					return currentPage.Layout(gtx)
 				}),
 				layout.Stacked(func(gtx C) D {
-					return mp.floatingActionButton.LayoutSendReceive(gtx)
+					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, mp.floatingActionButton.LayoutSendReceive)
 				}),
 			)
 		}),

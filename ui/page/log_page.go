@@ -199,7 +199,7 @@ func (pg *LogPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 		}
 		return sp.Layout(pg.ParentWindow(), gtx)
 	}
-	return components.UniformMobile(gtx, false, container)
+	return components.UniformMobile(gtx, false, false, container)
 }
 
 // HandleUserInteractions is called just before Layout() to determine

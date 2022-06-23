@@ -96,16 +96,28 @@ func (pg *Restore) layoutMobile(gtx C) D {
 				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
-				return pg.restoreLayout(gtx)
+				return pg.restoreMobileLayout(gtx)
 			},
 		}
 		return sp.Layout(pg.ParentWindow(), gtx)
 	}
-	return components.UniformPadding(gtx, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *Restore) restoreLayout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.tabLayout),
+			layout.Rigid(pg.Theme.Separator().Layout),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, pg.indexLayout)
+			}),
+		)
+	})
+}
+
+func (pg *Restore) restoreMobileLayout(gtx layout.Context) layout.Dimensions {
+	return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.tabLayout),
 			layout.Rigid(pg.Theme.Separator().Layout),

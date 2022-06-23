@@ -239,7 +239,7 @@ func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return components.UniformMobileHorizontalPadding(gtx, true, func(gtx layout.Context) layout.Dimensions {
+	return components.UniformMobile(gtx, true, true, func(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
 			return pg.Theme.List(pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
 				return widgets[i](gtx)

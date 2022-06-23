@@ -95,7 +95,7 @@ func (pg *SecurityToolsPage) layoutDesktop(gtx layout.Context, body layout.Widge
 }
 
 func (pg *SecurityToolsPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *SecurityToolsPage) message() layout.Widget {

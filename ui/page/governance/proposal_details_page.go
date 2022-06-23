@@ -640,5 +640,5 @@ func (pg *ProposalDetails) layoutMobile(gtx layout.Context) layout.Dimensions {
 		}
 		return page.Layout(pg.ParentWindow(), gtx)
 	}
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }

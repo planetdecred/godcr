@@ -224,7 +224,7 @@ func (pg *MorePage) layoutMobile(gtx layout.Context) layout.Dimensions {
 		pg.layoutMoreItemsMobile(gtx)
 		return layout.Dimensions{Size: gtx.Constraints.Max}
 	}
-	return components.UniformMobile(gtx, false, container)
+	return components.UniformMobile(gtx, false, false, container)
 }
 
 func (pg *MorePage) layoutMoreItemsDesktop(gtx layout.Context) layout.Dimensions {

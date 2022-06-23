@@ -532,7 +532,7 @@ func (pg *WalletPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{}.Layout(gtx,
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+							return layout.Inset{Right: values.MarginPadding20, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 								return pg.layoutAddWalletSection(gtx)
 							})
 						})
@@ -544,7 +544,7 @@ func (pg *WalletPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return components.UniformMobile(gtx, true, body)
+			return components.UniformMobile(gtx, false, true, body)
 		}),
 		layout.Expanded(func(gtx C) D {
 			if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {

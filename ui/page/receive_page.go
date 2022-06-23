@@ -307,7 +307,7 @@ func (pg *ReceivePage) layoutMobile(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	dims := components.UniformMobile(gtx, true, func(gtx C) D {
+	dims := components.UniformMobile(gtx, false, true, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding16, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {

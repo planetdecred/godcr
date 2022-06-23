@@ -138,7 +138,7 @@ func (pg *SignMessagePage) layoutDesktop(gtx layout.Context, body layout.Widget)
 }
 
 func (pg *SignMessagePage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *SignMessagePage) description() layout.Widget {

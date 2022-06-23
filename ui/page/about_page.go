@@ -112,7 +112,7 @@ func (pg *AboutPage) layoutDesktop(gtx layout.Context, body layout.Widget) layou
 }
 
 func (pg *AboutPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *AboutPage) layoutRows(gtx C) D {

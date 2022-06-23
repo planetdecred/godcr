@@ -184,7 +184,7 @@ func container(gtx C, isMobile bool, theme decredmaterial.Theme, body layout.Wid
 		)
 	}
 	if isMobile {
-		return components.UniformMobile(gtx, false, bodyLayout)
+		return components.UniformMobile(gtx, false, false, bodyLayout)
 	}
 	return components.UniformPadding(gtx, bodyLayout)
 }

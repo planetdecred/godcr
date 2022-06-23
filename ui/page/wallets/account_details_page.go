@@ -193,7 +193,7 @@ func (pg *AcctDetailsPage) layoutMobile(gtx layout.Context, widgets []func(gtx C
 		}
 		return sp.Layout(pg.ParentWindow(), gtx)
 	}
-	return components.UniformMobile(gtx, true, body)
+	return components.UniformMobile(gtx, false, true, body)
 }
 
 func (pg *AcctDetailsPage) accountBalanceLayout(gtx C) D {

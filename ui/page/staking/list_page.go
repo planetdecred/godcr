@@ -236,7 +236,7 @@ func (pg *ListPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout
 }
 
 func (pg *ListPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionItem) layout.Dimensions {

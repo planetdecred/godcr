@@ -236,7 +236,7 @@ func (pg *TxDetailsPage) layoutDesktop(gtx layout.Context, body layout.Widget) l
 }
 
 func (pg *TxDetailsPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, body)
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensions {
