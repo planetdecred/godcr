@@ -97,7 +97,7 @@ var (
 	TextSize32   = unit.Sp(32)
 
 	AppWidth  = unit.Dp(800)
-	AppHeight = unit.Dp(400)
+	AppHeight = unit.Dp(600)
 
 	// These define the dimensions at which we consider the user to be using a
 	// mobile device. The dimensions specified are the default viewport for

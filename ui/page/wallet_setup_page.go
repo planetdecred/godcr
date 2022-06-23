@@ -19,10 +19,13 @@ import (
 
 const CreateWalletID = "create_wallet"
 
+const defaultWalletName = "myWallet"
+
 type walletType struct {
 	clickable *decredmaterial.Clickable
 	logo      *decredmaterial.Image
 	name      string
+	border    decredmaterial.Border
 }
 
 type decredAction struct {
@@ -51,13 +54,13 @@ type CreateWallet struct {
 	walletTypeList *decredmaterial.ClickableList
 
 	walletName         decredmaterial.Editor
-	restoreWalletName  decredmaterial.Editor
 	watchOnlyWalletHex decredmaterial.Editor
 	watchOnlyCheckBox  decredmaterial.CheckBoxStyle
 
 	continueBtn decredmaterial.Button
 	restoreBtn  decredmaterial.Button
 	importBtn   decredmaterial.Button
+	backButton  decredmaterial.IconButton
 
 	selectedWalletType         int
 	selectedDecredWalletAction int
@@ -74,10 +77,10 @@ func NewCreateWallet(l *load.Load) *CreateWallet {
 		},
 		list: layout.List{Axis: layout.Vertical},
 
-		continueBtn:                l.Theme.Button("Continue"),
-		restoreBtn:                 l.Theme.Button("Restore"),
-		importBtn:                  l.Theme.Button("Import"),
-		watchOnlyCheckBox:          l.Theme.CheckBox(new(widget.Bool), "Import watch only"),
+		continueBtn:                l.Theme.Button(values.String(values.StrContinue)),
+		restoreBtn:                 l.Theme.Button(values.String(values.StrRestore)),
+		importBtn:                  l.Theme.Button(values.String(values.StrImport)),
+		watchOnlyCheckBox:          l.Theme.CheckBox(new(widget.Bool), values.String(values.StrImportWatchingOnlyWallet)),
 		walletTypeList:             l.Theme.NewClickableList(layout.Horizontal),
 		selectedWalletType:         -1,
 		selectedDecredWalletAction: -1,
@@ -85,14 +88,13 @@ func NewCreateWallet(l *load.Load) *CreateWallet {
 		Load: l,
 	}
 
-	pg.walletName = l.Theme.Editor(new(widget.Editor), values.String(values.StrWalletName))
+	pg.walletName = l.Theme.Editor(new(widget.Editor), values.String(values.StrEnterWalletName))
 	pg.walletName.Editor.SingleLine, pg.walletName.Editor.Submit, pg.walletName.IsTitleLabel = true, true, false
 
-	pg.restoreWalletName = l.Theme.Editor(new(widget.Editor), values.String(values.StrWalletName))
-	pg.restoreWalletName.Editor.SingleLine, pg.restoreWalletName.Editor.Submit, pg.restoreWalletName.IsTitleLabel = true, true, false
+	pg.watchOnlyWalletHex = l.Theme.Editor(new(widget.Editor), values.String(values.StrExtendedPubKey))
+	pg.watchOnlyWalletHex.Editor.SingleLine, pg.watchOnlyWalletHex.Editor.Submit, pg.watchOnlyWalletHex.IsTitleLabel = false, true, false
 
-	pg.watchOnlyWalletHex = l.Theme.Editor(new(widget.Editor), "Extended public key")
-	pg.restoreWalletName.Editor.SingleLine, pg.watchOnlyWalletHex.Editor.Submit, pg.watchOnlyWalletHex.IsTitleLabel = false, true, false
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -106,6 +108,7 @@ func (pg *CreateWallet) OnNavigatedTo() {
 }
 
 func (pg *CreateWallet) initPageItems() {
+
 	walletTypes := []*walletType{
 		{
 			logo:      pg.Theme.Icons.DecredLogo,
@@ -131,7 +134,7 @@ func (pg *CreateWallet) initPageItems() {
 
 	decredActions := []*decredAction{
 		{
-			title:     "New Wallet",
+			title:     values.String(values.StrNewWallet),
 			clickable: pg.Theme.NewClickable(true),
 			border: decredmaterial.Border{
 				Radius: leftRadius,
@@ -141,11 +144,12 @@ func (pg *CreateWallet) initPageItems() {
 			width: values.MarginPadding110,
 		},
 		{
-			title:     "Restore existing wallet",
+			title:     values.String(values.StrRestoreExistingWallet),
 			clickable: pg.Theme.NewClickable(true),
-			border: decredmaterial.Border{Radius: rightRadius,
-				Color: pg.Theme.Color.Gray1,
-				Width: values.MarginPadding2,
+			border: decredmaterial.Border{
+				Radius: rightRadius,
+				Color:  pg.Theme.Color.Gray1,
+				Width:  values.MarginPadding2,
 			},
 			width: values.MarginPadding195,
 		},
@@ -169,7 +173,7 @@ func (pg *CreateWallet) OnNavigatedFrom() {}
 // Part of the load.Page interface.
 func (pg *CreateWallet) Layout(gtx C) D {
 	pageContent := []func(gtx C) D{
-		pg.Theme.H6("Select the type of wallet you want to create").Layout,
+		pg.Theme.H6(values.String(values.StrSelectWalletType)).Layout,
 		pg.walletTypeSection,
 		func(gtx C) D {
 			switch pg.selectedWalletType {
@@ -177,16 +181,6 @@ func (pg *CreateWallet) Layout(gtx C) D {
 				return pg.decredWalletOptions(gtx)
 			case 1:
 				return D{} // todo btc functionality
-			default:
-				return D{}
-			}
-		},
-		func(gtx C) D {
-			switch pg.selectedDecredWalletAction {
-			case 0:
-				return pg.createNewWallet(gtx)
-			case 1:
-				return pg.restoreWallet(gtx)
 			default:
 				return D{}
 			}
@@ -207,14 +201,21 @@ func (pg *CreateWallet) Layout(gtx C) D {
 				Bottom: values.MarginPadding30,
 			},
 		}.Layout2(gtx, func(gtx C) D {
-			return pg.list.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-				return layout.Inset{
-					Top:    values.MarginPadding26,
-					Bottom: values.MarginPadding10,
-				}.Layout(gtx, func(gtx C) D {
-					return pageContent[i](gtx)
-				})
-			})
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.backButton.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.list.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+						return layout.Inset{
+							Top:    values.MarginPadding26,
+							Bottom: values.MarginPadding10,
+						}.Layout(gtx, func(gtx C) D {
+							return pageContent[i](gtx)
+						})
+					})
+				}),
+			)
 		})
 	})
 }
@@ -224,14 +225,25 @@ func (pg *CreateWallet) walletTypeSection(gtx C) D {
 	list := layout.List{}
 	return list.Layout(gtx, len(pg.walletTypes), func(gtx C, i int) D {
 		item := pg.walletTypes[i]
+
+		// set selected item background color
+		backgroundColor := pg.Theme.Color.Surface
+		if pg.selectedWalletType == i {
+			backgroundColor = pg.Theme.Color.Gray2
+		}
+
 		return decredmaterial.LinearLayout{
 			Width:       gtx.Dp(values.MarginPadding172),
 			Height:      gtx.Dp(values.MarginPadding174),
 			Orientation: layout.Vertical,
 			Alignment:   layout.Middle,
 			Direction:   layout.Center,
-			Background:  pg.Theme.Color.Surface,
-			Clickable:   item.clickable,
+			Border: decredmaterial.Border{
+				Color: pg.Theme.Color.Gray2,
+				Width: values.MarginPadding2,
+			},
+			Background: backgroundColor,
+			Clickable:  item.clickable,
 			Margin: layout.Inset{
 				Top:   values.MarginPadding10,
 				Right: values.MarginPadding6,
@@ -251,26 +263,49 @@ func (pg *CreateWallet) walletTypeSection(gtx C) D {
 }
 
 func (pg *CreateWallet) decredWalletOptions(gtx C) D {
-	list := layout.List{}
-	return list.Layout(gtx, len(pg.decredActions), func(gtx C, i int) D {
-		item := pg.decredActions[i]
-		return decredmaterial.LinearLayout{
-			Width:       gtx.Dp(item.width),
-			Height:      decredmaterial.WrapContent,
-			Orientation: layout.Vertical,
-			Alignment:   layout.Middle,
-			Direction:   layout.Center,
-			Background:  pg.Theme.Color.Surface,
-			Clickable:   item.clickable,
-			Border:      item.border,
-			Padding:     layout.UniformInset(values.MarginPadding12),
-		}.Layout2(gtx, pg.Theme.Label(values.TextSize16, item.title).Layout)
-	})
+	return layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+
+			list := layout.List{}
+			return list.Layout(gtx, len(pg.decredActions), func(gtx C, i int) D {
+				item := pg.decredActions[i]
+
+				// set selected item background color
+				col := pg.Theme.Color.Surface
+				if pg.selectedDecredWalletAction == i {
+					col = pg.Theme.Color.Gray2
+				}
+
+				return decredmaterial.LinearLayout{
+					Width:       gtx.Dp(item.width),
+					Height:      decredmaterial.WrapContent,
+					Orientation: layout.Vertical,
+					Alignment:   layout.Middle,
+					Direction:   layout.Center,
+					Background:  col,
+					Clickable:   item.clickable,
+					Border:      item.border,
+					Padding:     layout.UniformInset(values.MarginPadding12),
+					Margin:      layout.Inset{Bottom: values.MarginPadding15},
+				}.Layout2(gtx, pg.Theme.Label(values.TextSize16, item.title).Layout)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			switch pg.selectedDecredWalletAction {
+			case 0:
+				return pg.createNewWallet(gtx)
+			case 1:
+				return pg.restoreWallet(gtx)
+			default:
+				return D{}
+			}
+		}),
+	)
 }
 
 func (pg *CreateWallet) createNewWallet(gtx C) D {
 	return layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(pg.Theme.Label(values.TextSize16, "What would you like to call your wallet?").Layout),
+		layout.Rigid(pg.Theme.Label(values.TextSize16, values.String(values.StrWhatToCallWallet)).Layout),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
 				Top:    values.MarginPadding14,
@@ -278,7 +313,7 @@ func (pg *CreateWallet) createNewWallet(gtx C) D {
 			}.Layout(gtx, func(gtx C) D {
 				mGtx := gtx
 				if pg.WL.MultiWallet.LoadedWalletsCount() == 0 {
-					pg.walletName.Editor.SetText("myWallet")
+					pg.walletName.Editor.SetText(defaultWalletName)
 					mGtx = gtx.Disabled()
 				}
 
@@ -299,7 +334,7 @@ func (pg *CreateWallet) createNewWallet(gtx C) D {
 
 func (pg *CreateWallet) restoreWallet(gtx C) D {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(pg.Theme.Label(values.TextSize16, "What is your wallet existing wallet name?").Layout),
+		layout.Rigid(pg.Theme.Label(values.TextSize16, values.String(values.StrExistingWalletName)).Layout),
 		layout.Rigid(pg.watchOnlyCheckBox.Layout),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
@@ -310,11 +345,11 @@ func (pg *CreateWallet) restoreWallet(gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						mGtx := gtx
 						if pg.WL.MultiWallet.LoadedWalletsCount() == 0 {
-							pg.restoreWalletName.Editor.SetText("myWallet")
+							pg.walletName.Editor.SetText(defaultWalletName)
 							mGtx = gtx.Disabled()
 						}
 
-						return pg.restoreWalletName.Layout(mGtx)
+						return pg.walletName.Layout(mGtx)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if pg.watchOnlyCheckBox.CheckBox.Value {
@@ -323,7 +358,7 @@ func (pg *CreateWallet) restoreWallet(gtx C) D {
 									return layout.Inset{
 										Top:    values.MarginPadding10,
 										Bottom: values.MarginPadding8,
-									}.Layout(gtx, pg.Theme.Label(values.TextSize16, "Extended public key").Layout)
+									}.Layout(gtx, pg.Theme.Label(values.TextSize16, values.String(values.StrExtendedPubKey)).Layout)
 								}),
 								layout.Rigid(pg.watchOnlyWalletHex.Layout),
 							)
@@ -354,27 +389,36 @@ func (pg *CreateWallet) restoreWallet(gtx C) D {
 // displayed.
 // Part of the load.Page interface.
 func (pg *CreateWallet) HandleUserInteractions() {
+	// back button action
+	if pg.backButton.Button.Clicked() {
+		pg.ParentNavigator().CloseCurrentPage()
+	}
+
+	// wallet type selection action
 	for i, item := range pg.walletTypes {
 		for item.clickable.Clicked() {
 			pg.selectedWalletType = i
 		}
 	}
 
+	// decred wallet type sub action
 	for i, item := range pg.decredActions {
 		for item.clickable.Clicked() {
 			pg.selectedDecredWalletAction = i
 		}
 	}
 
+	// editor event listener
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pg.walletName.Editor, pg.watchOnlyWalletHex.Editor)
 	if isChanged {
 		// reset error when any editor is modified
 		pg.walletName.SetError("")
 	}
 
-	if (pg.continueBtn.Clicked() || isSubmit) && pg.validInputsName() {
+	// create wallet action
+	if (pg.continueBtn.Clicked() || isSubmit) && pg.validInputs() {
 		spendingPasswordModal := modal.NewCreatePasswordModal(pg.Load).
-			Title("Set spending password").
+			Title(values.String(values.StrSpendingPassword)).
 			NegativeButton(func() {}).
 			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
@@ -393,43 +437,30 @@ func (pg *CreateWallet) HandleUserInteractions() {
 					pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 					m.Dismiss()
 
-					// naviagate to homepage is wallet count is 1 else go back to the previous page
-					if pg.WL.MultiWallet.LoadedWalletsCount() == 1 {
-						onWalSelected := func() {
-							pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
-						}
-						pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
-					} else {
-						onWalSelected := func() {
-							pg.ParentNavigator().CloseCurrentPage() // todo create new wallet from wallet page
-						}
-						pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
+					onWalSelected := func() {
+						pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
 					}
+					pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
 				}()
 				return false
 			})
 		pg.ParentWindow().ShowModal(spendingPasswordModal)
 	}
 
+	// restore wallet actions
 	if pg.restoreBtn.Clicked() {
 		afterRestore := func() {
-			// naviagate to homepage is wallet count is 1 else go back to the previous page
-			if pg.WL.MultiWallet.LoadedWalletsCount() == 1 {
-				onWalSelected := func() {
-					pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
-				}
-				pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
-			} else {
-				onWalSelected := func() {
-					pg.ParentNavigator().CloseCurrentPage() // todo create new wallet from wallet page
-				}
-				pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
+			// todo setup mixer for restored accounts automatically
+			onWalSelected := func() {
+				pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
 			}
+			pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
 		}
 		pg.ParentNavigator().Display(wallets.NewRestorePage(pg.Load, afterRestore))
 	}
 
-	if (pg.importBtn.Clicked() || isSubmit) && pg.validInputsName() {
+	// imported wallet click action control
+	if (pg.importBtn.Clicked() || isSubmit) && pg.validInputs() {
 		go func() {
 			_, err := pg.WL.MultiWallet.CreateWatchOnlyWallet(pg.walletName.Editor.Text(), pg.watchOnlyWalletHex.Editor.Text())
 			if err != nil {
@@ -437,23 +468,15 @@ func (pg *CreateWallet) HandleUserInteractions() {
 				return
 			}
 
-			// naviagate to homepage is wallet count is 1 else go back to the previous page
-			if pg.WL.MultiWallet.LoadedWalletsCount() == 1 {
-				onWalSelected := func() {
-					pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
-				}
-				pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
-			} else {
-				onWalSelected := func() {
-					pg.ParentNavigator().CloseCurrentPage() // todo create new wallet from wallet page
-				}
-				pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
+			onWalSelected := func() {
+				pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
 			}
+			pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
 		}()
 	}
 }
 
-func (pg *CreateWallet) validInputsName() bool {
+func (pg *CreateWallet) validInputs() bool {
 	pg.walletName.SetError("")
 	pg.watchOnlyWalletHex.SetError("")
 	if !components.StringNotEmpty(pg.walletName.Editor.Text()) {

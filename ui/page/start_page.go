@@ -109,12 +109,7 @@ func (sp *startPage) openWallets(password string) error {
 // Part of the load.Page interface.
 func (sp *startPage) HandleUserInteractions() {
 	for sp.addWalletButton.Clicked() {
-
-		// onWalSelected := func() {
-		// 	sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
-		// }
-		sp.ParentNavigator().ClearStackAndDisplay(NewCreateWallet(sp.Load))
-		// todo -- navigate to wallet creation page
+		sp.ParentNavigator().Display(NewCreateWallet(sp.Load))
 	}
 }
 

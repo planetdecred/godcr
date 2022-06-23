@@ -1,7 +1,6 @@
 package decredmaterial
 
 import (
-	// "fmt"
 	"image/color"
 
 	"gioui.org/layout"
@@ -14,9 +13,9 @@ import (
 type IconStyle uint8
 
 const (
-	// Outline sets the outline material design chevron icon.
+	// Chevron sets the icon design chevron icon.
 	Chevron IconStyle = iota
-	// Fill sets the Fill chevron icon.
+	// Caret sets the  the icon design to caret icon.
 	Caret
 )
 

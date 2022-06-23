@@ -432,4 +432,10 @@ const FR = `
 "destAddr" = "Adresse de destination"
 "myAcct" = "Mon compte"
 "selectWalletToOpen" = "Select the wallet you would like to open."
+"continue" = "Continuer"
+"restore" = "Restaurer"
+"newWallet" = "Nouveau portefeuille"
+"selectWalletType" = "Sélectionnez le type de portefeuille que vous souhaitez créer"
+"whatToCallWallet" = "Comment voudriez-vous appeler votre portefeuille?"
+"existingWalletName" = "Quel est le nom de votre portefeuille actuel?"
 `

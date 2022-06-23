@@ -326,6 +326,7 @@ const (
 	StrValidateWalSeed             = "validateWalSeed"
 	StrClearAll                    = "clearAll"
 	StrRestoreWallet               = "restoreWallet"
+	StrRestore                     = "restore"
 	StrRestoreExistingWallet       = "restoreExistingWallet"
 	StrEnterSeedPhrase             = "enterSeedPhrase"
 	StrInvalidSeedPhrase           = "invalidSeedPhrase"
@@ -571,4 +572,9 @@ const (
 	StrDestAddr                    = "destAddr"
 	StrMyAcct                      = "myAcct"
 	StrSelectWalletToOpen          = "selectWalletToOpen"
+	StrContinue                    = "continue"
+	StrNewWallet                   = "newWallet"
+	StrSelectWalletType            = "selectWalletType"
+	StrWhatToCallWallet            = "whatToCallWallet"
+	StrExistingWalletName          = "existingWalletName"
 )
