@@ -470,4 +470,6 @@ unlockWithPassword = "Unlock with password"
 "selectWalletType" = "Select the type of wallet you want to create"
 "whatToCallWallet" = "What would you like to call your wallet?"
 "existingWalletName" = "What is your wallet existing wallet name?"
+"ticketVotedTitle" = "Ticket, Voted"
+"ticketRevokedTitle" = "Ticket, Revoked"
 `

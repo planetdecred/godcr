@@ -578,4 +578,6 @@ const (
 	StrSelectWalletType            = "selectWalletType"
 	StrWhatToCallWallet            = "whatToCallWallet"
 	StrExistingWalletName          = "existingWalletName"
+	StrTicketVotedTitle            = "ticketVotedTitle"
+	StrTicketRevokedTitle          = "ticketRevokedTitle"
 )
