@@ -96,13 +96,12 @@ func (pg *TransactionsPage) OnNavigatedTo() {
 }
 
 func (pg *TransactionsPage) refreshAvailableTxType(l *load.Load) {
-	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-	txCount, _ := selectedWallet.CountTransactions(dcrlibwallet.TxFilterAll)
-	sentTxCount, _ := selectedWallet.CountTransactions(dcrlibwallet.TxFilterSent)
-	receivedTxCount, _ := selectedWallet.CountTransactions(dcrlibwallet.TxFilterReceived)
-	transferredTxCount, _ := selectedWallet.CountTransactions(dcrlibwallet.TxFilterTransferred)
-	mixedTxCount, _ := selectedWallet.CountTransactions(dcrlibwallet.TxFilterMixed)
-	stakingTxCount, _ := selectedWallet.CountTransactions(dcrlibwallet.TxFilterStaking)
+	txCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterAll)
+	sentTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterSent)
+	receivedTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterReceived)
+	transferredTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterTransferred)
+	mixedTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterMixed)
+	stakingTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterStaking)
 
 	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
