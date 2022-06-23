@@ -173,11 +173,7 @@ func (pg *TreasuryPage) FetchPolicies() {
 	// Fetch (or re-fetch) treasury policies in background as this makes
 	// a network call. Refresh the window once the call completes.
 	go func() {
-		PiKey := dcrlibwallet.MainnetPiKeys[0]
-		if pg.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
-			PiKey = dcrlibwallet.TestnetPiKeys[0]
-		}
-		pg.treasuryItems = components.LoadPolicies(pg.Load, selectedWallet, PiKey)
+		pg.treasuryItems = components.LoadPolicies(pg.Load, selectedWallet, pg.WL.MultiWallet.PiKey(0))
 		pg.isPolicyFetchInProgress = true
 		pg.ParentWindow().Reload()
 	}()
@@ -279,7 +275,7 @@ func (pg *TreasuryPage) updatePolicyPreference(treasuryItem *components.Treasury
 			go func() {
 				selectedWallet := pg.WL.SelectedWallet.Wallet
 				votingPreference := treasuryItem.OptionsRadioGroup.Value
-				err := selectedWallet.SetTreasuryPolicy(treasuryItem.Policy.Key, votingPreference, "", []byte(password))
+				err := selectedWallet.SetTreasuryPolicy(treasuryItem.Policy.PiKey, votingPreference, "", []byte(password))
 				if err != nil {
 					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 						pm.SetError(values.String(values.StrInvalidPassphrase))

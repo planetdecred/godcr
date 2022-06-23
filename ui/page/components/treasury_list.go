@@ -43,7 +43,7 @@ func layoutPiKey(gtx C, l *load.Load, treasuryKeyPolicy dcrlibwallet.TreasuryKey
 
 	var backgroundColor color.NRGBA
 
-	statusLabel := l.Theme.Label(values.TextSize14, treasuryKeyPolicy.Key)
+	statusLabel := l.Theme.Label(values.TextSize14, treasuryKeyPolicy.PiKey)
 	backgroundColor = l.Theme.Color.LightBlue
 
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -127,7 +127,7 @@ func LayoutNoPoliciesFound(gtx C, l *load.Load, syncing bool) D {
 }
 
 func LoadPolicies(l *load.Load, selectedWallet *dcrlibwallet.Wallet, pikey string) []*TreasuryItem {
-	policies, err := selectedWallet.AllTreasuryPolicies(pikey, "")
+	policies, err := selectedWallet.TreasuryPolicies(pikey, "")
 	if err != nil {
 		return nil
 	}
