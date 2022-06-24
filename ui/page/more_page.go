@@ -81,14 +81,6 @@ func (pg *MorePage) initPageItems() {
 				pg.ParentNavigator().Display(NewAboutPage(pg.Load))
 			},
 		},
-		{
-			clickable: pg.Theme.NewClickable(true),
-			image:     pg.Theme.Icons.DebugIcon,
-			page:      DebugPageID,
-			action: func() {
-				pg.ParentNavigator().Display(NewDebugPage(pg.Load))
-			},
-		},
 	}
 
 	pg.morePageListItemsMobile = []morePageHandler{
