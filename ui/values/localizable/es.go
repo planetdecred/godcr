@@ -455,4 +455,11 @@ const ES = `
 "destAddr" = "Dirección de destino"
 "myAcct" = "Mi cuenta"
 "selectWalletToOpen" = "Select the wallet you would like to open."
+"continue" = "Continuar"
+"restore" = "Restaurar"
+"newWallet" = "Cartera nueva"
+"selectWalletType" = "Seleccione el tipo de billetera que desea crear"
+"whatToCallWallet" = "¿Cómo te gustaría llamar a tu billetera?"
+"existingWalletName" = "¿Cuál es el nombre de la cartera existente de su billetera?"
+
 `
