@@ -604,12 +604,26 @@ func (mp *MainPage) HandleUserInteractions() {
 	}
 }
 
-// HandleKeyEvent is called when a key is pressed on the current window.
+// KeysToHandle returns an expression that describes a set of key combinations
+// that this page wishes to capture. The HandleKeyPress() method will only be
+// called when any of these key combinations is pressed.
 // Satisfies the load.KeyEventHandler interface for receiving key events.
-func (mp *MainPage) HandleKeyEvent(evt *key.Event) {
+func (mp *MainPage) KeysToHandle() key.Set {
 	if currentPage := mp.CurrentPage(); currentPage != nil {
 		if keyEvtHandler, ok := currentPage.(load.KeyEventHandler); ok {
-			keyEvtHandler.HandleKeyEvent(evt)
+			return keyEvtHandler.KeysToHandle()
+		}
+	}
+	return ""
+}
+
+// HandleKeyPress is called when one or more keys are pressed on the current
+// window that match any of the key combinations returned by KeysToHandle().
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (mp *MainPage) HandleKeyPress(evt *key.Event) {
+	if currentPage := mp.CurrentPage(); currentPage != nil {
+		if keyEvtHandler, ok := currentPage.(load.KeyEventHandler); ok {
+			keyEvtHandler.HandleKeyPress(evt)
 		}
 	}
 }

@@ -22,6 +22,12 @@ type AppSettingsChangeHandler interface {
 // KeyEventHandler is implemented by pages and modals that require key event
 // notifications.
 type KeyEventHandler interface {
-	// HandleKeyEvent is called when a key is pressed on the current window.
-	HandleKeyEvent(*key.Event)
+	// KeysToHandle returns an expression that describes a set of key
+	// combinations that the implementer of this interface wishes to capture.
+	// The HandleKeyPress() method will only be called when any of these key
+	// combinations is pressed.
+	KeysToHandle() key.Set
+	// HandleKeyPress is called when one or more keys are pressed on the current
+	// window that match any of the key combinations returned by KeysToHandle().
+	HandleKeyPress(*key.Event)
 }

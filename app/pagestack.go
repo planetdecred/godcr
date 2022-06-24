@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -63,7 +62,6 @@ func (pageStack *PageStack) Push(newPage Page) {
 
 	pageStack.pages = append(otherPages, newPage)
 	newPage.OnNavigatedTo()
-	pageStack.debugLog()
 }
 
 // Pop removes the page at the top of the stack and gets the next page ready for
@@ -90,7 +88,6 @@ func (pageStack *PageStack) Pop() bool {
 	if l > 1 {
 		pageStack.pages[l-2].OnNavigatedTo() // get previous page ready for display
 	}
-	pageStack.debugLog()
 	return true
 }
 
@@ -124,7 +121,6 @@ func (pageStack *PageStack) PopAfter(matcher func(Page) bool) bool {
 
 	pageStack.pages = pageStack.pages[:retainPageIndex+1] // keep pages from index 0 up till retainPageIndex
 	pageStack.pages[retainPageIndex].OnNavigatedTo()
-	pageStack.debugLog()
 	return true
 }
 
@@ -146,14 +142,5 @@ func (pageStack *PageStack) Reset(newPages ...Page) {
 	pageStack.pages = newPages
 	if l := len(newPages); l > 0 {
 		pageStack.pages[l-1].OnNavigatedTo()
-	}
-	pageStack.debugLog()
-}
-
-func (pageStack *PageStack) debugLog() {
-	if l := len(pageStack.pages); l > 0 {
-		fmt.Printf("%s | page to be displayed: %s | stack: %d \n", pageStack.name, pageStack.pages[l-1].ID(), l)
-	} else {
-		fmt.Printf("%s | empty page stack \n", pageStack.name)
 	}
 }
