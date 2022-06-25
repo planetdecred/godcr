@@ -1204,7 +1204,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 			if menu.button.Clicked() {
 				switch menu.id {
 				case SignMessagePageID:
-					pg.ParentNavigator().Display(NewSignMessagePage(pg.Load, listItem.wal))
+					pg.ParentNavigator().Display(NewSignMessagePage(pg.Load))
 				case privacy.SetupPrivacyPageID:
 					pg.ParentNavigator().Display(privacy.NewSetupPrivacyPage(pg.Load, listItem.wal))
 				case privacy.AccountMixerPageID:

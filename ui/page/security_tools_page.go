@@ -10,6 +10,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -145,6 +146,10 @@ func (pg *SecurityToolsPage) HandleUserInteractions() {
 
 	if pg.validateAddress.Clicked() {
 		pg.ParentNavigator().Display(NewValidateAddressPage(pg.Load))
+	}
+
+	if pg.signMsg.Clicked() {
+		pg.ParentNavigator().Display(wallets.NewSignMessagePage(pg.Load))
 	}
 }
 
