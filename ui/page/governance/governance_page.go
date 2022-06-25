@@ -79,6 +79,10 @@ func (pg *Page) OnNavigatedFrom() {
 }
 
 func (pg *Page) HandleUserInteractions() {
+	if activeTab := pg.CurrentPage(); activeTab != nil {
+		activeTab.HandleUserInteractions()
+	}
+
 	for pg.splashScreenInfoButton.Button.Clicked() {
 		pg.showInfoModal()
 	}

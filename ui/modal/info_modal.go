@@ -161,13 +161,20 @@ func (in *InfoModal) UseCustomWidget(layout layout.Widget) *InfoModal {
 	return in
 }
 
-// HandleKeyEvent is called when a key is pressed on the current window.
+// KeysToHandle returns an expression that describes a set of key combinations
+// that this modal wishes to capture. The HandleKeyPress() method will only be
+// called when any of these key combinations is pressed.
 // Satisfies the load.KeyEventHandler interface for receiving key events.
-func (in *InfoModal) HandleKeyEvent(evt *key.Event) {
-	if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && evt.State == key.Press {
-		in.btnPositve.Click()
-		in.ParentWindow().Reload()
-	}
+func (in *InfoModal) KeysToHandle() key.Set {
+	return decredmaterial.AnyKey(key.NameReturn, key.NameEnter, key.NameEscape)
+}
+
+// HandleKeyPress is called when one or more keys are pressed on the current
+// window that match any of the key combinations returned by KeysToHandle().
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (in *InfoModal) HandleKeyPress(evt *key.Event) {
+	in.btnPositve.Click()
+	in.ParentWindow().Reload()
 }
 
 func (in *InfoModal) Handle() {

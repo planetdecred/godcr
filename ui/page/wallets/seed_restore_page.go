@@ -611,9 +611,26 @@ func (pg *SeedRestore) HandleUserInteractions() {
 	}
 }
 
-// HandleKeyEvent is called when a key is pressed on the current window.
+// KeysToHandle returns an expression that describes a set of key combinations
+// that this page wishes to capture. The HandleKeyPress() method will only be
+// called when any of these key combinations is pressed.
 // Satisfies the load.KeyEventHandler interface for receiving key events.
-func (pg *SeedRestore) HandleKeyEvent(evt *key.Event) {
+func (pg *SeedRestore) KeysToHandle() key.Set {
+	if pg.isRestoring {
+		return "" // don't capture keys while restoring, problematic?
+	}
+	// TODO: Once user starts editing any of the input boxes, the arrow up, down
+	// and enter key signals are no longer received.
+	keySet1 := decredmaterial.AnyKeyWithOptionalModifier(key.ModShift, key.NameTab)
+	keySet2 := decredmaterial.AnyKey(key.NameUpArrow, key.NameDownArrow)
+	keySet3 := decredmaterial.AnyKey(key.NameReturn, key.NameEnter)
+	return decredmaterial.AnyKey(string(keySet1), string(keySet2), string(keySet3))
+}
+
+// HandleKeyPress is called when one or more keys are pressed on the current
+// window that match any of the key combinations returned by KeysToHandle().
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (pg *SeedRestore) HandleKeyPress(evt *key.Event) {
 	if pg.isRestoring {
 		return
 	}

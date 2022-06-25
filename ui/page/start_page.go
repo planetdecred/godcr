@@ -109,7 +109,7 @@ func (sp *startPage) openWallets(password string) error {
 // Part of the load.Page interface.
 func (sp *startPage) HandleUserInteractions() {
 	for sp.addWalletButton.Clicked() {
-		// todo -- navigate to wallet creation page
+		sp.ParentNavigator().Display(NewCreateWallet(sp.Load))
 	}
 }
 
@@ -161,7 +161,7 @@ func (sp *startPage) loadingSection(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Center.Layout(gtx, func(gtx C) D {
-						return sp.Theme.Icons.DecredSymbolIcon.LayoutSize(gtx, values.MarginPadding150)
+						return sp.Theme.Icons.DecredLogo.LayoutSize(gtx, values.MarginPadding150)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {

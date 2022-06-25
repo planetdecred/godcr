@@ -62,16 +62,12 @@ func NewWalletList(l *load.Load, onWalletSelected func()) *WalletList {
 			},
 		},
 		wallectSelected: onWalletSelected,
-
-		Load:      l,
-		shadowBox: l.Theme.Shadow(),
+		Load:            l,
+		shadowBox:       l.Theme.Shadow(),
 	}
 
 	pg.walletsList = l.Theme.NewClickableList(layout.Vertical)
-	pg.walletsList.IsShadowEnabled = true
-
 	pg.watchOnlyWalletsList = l.Theme.NewClickableList(layout.Vertical)
-	pg.watchOnlyWalletsList.IsShadowEnabled = true
 
 	pg.addWalClickable = l.Theme.NewClickable(false)
 	pg.addWalClickable.Radius = decredmaterial.Radius(14)
@@ -194,6 +190,10 @@ func (pg *WalletList) HandleUserInteractions() {
 		if badWallet.deleteBtn.Clicked() {
 			pg.deleteBadWallet(badWallet.ID)
 		}
+	}
+
+	if pg.addWalClickable.Clicked() {
+		pg.ParentNavigator().Display(NewCreateWallet(pg.Load))
 	}
 }
 

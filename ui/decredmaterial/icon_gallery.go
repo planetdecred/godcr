@@ -20,10 +20,11 @@ type Icons struct {
 	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, Mixer, DcrWatchOnly,
 	Next, SettingsIcon, SecurityIcon, HelpIcon, AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, SignMessageIcon,
 	AlertGray, ArrowDownIcon, WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, TransactionFingerprint,
-	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredSymbolIcon,
+	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredLogo,
 	DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon, LogoDarkMode, TimerDarkMode, Rebroadcast,
 	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon,
-	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon *Image
+	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon,
+	ChevronExpand, ChevronCollapse *Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -118,7 +119,7 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.TicketMissedIcon = NewImage(decredIcons["ticket_missed"])
 	i.TicketExpiredIcon = NewImage(decredIcons["ticket_expired"])
 	i.TicketRevokedIcon = NewImage(decredIcons["ticket_revoked"])
-	i.DecredSymbolIcon = NewImage(decredIcons["decred_symbol"])
+	i.DecredLogo = NewImage(decredIcons["decred_symbol"])
 	i.DecredSymbol2 = NewImage(decredIcons["ic_decred02"])
 	i.GovernanceActiveIcon = NewImage(decredIcons["governance_active"])
 	i.GovernanceInactiveIcon = NewImage(decredIcons["governance_inactive"])
@@ -145,6 +146,9 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.MixerInactive = NewImage(decredIcons["mixer_inactive"])
 	i.DcrWatchOnly = NewImage(decredIcons["dcr_watch_only"])
 	i.RedAlert = NewImage(decredIcons["red_alert"])
+	i.ChevronExpand = NewImage(decredIcons["chevron_coll"])
+	i.ChevronCollapse = NewImage(decredIcons["chevron_expand"])
+
 	return i
 }
 
@@ -183,7 +187,7 @@ func (i *Icons) DarkModeIcons() *Icons {
 	i.WalletIcon = NewImage(decredIcons["dm_wallet"])
 	i.StakeIcon = NewImage(decredIcons["dm_stake"])
 	i.TicketRevokedIcon = NewImage(decredIcons["dm_ticket_revoked"])
-	i.DecredSymbolIcon = NewImage(decredIcons["dm_decred_symbol"])
+	i.DecredLogo = NewImage(decredIcons["dm_decred_symbol"])
 	i.DecredSymbol2 = NewImage(decredIcons["logo_darkmode"])
 	i.GovernanceActiveIcon = NewImage(decredIcons["dm_governance_active"])
 	i.GovernanceInactiveIcon = NewImage(decredIcons["dm_governance_inactive"])

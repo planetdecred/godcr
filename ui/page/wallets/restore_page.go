@@ -3,6 +3,7 @@ package wallets
 import (
 	"image"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -254,4 +255,24 @@ func (pg *Restore) verifyHex(hex string) bool {
 	}
 
 	return true
+}
+
+// KeysToHandle returns an expression that describes a set of key combinations
+// that this page wishes to capture. The HandleKeyPress() method will only be
+// called when any of these key combinations is pressed.
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (pg *Restore) KeysToHandle() key.Set {
+	if pg.tabIndex == 0 {
+		return pg.seedRestorePage.KeysToHandle()
+	}
+	return ""
+}
+
+// HandleKeyPress is called when one or more keys are pressed on the current
+// window that match any of the key combinations returned by KeysToHandle().
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (pg *Restore) HandleKeyPress(evt *key.Event) {
+	if pg.tabIndex == 0 {
+		pg.seedRestorePage.HandleKeyPress(evt)
+	}
 }

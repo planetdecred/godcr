@@ -287,9 +287,18 @@ func (pg *SignMessagePage) HandleUserInteractions() {
 	}
 }
 
-// HandleKeyEvent is called when a key is pressed on the current window.
+// KeysToHandle returns an expression that describes a set of key combinations
+// that this page wishes to capture. The HandleKeyPress() method will only be
+// called when any of these key combinations is pressed.
 // Satisfies the load.KeyEventHandler interface for receiving key events.
-func (pg *SignMessagePage) HandleKeyEvent(evt *key.Event) {
+func (pg *SignMessagePage) KeysToHandle() key.Set {
+	return decredmaterial.AnyKeyWithOptionalModifier(key.ModShift, key.NameTab)
+}
+
+// HandleKeyPress is called when one or more keys are pressed on the current
+// window that match any of the key combinations returned by KeysToHandle().
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (pg *SignMessagePage) HandleKeyPress(evt *key.Event) {
 	// Switch editors when tab key is pressed.
 	decredmaterial.SwitchEditors(evt, pg.addressEditor.Editor, pg.messageEditor.Editor)
 }

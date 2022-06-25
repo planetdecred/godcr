@@ -208,14 +208,13 @@ func (mp *MainPage) initNavItems() {
 				Title:         values.String(values.StrGovernance),
 				PageID:        governance.GovernancePageID,
 			},
-			// Temp disabling. Will uncomment after release
-			// {
-			// 	Clickable:     mp.Theme.NewClickable(true),
-			// 	Image:         mp.Theme.Icons.DexIcon,
-			// 	ImageInactive: mp.Theme.Icons.DexIconInactive,
-			// 	Title:         values.String(values.StrDex),
-			// 	PageID:        dexclient.MarketPageID,
-			// },
+			{
+				Clickable:     mp.Theme.NewClickable(true),
+				Image:         mp.Theme.Icons.DexIcon,
+				ImageInactive: mp.Theme.Icons.DexIconInactive,
+				Title:         values.String(values.StrDex),
+				PageID:        dexclient.MarketPageID,
+			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.MoreIcon,
@@ -520,12 +519,7 @@ func (mp *MainPage) HandleUserInteractions() {
 			case governance.GovernancePageID:
 				pg = governance.NewGovernancePage(mp.Load)
 			case dexclient.MarketPageID:
-				_, err := mp.WL.MultiWallet.StartDexClient() // does nothing if already started
-				if err != nil {
-					mp.Toast.NotifyError(values.StringF(values.StrDexStartupErr, err))
-				} else {
-					pg = dexclient.NewMarketPage(mp.Load)
-				}
+				pg = dexclient.NewMarketPage(mp.Load)
 			case MorePageID:
 				pg = NewMorePage(mp.Load)
 			}
@@ -610,12 +604,26 @@ func (mp *MainPage) HandleUserInteractions() {
 	}
 }
 
-// HandleKeyEvent is called when a key is pressed on the current window.
+// KeysToHandle returns an expression that describes a set of key combinations
+// that this page wishes to capture. The HandleKeyPress() method will only be
+// called when any of these key combinations is pressed.
 // Satisfies the load.KeyEventHandler interface for receiving key events.
-func (mp *MainPage) HandleKeyEvent(evt *key.Event) {
+func (mp *MainPage) KeysToHandle() key.Set {
 	if currentPage := mp.CurrentPage(); currentPage != nil {
 		if keyEvtHandler, ok := currentPage.(load.KeyEventHandler); ok {
-			keyEvtHandler.HandleKeyEvent(evt)
+			return keyEvtHandler.KeysToHandle()
+		}
+	}
+	return ""
+}
+
+// HandleKeyPress is called when one or more keys are pressed on the current
+// window that match any of the key combinations returned by KeysToHandle().
+// Satisfies the load.KeyEventHandler interface for receiving key events.
+func (mp *MainPage) HandleKeyPress(evt *key.Event) {
+	if currentPage := mp.CurrentPage(); currentPage != nil {
+		if keyEvtHandler, ok := currentPage.(load.KeyEventHandler); ok {
+			keyEvtHandler.HandleKeyPress(evt)
 		}
 	}
 }

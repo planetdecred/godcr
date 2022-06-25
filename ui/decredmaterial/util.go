@@ -1,12 +1,15 @@
 package decredmaterial
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"math"
 	"math/rand"
+	"strings"
 	"time"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -116,4 +119,20 @@ func drawInk(gtx layout.Context, c widget.Press, highlightColor color.NRGBA) {
 
 func GenerateRandomNumber() int {
 	return rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+}
+
+// AnyKey returns a key.Set that will match any of the provided keys.
+// See the doc on key.Set for more.
+func AnyKey(keys ...string) key.Set {
+	keysCombined := strings.Join(keys, "|")
+	return key.Set(keysCombined)
+}
+
+// AnyKeyWithOptionalModifier returns a key.Set that will match any of the
+// provided keys whether or not they are pressed with provided modifier.
+// See the doc on key.Set for more.
+func AnyKeyWithOptionalModifier(modifier key.Modifiers, keys ...string) key.Set {
+	keysCombined := strings.Join(keys, ",")
+	keysWithModifier := fmt.Sprintf("(%s)-[%s]", modifier, keysCombined)
+	return key.Set(keysWithModifier)
 }
