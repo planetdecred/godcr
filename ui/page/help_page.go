@@ -102,7 +102,9 @@ func (pg *HelpPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween, WeightSum: 1}.Layout(gtx,
-						layout.Flexed(1, pg.document()),
+						layout.Flexed(1, func(gtx C) D {
+							return pg.pageSectionsMobile(gtx, pg.Theme.Icons.DocumentationIcon, pg.documentation, values.String(values.StrDocumentation))
+						}),
 					)
 				})
 			},
@@ -139,6 +141,34 @@ func (pg *HelpPage) pageSections(gtx C, icon *decredmaterial.Image, action *decr
 			layout.Rigid(func(gtx C) D {
 				size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
 				return D{Size: size}
+			}),
+		)
+	})
+}
+
+func (pg *HelpPage) pageSectionsMobile(gtx C, icon *decredmaterial.Image, action *decredmaterial.Clickable, title string) D {
+	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return decredmaterial.LinearLayout{
+			Orientation: layout.Horizontal,
+			Width:       decredmaterial.MatchParent,
+			Height:      decredmaterial.WrapContent,
+			Background:  pg.Theme.Color.Surface,
+			Clickable:   action,
+			Direction:   layout.W,
+			Shadow:      pg.shadowBox,
+			Border:      decredmaterial.Border{Radius: decredmaterial.Radius(14)},
+			Padding:     layout.UniformInset(values.MarginPadding15),
+			Margin:      layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return icon.Layout24dp(gtx)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{
+					Top:  values.MarginPadding2,
+					Left: values.MarginPadding18,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.Theme.Body1(title).Layout(gtx)
+				})
 			}),
 		)
 	})
