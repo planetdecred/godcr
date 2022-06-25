@@ -34,6 +34,7 @@ type SecurityToolsPage struct {
 }
 
 func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
+
 	pg := &SecurityToolsPage{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(SecurityToolsPageID),
