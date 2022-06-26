@@ -186,7 +186,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	for pg.changePass.Clicked() {
 		currentSpendingPasswordModal := modal.NewPasswordModal(pg.Load).
 			Title(values.String(values.StrChangeSpendingPass)).
-			Hint("Current spending password").
+			Hint("Current spending passphrase").
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 				go func() {
@@ -203,8 +203,8 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 					newSpendingPasswordModal := modal.NewCreatePasswordModal(pg.Load).
 						Title(values.String(values.StrChangeSpendingPass)).
 						EnableName(false).
-						PasswordHint("New spending password").
-						ConfirmPasswordHint("Confirm new spending password").
+						PasswordHint("New spending passphrase").
+						ConfirmPasswordHint("Confirm new spending passphrase").
 						PasswordCreated(func(walletName, newPassword string, m *modal.CreatePasswordModal) bool {
 							go func() {
 								err := pg.WL.MultiWallet.ChangePrivatePassphraseForWallet(pg.wallet.ID, []byte(password),
@@ -214,7 +214,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify("Spending password updated")
+								pg.Toast.Notify("Spending passphrase updated")
 								m.Dismiss()
 							}()
 							return false

@@ -224,7 +224,7 @@ const (
 	StrConfirm                     = "confirm"
 	StrSpendingPasswordInfo        = "spendingPasswordInfo"
 	StrSpendingPasswordInfo2       = "spendingPasswordInfo2"
-	StrSpendingPassword            = "spendingPassword"
+	StrSpendingPassword            = "spendingPassphrase"
 	StrEnterSpendingPassword       = "enterSpendingPassword"
 	StrConfirmSpendingPassword     = "confirmSpendingPassword"
 	StrCurrentSpendingPassword     = "currentSpendingPassword"
