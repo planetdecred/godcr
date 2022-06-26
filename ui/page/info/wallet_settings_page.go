@@ -26,9 +26,10 @@ type WalletSettingsPage struct {
 
 	changePass, rescan, deleteWallet *decredmaterial.Clickable
 
-	chevronRightIcon *decredmaterial.Icon
-	backButton       decredmaterial.IconButton
-	infoButton       decredmaterial.IconButton
+	chevronRightIcon        *decredmaterial.Icon
+	backButton              decredmaterial.IconButton
+	infoButton              decredmaterial.IconButton
+	allowUnspendUnmixedAcct *decredmaterial.Switch
 }
 
 func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettingsPage {
@@ -40,7 +41,8 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 		rescan:           l.Theme.NewClickable(false),
 		deleteWallet:     l.Theme.NewClickable(false),
 
-		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
+		chevronRightIcon:        decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
+		allowUnspendUnmixedAcct: l.Theme.Switch(),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -77,6 +79,7 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 						}
 						return layout.Dimensions{}
 					}),
+					layout.Rigid(pg.stakeshuffle()),
 					layout.Rigid(pg.debug()),
 					layout.Rigid(pg.dangerZone()),
 				)
@@ -112,10 +115,38 @@ func (pg *WalletSettingsPage) debug() layout.Widget {
 	}
 }
 
+func (pg *WalletSettingsPage) stakeshuffle() layout.Widget {
+	return func(gtx C) D {
+		return pg.pageSections(gtx, "StakeShuffle",
+			func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(pg.bottomSectionLabel(pg.rescan, "Mixed account")),
+					layout.Rigid(pg.Theme.Separator().Layout),
+					layout.Rigid(pg.bottomSectionLabel(pg.rescan, "Change account")),
+					layout.Rigid(pg.Theme.Separator().Layout),
+					layout.Rigid(pg.bottomSectionLabel(pg.rescan, "Coordination server")),
+				)
+			})
+	}
+}
+
 func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrDangerZone),
-			pg.bottomSectionLabel(pg.deleteWallet, values.String(values.StrRemoveWallet)))
+			func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{}.Layout(gtx,
+								layout.Flexed(1, pg.Theme.Label(values.TextSize16, "Allow spending from unmixed accounts").Layout),
+								layout.Rigid(pg.allowUnspendUnmixedAcct.Layout),
+							)
+						})
+					}),
+					layout.Rigid(pg.Theme.Separator().Layout),
+					layout.Rigid(pg.bottomSectionLabel(pg.deleteWallet, values.String(values.StrRemoveWallet))),
+				)
+			})
 	}
 }
 
