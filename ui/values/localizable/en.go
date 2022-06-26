@@ -475,4 +475,7 @@ unlockWithPassword = "Unlock with password"
 "ticketRevokedTitle" = "Ticket, Revoked"
 "syncCompTime" = "Est. Sync completion time"
 "info" = "Info"
+"changeAccount" = "Change account"
+"mixedAccount" = "Mixed account"
+"coordinationServer" = "Coordination server"
 `

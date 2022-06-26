@@ -24,7 +24,8 @@ type WalletSettingsPage struct {
 
 	wallet *dcrlibwallet.Wallet
 
-	changePass, rescan, deleteWallet *decredmaterial.Clickable
+	changePass, rescan, deleteWallet                *decredmaterial.Clickable
+	changeAccount, mixedAccount, coordinationServer *decredmaterial.Clickable
 
 	chevronRightIcon        *decredmaterial.Icon
 	backButton              decredmaterial.IconButton
@@ -34,12 +35,15 @@ type WalletSettingsPage struct {
 
 func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettingsPage {
 	pg := &WalletSettingsPage{
-		Load:             l,
-		GenericPageModal: app.NewGenericPageModal(WalletSettingsPageID),
-		wallet:           wal,
-		changePass:       l.Theme.NewClickable(false),
-		rescan:           l.Theme.NewClickable(false),
-		deleteWallet:     l.Theme.NewClickable(false),
+		Load:               l,
+		GenericPageModal:   app.NewGenericPageModal(WalletSettingsPageID),
+		wallet:             wal,
+		changePass:         l.Theme.NewClickable(false),
+		rescan:             l.Theme.NewClickable(false),
+		deleteWallet:       l.Theme.NewClickable(false),
+		changeAccount:      l.Theme.NewClickable(false),
+		mixedAccount:       l.Theme.NewClickable(false),
+		coordinationServer: l.Theme.NewClickable(false),
 
 		chevronRightIcon:        decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
 		allowUnspendUnmixedAcct: l.Theme.Switch(),
@@ -117,14 +121,14 @@ func (pg *WalletSettingsPage) debug() layout.Widget {
 
 func (pg *WalletSettingsPage) stakeshuffle() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "StakeShuffle",
+		return pg.pageSections(gtx, values.String(values.StrStakeShuffle),
 			func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(pg.bottomSectionLabel(pg.rescan, "Mixed account")),
+					layout.Rigid(pg.bottomSectionLabel(pg.mixedAccount, values.String(values.StrMixedAccount))),
 					layout.Rigid(pg.Theme.Separator().Layout),
-					layout.Rigid(pg.bottomSectionLabel(pg.rescan, "Change account")),
+					layout.Rigid(pg.bottomSectionLabel(pg.changeAccount, values.String(values.StrChangeAccount))),
 					layout.Rigid(pg.Theme.Separator().Layout),
-					layout.Rigid(pg.bottomSectionLabel(pg.rescan, "Coordination server")),
+					layout.Rigid(pg.bottomSectionLabel(pg.coordinationServer, values.String(values.StrCoordinationServer))),
 				)
 			})
 	}

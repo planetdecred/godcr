@@ -583,4 +583,7 @@ const (
 	StrTicketRevokedTitle          = "ticketRevokedTitle"
 	StrSyncCompTime                = "syncCompTime"
 	StrInfo                        = "info"
+	StrMixedAccount                = "mixedAccount"
+	StrChangeAccount               = "changeAccount"
+	StrCoordinationServer          = "coordinationServer"
 )

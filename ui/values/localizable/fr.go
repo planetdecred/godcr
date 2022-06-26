@@ -441,4 +441,7 @@ const FR = `
 "existingWalletName" = "Quel est le nom de votre portefeuille actuel?"
 "syncCompTime" = "Est. Sync completion time"
 "info" = "Info"
+"changeAccount" = "Changer de compte"
+"mixedAccount" = "Compte mixte"
+"coordinationServer" = "Serveur de coordination"
 `

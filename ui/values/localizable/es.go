@@ -464,4 +464,7 @@ const ES = `
 "existingWalletName" = "¿Cuál es el nombre de la cartera existente de su billetera?"
 syncCompTime" = "Est. Sync completion time"
 "info" = "Info"
+"changeAccount" = "Cambiar cuenta"
+"mixedAccount" = "Cuenta mixta"
+"coordinationServer" = "Servidor de coordinación"
 `
