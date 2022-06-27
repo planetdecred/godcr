@@ -285,15 +285,9 @@ func (pg *WalletList) layoutDesktop(gtx C) D {
 	gtx.Constraints.Min = gtx.Constraints.Max
 	return components.UniformPadding(gtx, func(gtx C) D {
 		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
-		list := &layout.List{
-			Axis: layout.Vertical,
-		}
-
 		return layout.Center.Layout(gtx, func(gtx C) D {
-			return list.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-				return layout.Inset{Top: values.MarginPadding26}.Layout(gtx, func(gtx C) D {
-					return pageContent[i](gtx)
-				})
+			return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+				return layout.Inset{Top: values.MarginPadding26}.Layout(gtx, pageContent[i])
 			})
 		})
 	})
@@ -383,8 +377,10 @@ func (pg *WalletList) walletSection(gtx C) D {
 	if len(pg.badWalletsList) != 0 {
 		walletSections = append(walletSections, pg.badWalletsSection)
 	}
-
-	return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(walletSections), func(gtx C, i int) D {
+	list := &layout.List{
+		Axis: layout.Vertical,
+	}
+	return list.Layout(gtx, len(walletSections), func(gtx C, i int) D {
 		return walletSections[i](gtx)
 	})
 }
