@@ -106,12 +106,13 @@ func (lp *ListPreferenceModal) Handle() {
 	}
 
 	for lp.btnNegative.Clicked() {
+		lp.negativeButtonClicked()
 		lp.Modal.Dismiss()
 	}
 
 	for lp.btnPositive.Clicked() {
-		lp.currentValue = lp.optionsRadioGroup.Value
 		lp.WL.MultiWallet.SaveUserConfigValue(lp.preferenceKey, lp.optionsRadioGroup.Value)
+		lp.positiveButtonClicked()
 		lp.RefreshTheme(lp.ParentWindow())
 		lp.Modal.Dismiss()
 	}
@@ -151,26 +152,26 @@ func (lp *ListPreferenceModal) layoutItems() []layout.FlexChild {
 	return items
 }
 
-func (in *ListPreferenceModal) actionButtonsLayout(gtx layout.Context) layout.Dimensions {
+func (lp *ListPreferenceModal) actionButtonsLayout(gtx layout.Context) layout.Dimensions {
 	return layout.E.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				if in.negativeButtonText == "" {
+				if lp.negativeButtonText == "" {
 					return layout.Dimensions{}
 				}
 
-				in.btnNegative.Text = in.negativeButtonText
+				lp.btnNegative.Text = lp.negativeButtonText
 				gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding250)
-				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, in.btnNegative.Layout)
+				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, lp.btnNegative.Layout)
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				if in.positiveButtonText == "" {
+				if lp.positiveButtonText == "" {
 					return layout.Dimensions{}
 				}
 
-				in.btnPositive.Text = in.positiveButtonText
+				lp.btnPositive.Text = lp.positiveButtonText
 				gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding250)
-				return in.btnPositive.Layout(gtx)
+				return lp.btnPositive.Layout(gtx)
 			}),
 		)
 	})
