@@ -45,7 +45,6 @@ type SettingsPage struct {
 	backButton       decredmaterial.IconButton
 	infoButton       decredmaterial.IconButton
 
-	isDarkModeOn            *decredmaterial.Switch
 	spendUnconfirmed        *decredmaterial.Switch
 	startupPassword         *decredmaterial.Switch
 	beepNewBlocks           *decredmaterial.Switch
@@ -54,6 +53,7 @@ type SettingsPage struct {
 	governance              *decredmaterial.Switch
 	proposalNotification    *decredmaterial.Switch
 	transactionNotification *decredmaterial.Switch
+	isHideBalance           *decredmaterial.Switch
 
 	peerLabel, agentLabel decredmaterial.Label
 
@@ -74,7 +74,6 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		},
 		wal: l.WL.Wallet,
 
-		isDarkModeOn:            l.Theme.Switch(),
 		spendUnconfirmed:        l.Theme.Switch(),
 		startupPassword:         l.Theme.Switch(),
 		beepNewBlocks:           l.Theme.Switch(),
@@ -83,6 +82,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		governance:              l.Theme.Switch(),
 		proposalNotification:    l.Theme.Switch(),
 		transactionNotification: l.Theme.Switch(),
+		isHideBalance:           l.Theme.Switch(),
 
 		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
 
@@ -146,13 +146,13 @@ func (pg *SettingsPage) general() layout.Widget {
 		return pg.mainSection(gtx, values.String(values.StrGeneral), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrDarkMode), pg.isDarkModeOn)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)
+					return pg.subSectionSwitch(gtx, values.String(values.StrHideBalance), pg.isHideBalance)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.String(values.StrGovernance), pg.governance)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.subSectionSwitch(gtx, values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)
 				}),
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
@@ -399,9 +399,11 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		langSelectorModal := preference.NewListPreference(pg.Load,
 			load.LanguagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
 			Title(values.StrLanguage).
-			UpdateValues(func() {
+			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+			PositiveButton(values.String(values.StrSave), func() {
 				values.SetUserLanguage(pg.WL.MultiWallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
-			})
+			}).
+			NegativeButton(values.String(values.StrCancel), func() {})
 		pg.ParentWindow().ShowModal(langSelectorModal)
 		break
 	}
@@ -411,13 +413,15 @@ func (pg *SettingsPage) HandleUserInteractions() {
 			dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue,
 			values.ArrExchangeCurrencies).
 			Title(values.StrCurrencyConversion).
-			UpdateValues(func() {})
+			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+			PositiveButton(values.String(values.StrSave), func() {}).
+			NegativeButton(values.String(values.StrCancel), func() {})
 		pg.ParentWindow().ShowModal(currencySelectorModal)
 		break
 	}
 
-	if pg.isDarkModeOn.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())
+	if pg.isHideBalance.Changed() {
+		pg.WL.MultiWallet.SaveUserConfigValue(load.HideBalanceSectionConfigKey, pg.isHideBalance.IsChecked())
 		pg.RefreshTheme(pg.ParentWindow())
 	}
 
@@ -667,10 +671,10 @@ func (pg *SettingsPage) updateSettingOptions() {
 		pg.isStartupPassword = true
 	}
 
-	isDarkModeOn := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
-	pg.isDarkModeOn.SetChecked(false)
-	if isDarkModeOn {
-		pg.isDarkModeOn.SetChecked(isDarkModeOn)
+	isHideBalanceSection := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.HideBalanceSectionConfigKey, false)
+	pg.isHideBalance.SetChecked(false)
+	if isHideBalanceSection {
+		pg.isHideBalance.SetChecked(isHideBalanceSection)
 	}
 
 	isSpendUnconfirmed := pg.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false)

@@ -438,4 +438,5 @@ const FR = `
 "selectWalletType" = "Sélectionnez le type de portefeuille que vous souhaitez créer"
 "whatToCallWallet" = "Comment voudriez-vous appeler votre portefeuille?"
 "existingWalletName" = "Quel est le nom de votre portefeuille actuel?"
+"hideBalance" = "Hide balance"
 `

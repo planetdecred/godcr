@@ -26,4 +26,5 @@ const ZH = `
 "disconnect" = "断开连接";
 "blockHeaderFetchedCount" = "%d of %d";
 "spanish" = "西班牙语";
+"hideBalance" = "Hide balance"
 `

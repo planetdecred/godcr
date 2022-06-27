@@ -94,6 +94,7 @@ type MainPage struct {
 	isNavExpanded          bool
 	setNavExpanded         func()
 	totalBalanceUSD        string
+	isBalanceHiddenSection bool
 }
 
 func NewMainPage(l *load.Load) *MainPage {
@@ -602,6 +603,8 @@ func (mp *MainPage) HandleUserInteractions() {
 		mp.isBalanceHidden = !mp.isBalanceHidden
 		mp.WL.MultiWallet.SetBoolConfigValueForKey(load.HideBalanceConfigKey, mp.isBalanceHidden)
 	}
+
+	mp.isBalanceHiddenSection = mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.HideBalanceSectionConfigKey, false)
 }
 
 // KeysToHandle returns an expression that describes a set of key combinations
@@ -830,34 +833,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 									}),
 								)
 							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Right: values.MarginPadding16,
-									Left:  values.MarginPadding24,
-								}.Layout(gtx,
-									func(gtx C) D {
-										return mp.Theme.Icons.Logo.Layout24dp(gtx)
-									})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return mp.totalDCRBalance(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								if !mp.isBalanceHidden {
-									return mp.LayoutUSDBalance(gtx)
-								}
-								return D{}
-							}),
-							layout.Rigid(func(gtx C) D {
-								mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
-								if mp.isBalanceHidden {
-									mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
-								}
-								return layout.Inset{
-									Top:  values.MarginPadding1,
-									Left: values.MarginPadding9,
-								}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
-							}),
+							layout.Rigid(mp.balanceLayoutSection),
 						)
 					})
 				}),
@@ -889,6 +865,47 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 		layout.Rigid(func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return mp.Theme.Separator().Layout(gtx)
+		}),
+	)
+}
+
+func (mp *MainPage) balanceLayoutSection(gtx C) D {
+	if mp.isBalanceHiddenSection {
+		return D{}
+	}
+	return decredmaterial.LinearLayout{
+		Width:       decredmaterial.WrapContent,
+		Height:      decredmaterial.WrapContent,
+		Orientation: layout.Horizontal,
+		Alignment:   layout.Middle,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{
+				Right: values.MarginPadding16,
+				Left:  values.MarginPadding24,
+			}.Layout(gtx,
+				func(gtx C) D {
+					return mp.Theme.Icons.Logo.Layout24dp(gtx)
+				})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return mp.totalDCRBalance(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if !mp.isBalanceHidden {
+				return mp.LayoutUSDBalance(gtx)
+			}
+			return D{}
+		}),
+		layout.Rigid(func(gtx C) D {
+			mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
+			if mp.isBalanceHidden {
+				mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
+			}
+			return layout.Inset{
+				Top:  values.MarginPadding1,
+				Left: values.MarginPadding9,
+			}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
 		}),
 	)
 }

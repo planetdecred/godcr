@@ -14,6 +14,7 @@ const (
 	ProposalNotificationConfigKey    = "proposal_notification_key"
 	TransactionNotificationConfigKey = "transaction_notification_key"
 	SpendUnmixedFundsKey             = "spend_unmixed_funds"
+	HideBalanceSectionConfigKey      = "hide_balance_section"
 )
 
 // SetCurrentAppWidth stores the current width of the app's window.

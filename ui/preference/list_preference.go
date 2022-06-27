@@ -1,6 +1,7 @@
 package preference
 
 import (
+	"image/color"
 	"sort"
 
 	"gioui.org/layout"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -17,7 +17,6 @@ type ListPreferenceModal struct {
 	*decredmaterial.Modal
 
 	optionsRadioGroup *widget.Enum
-	cancelButton      decredmaterial.IconButton
 
 	items         map[string]string //[key]str-key
 	itemKeys      []string
@@ -27,7 +26,13 @@ type ListPreferenceModal struct {
 	initialValue  string
 	currentValue  string
 
-	updateButtonClicked func()
+	positiveButtonText    string
+	positiveButtonClicked func()
+	btnPositive           decredmaterial.Button
+
+	negativeButtonText    string
+	negativeButtonClicked func()
+	btnNegative           decredmaterial.Button
 }
 
 func NewListPreference(l *load.Load, preferenceKey, defaultValue string, items map[string]string) *ListPreferenceModal {
@@ -50,10 +55,10 @@ func NewListPreference(l *load.Load, preferenceKey, defaultValue string, items m
 
 		optionsRadioGroup: new(widget.Enum),
 		Modal:             l.Theme.ModalFloatTitle("list_preference"),
-	}
 
-	lp.cancelButton, _ = components.SubpageHeaderButtons(l)
-	lp.cancelButton.Icon = l.Theme.Icons.ContentClear
+		btnPositive: l.Theme.OutlineButton(values.String(values.StrSave)),
+		btnNegative: l.Theme.OutlineButton(values.String(values.StrCancel)),
+	}
 
 	return &lp
 }
@@ -77,8 +82,20 @@ func (lp *ListPreferenceModal) Title(title string) *ListPreferenceModal {
 	return lp
 }
 
-func (lp *ListPreferenceModal) UpdateValues(clicked func()) *ListPreferenceModal {
-	lp.updateButtonClicked = clicked
+func (lp *ListPreferenceModal) PositiveButton(text string, clicked func()) *ListPreferenceModal {
+	lp.positiveButtonText = text
+	lp.positiveButtonClicked = clicked
+	return lp
+}
+
+func (lp *ListPreferenceModal) PositiveButtonStyle(background, text color.NRGBA) *ListPreferenceModal {
+	lp.btnPositive.Background, lp.btnPositive.Color = background, text
+	return lp
+}
+
+func (lp *ListPreferenceModal) NegativeButton(text string, clicked func()) *ListPreferenceModal {
+	lp.negativeButtonText = text
+	lp.negativeButtonClicked = clicked
 	return lp
 }
 
@@ -86,13 +103,16 @@ func (lp *ListPreferenceModal) Handle() {
 
 	for lp.optionsRadioGroup.Changed() {
 		lp.currentValue = lp.optionsRadioGroup.Value
-		lp.WL.MultiWallet.SaveUserConfigValue(lp.preferenceKey, lp.optionsRadioGroup.Value)
-		lp.updateButtonClicked()
-		lp.RefreshTheme(lp.ParentWindow())
-		lp.Dismiss()
 	}
 
-	for lp.cancelButton.Button.Clicked() {
+	for lp.btnNegative.Clicked() {
+		lp.Modal.Dismiss()
+	}
+
+	for lp.btnPositive.Clicked() {
+		lp.currentValue = lp.optionsRadioGroup.Value
+		lp.WL.MultiWallet.SaveUserConfigValue(lp.preferenceKey, lp.optionsRadioGroup.Value)
+		lp.RefreshTheme(lp.ParentWindow())
 		lp.Modal.Dismiss()
 	}
 
@@ -106,15 +126,13 @@ func (lp *ListPreferenceModal) Layout(gtx layout.Context) layout.Dimensions {
 		func(gtx layout.Context) layout.Dimensions {
 			txt := lp.Theme.H6(values.String(lp.title))
 			txt.Color = lp.Theme.Color.Text
-			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.
-				Layout(gtx, layout.Rigid(txt.Layout), layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return layout.Inset{
-						Top: values.MarginPaddingMinus2,
-					}.Layout(gtx, lp.cancelButton.Layout)
-				}))
+			return txt.Layout(gtx)
 		},
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, lp.layoutItems()...)
+		},
+		func(gtx layout.Context) layout.Dimensions {
+			return lp.actionButtonsLayout(gtx)
 		},
 	}
 
@@ -131,4 +149,29 @@ func (lp *ListPreferenceModal) layoutItems() []layout.FlexChild {
 	}
 
 	return items
+}
+
+func (in *ListPreferenceModal) actionButtonsLayout(gtx layout.Context) layout.Dimensions {
+	return layout.E.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				if in.negativeButtonText == "" {
+					return layout.Dimensions{}
+				}
+
+				in.btnNegative.Text = in.negativeButtonText
+				gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding250)
+				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, in.btnNegative.Layout)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				if in.positiveButtonText == "" {
+					return layout.Dimensions{}
+				}
+
+				in.btnPositive.Text = in.positiveButtonText
+				gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding250)
+				return in.btnPositive.Layout(gtx)
+			}),
+		)
+	})
 }
