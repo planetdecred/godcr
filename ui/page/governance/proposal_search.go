@@ -3,11 +3,17 @@ package governance
 import (
 	"errors"
 
+	"gioui.org/layout"
+	"gioui.org/text"
+
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/v2/analysis/lang/en"
 	"github.com/blevesearch/bleve/v2/mapping"
 	"github.com/planetdecred/godcr/ui/page/components"
+
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 // The proposal bleve index directory name.
@@ -134,4 +140,38 @@ func (pg *ProposalsPage) searchProposal(searchTerm string) {
 		pg.proposalSearchChan <- hits
 	}
 	return
+}
+
+func (pg *ProposalsPage) layoutSearchResult(gtx C, l *load.Load, result *searchResult) D {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return pg.layoutAuthor(gtx, l, result)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return pg.layoutTitle(gtx, l, result)
+			}),
+		)
+	})
+}
+
+func (pg *ProposalsPage) layoutTitle(gtx C, l *load.Load, result *searchResult) D {
+	lbl := l.Theme.H6(result.Name)
+	lbl.Font.Weight = text.SemiBold
+	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
+}
+
+func (pg *ProposalsPage) layoutAuthor(gtx C, l *load.Load, result *searchResult) D {
+	grayCol := l.Theme.Color.GrayText2
+	nameLabel := l.Theme.Body2(result.Username)
+	nameLabel.Color = grayCol
+
+	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(nameLabel.Layout),
+			)
+		}),
+	)
 }
