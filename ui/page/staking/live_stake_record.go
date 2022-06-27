@@ -5,6 +5,7 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -105,7 +106,6 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 					pg.ticketRecordIconCount(pg.Theme.Icons.TicketExpiredIcon, pg.ticketOverview.Expired, values.String(values.StrExpired)),
 					pg.ticketRecordIconCount(pg.Theme.Icons.TicketRevokedIcon, pg.ticketOverview.Revoked, values.String(values.StrRevoked)),
 				}
-
 				return decredmaterial.GridWrap{
 					Axis:      layout.Horizontal,
 					Alignment: layout.End,
@@ -163,6 +163,8 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 
 func (pg *Page) ticketRecordIconCount(icon *decredmaterial.Image, count int, status string) layout.Widget {
 	return func(gtx C) D {
+		gtx.Constraints.Min.X = gtx.Dp(unit.Dp(110))
+		gtx.Constraints.Max.X = gtx.Dp(unit.Dp(110))
 		return layout.Inset{Bottom: values.MarginPadding16, Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {

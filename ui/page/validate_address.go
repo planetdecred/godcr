@@ -90,7 +90,18 @@ func (pg *ValidateAddressPage) Layout(gtx C) D {
 		}
 		return sp.Layout(pg.ParentWindow(), gtx)
 	}
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx, body)
+	}
+	return pg.layoutDesktop(gtx, body)
+}
+
+func (pg *ValidateAddressPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *ValidateAddressPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *ValidateAddressPage) addressSection() layout.Widget {

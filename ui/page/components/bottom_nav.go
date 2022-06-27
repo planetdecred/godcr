@@ -57,7 +57,7 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutBottomNavigationBar(gtx la
 							Orientation: bottomNavigationbar.axis,
 							Width:       (bottomNavigationbar.Load.GetCurrentAppWidth() * 100 / len(bottomNavigationbar.BottomNaigationItems)) / 100, // Divide each cell equally
 							Height:      decredmaterial.WrapContent,
-							Padding:     layout.UniformInset(values.MarginPadding15),
+							Padding:     layout.UniformInset(values.MarginPadding10),
 							Alignment:   bottomNavigationbar.alignment,
 							Direction:   bottomNavigationbar.direction,
 							Background:  background,
@@ -105,7 +105,7 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutSendReceive(gtx layout.Con
 							Width:       decredmaterial.WrapContent,
 							Height:      decredmaterial.WrapContent,
 							Orientation: layout.Horizontal,
-							Background:  bottomNavigationbar.Theme.Color.DefualtThemeColors().Primary,
+							Background:  bottomNavigationbar.Theme.Color.DefaultThemeColors().Primary,
 							Border:      decredmaterial.Border{Radius: decredmaterial.Radius(20)},
 							Padding:     layout.UniformInset(values.MarginPadding8),
 						}.Layout(gtx,
@@ -136,7 +136,7 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutSendReceive(gtx layout.Con
 												}.Layout(gtx, func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
 														txt := bottomNavigationbar.Theme.Label(values.TextSize16, bottomNavigationbar.FloatingActionButton[0].Title)
-														txt.Color = bottomNavigationbar.Theme.Color.DefualtThemeColors().White
+														txt.Color = bottomNavigationbar.Theme.Color.DefaultThemeColors().White
 														return txt.Layout(gtx)
 													})
 												})
@@ -145,7 +145,7 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutSendReceive(gtx layout.Con
 									}),
 									layout.Rigid(func(gtx C) D {
 										verticalSeparator := bottomNavigationbar.Theme.SeparatorVertical(50, 1)
-										verticalSeparator.Color = bottomNavigationbar.Theme.Color.DefualtThemeColors().White
+										verticalSeparator.Color = bottomNavigationbar.Theme.Color.DefaultThemeColors().White
 										return verticalSeparator.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
@@ -173,7 +173,7 @@ func (bottomNavigationbar *BottomNavigationBar) LayoutSendReceive(gtx layout.Con
 												}.Layout(gtx, func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
 														txt := bottomNavigationbar.Theme.Label(values.TextSize16, bottomNavigationbar.FloatingActionButton[1].Title)
-														txt.Color = bottomNavigationbar.Theme.Color.DefualtThemeColors().White
+														txt.Color = bottomNavigationbar.Theme.Color.DefaultThemeColors().White
 														return txt.Layout(gtx)
 													})
 												})

@@ -60,6 +60,13 @@ func (pg *HelpPage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *HelpPage) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *HelpPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -80,6 +87,31 @@ func (pg *HelpPage) Layout(gtx C) D {
 		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *HelpPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	body := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      values.String(values.StrHelp),
+			SubTitle:   values.String(values.StrHelpInfo),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.ParentNavigator().CloseCurrentPage()
+			},
+			Body: func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Spacing: layout.SpaceBetween, WeightSum: 1}.Layout(gtx,
+						layout.Flexed(1, func(gtx C) D {
+							return pg.pageSectionsMobile(gtx, pg.Theme.Icons.DocumentationIcon, pg.documentation, values.String(values.StrDocumentation))
+						}),
+					)
+				})
+			},
+		}
+		return sp.Layout(pg.ParentWindow(), gtx)
+	}
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *HelpPage) document() layout.Widget {
@@ -109,6 +141,34 @@ func (pg *HelpPage) pageSections(gtx C, icon *decredmaterial.Image, action *decr
 			layout.Rigid(func(gtx C) D {
 				size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
 				return D{Size: size}
+			}),
+		)
+	})
+}
+
+func (pg *HelpPage) pageSectionsMobile(gtx C, icon *decredmaterial.Image, action *decredmaterial.Clickable, title string) D {
+	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return decredmaterial.LinearLayout{
+			Orientation: layout.Horizontal,
+			Width:       decredmaterial.MatchParent,
+			Height:      decredmaterial.WrapContent,
+			Background:  pg.Theme.Color.Surface,
+			Clickable:   action,
+			Direction:   layout.W,
+			Shadow:      pg.shadowBox,
+			Border:      decredmaterial.Border{Radius: decredmaterial.Radius(14)},
+			Padding:     layout.UniformInset(values.MarginPadding15),
+			Margin:      layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return icon.Layout24dp(gtx)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{
+					Top:  values.MarginPadding2,
+					Left: values.MarginPadding18,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.Theme.Body1(title).Layout(gtx)
+				})
 			}),
 		)
 	})

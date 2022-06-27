@@ -101,8 +101,18 @@ func (pg *AboutPage) Layout(gtx C) D {
 		}
 		return page.Layout(pg.ParentWindow(), gtx)
 	}
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx, body)
+	}
+	return pg.layoutDesktop(gtx, body)
+}
 
+func (pg *AboutPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *AboutPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *AboutPage) layoutRows(gtx C) D {

@@ -236,63 +236,65 @@ func (pg *TransactionsPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 							Top: values.MarginPadding60,
 						}.Layout(gtx, func(gtx C) D {
 							return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
-								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-									return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+								return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 
-										// return "No transactions yet" text if there are no transactions
-										if len(wallTxs) == 0 {
-											padding := values.MarginPadding16
-											txt := pg.Theme.Body1(values.String(values.StrNoTransactions))
-											txt.Color = pg.Theme.Color.GrayText3
-											gtx.Constraints.Min.X = gtx.Constraints.Max.X
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
-											})
+									// return "No transactions yet" text if there are no transactions
+									if len(wallTxs) == 0 {
+										padding := values.MarginPadding16
+										txt := pg.Theme.Body1(values.String(values.StrNoTransactions))
+										txt.Color = pg.Theme.Color.GrayText3
+										gtx.Constraints.Min.X = gtx.Constraints.Max.X
+										return layout.Center.Layout(gtx, func(gtx C) D {
+											return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
+										})
+									}
+
+									return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
+										var row = components.TransactionRow{
+											Transaction: wallTxs[index],
+											Index:       index,
+											ShowBadge:   false,
 										}
 
-										return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
-											var row = components.TransactionRow{
-												Transaction: wallTxs[index],
-												Index:       index,
-												ShowBadge:   false,
-											}
+										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												return components.LayoutTransactionRow(gtx, pg.Load, row)
+											}),
+											layout.Rigid(func(gtx C) D {
+												// No divider for last row
+												if row.Index == len(wallTxs)-1 {
+													return layout.Dimensions{}
+												}
 
-											return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													return components.LayoutTransactionRow(gtx, pg.Load, row)
-												}),
-												layout.Rigid(func(gtx C) D {
-													// No divider for last row
-													if row.Index == len(wallTxs)-1 {
-														return layout.Dimensions{}
-													}
-
-													gtx.Constraints.Min.X = gtx.Constraints.Max.X
-													separator := pg.Theme.Separator()
-													return layout.E.Layout(gtx, func(gtx C) D {
-														// Show bottom divider for all rows except last
-														return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
-													})
-												}),
-											)
-										})
+												gtx.Constraints.Min.X = gtx.Constraints.Max.X
+												separator := pg.Theme.Separator()
+												return layout.E.Layout(gtx, func(gtx C) D {
+													// Show bottom divider for all rows except last
+													return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
+												})
+											}),
+										)
 									})
 								})
 							})
 						})
 					}),
 					layout.Expanded(func(gtx C) D {
-						return pg.orderDropDown.Layout(gtx, 0, true)
+						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return pg.orderDropDown.Layout(gtx, 0, true)
+						})
 					}),
 					layout.Expanded(func(gtx C) D {
-						return pg.txTypeDropDown.Layout(gtx, pg.orderDropDown.Width-4, true)
+						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return pg.txTypeDropDown.Layout(gtx, pg.orderDropDown.Width-4, true)
+						})
 					}),
 				)
 			}),
 		)
 
 	}
-	return components.UniformPadding(gtx, container)
+	return components.UniformMobile(gtx, false, true, container)
 }
 
 func (pg *TransactionsPage) layoutTabs(gtx C) D {
