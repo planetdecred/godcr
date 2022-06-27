@@ -25,7 +25,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/dexclient"
 	"github.com/planetdecred/godcr/ui/page/governance"
-	"github.com/planetdecred/godcr/ui/page/overview"
+	// "github.com/planetdecred/godcr/ui/page/overview"
 	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/staking"
@@ -151,12 +151,19 @@ func (mp *MainPage) initNavItems() {
 		Load:        mp.Load,
 		CurrentPage: mp.CurrentPageID(),
 		DrawerNavItems: []components.NavHandler{
+			// {
+			// 	Clickable:     mp.Theme.NewClickable(true),
+			// Image:         mp.Theme.Icons.OverviewIcon,
+			// ImageInactive: mp.Theme.Icons.OverviewIconInactive,
+			// 	Title:         values.String(values.StrOverview),
+			// 	PageID:        overview.OverviewPageID,
+			// },
 			{
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.OverviewIcon,
 				ImageInactive: mp.Theme.Icons.OverviewIconInactive,
 				Title:         values.String(values.StrOverview),
-				PageID:        overview.OverviewPageID,
+				PageID:        wallets.OverviewPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -171,14 +178,6 @@ func (mp *MainPage) initNavItems() {
 				ImageInactive: mp.Theme.Icons.ReceiveInactiveIcon,
 				Title:         values.String(values.StrReceive),
 				PageID:        ReceivePageID,
-			},
-			{
-				// TODO -- deprectated in v2 layout
-				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Theme.Icons.WalletIcon,
-				ImageInactive: mp.Theme.Icons.WalletIconInactive,
-				Title:         values.String(values.StrWallets),
-				PageID:        wallets.WalletPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -210,13 +209,6 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Theme.Icons.DexIcon,
-				ImageInactive: mp.Theme.Icons.DexIconInactive,
-				Title:         values.String(values.StrDex),
-				PageID:        dexclient.MarketPageID,
-			},
-			{
-				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.MoreIcon,
 				ImageInactive: mp.Theme.Icons.MoreIconInactive,
 				Title:         values.String(values.StrMore),
@@ -231,13 +223,13 @@ func (mp *MainPage) initNavItems() {
 		Load:        mp.Load,
 		CurrentPage: mp.CurrentPageID(),
 		BottomNaigationItems: []components.BottomNavigationBarHandler{
-			{
-				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Theme.Icons.OverviewIcon,
-				ImageInactive: mp.Theme.Icons.OverviewIconInactive,
-				Title:         values.String(values.StrOverview),
-				PageID:        overview.OverviewPageID,
-			},
+			// {
+			// 	Clickable:     mp.Theme.NewClickable(true),
+			// 	Image:         mp.Theme.Icons.OverviewIcon,
+			// 	ImageInactive: mp.Theme.Icons.OverviewIconInactive,
+			// 	Title:         values.String(values.StrOverview),
+			// 	PageID:        overview.OverviewPageID,
+			// },
 			{
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.TransactionsIcon,
@@ -257,7 +249,7 @@ func (mp *MainPage) initNavItems() {
 				Image:         mp.Theme.Icons.WalletIcon,
 				ImageInactive: mp.Theme.Icons.WalletIconInactive,
 				Title:         values.String(values.StrWallets),
-				PageID:        wallets.WalletPageID,
+				PageID:        wallets.OverviewPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -302,7 +294,7 @@ func (mp *MainPage) OnNavigatedTo() {
 	mp.listenForNotifications()
 
 	if mp.CurrentPage() == nil {
-		mp.Display(overview.NewOverviewPage(mp.Load)) // TODO: Should pagestack have a start page?
+		mp.Display(wallets.NewWalletPage(mp.Load)) // TODO: Should pagestack have a start page?
 	}
 	mp.CurrentPage().OnNavigatedTo()
 
@@ -503,13 +495,13 @@ func (mp *MainPage) HandleUserInteractions() {
 		for item.Clickable.Clicked() {
 			var pg app.Page
 			switch item.PageID {
-			case overview.OverviewPageID:
-				pg = overview.NewOverviewPage(mp.Load) // todo :New wallet ui --- current overview page is deprecated.
+			// case overview.OverviewPageID:
+			// 	pg = overview.NewOverviewPage(mp.Load) // todo :New wallet ui --- current overview page is deprecated.
 			case send.SendPageID:
 				pg = send.NewSendPage(mp.Load)
 			case ReceivePageID:
 				pg = NewReceivePage(mp.Load)
-			case wallets.WalletPageID:
+			case wallets.OverviewPageID:
 				pg = wallets.NewWalletPage(mp.Load)
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
@@ -548,13 +540,13 @@ func (mp *MainPage) HandleUserInteractions() {
 		for item.Clickable.Clicked() {
 			var pg app.Page
 			switch item.PageID {
-			case overview.OverviewPageID:
-				pg = overview.NewOverviewPage(mp.Load)
+			// case overview.OverviewPageID:
+			// 	pg = overview.NewOverviewPage(mp.Load)
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
 			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
-			case wallets.WalletPageID:
+			case wallets.OverviewPageID:
 				pg = wallets.NewWalletPage(mp.Load)
 			case MorePageID:
 				pg = NewMorePage(mp.Load)
