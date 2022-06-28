@@ -133,6 +133,8 @@ func (pg *WalletSettingsPage) layoutDesktop(gtx layout.Context, body layout.Widg
 
 func (pg *WalletSettingsPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformMobile(gtx, false, false, body)
+}
+
 func (pg *WalletSettingsPage) clickableRow(gtx C, row row) D {
 	return row.clickable.Layout(gtx, func(gtx C) D {
 		return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
