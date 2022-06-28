@@ -14,6 +14,13 @@ import (
 
 const WalletSettingsPageID = "WalletSettings"
 
+type row struct {
+	title     string
+	clickable *decredmaterial.Clickable
+	icon      *decredmaterial.Icon
+	label     decredmaterial.Label
+}
+
 type WalletSettingsPage struct {
 	*load.Load
 	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
@@ -23,6 +30,8 @@ type WalletSettingsPage struct {
 	*app.GenericPageModal
 
 	wallet *dcrlibwallet.Wallet
+
+	pageContainer layout.List
 
 	changePass, rescan, deleteWallet                *decredmaterial.Clickable
 	changeAccount, mixedAccount, coordinationServer *decredmaterial.Clickable
@@ -47,6 +56,7 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 
 		chevronRightIcon:        decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
 		allowUnspendUnmixedAcct: l.Theme.Switch(),
+		pageContainer:           layout.List{Axis: layout.Vertical},
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -75,7 +85,7 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			Back: func() {
 				pg.ParentNavigator().CloseCurrentPage()
 			},
-			Body: func(gtx layout.Context) layout.Dimensions {
+			Body: func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						if !pg.wallet.IsWatchingOnlyWallet() {
@@ -103,6 +113,38 @@ func (pg *WalletSettingsPage) layoutDesktop(gtx layout.Context, body layout.Widg
 
 func (pg *WalletSettingsPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformMobile(gtx, false, false, body)
+func (pg *WalletSettingsPage) clickableRow(gtx C, row row) D {
+	return row.clickable.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
+			return pg.subSection(gtx, row.title, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(row.label.Layout),
+					layout.Rigid(func(gtx C) D {
+						ic := row.icon
+						ic.Color = pg.Theme.Color.Gray3
+						return ic.Layout(gtx, values.MarginPadding22)
+					}),
+				)
+			})
+		})
+	})
+}
+
+func (pg *WalletSettingsPage) subSection(gtx C, title string, body layout.Widget) D {
+	return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{}.Layout(gtx,
+			layout.Rigid(pg.subSectionLabel(title)),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.E.Layout(gtx, body)
+			}),
+		)
+	})
+}
+
+func (pg *WalletSettingsPage) subSectionLabel(title string) layout.Widget {
+	return func(gtx C) D {
+		return pg.Theme.Body1(title).Layout(gtx)
+	}
 }
 
 func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
@@ -124,11 +166,35 @@ func (pg *WalletSettingsPage) stakeshuffle() layout.Widget {
 		return pg.pageSections(gtx, values.String(values.StrStakeShuffle),
 			func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(pg.bottomSectionLabel(pg.mixedAccount, values.String(values.StrMixedAccount))),
+					layout.Rigid(func(gtx C) D {
+						mixedAccountRow := row{
+							title:     values.String(values.StrMixedAccount),
+							clickable: pg.mixedAccount,
+							icon:      pg.chevronRightIcon,
+							label:     pg.Theme.Body2("mixed"), // TODO
+						}
+						return pg.clickableRow(gtx, mixedAccountRow)
+					}),
 					layout.Rigid(pg.Theme.Separator().Layout),
-					layout.Rigid(pg.bottomSectionLabel(pg.changeAccount, values.String(values.StrChangeAccount))),
+					layout.Rigid(func(gtx C) D {
+						changeAccountRow := row{
+							title:     values.String(values.StrChangeAccount),
+							clickable: pg.changeAccount,
+							icon:      pg.chevronRightIcon,
+							label:     pg.Theme.Body2("unmixed"), // TODO
+						}
+						return pg.clickableRow(gtx, changeAccountRow)
+					}),
 					layout.Rigid(pg.Theme.Separator().Layout),
-					layout.Rigid(pg.bottomSectionLabel(pg.coordinationServer, values.String(values.StrCoordinationServer))),
+					layout.Rigid(func(gtx C) D {
+						coordinationServerRow := row{
+							title:     values.String(values.StrCoordinationServer),
+							clickable: pg.coordinationServer,
+							icon:      pg.chevronRightIcon,
+							label:     pg.Theme.Body2("cspp.decred.org"),
+						}
+						return pg.clickableRow(gtx, coordinationServerRow)
+					}),
 				)
 			})
 	}
@@ -140,14 +206,13 @@ func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 			func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
 								layout.Flexed(1, pg.Theme.Label(values.TextSize16, "Allow spending from unmixed accounts").Layout),
 								layout.Rigid(pg.allowUnspendUnmixedAcct.Layout),
 							)
 						})
 					}),
-					layout.Rigid(pg.Theme.Separator().Layout),
 					layout.Rigid(pg.bottomSectionLabel(pg.deleteWallet, values.String(values.StrRemoveWallet))),
 				)
 			})
