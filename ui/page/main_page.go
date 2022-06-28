@@ -876,7 +876,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 									Left:  values.MarginPadding24,
 								}.Layout(gtx, func(gtx C) D {
 									//todo -- app level settings functionality
-									return mp.Theme.Icons.SettingsIcon.Layout24dp(gtx)
+									return mp.Theme.Icons.HeaderSettingsIcon.Layout24dp(gtx)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
