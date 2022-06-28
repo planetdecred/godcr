@@ -212,6 +212,13 @@ func (pg *WalletList) OnNavigatedFrom() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *WalletList) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *WalletList) layoutDesktop(gtx C) D {
 	pageContent := []func(gtx C) D{
 		pg.Theme.Label(values.TextSize20, values.String(values.StrSelectWalletToOpen)).Layout,
 		pg.walletSection, // wallet list layout
@@ -226,6 +233,34 @@ func (pg *WalletList) Layout(gtx C) D {
 	gtx.Constraints.Min = gtx.Constraints.Max
 	return components.UniformPadding(gtx, func(gtx C) D {
 		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
+		list := &layout.List{
+			Axis: layout.Vertical,
+		}
+
+		return layout.Center.Layout(gtx, func(gtx C) D {
+			return list.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+				return layout.Inset{Top: values.MarginPadding26}.Layout(gtx, func(gtx C) D {
+					return pageContent[i](gtx)
+				})
+			})
+		})
+	})
+}
+
+func (pg *WalletList) layoutMobile(gtx C) D {
+	pageContent := []func(gtx C) D{
+		pg.Theme.Label(values.TextSize20, values.String(values.StrSelectWalletToOpen)).Layout,
+		pg.walletSection, // wallet list layout
+		func(gtx C) D {
+			return layout.Inset{
+				Left:   values.MarginPadding5,
+				Bottom: values.MarginPadding10,
+			}.Layout(gtx, pg.layoutAddWalletSection)
+		},
+	}
+
+	gtx.Constraints.Min = gtx.Constraints.Max
+	return components.UniformMobile(gtx, false, false, func(gtx C) D {
 		list := &layout.List{
 			Axis: layout.Vertical,
 		}

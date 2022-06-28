@@ -194,6 +194,13 @@ func (pg *Page) loadPageData() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *Page) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	widgets := []layout.Widget{
 		func(gtx C) D {
 			return components.UniformHorizontalPadding(gtx, pg.stakePriceSection)
@@ -212,6 +219,31 @@ func (pg *Page) Layout(gtx C) D {
 	return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.List(pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
 			return widgets[i](gtx)
+		})
+	})
+}
+
+func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
+	widgets := []layout.Widget{
+		func(gtx C) D {
+			return pg.stakePriceSection(gtx)
+		},
+		func(gtx C) D {
+			return pg.walletBalanceLayout(gtx)
+		},
+		func(gtx C) D {
+			return pg.stakeLiveSection(gtx)
+		},
+		func(gtx C) D {
+			return pg.stakingRecordSection(gtx)
+		},
+	}
+
+	return components.UniformMobile(gtx, true, true, func(gtx layout.Context) layout.Dimensions {
+		return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+			return pg.Theme.List(pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
+				return widgets[i](gtx)
+			})
 		})
 	})
 }

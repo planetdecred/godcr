@@ -64,6 +64,12 @@ func (pg *Restore) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *Restore) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+func (pg *Restore) layoutDesktop(gtx C) D {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -81,8 +87,38 @@ func (pg *Restore) Layout(gtx C) D {
 	return components.UniformPadding(gtx, body)
 }
 
+func (pg *Restore) layoutMobile(gtx C) D {
+	body := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      values.String(values.StrRestoreWallet),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.ParentNavigator().CloseCurrentPage()
+			},
+			Body: func(gtx C) D {
+				return pg.restoreMobileLayout(gtx)
+			},
+		}
+		return sp.Layout(pg.ParentWindow(), gtx)
+	}
+	return components.UniformMobile(gtx, false, false, body)
+}
+
 func (pg *Restore) restoreLayout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.tabLayout),
+			layout.Rigid(pg.Theme.Separator().Layout),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, pg.indexLayout)
+			}),
+		)
+	})
+}
+
+func (pg *Restore) restoreMobileLayout(gtx layout.Context) layout.Dimensions {
+	return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.tabLayout),
 			layout.Rigid(pg.Theme.Separator().Layout),

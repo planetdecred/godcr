@@ -126,6 +126,14 @@ func (sp *startPage) OnNavigatedFrom() {}
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (sp *startPage) Layout(gtx C) D {
+	if sp.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return sp.layoutMobile(gtx)
+	}
+	return sp.layoutDesktop(gtx)
+}
+
+// Desktop layout
+func (sp *startPage) layoutDesktop(gtx C) D {
 	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width
 	return layout.Flex{
 		Alignment: layout.Middle,
@@ -185,10 +193,34 @@ func (sp *startPage) loadingSection(gtx C) D {
 					}
 
 					welcomeText := sp.Theme.Label(values.TextSize24, values.String(values.StrWelcomeNote))
-					welcomeText.Color = sp.Theme.Color.GrayText1
+					welcomeText.Alignment = text.Middle
 					return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, welcomeText.Layout)
 				}),
 			)
+		}),
+	)
+}
+
+// Mobile layout
+func (sp *startPage) layoutMobile(gtx C) D {
+	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width
+	return layout.Flex{
+		Alignment: layout.Middle,
+		Axis:      layout.Vertical,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return sp.loadingSection(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if sp.loading {
+				return D{}
+			}
+
+			gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding350)
+			return layout.Inset{
+				Left:  values.MarginPadding24,
+				Right: values.MarginPadding24,
+			}.Layout(gtx, sp.addWalletButton.Layout)
 		}),
 	)
 }

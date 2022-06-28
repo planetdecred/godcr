@@ -146,6 +146,72 @@ func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
+	pageContent := []func(gtx C) D{
+		func(gtx C) D {
+			return pg.pageSections(gtx, values.String(values.StrFrom), false, func(gtx C) D {
+				return pg.sourceAccountSelector.Layout(pg.ParentWindow(), gtx)
+			})
+		},
+		func(gtx C) D {
+			return pg.toSection(gtx)
+		},
+		func(gtx C) D {
+			return pg.feeSection(gtx)
+		},
+	}
+	dims := layout.Stack{Alignment: layout.S}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return layout.Stack{Alignment: layout.NE}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return components.UniformPadding(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+									return pg.topNav(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+									return layout.Inset{Bottom: values.MarginPadding16, Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+										return layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}.Layout(gtx, pageContent[i])
+									})
+								})
+							}),
+						)
+					})
+				}),
+			)
+		}),
+		layout.Stacked(func(gtx C) D {
+			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+			return layout.S.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
+					return pg.balanceSection(gtx)
+				})
+			})
+		}),
+		layout.Expanded(func(gtx C) D {
+			if pg.moreOptionIsOpen {
+				return pg.backdrop.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					semantic.Button.Add(gtx.Ops)
+					return layout.Dimensions{Size: gtx.Constraints.Min}
+				})
+			}
+			return D{}
+		}),
+	)
+
+	return dims
+}
+
+func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, values.String(values.StrFrom), false, func(gtx C) D {
@@ -164,10 +230,10 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 		layout.Expanded(func(gtx C) D {
 			return layout.Stack{Alignment: layout.NE}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					return components.UniformPadding(gtx, func(gtx C) D {
+					return components.UniformMobile(gtx, false, true, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+								return layout.Inset{Bottom: values.MarginPadding16, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 									return pg.topNav(gtx)
 								})
 							}),

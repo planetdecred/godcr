@@ -514,6 +514,13 @@ func (pg *ProposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *ProposalDetails) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *ProposalDetails) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	proposal := pg.proposal
 	_, ok := pg.proposalItems[proposal.Token]
 	if !ok && !pg.loadingDescription {
@@ -578,4 +585,60 @@ func (pg *ProposalDetails) Layout(gtx C) D {
 		return page.Layout(pg.ParentWindow(), gtx)
 	}
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *ProposalDetails) layoutMobile(gtx layout.Context) layout.Dimensions {
+	proposal := pg.proposal
+	_, ok := pg.proposalItems[proposal.Token]
+	if !ok && !pg.loadingDescription {
+		pg.loadingDescription = true
+		go func() {
+			var proposalDescription string
+			if proposal.IndexFile != "" && proposal.IndexFileVersion == proposal.Version {
+				proposalDescription = proposal.IndexFile
+			} else {
+				var err error
+				proposalDescription, err = pg.WL.MultiWallet.Politeia.FetchProposalDescription(proposal.Token)
+				if err != nil {
+					log.Errorf("Error loading proposal description: %v", err)
+					time.Sleep(7 * time.Second)
+					pg.loadingDescription = false
+					return
+				}
+			}
+
+			r := renderers.RenderMarkdown(gtx, pg.Theme, proposalDescription)
+			proposalWidgets, proposalClickables := r.Layout()
+			pg.proposalItems[proposal.Token] = proposalItemWidgets{
+				widgets:    proposalWidgets,
+				clickables: proposalClickables,
+			}
+			pg.loadingDescription = false
+		}()
+	}
+
+	body := func(gtx C) D {
+		page := components.SubPage{
+			Load:       pg.Load,
+			Title:      components.TruncateString(proposal.Name, 30),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.ParentNavigator().CloseCurrentPage()
+			},
+			Body: func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pg.layoutTitle)
+					}),
+					layout.Rigid(pg.layoutDescription),
+				)
+			},
+			ExtraItem: pg.viewInPoliteiaBtn,
+			Extra: func(gtx C) D {
+				return layout.Inset{}.Layout(gtx, pg.redirectIcon.Layout24dp)
+			},
+		}
+		return page.Layout(pg.ParentWindow(), gtx)
+	}
+	return components.UniformMobile(gtx, false, false, body)
 }

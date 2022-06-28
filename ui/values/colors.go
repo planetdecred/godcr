@@ -71,54 +71,56 @@ func (c *Color) DarkThemeColors() {
 	c.Surface = rgb(0x252525)
 }
 
-func (c *Color) DefualtThemeColors() *Color {
-	c.Primary = rgb(0x2970ff)
-	c.Primary50 = rgb(0xE3F2FF)
-	c.PrimaryHighlight = rgb(0x1B41B3)
+func (c *Color) DefaultThemeColors() *Color {
+	cl := Color{
+		Primary:          rgb(0x2970ff),
+		Primary50:        rgb(0xE3F2FF),
+		PrimaryHighlight: rgb(0x1B41B3),
 
-	// text colors
-	c.Text = rgb(0x091440)
-	c.InvText = rgb(0xffffff)
-	c.GrayText1 = rgb(0x3d5873)
-	c.GrayText2 = rgb(0x596D81)
-	c.GrayText3 = rgb(0x8997a5) //hint
-	c.GrayText4 = rgb(0xc4cbd2)
-	c.GreenText = rgb(0x41BE53)
+		// text colors
+		Text:      rgb(0x091440),
+		InvText:   rgb(0xffffff),
+		GrayText1: rgb(0x3d5873),
+		GrayText2: rgb(0x596D81),
+		GrayText3: rgb(0x8997a5), //hint
+		GrayText4: rgb(0xc4cbd2),
+		GreenText: rgb(0x41BE53),
 
-	// background colors
-	c.Background = argb(0x22444444)
-	c.Black = rgb(0x000000)
-	c.BlueProgressTint = rgb(0x73d7ff)
-	c.Danger = rgb(0xed6d47)
-	c.DeepBlue = rgb(0x091440)
-	c.LightBlue = rgb(0xe4f6ff)
-	c.LightBlue2 = rgb(0x75D8FF)
-	c.LightBlue3 = rgb(0xBCE8FF)
-	c.LightBlue4 = rgb(0xBBDEFF)
-	c.LightBlue5 = rgb(0x70CBFF)
-	c.LightBlue6 = rgb(0x4B91D8)
-	c.Gray1 = rgb(0x3d5873) // darkest gray #3D5873 (icon color)
-	c.Gray2 = rgb(0xe6eaed) // light 0xe6eaed
-	c.Gray3 = rgb(0xc4cbd2) // InactiveGray #C4CBD2
-	c.Gray4 = rgb(0xf3f5f6) //active n light gray combined f3f5f6
-	c.Gray5 = rgb(0xf3f5f6)
-	c.Green50 = rgb(0xE8F7EA)
-	c.Green500 = rgb(0x41BE53)
-	c.Orange = rgb(0xD34A21)
-	c.Orange2 = rgb(0xF8E8E7)
-	c.Orange3 = rgb(0xF8CABC)
-	c.OrangeRipple = rgb(0xD32F2F)
-	c.Success = rgb(0x41bf53)
-	c.Success2 = rgb(0xE1F8EF)
-	c.Surface = rgb(0xffffff)
-	c.Turquoise100 = rgb(0xB6EED7)
-	c.Turquoise300 = rgb(0x2DD8A3)
-	c.Turquoise700 = rgb(0x00A05F)
-	c.Turquoise800 = rgb(0x008F52)
-	c.Yellow = rgb(0xffc84e)
-	c.White = rgb(0xffffff)
+		// background colors
+		Background:       argb(0x22444444),
+		Black:            rgb(0x000000),
+		BlueProgressTint: rgb(0x73d7ff),
+		Danger:           rgb(0xed6d47),
+		DeepBlue:         rgb(0x091440),
+		LightBlue:        rgb(0xe4f6ff),
+		LightBlue2:       rgb(0x75D8FF),
+		LightBlue3:       rgb(0xBCE8FF),
+		LightBlue4:       rgb(0xBBDEFF),
+		LightBlue5:       rgb(0x70CBFF),
+		LightBlue6:       rgb(0x4B91D8),
+		Gray1:            rgb(0x3d5873), // darkest gray #3D5873 (icon color),
+		Gray2:            rgb(0xe6eaed), // light 0xe6eaed
+		Gray3:            rgb(0xc4cbd2), // InactiveGray #C4CBD2
+		Gray4:            rgb(0xf3f5f6), //active n light gray combined f3f5f6
+		Gray5:            rgb(0xf3f5f6),
+		Green50:          rgb(0xE8F7EA),
+		Green500:         rgb(0x41BE53),
+		Orange:           rgb(0xD34A21),
+		Orange2:          rgb(0xF8E8E7),
+		Orange3:          rgb(0xF8CABC),
+		OrangeRipple:     rgb(0xD32F2F),
+		Success:          rgb(0x41bf53),
+		Success2:         rgb(0xE1F8EF),
+		Surface:          rgb(0xffffff),
+		Turquoise100:     rgb(0xB6EED7),
+		Turquoise300:     rgb(0x2DD8A3),
+		Turquoise700:     rgb(0x00A05F),
+		Turquoise800:     rgb(0x008F52),
+		Yellow:           rgb(0xffc84e),
+		White:            rgb(0xffffff),
+	}
 
-	return c
+	return &cl
 }
 
 func rgb(c uint32) color.NRGBA {
