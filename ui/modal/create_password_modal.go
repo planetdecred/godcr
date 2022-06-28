@@ -325,18 +325,14 @@ func (cm *CreatePasswordModal) Layout(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(cm.confirmPasswordEditor.Layout),
 			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							txt := cm.Theme.Label(values.TextSize12, strconv.Itoa(cm.confirmPasswordEditor.Editor.Len()))
-							txt.Color = cm.Theme.Color.GrayText1
-							if txt.Text != "0" {
-								return layout.E.Layout(gtx, txt.Layout)
-							}
+				return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+					txt := cm.Theme.Label(values.TextSize12, strconv.Itoa(cm.confirmPasswordEditor.Editor.Len()))
+					txt.Color = cm.Theme.Color.GrayText1
+					if txt.Text != "0" {
+						return layout.E.Layout(gtx, txt.Layout)
+					}
 
-							return D{}
-						}),
-					)
+					return D{}
 				})
 			}),
 		)
