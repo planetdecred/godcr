@@ -86,17 +86,37 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						if !pg.wallet.IsWatchingOnlyWallet() {
-							return pg.changePassphrase()(gtx)
-						}
-						return layout.Dimensions{}
-					}),
-					layout.Rigid(pg.stakeshuffle()),
-					layout.Rigid(pg.debug()),
-					layout.Rigid(pg.dangerZone()),
-				)
+				w := []func(gtx C) D{
+					func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+								if !pg.wallet.IsWatchingOnlyWallet() {
+									return pg.changePassphrase()(gtx)
+								}
+								return layout.Dimensions{}
+							}),
+						)
+					},
+					func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(pg.stakeshuffle()),
+						)
+					},
+					func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(pg.debug()),
+						)
+					},
+					func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(pg.dangerZone()),
+						)
+					},
+				}
+
+				return pg.pageContainer.Layout(gtx, len(w), func(gtx C, i int) D {
+					return w[i](gtx)
+				})
 			},
 		}
 		return sp.Layout(pg.ParentWindow(), gtx)
@@ -208,8 +228,10 @@ func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
-								layout.Flexed(1, pg.Theme.Label(values.TextSize16, "Allow spending from unmixed accounts").Layout),
-								layout.Rigid(pg.allowUnspendUnmixedAcct.Layout),
+								layout.Rigid(pg.Theme.Label(values.TextSize16, "Allow spending from unmixed accounts").Layout),
+								layout.Flexed(1, func(gtx C) D {
+									return layout.E.Layout(gtx, pg.allowUnspendUnmixedAcct.Layout)
+								}),
 							)
 						})
 					}),
