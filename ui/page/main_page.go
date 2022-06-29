@@ -883,14 +883,9 @@ func (mp *MainPage) balanceLayoutSection(gtx C) D {
 			return layout.Inset{
 				Right: values.MarginPadding16,
 				Left:  values.MarginPadding24,
-			}.Layout(gtx,
-				func(gtx C) D {
-					return mp.Theme.Icons.Logo.Layout24dp(gtx)
-				})
+			}.Layout(gtx, mp.Theme.Icons.Logo.Layout24dp)
 		}),
-		layout.Rigid(func(gtx C) D {
-			return mp.totalDCRBalance(gtx)
-		}),
+		layout.Rigid(mp.totalDCRBalance),
 		layout.Rigid(func(gtx C) D {
 			if !mp.isBalanceHidden {
 				return mp.LayoutUSDBalance(gtx)
