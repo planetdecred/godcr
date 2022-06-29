@@ -18,6 +18,7 @@ const (
 	WalletBackupInfoTemplate       = "WalletBackupInfo"
 	AllowUnmixedSpendingTemplate   = "AllowUnmixedSpending"
 	TicketPriceErrorTemplate       = "TicketPriceError"
+	SecurityToolsInfoTemplate      = "SecurityToolsInfo"
 )
 
 func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
@@ -29,6 +30,13 @@ func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
 
 func signMessageInfo(th *decredmaterial.Theme) []layout.Widget {
 	text := values.StringF(values.StrSignMessageInfo, `<span style="text-color: gray">`, `</span>`)
+	return []layout.Widget{
+		renderers.RenderHTML(text, th).Layout,
+	}
+}
+
+func securityToolsInfo(th *decredmaterial.Theme) []layout.Widget {
+	text := values.StringF(values.StrSecurityToolsInfo, `<span style="text-color: gray">`, `</span>`)
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,
 	}

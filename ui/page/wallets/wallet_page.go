@@ -281,11 +281,6 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 	}
 	return []menuItem{
 		{
-			text:   values.String(values.StrSignMessage),
-			button: pg.Theme.NewClickable(true),
-			id:     SignMessagePageID,
-		},
-		{
 			text:     values.String(values.StrViewProperty),
 			button:   pg.Theme.NewClickable(true),
 			separate: true,
@@ -1264,8 +1259,6 @@ func (pg *WalletPage) HandleUserInteractions() {
 		for _, menu := range listItem.optionsMenu {
 			if menu.button.Clicked() {
 				switch menu.id {
-				case SignMessagePageID:
-					pg.ParentNavigator().Display(NewSignMessagePage(pg.Load, listItem.wal))
 				case privacy.SetupPrivacyPageID:
 					pg.ParentNavigator().Display(privacy.NewSetupPrivacyPage(pg.Load, listItem.wal))
 				case privacy.AccountMixerPageID:

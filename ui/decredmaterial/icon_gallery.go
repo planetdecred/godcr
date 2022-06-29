@@ -18,8 +18,8 @@ type Icons struct {
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
 	PendingIcon, Logo, RedirectIcon, ConfirmIcon, NewWalletIcon, WalletAlertIcon, ArrowForward,
 	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, Mixer, DcrWatchOnly,
-	Next, HeaderSettingsIcon, SettingsIcon, SecurityIcon, HelpIcon, AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon,
-	AlertGray, ArrowDownIcon, WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, TransactionFingerprint,
+	Next, SettingsIcon, SecurityIcon, HelpIcon, AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, SignMessageIcon,
+	HeaderSettingsIcon, AlertGray, ArrowDownIcon, WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, TransactionFingerprint,
 	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredLogo,
 	DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon, LogoDarkMode, TimerDarkMode, Rebroadcast,
 	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon,
@@ -99,6 +99,7 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.DebugIcon = NewImage(decredIcons["debug"])
 	i.VerifyMessageIcon = NewImage(decredIcons["verify_message"])
 	i.LocationPinIcon = NewImage(decredIcons["location_pin"])
+	i.SignMessageIcon = NewImage(decredIcons["signMessage"])
 	i.AlertGray = NewImage(decredIcons["alert_gray"])
 	i.ArrowDownIcon = NewImage(decredIcons["arrow_down"])
 	i.WatchOnlyWalletIcon = NewImage(decredIcons["watch_only_wallet"])
