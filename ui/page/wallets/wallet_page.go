@@ -18,6 +18,7 @@ import (
 	// "github.com/planetdecred/godcr/ui/page/privacy"
 	// "github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const OverviewPageID = "Overview"
@@ -27,7 +28,16 @@ type (
 	D = layout.Dimensions
 )
 
-type WalletPage struct {
+// walletSyncDetails contains sync data for each wallet when a sync
+// is in progress.
+type walletSyncDetails struct {
+	name               decredmaterial.Label
+	status             decredmaterial.Label
+	blockHeaderFetched decredmaterial.Label
+	syncingProgress    decredmaterial.Label
+}
+
+type AppOverviewPage struct {
 	*load.Load
 	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
 	// that helps this Page satisfy the app.Page interface. It also defines
@@ -35,6 +45,8 @@ type WalletPage struct {
 	// and the root WindowNavigator.
 	*app.GenericPageModal
 
+	*listeners.SyncProgressListener
+	*listeners.BlocksRescanProgressListener
 	*listeners.TxAndBlockNotificationListener
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
@@ -54,10 +66,28 @@ type WalletPage struct {
 	addAcctClickable    *decredmaterial.Clickable
 	backupAcctClickable *decredmaterial.Clickable
 	renameWallet        *decredmaterial.Clickable
+
+	toggleSyncDetails            decredmaterial.Button
+	syncedIcon, notSyncedIcon    *decredmaterial.Icon
+	walletStatusIcon, cachedIcon *decredmaterial.Icon
+	syncingIcon                  *decredmaterial.Image
+	autoSyncSwitch               *decredmaterial.Switch
+	walletSyncList               *layout.List
+	syncClickable                *decredmaterial.Clickable
+
+	rescanUpdate         *wallet.RescanUpdate
+	remainingSyncTime    string
+	syncStepLabel        string
+	headersToFetchOrScan int32
+	stepFetchProgress    int32
+	syncProgress         int
+	syncStep             int
+
+	syncDetailsVisibility bool
 }
 
-func NewWalletPage(l *load.Load) *WalletPage {
-	pg := &WalletPage{
+func NewWalletPage(l *load.Load) *AppOverviewPage {
+	pg := &AppOverviewPage{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(OverviewPageID),
 		multiWallet:      l.WL.MultiWallet,
@@ -79,6 +109,8 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	backupClickable.Radius = decredmaterial.CornerRadius{BottomRight: 14, BottomLeft: 14}
 	pg.backupAcctClickable = backupClickable
 
+	pg.initWalletStatusWidgets()
+	pg.initSyncDetailsWidgets()
 	// pg.walletIcon = pg.Theme.Icons.WalletIcon
 
 	// pg.walletAlertIcon = pg.Theme.Icons.WalletAlertIcon
@@ -95,14 +127,14 @@ func NewWalletPage(l *load.Load) *WalletPage {
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *WalletPage) OnNavigatedTo() {
+func (pg *AppOverviewPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.listenForTxNotifications()
+	pg.listenForNotifications()
 	pg.loadWalletAccounts()
 }
 
-func (pg *WalletPage) loadWalletAccounts() {
+func (pg *AppOverviewPage) loadWalletAccounts() {
 	accountsResult, err := pg.WL.SelectedWallet.Wallet.GetAccountsRaw()
 	if err != nil {
 		log.Errorf("Wallet account error: %v", err)
@@ -138,7 +170,7 @@ func (pg *WalletPage) loadWalletAccounts() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 // Layout lays out the widgets for the main wallets pg.
-func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
 			return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
@@ -152,6 +184,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 									Bottom: values.MarginPadding16,
 								}.Layout(gtx, pg.separator.Layout)
 							}),
+							layout.Rigid(pg.syncStatusSection),
 						)
 					})
 				})
@@ -162,7 +195,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *WalletPage) headerLayout(gtx layout.Context) D {
+func (pg *AppOverviewPage) headerLayout(gtx layout.Context) D {
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(pg.Theme.Icons.WalletIcon.Layout24dp),
 		layout.Rigid(func(gtx C) D {
@@ -186,7 +219,7 @@ func (pg *WalletPage) headerLayout(gtx layout.Context) D {
 	)
 }
 
-// func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
+// func (pg *AppOverviewPage) walletSection(gtx layout.Context) layout.Dimensions {
 
 // 	pg.Theme.Card().Layout(gtx, func(gtx C) D {
 
@@ -292,7 +325,7 @@ func (pg *WalletPage) headerLayout(gtx layout.Context) D {
 // 	})
 // }
 
-// func (pg *WalletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label) layout.Dimensions {
+// func (pg *AppOverviewPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label) layout.Dimensions {
 // 	m := values.MarginPadding0
 
 // 	return layout.Flex{}.Layout(gtx,
@@ -314,7 +347,7 @@ func (pg *WalletPage) headerLayout(gtx layout.Context) D {
 // 	)
 // }
 
-// func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwallet.Account) layout.Dimensions {
+// func (pg *AppOverviewPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwallet.Account) layout.Dimensions {
 // 	accountIcon := pg.Theme.Icons.AccountIcon
 // 	if account.Number == load.MaxInt32 {
 // 		accountIcon = pg.Theme.Icons.ImportedAccountIcon
@@ -387,7 +420,7 @@ func (pg *WalletPage) headerLayout(gtx layout.Context) D {
 // 	)
 // }
 
-// func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walletListItem) layout.Dimensions {
+// func (pg *AppOverviewPage) backupSeedNotification(gtx layout.Context, listItem *walletListItem) layout.Dimensions {
 // 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 // 	textColor := pg.Theme.Color.InvText
 // 	return listItem.backupAcctClickable.Layout(gtx, func(gtx C) D {
@@ -431,7 +464,7 @@ func (pg *WalletPage) headerLayout(gtx layout.Context) D {
 // 	})
 // }
 
-// func (pg *WalletPage) checkMixerSection(gtx layout.Context, listItem *walletListItem) layout.Dimensions {
+// func (pg *AppOverviewPage) checkMixerSection(gtx layout.Context, listItem *walletListItem) layout.Dimensions {
 // 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 // 	return listItem.checkMixerClickable.Layout(gtx, func(gtx C) D {
 // 		return layout.UniformInset(values.MarginPadding8).Layout(gtx, func(gtx C) D {
@@ -480,9 +513,28 @@ func (pg *WalletPage) headerLayout(gtx layout.Context) D {
 // used to update the page's UI components shortly before they are
 // displayed.
 // Part of the load.Page interface.
-func (pg *WalletPage) HandleUserInteractions() {
+func (pg *AppOverviewPage) HandleUserInteractions() {
 	if ok, selectedItem := pg.accountsList.ItemClicked(); ok {
 		pg.ParentNavigator().Display(NewAcctDetailsPage(pg.Load, pg.accounts[selectedItem]))
+	}
+
+	if pg.syncClickable.Clicked() {
+		if pg.WL.MultiWallet.IsRescanning() {
+			pg.WL.MultiWallet.CancelRescan()
+		} else {
+			// If connected to the Decred network disable button. Prevents multiple clicks.
+			if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+				pg.syncClickable.SetEnabled(false, nil)
+			}
+
+			// On exit update button state.
+			go func() {
+				pg.ToggleSync()
+				if !pg.syncClickable.Enabled() {
+					pg.syncClickable.SetEnabled(true, nil)
+				}
+			}()
+		}
 	}
 
 	// if !mp.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
@@ -534,46 +586,108 @@ func (pg *WalletPage) HandleUserInteractions() {
 	// }
 }
 
-func (pg *WalletPage) listenForTxNotifications() {
-	if pg.TxAndBlockNotificationListener != nil {
+// listenForNotifications starts a goroutine to watch for sync updates
+// and update the UI accordingly. To prevent UI lags, this method does not
+// refresh the window display everytime a sync update is received. During
+// active blocks sync, rescan or proposals sync, the Layout method auto
+// refreshes the display every set interval. Other sync updates that affect
+// the UI but occur outside of an active sync requires a display refresh.
+func (pg *AppOverviewPage) listenForNotifications() {
+	// Return if any of the listener is not nill.
+	switch {
+	case pg.SyncProgressListener != nil:
+		return
+	case pg.TxAndBlockNotificationListener != nil:
+		return
+	case pg.BlocksRescanProgressListener != nil:
 		return
 	}
+
+	pg.SyncProgressListener = listeners.NewSyncProgress()
+	err := pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
+	if err != nil {
+		log.Errorf("Error adding sync progress listener: %v", err)
+		return
+	}
+
 	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	err := pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, OverviewPageID)
+	err = pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, OverviewPageID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
 	}
 
+	pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
+	pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
+
 	go func() {
 		for {
 			select {
+			case n := <-pg.SyncStatusChan:
+				// Update sync progress fields which will be displayed
+				// when the next UI invalidation occurs.
+				switch t := n.ProgressReport.(type) {
+				case *dcrlibwallet.HeadersFetchProgressReport:
+					pg.stepFetchProgress = t.HeadersFetchProgress
+					pg.headersToFetchOrScan = t.TotalHeadersToFetch
+					pg.syncProgress = int(t.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
+					pg.syncStep = wallet.FetchHeadersSteps
+				case *dcrlibwallet.AddressDiscoveryProgressReport:
+					pg.syncProgress = int(t.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
+					pg.syncStep = wallet.AddressDiscoveryStep
+					pg.stepFetchProgress = t.AddressDiscoveryProgress
+				case *dcrlibwallet.HeadersRescanProgressReport:
+					pg.headersToFetchOrScan = t.TotalHeadersToScan
+					pg.syncProgress = int(t.TotalSyncProgress)
+					pg.remainingSyncTime = components.TimeFormat(int(t.TotalTimeRemainingSeconds), true)
+					pg.syncStep = wallet.RescanHeadersStep
+					pg.stepFetchProgress = t.RescanProgress
+				}
+
+				// We only care about sync state changes here, to
+				// refresh the window display.
+				switch n.Stage {
+				case wallet.SyncStarted:
+					fallthrough
+				case wallet.SyncCanceled:
+					fallthrough
+				case wallet.SyncCompleted:
+					pg.ParentWindow().Reload()
+				}
+
 			case n := <-pg.TxAndBlockNotifChan:
 				switch n.Type {
-				case listeners.BlockAttached:
-					// refresh wallet account and balance on every new block
-					// only if sync is completed.
-					if pg.WL.MultiWallet.IsSynced() {
-						pg.updateAccountBalance()
-						pg.ParentWindow().Reload()
-					}
 				case listeners.NewTransaction:
-					// refresh wallets when new transaction is received
-					pg.updateAccountBalance()
+					pg.ParentWindow().Reload()
+				case listeners.BlockAttached:
+					pg.ParentWindow().Reload()
+				}
+			case n := <-pg.BlockRescanChan:
+				pg.rescanUpdate = &n
+				if n.Stage == wallet.RescanEnded {
 					pg.ParentWindow().Reload()
 				}
 			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
 				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
+				pg.WL.MultiWallet.SetBlocksRescanProgressListener(nil)
+
+				close(pg.SyncStatusChan)
 				close(pg.TxAndBlockNotifChan)
+				close(pg.BlockRescanChan)
+
+				pg.SyncProgressListener = nil
 				pg.TxAndBlockNotificationListener = nil
+				pg.BlocksRescanProgressListener = nil
 
 				return
 			}
 		}
 	}()
 }
-
-func (pg *WalletPage) updateAccountBalance() {
+func (pg *AppOverviewPage) updateAccountBalance() {
 	pg.listLock.Lock()
 	defer pg.listLock.Unlock()
 
@@ -602,6 +716,6 @@ func (pg *WalletPage) updateAccountBalance() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *WalletPage) OnNavigatedFrom() {
+func (pg *AppOverviewPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 }
