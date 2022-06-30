@@ -583,4 +583,5 @@ const (
 	StrUnmixed                         = "unmixed"
 	StrAllowSpendingFromUnmixedAccount = "allowSpendingFromUnmixedAccount"
 	StrCurrentSpendingPassphrase       = "currentSpendingPassphrase"
+	StrSecurityToolsInfo               = "securityToolsInfo"
 )
