@@ -25,7 +25,6 @@ const (
 	strWaitingConfirms          = "Waiting for confirmations..."
 	strDexAddr                  = "DEX Address"
 	strSubmit                   = "Submit"
-	strPickAServer              = "Pick a Server"
 	strCustomServer             = "Custom Server"
 	strAddADex                  = "Add a dex"
 	strAddA                     = "Add a"
@@ -75,18 +74,6 @@ func formatAmountUnit(assetID uint32, assetName string, amount uint64) string {
 	unitInfo := assetInfo.UnitInfo
 	convertedLotSize := formatAmount(amount, &unitInfo)
 	return fmt.Sprintf("%s %s", convertedLotSize, unitInfo.Conventional.Unit)
-}
-
-// sortExchanges convert map cert into a sorted slice
-func sortExchanges(mapCert map[string][]byte) []string {
-	servers := make([]string, 0, len(mapCert))
-	for host := range mapCert {
-		servers = append(servers, host)
-	}
-	sort.Slice(servers, func(i, j int) bool {
-		return servers[i] < servers[j]
-	})
-	return servers
 }
 
 // sortFeeAsset convert map FeeAsset into a sorted slice

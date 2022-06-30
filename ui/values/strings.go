@@ -591,4 +591,6 @@ const (
 	StrInfo                            = "info"
 	StrChangeWalletName                = "changeWalletName"
 	StrAccount                         = "account"
+	StrSelectDexServerToOpen       = "selectDexServerToOpen"
+	StrAddDexServer                = "addDexServer"
 )

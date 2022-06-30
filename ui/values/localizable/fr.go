@@ -452,4 +452,6 @@ const FR = `
 "info" = "Infos"
 "changeWalletName" = "Changer le nom du portefeuille"
 "account" = "Compte"
+"selectDexServerToOpen" = "Select the Dex server you would like to open."
+"addDexServer" = "Add dex server"
 `

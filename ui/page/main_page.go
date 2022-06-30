@@ -458,7 +458,10 @@ func (mp *MainPage) HandleUserInteractions() {
 		onWalSelected := func() {
 			mp.ParentNavigator().CloseCurrentPage()
 		}
-		mp.ParentWindow().Display(NewWalletList(mp.Load, onWalSelected))
+		onDexServerSelected := func(server string) {
+			log.Info("Not implemented yet...", server)
+		}
+		mp.ParentWindow().Display(NewWalletDexServerSelector(mp.Load, onWalSelected, onDexServerSelected))
 	}
 
 	mp.drawerNav.CurrentPage = mp.CurrentPageID()
