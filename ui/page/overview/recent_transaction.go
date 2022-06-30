@@ -15,8 +15,6 @@ func (pg *AppOverviewPage) initRecentTxWidgets() {
 	pg.transactionsList.Radius = decredmaterial.BottomRadius(14)
 
 	pg.toTransactions = pg.Theme.TextAndIconButton(values.String(values.StrSeeAll), pg.Theme.Icons.NavigationArrowForward)
-	pg.toTransactions.Color = pg.Theme.Color.Primary
-	pg.toTransactions.BackgroundColor = pg.Theme.Color.Surface
 }
 
 func (pg *AppOverviewPage) loadTransactions() {
@@ -49,6 +47,8 @@ func (pg *AppOverviewPage) recentTransactionsSection(gtx layout.Context) layout.
 							layout.Rigid(title.Layout),
 							layout.Rigid(func(gtx C) D {
 								if len(pg.transactions) > 0 {
+									pg.toTransactions.Color = pg.Theme.Color.Primary
+									pg.toTransactions.BackgroundColor = pg.Theme.Color.Surface
 									return pg.toTransactions.Layout(gtx)
 								}
 								return D{}
