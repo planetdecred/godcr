@@ -84,6 +84,50 @@ func (pg *WalletList) OnNavigatedTo() {
 
 	pg.listenForTxNotifications()
 	pg.loadWallets()
+	if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false) {
+		pg.startSyncing()
+	}
+}
+
+func (pg *WalletList) startSyncing() {
+	for _, wal := range pg.WL.SortedWalletList() {
+		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
+			pg.UnlockWalletForSyncing(wal)
+			return
+		}
+	}
+
+	err := pg.WL.MultiWallet.SpvSync()
+	if err != nil {
+		// show error dialog
+		log.Info("Error starting sync:", err)
+	}
+}
+
+func (pg *WalletList) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
+	spendingPasswordModal := modal.NewPasswordModal(pg.Load).
+		Title(values.String(values.StrResumeAccountDiscoveryTitle)).
+		Hint(values.String(values.StrSpendingPassword)).
+		NegativeButton(values.String(values.StrCancel), func() {}).
+		PositiveButton(values.String(values.StrUnlock), func(password string, pm *modal.PasswordModal) bool {
+			go func() {
+				err := pg.WL.MultiWallet.UnlockWallet(wal.ID, []byte(password))
+				if err != nil {
+					errText := err.Error()
+					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+						errText = values.String(values.StrInvalidPassphrase)
+					}
+					pm.SetError(errText)
+					pm.SetLoading(false)
+					return
+				}
+				pm.Dismiss()
+				pg.startSyncing()
+			}()
+
+			return false
+		})
+	pg.ParentWindow().ShowModal(spendingPasswordModal)
 }
 
 func (pg *WalletList) loadWallets() {

@@ -60,18 +60,6 @@ func (pg *AppOverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensio
 										}
 										return layout.Dimensions{}
 									}),
-									layout.Rigid(func(gtx C) D {
-										if syncing || rescanning {
-											return pg.progressBarRow(gtx, uniform)
-										}
-										return layout.Dimensions{}
-									}),
-									layout.Rigid(func(gtx C) D {
-										if syncing || rescanning {
-											return pg.progressStatusRow(gtx, uniform)
-										}
-										return layout.Dimensions{}
-									}),
 								)
 							}),
 						)
@@ -119,23 +107,13 @@ func (pg *AppOverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensio
 func (pg *AppOverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions {
 	title := pg.Theme.Body2(values.String(values.StrWalletStatus))
 	title.Color = pg.Theme.Color.GrayText1
-	statusLabel := pg.Theme.Body1(values.String(values.StrOffline))
+
+	statusLabel := pg.Theme.Label(values.TextSize16, values.String(values.StrOffline))
 	pg.walletStatusIcon.Color = pg.Theme.Color.Danger
 	if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
 		statusLabel.Text = values.String(values.StrOnline)
 		pg.walletStatusIcon.Color = pg.Theme.Color.Success
 	}
-
-	// syncStatus := func(gtx layout.Context) layout.Dimensions {
-	// 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-	// 		layout.Rigid(func(gtx C) D {
-	// 			return layout.Inset{Top: values.MarginPadding4, Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-	// 				return pg.walletStatusIcon.Layout(gtx, values.MarginPadding14)
-	// 			})
-	// 		}),
-	// 		layout.Rigid(statusLabel.Layout),
-	// 	)
-	// }
 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	titlePadding := values.MarginPadding15
@@ -150,10 +128,14 @@ func (pg *AppOverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(pg.layoutAutoSyncSection),
 					layout.Rigid(func(gtx C) D {
-						// if len(pg.transactions) > 0 {
-						// 	return syncStatus(gtx)
-						// }
-						return D{}
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Top: values.MarginPadding4, Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+									return pg.walletStatusIcon.Layout(gtx, values.MarginPadding12)
+								})
+							}),
+							layout.Rigid(statusLabel.Layout),
+						)
 					}),
 				)
 			}),
@@ -168,12 +150,12 @@ func (pg *AppOverviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions 
 		syncStatusIcon = pg.syncedIcon
 		syncStatusIcon.Color = pg.Theme.Color.Success
 	}
-	i := layout.Inset{Right: values.MarginPadding16, Top: values.MarginPadding9}
+	i := layout.Inset{Right: values.MarginPadding16}
 	if pg.WL.MultiWallet.IsSyncing() {
 		return i.Layout(gtx, pg.syncingIcon.Layout24dp)
 	}
 	return i.Layout(gtx, func(gtx C) D {
-		return syncStatusIcon.Layout(gtx, values.MarginPadding24)
+		return syncStatusIcon.Layout(gtx, values.MarginPadding20)
 	})
 }
 
@@ -221,15 +203,12 @@ func (pg *AppOverviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *AppOverviewPage) layoutAutoSyncSection(gtx layout.Context) layout.Dimensions {
-	txt := pg.Theme.Body2(values.String(values.StrAutoSync))
-	txt.Color = pg.Theme.Color.GrayText2
-
-	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+	return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pg.autoSyncSwitch.Layout)
 			}),
-			layout.Rigid(txt.Layout),
+			layout.Rigid(pg.Theme.Body2(values.String(values.StrAutoSync)).Layout),
 		)
 	})
 }

@@ -37,7 +37,7 @@ type MultiLayerProgressBar struct {
 	items  []ProgressBarItem
 	Radius CornerRadius
 	Height unit.Dp
-	Width  int
+	Width  unit.Dp
 	total  int
 }
 
@@ -59,7 +59,7 @@ func (t *Theme) MultiLayerProgressBar(total int, items []ProgressBarItem) *Multi
 
 // This achieves a progress bar using linear layouts.
 func (p ProgressBarStyle) Layout2(gtx C) D {
-	if p.Width <= 0 {
+	if p.Width <= unit.Dp(0) {
 		p.Width = unit.Dp(gtx.Constraints.Max.X)
 	}
 
@@ -77,6 +77,30 @@ func (p ProgressBarStyle) Layout2(gtx C) D {
 				Background: p.Color,
 				Border:     Border{Radius: p.Radius},
 			}.Layout(gtx)
+		})
+	})
+}
+
+// This achieves a progress bar using linear layouts.
+func (p ProgressBarStyle) TextLayout(gtx C, lbl layout.Widget) D {
+	if p.Width <= unit.Dp(0) {
+		p.Width = unit.Dp(gtx.Constraints.Max.X)
+	}
+
+	return p.Direction.Layout(gtx, func(gtx C) D {
+		return LinearLayout{
+			Width:      gtx.Dp(p.Width),
+			Height:     gtx.Dp(p.Height),
+			Background: p.TrackColor,
+			Border:     Border{Radius: p.Radius},
+		}.Layout2(gtx, func(gtx C) D {
+			return LinearLayout{
+				Width:      int(float32(p.Width) * clamp1(p.Progress)),
+				Height:     gtx.Dp(p.Height),
+				Background: p.Color,
+				Border:     Border{Radius: p.Radius},
+				Direction:  layout.Center,
+			}.Layout2(gtx, lbl)
 		})
 	})
 }
@@ -131,7 +155,7 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 	r := gtx.Dp(values.MarginPadding0)
 	if mp.Width <= 0 {
-		mp.Width = gtx.Constraints.Max.X
+		mp.Width = unit.Dp(gtx.Constraints.Max.X)
 	}
 
 	// progressScale represent the different progress bar layers
@@ -152,11 +176,8 @@ func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 	}
 
 	calProgressWidth := func(progress int) int {
-		val := 1
-		if mp.total != 0 {
-			val = (progress / mp.total) * 100
-		}
-		return (mp.Width / 100) * val
+		val := (progress / mp.total) * 100
+		return (int(mp.Width) / 100) * val
 	}
 
 	// This takes only 2 layers

@@ -13,7 +13,7 @@ import (
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	// "github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	// "github.com/planetdecred/godcr/ui/page/privacy"
 	// "github.com/planetdecred/godcr/ui/page/seedbackup"
@@ -132,6 +132,9 @@ func (pg *AppOverviewPage) OnNavigatedTo() {
 
 	pg.listenForNotifications()
 	pg.loadWalletAccounts()
+
+	autoSync := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false)
+	pg.autoSyncSwitch.SetChecked(autoSync)
 }
 
 func (pg *AppOverviewPage) loadWalletAccounts() {
@@ -150,22 +153,6 @@ func (pg *AppOverviewPage) loadWalletAccounts() {
 	pg.totalBalance = dcrutil.Amount(totalBalance).String()
 }
 
-// textModal := modal.NewTextInputModal(l).
-// 	Hint(values.String(values.StrWalletName)).
-// 	PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
-// 	PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
-// 		err := pg.multiWallet.RenameWallet(wal.ID, newName)
-// 		if err != nil {
-// 			pg.Toast.NotifyError(err.Error())
-// 			return false
-// 		}
-// 		return true
-// 	})
-
-// textModal.Title(values.String(values.StrRenameWalletSheetTitle)).
-// 	NegativeButton(values.String(values.StrCancel), func() {})
-// pg.ParentWindow().ShowModal(textModal)
-
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
@@ -180,8 +167,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 							layout.Rigid(pg.headerLayout),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
-									Top:    values.MarginPadding16,
-									Bottom: values.MarginPadding16,
+									Top: values.MarginPadding16,
 								}.Layout(gtx, pg.separator.Layout)
 							}),
 							layout.Rigid(pg.syncStatusSection),
@@ -537,7 +523,52 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 		}
 	}
 
-	// if !mp.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
+	if pg.renameWallet.Clicked() {
+		textModal := modal.NewTextInputModal(pg.Load).
+			Hint(values.String(values.StrWalletName)).
+			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+			PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
+				err := pg.multiWallet.RenameWallet(pg.WL.SelectedWallet.Wallet.ID, newName)
+				if err != nil {
+					pg.Toast.NotifyError(err.Error())
+					return false
+				}
+				return true
+			})
+
+		textModal.Title(values.String(values.StrRenameWalletSheetTitle)).
+			NegativeButton(values.String(values.StrCancel), func() {})
+		pg.ParentWindow().ShowModal(textModal)
+	}
+
+	if pg.autoSyncSwitch.Changed() {
+		pg.WL.MultiWallet.SaveUserConfigValue(load.AutoSyncConfigKey, pg.autoSyncSwitch.IsChecked())
+		pg.autoSyncSwitch.SetChecked(pg.autoSyncSwitch.IsChecked())
+		if pg.autoSyncSwitch.IsChecked() && (!pg.WL.MultiWallet.IsSyncing() || pg.WL.MultiWallet.IsSynced()) {
+			info := modal.NewInfoModal(pg.Load).
+				Title(values.String("Auto sync")).
+				Body("Auto sync feature has been enable, and wallets are not synced. Would you like to start syncing your wallets now?").
+				NegativeButton(values.String(values.StrCancel), func() {}).
+				PositiveButton(values.String(values.StrContinue), func(isChecked bool) bool {
+					for _, wal := range pg.WL.SortedWalletList() {
+						if !wal.HasDiscoveredAccounts && wal.IsLocked() {
+							pg.unlockWalletForSyncing(wal)
+							return true
+						}
+					}
+
+					err := pg.WL.MultiWallet.SpvSync()
+					if err != nil {
+						// show error dialog
+						log.Info("Error starting sync:", err)
+					}
+					return true
+				})
+			pg.ParentWindow().ShowModal(info)
+		}
+	}
+
+	// if !pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
 	// 	for pg.addAcctClickable.Clicked() {
 	// 		walletID := listItem.wal.ID
 	// 		textModal := modal.NewTextInputModal(pg.Load).
@@ -687,6 +718,45 @@ func (pg *AppOverviewPage) listenForNotifications() {
 		}
 	}()
 }
+
+func (pg *AppOverviewPage) unlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
+	spendingPasswordModal := modal.NewPasswordModal(pg.Load).
+		Title(values.String(values.StrResumeAccountDiscoveryTitle)).
+		Hint(values.String(values.StrSpendingPassword)).
+		NegativeButton(values.String(values.StrCancel), func() {}).
+		PositiveButton(values.String(values.StrUnlock), func(password string, pm *modal.PasswordModal) bool {
+			go func() {
+				err := pg.WL.MultiWallet.UnlockWallet(wal.ID, []byte(password))
+				if err != nil {
+					errText := err.Error()
+					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+						errText = values.String(values.StrInvalidPassphrase)
+					}
+					pm.SetError(errText)
+					pm.SetLoading(false)
+					return
+				}
+				pm.Dismiss()
+
+				for _, wal := range pg.WL.SortedWalletList() {
+					if !wal.HasDiscoveredAccounts && wal.IsLocked() {
+						pg.unlockWalletForSyncing(wal)
+						return
+					}
+				}
+
+				err = pg.WL.MultiWallet.SpvSync()
+				if err != nil {
+					// show error dialog
+					log.Info("Error starting sync:", err)
+				}
+			}()
+
+			return false
+		})
+	pg.ParentWindow().ShowModal(spendingPasswordModal)
+}
+
 func (pg *AppOverviewPage) updateAccountBalance() {
 	pg.listLock.Lock()
 	defer pg.listLock.Unlock()

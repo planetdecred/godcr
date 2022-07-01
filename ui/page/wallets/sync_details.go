@@ -53,7 +53,9 @@ func (pg *AppOverviewPage) connectionPeer(gtx C) D {
 
 // syncStatusTextRow lays out sync status text and sync button.
 func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
-	syncStatusLabel := pg.Theme.H6(values.String(values.StrWalletNotSynced))
+	syncing, rescanning := pg.WL.MultiWallet.IsSyncing(), pg.WL.MultiWallet.IsRescanning()
+
+	syncStatusLabel := pg.Theme.Label(values.TextSize16, values.String(values.StrWalletNotSynced))
 	if pg.WL.MultiWallet.IsSyncing() {
 		syncStatusLabel.Text = values.String(values.StrSyncingState)
 	} else if pg.WL.MultiWallet.IsRescanning() {
@@ -62,74 +64,94 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
 		syncStatusLabel.Text = values.String(values.StrSynced)
 	}
 
-	return inset.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Flexed(1, syncStatusLabel.Layout),
-			layout.Rigid(func(gtx C) D {
-
-				// Set gxt to Disabled (Sets Queue to nil) if syncClickable state is disabled, prevents double click.
-				if !pg.syncClickable.Enabled() {
-					gtx = pg.syncClickable.SetEnabled(false, &gtx)
-				}
-
-				return decredmaterial.LinearLayout{
-					Width:     decredmaterial.WrapContent,
-					Height:    decredmaterial.WrapContent,
-					Clickable: pg.syncClickable,
-					Direction: layout.Center,
-					Alignment: layout.Middle,
-					Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
-					Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
-				}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
-							return D{}
+	// return inset.Layout(gtx, func(gtx C) D {
+	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(syncStatusLabel.Layout),
+		layout.Rigid(func(gtx C) D {
+			if syncing || rescanning {
+				return pg.progressBarRow(gtx)
+			}
+			return layout.Dimensions{}
+		}),
+		// layout.Rigid(func(gtx C) D {
+		// 	if syncing || rescanning {
+		// 		return pg.progressStatusRow(gtx)
+		// 	}
+		// 	return layout.Dimensions{}
+		// }),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+				layout.Flexed(1, func(gtx C) D {
+					return layout.E.Layout(gtx, func(gtx C) D {
+						// Set gxt to Disabled (Sets Queue to nil) if syncClickable state is disabled, prevents double click.
+						if !pg.syncClickable.Enabled() {
+							gtx = pg.syncClickable.SetEnabled(false, &gtx)
 						}
+						return decredmaterial.LinearLayout{
+							Width:     decredmaterial.WrapContent,
+							Height:    decredmaterial.WrapContent,
+							Clickable: pg.syncClickable,
+							Direction: layout.Center,
+							Alignment: layout.Middle,
+							Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+							Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
+						}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+									return D{}
+								}
 
-						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-							pg.cachedIcon.Color = pg.Theme.Color.Gray1
-							return pg.cachedIcon.Layout(gtx, values.MarginPadding16)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						sync := pg.Theme.Label(values.TextSize14, values.String(values.StrReconnect))
-						sync.TextSize = values.TextSize14
-						sync.Color = pg.Theme.Color.Text
-						if pg.WL.MultiWallet.IsRescanning() {
-							sync.Text = values.String(values.StrCancel)
-						} else if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
-							sync.Text = values.String(values.StrDisconnect)
-						} else {
-							sync.Text = values.String(values.StrReconnect)
-						}
+								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+									pg.cachedIcon.Color = pg.Theme.Color.Gray1
+									return pg.cachedIcon.Layout(gtx, values.MarginPadding16)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								sync := pg.Theme.Label(values.TextSize14, values.String(values.StrReconnect))
+								sync.TextSize = values.TextSize14
+								sync.Color = pg.Theme.Color.Text
+								if pg.WL.MultiWallet.IsRescanning() {
+									sync.Text = values.String(values.StrCancel)
+								} else if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+									sync.Text = values.String(values.StrDisconnect)
+								} else {
+									sync.Text = values.String(values.StrReconnect)
+								}
 
-						return sync.Layout(gtx)
-					}),
-				)
-			}),
-		)
-	})
+								return sync.Layout(gtx)
+							}),
+						)
+					})
+				}),
+			)
+		}),
+	)
+	// })
 }
 
 // progressBarRow lays out the progress bar.
-func (pg *AppOverviewPage) progressBarRow(gtx C, inset layout.Inset) D {
-	return inset.Layout(gtx, func(gtx C) D {
+func (pg *AppOverviewPage) progressBarRow(gtx C) D {
+	return layout.Inset{Left: values.MarginPadding40, Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
 		progress := pg.syncProgress
 		rescanUpdate := pg.rescanUpdate
 		if rescanUpdate != nil && rescanUpdate.ProgressReport != nil {
 			progress = int(rescanUpdate.ProgressReport.RescanProgress)
 		}
 		p := pg.Theme.ProgressBar(progress)
-		p.Height = values.MarginPadding8
+		p.Height = values.MarginPadding16
 		p.Radius = decredmaterial.Radius(4)
 		p.Color = pg.Theme.Color.Success
 		p.TrackColor = pg.Theme.Color.Gray2
-		return p.Layout(gtx)
+		p.Width = values.MarginPadding218
+
+		progressTitleLabel := pg.Theme.Label(values.TextSize14, fmt.Sprintf("%v%%", progress))
+		progressTitleLabel.Color = pg.Theme.Color.InvText
+		return p.TextLayout(gtx, progressTitleLabel.Layout)
 	})
 }
 
 // progressStatusRow lays out the progress status when the wallet is syncing.
-func (pg *AppOverviewPage) progressStatusRow(gtx C, inset layout.Inset) D {
+func (pg *AppOverviewPage) progressStatusRow(gtx C) D {
 	timeLeft := pg.remainingSyncTime
 	progress := pg.syncProgress
 	rescanUpdate := pg.rescanUpdate
@@ -143,9 +165,9 @@ func (pg *AppOverviewPage) progressStatusRow(gtx C, inset layout.Inset) D {
 	if progress == 0 {
 		timeLeftLabel = values.String(values.StrConnecting)
 	}
-	return inset.Layout(gtx, func(gtx C) D {
-		return components.EndToEndRow(gtx, percentageLabel.Layout, pg.Theme.Body1(timeLeftLabel).Layout)
-	})
+	// return inset.Layout(gtx, func(gtx C) D {
+	return components.EndToEndRow(gtx, percentageLabel.Layout, pg.Theme.Body1(timeLeftLabel).Layout)
+	// })
 
 }
 

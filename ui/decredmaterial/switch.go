@@ -22,7 +22,7 @@ type Switch struct {
 	disabled bool
 	value    bool
 	changed  bool
-	clk      *widget.Clickable
+	clk      *widget.Bool
 }
 
 type SwitchItem struct {
@@ -41,7 +41,7 @@ type SwitchButtonText struct {
 
 func (t *Theme) Switch() *Switch {
 	return &Switch{
-		clk:   new(widget.Clickable),
+		clk:   new(widget.Bool),
 		style: t.Styles.SwitchStyle,
 	}
 }
@@ -69,9 +69,11 @@ func (t *Theme) SwitchButtonText(i []SwitchItem) *SwitchButtonText {
 }
 
 func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
-	trackWidth := gtx.Dp(unit.Dp(32))
-	trackHeight := gtx.Dp(unit.Dp(20))
-	thumbSize := gtx.Dp(unit.Dp(18))
+	dGtx := gtx
+
+	trackWidth := dGtx.Dp(32)
+	trackHeight := dGtx.Dp(20)
+	thumbSize := dGtx.Dp(18)
 	trackOff := (thumbSize - trackHeight) / 2
 
 	// Draw track.
@@ -83,6 +85,7 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 
 	activeColor, InactiveColor, thumbColor := s.style.ActiveColor, s.style.InactiveColor, s.style.ThumbColor
 	if s.disabled {
+		dGtx = gtx.Disabled()
 		activeColor, InactiveColor, thumbColor = Disabled(activeColor), Disabled(InactiveColor), Disabled(thumbColor)
 	}
 
@@ -92,17 +95,17 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	trackColor := col
-	t := op.Offset(image.Point{Y: trackOff}).Push(gtx.Ops)
-	cl := clip.UniformRRect(trackRect, trackCorner).Push(gtx.Ops)
-	paint.ColorOp{Color: trackColor}.Add(gtx.Ops)
-	paint.PaintOp{}.Add(gtx.Ops)
+	t := op.Offset(image.Point{Y: trackOff}).Push(dGtx.Ops)
+	cl := clip.UniformRRect(trackRect, trackCorner).Push(dGtx.Ops)
+	paint.ColorOp{Color: trackColor}.Add(dGtx.Ops)
+	paint.PaintOp{}.Add(dGtx.Ops)
 	cl.Pop()
 	t.Pop()
 
 	// Compute thumb offset and color.
 	if s.IsChecked() {
 		xoff := trackWidth - thumbSize
-		defer op.Offset(image.Point{X: xoff}).Push(gtx.Ops).Pop()
+		defer op.Offset(image.Point{X: xoff}).Push(dGtx.Ops).Pop()
 	}
 
 	thumbRadius := thumbSize / 2
@@ -112,29 +115,28 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 			Min: image.Pt(x-r, y-r),
 			Max: image.Pt(x+r, y+r),
 		}
-		return clip.Ellipse(b).Op(gtx.Ops)
+		return clip.Ellipse(b).Op(dGtx.Ops)
 	}
 
 	// Draw thumb shadow, a translucent disc slightly larger than the
 	// thumb itself.
 	// Center shadow horizontally and slightly adjust its Y.
-	paint.FillShape(gtx.Ops, col, circle(thumbRadius, thumbRadius+gtx.Dp(.25), thumbRadius+1))
+	paint.FillShape(dGtx.Ops, col, circle(thumbRadius, thumbRadius+dGtx.Dp(.25), thumbRadius+1))
 
 	// Draw thumb.
-	paint.FillShape(gtx.Ops, thumbColor, circle(thumbRadius, thumbRadius, thumbRadius))
+	paint.FillShape(dGtx.Ops, thumbColor, circle(thumbRadius, thumbRadius, thumbRadius))
 
 	// Set up click area.
-	clickSize := gtx.Dp(unit.Dp(40))
+	clickSize := dGtx.Dp(38)
 	clickOff := image.Point{
-		X: (trackWidth) - (clickSize)/2,
+		X: (trackWidth) - (clickSize),
 		Y: (trackHeight) - (clickSize)/2 + trackOff,
 	}
-	defer op.Offset(clickOff).Push(gtx.Ops).Pop()
+	defer op.Offset(clickOff).Push(dGtx.Ops).Pop()
 	sz := image.Pt(clickSize, clickSize)
-	defer clip.Ellipse(image.Rectangle{Max: sz}).Push(gtx.Ops).Pop()
-	gtx.Constraints.Min = sz
-	s.clk.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		semantic.Switch.Add(gtx.Ops)
+	defer clip.Ellipse(image.Rectangle{Max: sz}).Push(dGtx.Ops).Pop()
+	s.clk.Layout(dGtx, func(dGtx layout.Context) layout.Dimensions {
+		semantic.Switch.Add(dGtx.Ops)
 		return layout.Dimensions{Size: sz}
 	})
 
@@ -143,33 +145,19 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (s *Switch) Changed() bool {
-	s.handleClickEvent()
-	changed := s.changed
-	s.changed = false
-	return changed
+	return s.clk.Changed()
 }
 
 func (s *Switch) IsChecked() bool {
-	s.handleClickEvent()
-	return s.value
+	return s.clk.Value
 }
 
 func (s *Switch) SetChecked(value bool) {
-	s.value = value
+	s.clk.Value = value
 }
 
 func (s *Switch) SetEnabled(value bool) {
 	s.disabled = value
-}
-
-func (s *Switch) handleClickEvent() {
-	for s.clk.Clicked() {
-		if s.disabled {
-			return
-		}
-		s.value = !s.value
-		s.changed = true
-	}
 }
 
 func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
