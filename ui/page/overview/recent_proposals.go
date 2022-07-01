@@ -12,8 +12,6 @@ import (
 
 func (pg *AppOverviewPage) initializeProposalsWidget() *AppOverviewPage {
 	pg.toProposals = pg.Theme.TextAndIconButton(values.String(values.StrSeeAll), pg.Theme.Icons.NavigationArrowForward)
-	pg.toProposals.Color = pg.Theme.Color.Primary
-	pg.toProposals.BackgroundColor = pg.Theme.Color.Surface
 
 	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
 	return pg
@@ -56,6 +54,8 @@ func (pg *AppOverviewPage) recentProposalsSection(gtx C) D {
 								if len(proposalItems) == 0 {
 									return D{}
 								}
+								pg.toProposals.Color = pg.Theme.Color.Primary
+								pg.toProposals.BackgroundColor = pg.Theme.Color.Surface
 								return layout.E.Layout(gtx, pg.toProposals.Layout)
 							}),
 						)

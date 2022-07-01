@@ -181,7 +181,12 @@ func (pg *Page) OnNavigatedTo() {
 // Satisfies the load.DarkModeChangeHandler interface.
 func (pg *Page) OnDarkModeChanged(isDarkModeOn bool) {
 	pg.amount.styleWidgets()
+	pg.sendDestination.styleWidgets()
 }
+
+func (mp *Page) OnLanguageChanged() {}
+
+func (mp *Page) OnCurrencyChanged() {}
 
 func (pg *Page) fetchExchangeRate() {
 	if pg.isFetchingExchangeRate {

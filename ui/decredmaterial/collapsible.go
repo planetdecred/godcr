@@ -163,7 +163,7 @@ func (c *CollapsibleWithOption) Layout(gtx C, header, body func(C) D, more func(
 	if rememberExpand[rowID] {
 		icon = c.expandedIcon
 	}
-
+	c.card.Color = c.BackgroundColor
 	return c.card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {

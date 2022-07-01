@@ -670,6 +670,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 			var children []layout.FlexChild
 			children = append(children, layout.Rigid(func(gtx C) D {
+				listItem.collapsible.BackgroundColor = pg.Theme.Color.Surface
 				return listItem.collapsible.Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleMore, listItem.wal.ID)
 			}))
 

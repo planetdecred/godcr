@@ -18,8 +18,6 @@ func (pg *AppOverviewPage) initSyncDetailsWidgets() {
 	pg.cachedIcon = decredmaterial.NewIcon(pg.Theme.Icons.Cached)
 
 	pg.sync = pg.Theme.Label(values.TextSize14, values.String(values.StrReconnect))
-	pg.sync.TextSize = values.TextSize14
-	pg.sync.Color = pg.Theme.Color.Text
 }
 
 // syncDetail returns a walletSyncDetails object containing data of a single wallet sync box
@@ -92,6 +90,8 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
+						pg.sync.TextSize = values.TextSize14
+						pg.sync.Color = pg.Theme.Color.Text
 						if pg.WL.MultiWallet.IsRescanning() {
 							pg.sync.Text = values.String(values.StrCancel)
 						} else if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
