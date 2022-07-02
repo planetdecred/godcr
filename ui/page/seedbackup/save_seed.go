@@ -329,6 +329,7 @@ func (pg *SaveSeedPage) hexLayout(gtx layout.Context) layout.Dimensions {
 								hexString, _ := components.SeedWordsToHex(pg.seed)
 								pg.hexLabel.Text = hexString
 							}
+							pg.hexLabel.Color = pg.Theme.Color.GrayText1
 							return pg.hexLabel.Layout(gtx)
 
 						})

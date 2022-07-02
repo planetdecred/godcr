@@ -1,8 +1,6 @@
 package decredmaterial
 
 import (
-	"image/color"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -23,8 +21,6 @@ type DropDown struct {
 	Position       uint
 	revs           bool
 	selectedIndex  int
-	color          color.NRGBA
-	background     color.NRGBA
 	dropdownIcon   *widget.Icon
 	navigationIcon *widget.Icon
 	clickable      *Clickable
@@ -55,8 +51,6 @@ func (t *Theme) DropDown(items []DropDownItem, group uint, pos uint) *DropDown {
 		Position:       pos,
 		selectedIndex:  0,
 		items:          make([]DropDownItem, 0),
-		color:          t.Color.Gray2,
-		background:     t.Color.Surface,
 		dropdownIcon:   t.dropDownIcon,
 		navigationIcon: t.navigationCheckIcon,
 		clickable:      t.NewClickable(true),
@@ -171,11 +165,12 @@ func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 		padding = values.MarginPadding8
 	}
 	return LinearLayout{
-		Width:     width,
-		Height:    WrapContent,
-		Clickable: clickable,
-		Padding:   layout.UniformInset(padding),
-		Border:    Border{Radius: radius},
+		Width:      width,
+		Height:     WrapContent,
+		Clickable:  clickable,
+		Padding:    layout.UniformInset(padding),
+		Border:     Border{Radius: radius},
+		Background: d.theme.Color.Surface,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			if item.Icon == nil {
@@ -296,11 +291,11 @@ func (d *DropDown) dropDownItemMenu(gtx C) D {
 // drawLayout wraps the page tx and sync section in a card layout
 func (d *DropDown) drawLayout(gtx C, body layout.Widget) D {
 	if d.isOpen {
-		d.linearLayout.Background = d.background
+		d.linearLayout.Background = d.theme.Color.Surface
 		d.linearLayout.Padding = d.padding
 		d.linearLayout.Shadow = d.shadow
 	} else {
-		d.linearLayout.Background = d.color
+		d.linearLayout.Background = d.theme.Color.Gray2
 		d.linearLayout.Padding = layout.Inset{}
 		d.linearLayout.Shadow = nil
 	}
