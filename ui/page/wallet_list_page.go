@@ -2,6 +2,7 @@ package page
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"gioui.org/layout"
@@ -16,6 +17,7 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const WalletListID = "wallet_list"
@@ -34,6 +36,9 @@ type WalletList struct {
 	*app.GenericPageModal
 
 	*listeners.TxAndBlockNotificationListener
+	*listeners.SyncProgressListener
+	*listeners.BlocksRescanProgressListener
+
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
@@ -48,8 +53,11 @@ type WalletList struct {
 	walletsList          *decredmaterial.ClickableList
 	watchOnlyWalletsList *decredmaterial.ClickableList
 	addWalClickable      *decredmaterial.Clickable
+	rescanUpdate         *wallet.RescanUpdate
 
 	wallectSelected func()
+
+	syncProgress int
 }
 
 func NewWalletList(l *load.Load, onWalletSelected func()) *WalletList {
@@ -323,26 +331,42 @@ func (pg *WalletList) syncStatusIcon(gtx C) D {
 	var (
 		syncStatusIcon *decredmaterial.Image
 		syncStatus     string
+		progress       int
 	)
 
 	switch {
 	case pg.WL.MultiWallet.IsSynced():
 		syncStatusIcon = pg.Theme.Icons.SuccessIcon
 		syncStatus = values.String(values.StrSynced)
+		progress = pg.syncProgress
 	case pg.WL.MultiWallet.IsSyncing():
 		syncStatusIcon = pg.Theme.Icons.SyncingIcon
 		syncStatus = values.String(values.StrSyncingState)
+		progress = pg.syncProgress
 	default:
 		syncStatusIcon = pg.Theme.Icons.FailedIcon
 		syncStatus = values.String(values.StrWalletNotSynced)
+		progress = pg.syncProgress
+	}
+
+	rescanUpdate := pg.rescanUpdate
+	if rescanUpdate != nil && rescanUpdate.ProgressReport != nil {
+		progress = int(rescanUpdate.ProgressReport.RescanProgress)
 	}
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(syncStatusIcon.Layout16dp),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
-				Left: values.MarginPadding5,
+				Left:  values.MarginPadding5,
+				Right: values.MarginPadding7,
 			}.Layout(gtx, pg.Theme.Caption(syncStatus).Layout)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if pg.WL.MultiWallet.IsSynced() {
+				return D{}
+			}
+			return pg.Theme.Caption(fmt.Sprintf("%v%%", progress)).Layout(gtx)
 		}),
 	)
 }
@@ -555,9 +579,41 @@ func (pg *WalletList) listenForTxNotifications() {
 		return
 	}
 
+	pg.SyncProgressListener = listeners.NewSyncProgress()
+	err = pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, WalletListID)
+	if err != nil {
+		log.Errorf("Error adding sync progress listener: %v", err)
+		return
+	}
+
+	pg.BlocksRescanProgressListener = listeners.NewBlocksRescanProgressListener()
+	pg.WL.MultiWallet.SetBlocksRescanProgressListener(pg.BlocksRescanProgressListener)
+
 	go func() {
 		for {
 			select {
+			case n := <-pg.SyncStatusChan:
+				// Update sync progress fields which will be displayed
+				// when the next UI invalidation occurs.
+				switch t := n.ProgressReport.(type) {
+				case *dcrlibwallet.HeadersFetchProgressReport:
+					pg.syncProgress = int(t.TotalSyncProgress)
+				case *dcrlibwallet.AddressDiscoveryProgressReport:
+					pg.syncProgress = int(t.TotalSyncProgress)
+				case *dcrlibwallet.HeadersRescanProgressReport:
+					pg.syncProgress = int(t.TotalSyncProgress)
+				}
+
+				// We only care about sync state changes here, to
+				// refresh the window display.
+				switch n.Stage {
+				case wallet.SyncStarted:
+					fallthrough
+				case wallet.SyncCanceled:
+					fallthrough
+				case wallet.SyncCompleted:
+					pg.ParentWindow().Reload()
+				}
 			case n := <-pg.TxAndBlockNotifChan:
 				switch n.Type {
 				case listeners.BlockAttached:
@@ -572,10 +628,23 @@ func (pg *WalletList) listenForTxNotifications() {
 					pg.updateAccountBalance()
 					pg.ParentWindow().Reload()
 				}
+			case n := <-pg.BlockRescanChan:
+				pg.rescanUpdate = &n
+				if n.Stage == wallet.RescanEnded {
+					pg.ParentWindow().Reload()
+				}
 			case <-pg.ctx.Done():
+				pg.WL.MultiWallet.RemoveSyncProgressListener(WalletListID)
 				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(WalletListID)
+				pg.WL.MultiWallet.SetBlocksRescanProgressListener(nil)
+
+				close(pg.SyncStatusChan)
 				close(pg.TxAndBlockNotifChan)
+				close(pg.BlockRescanChan)
+
+				pg.SyncProgressListener = nil
 				pg.TxAndBlockNotificationListener = nil
+				pg.BlocksRescanProgressListener = nil
 
 				return
 			}

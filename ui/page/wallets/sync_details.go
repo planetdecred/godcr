@@ -2,7 +2,7 @@ package wallets
 
 import (
 	"fmt"
-	// "time"
+	"time"
 
 	"gioui.org/layout"
 
@@ -16,16 +16,11 @@ func (pg *AppOverviewPage) initSyncDetailsWidgets() {
 	pg.walletSyncList = &layout.List{Axis: layout.Vertical}
 	pg.syncClickable = pg.Theme.NewClickable(true)
 	pg.cachedIcon = decredmaterial.NewIcon(pg.Theme.Icons.Cached)
-
-	// pg.sync = pg.Theme.Label(values.TextSize14, values.String(values.StrReconnect))
-	// pg.sync.TextSize = values.TextSize14
-	// pg.sync.Color = pg.Theme.Color.Text
 }
 
 // syncDetail returns a walletSyncDetails object containing data of a single wallet sync box
-func (pg *AppOverviewPage) syncDetail(name, status, headersFetched, progress string) walletSyncDetails {
+func (pg *AppOverviewPage) syncDetail(status, headersFetched, progress string) walletSyncDetails {
 	return walletSyncDetails{
-		name:               pg.Theme.Body1(name),
 		status:             pg.Theme.Body2(status),
 		blockHeaderFetched: pg.Theme.Body1(headersFetched),
 		syncingProgress:    pg.Theme.Body1(values.StringF(values.StrSyncingProgressStat, progress)),
@@ -64,24 +59,14 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
 		syncStatusLabel.Text = values.String(values.StrSynced)
 	}
 
-	// return inset.Layout(gtx, func(gtx C) D {
-	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(syncStatusLabel.Layout),
-		layout.Rigid(func(gtx C) D {
-			if syncing || rescanning {
-				return pg.progressBarRow(gtx)
-			}
-			return layout.Dimensions{}
-		}),
-		// layout.Rigid(func(gtx C) D {
-		// 	if syncing || rescanning {
-		// 		return pg.progressStatusRow(gtx)
-		// 	}
-		// 	return layout.Dimensions{}
-		// }),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-				layout.Flexed(1, func(gtx C) D {
+	var children []layout.FlexChild
+	children = append(children, layout.Rigid(syncStatusLabel.Layout))
+
+	if syncing || rescanning {
+		children = append(children,  layout.Flexed(1, pg.progressBarRow))
+	}
+
+	children = append(children, layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						// Set gxt to Disabled (Sets Queue to nil) if syncClickable state is disabled, prevents double click.
 						if !pg.syncClickable.Enabled() {
@@ -122,27 +107,26 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
 							}),
 						)
 					})
-				}),
-			)
-		}),
-	)
-	// })
+		}))
+
+
+	return layout.Flex{
+		Axis: layout.Horizontal, 
+		Spacing: layout.SpaceBetween, 
+		Alignment: layout.Middle,
+	}.Layout(gtx, children...)
 }
 
 // progressBarRow lays out the progress bar.
 func (pg *AppOverviewPage) progressBarRow(gtx C) D {
 	return layout.Inset{Left: values.MarginPadding40, Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
-		progress := pg.syncProgress
-		rescanUpdate := pg.rescanUpdate
-		if rescanUpdate != nil && rescanUpdate.ProgressReport != nil {
-			progress = int(rescanUpdate.ProgressReport.RescanProgress)
-		}
+		progress, _ := pg.progressStatusDetails()
+
 		p := pg.Theme.ProgressBar(progress)
 		p.Height = values.MarginPadding16
 		p.Radius = decredmaterial.Radius(4)
 		p.Color = pg.Theme.Color.Success
 		p.TrackColor = pg.Theme.Color.Gray2
-		p.Width = values.MarginPadding218
 
 		progressTitleLabel := pg.Theme.Label(values.TextSize14, fmt.Sprintf("%v%%", progress))
 		progressTitleLabel.Color = pg.Theme.Color.InvText
@@ -151,7 +135,7 @@ func (pg *AppOverviewPage) progressBarRow(gtx C) D {
 }
 
 // progressStatusRow lays out the progress status when the wallet is syncing.
-func (pg *AppOverviewPage) progressStatusRow(gtx C) D {
+func (pg *AppOverviewPage) progressStatusDetails() (int, string) {
 	timeLeft := pg.remainingSyncTime
 	progress := pg.syncProgress
 	rescanUpdate := pg.rescanUpdate
@@ -160,24 +144,22 @@ func (pg *AppOverviewPage) progressStatusRow(gtx C) D {
 		timeLeft = components.TimeFormat(int(rescanUpdate.ProgressReport.RescanTimeRemaining), true)
 	}
 
-	percentageLabel := pg.Theme.Body1(fmt.Sprintf("%v%%", progress))
 	timeLeftLabel := values.StringF(values.StrTimeLeft, timeLeft)
 	if progress == 0 {
-		timeLeftLabel = values.String(values.StrConnecting)
+		timeLeftLabel = values.String(values.StrLoading)
 	}
-	// return inset.Layout(gtx, func(gtx C) D {
-	return components.EndToEndRow(gtx, percentageLabel.Layout, pg.Theme.Body1(timeLeftLabel).Layout)
-	// })
 
+	return progress, timeLeftLabel
 }
 
 //	walletSyncRow layouts a list of wallet sync boxes horizontally.
 func (pg *AppOverviewPage) walletSyncRow(gtx C, inset layout.Inset) D {
+	col := pg.Theme.Color.GrayText2
 	return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				completedSteps := pg.Theme.Body2(values.StringF(values.StrSyncSteps, pg.syncStep))
-				completedSteps.Color = pg.Theme.Color.GrayText2
+				completedSteps.Color = col
 
 				headersFetched := pg.Theme.Body1(values.StringF(values.StrFetchingBlockHeaders, pg.stepFetchProgress))
 				if pg.syncStep == wallet.AddressDiscoveryStep {
@@ -192,39 +174,41 @@ func (pg *AppOverviewPage) walletSyncRow(gtx C, inset layout.Inset) D {
 			}),
 			layout.Rigid(func(gtx C) D {
 				connectedPeersTitleLabel := pg.Theme.Body2(values.String(values.StrConnectedPeersCount))
-				connectedPeersTitleLabel.Color = pg.Theme.Color.GrayText2
+				connectedPeersTitleLabel.Color = col
 				connectedPeers := pg.WL.MultiWallet.ConnectedPeers()
 				connectedPeersLabel := pg.Theme.Body1(fmt.Sprintf("%d", connectedPeers))
 				return inset.Layout(gtx, func(gtx C) D {
 					return components.EndToEndRow(gtx, connectedPeersTitleLabel.Layout, connectedPeersLabel.Layout)
 				})
 			}),
-			// layout.Rigid(func(gtx C) D {
-			// 	var walletSyncBoxes []layout.Widget
+			layout.Rigid(func(gtx C) D {
+				_, timeLeft := pg.progressStatusDetails()
 
-			// 	currentSeconds := time.Now().UnixNano() / int64(time.Second)
-			// 	for i := 0; i < len(pg.allWallets); i++ {
-			// 		w := pg.allWallets[i]
+				remainingSyncTime := pg.Theme.Body2("Sync completion time")
+				remainingSyncTime.Color = col
 
-			// 		status := values.String(values.StrSyncingState)
-			// 		if w.IsWaiting() {
-			// 			status = values.String(values.StrWaitingState)
-			// 		}
+				timeLeftLabel := pg.Theme.Body2(timeLeft)
 
-			// 		blockHeightProgress := values.StringF(values.StrBlockHeaderFetchedCount, w.GetBestBlock(), pg.headersToFetchOrScan)
-			// 		daysBehind := components.TimeFormat(int(currentSeconds-w.GetBestBlockTimeStamp()), true)
-			// 		details := pg.syncDetail(w.Name, status, blockHeightProgress, daysBehind)
-			// 		uniform := layout.UniformInset(values.MarginPadding5)
-			// 		walletSyncBoxes = append(walletSyncBoxes,
-			// 			func(gtx C) D {
-			// 				return pg.walletSyncBox(gtx, uniform, details)
-			// 			})
-			// 	}
+				return inset.Layout(gtx, func(gtx C) D {
+					return components.EndToEndRow(gtx, remainingSyncTime.Layout, timeLeftLabel.Layout)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				currentSeconds := time.Now().UnixNano() / int64(time.Second)
+				w := pg.WL.SelectedWallet.Wallet
 
-			// 	return pg.walletSyncList.Layout(gtx, len(walletSyncBoxes), func(gtx C, i int) D {
-			// 		return walletSyncBoxes[i](gtx)
-			// 	})
-			// }),
+				status := values.String(values.StrSyncingState)
+				if pg.WL.SelectedWallet.Wallet.IsWaiting() {
+					status = values.String(values.StrWaitingState)
+				}
+
+				blockHeightProgress := values.StringF(values.StrBlockHeaderFetchedCount, w.GetBestBlock(), pg.headersToFetchOrScan)
+				daysBehind := components.TimeFormat(int(currentSeconds-w.GetBestBlockTimeStamp()), true)
+				details := pg.syncDetail(status, blockHeightProgress, daysBehind)
+				uniform := layout.UniformInset(values.MarginPadding5)
+
+				return pg.walletSyncBox(gtx, uniform, details)
+			}),
 		)
 	})
 }
@@ -235,24 +219,28 @@ func (pg *AppOverviewPage) walletSyncBox(gtx C, inset layout.Inset, details wall
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		card := pg.Theme.Card()
 		card.Color = pg.Theme.Color.Gray4
+
+		col := pg.Theme.Color.GrayText2
 		return card.Layout(gtx, func(gtx C) D {
 			return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
+						status := pg.Theme.Body2(values.String(values.StrStatus))
+						status.Color = col
 						return inset.Layout(gtx, func(gtx C) D {
-							return components.EndToEndRow(gtx, details.name.Layout, details.status.Layout)
+							return components.EndToEndRow(gtx, status.Layout, details.status.Layout)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
 						headersFetchedTitleLabel := pg.Theme.Body2(values.String(values.StrBlockHeaderFetched))
-						headersFetchedTitleLabel.Color = pg.Theme.Color.GrayText2
+						headersFetchedTitleLabel.Color = col
 						return inset.Layout(gtx, func(gtx C) D {
 							return components.EndToEndRow(gtx, headersFetchedTitleLabel.Layout, details.blockHeaderFetched.Layout)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
 						progressTitleLabel := pg.Theme.Body2(values.String(values.StrSyncingProgress))
-						progressTitleLabel.Color = pg.Theme.Color.GrayText2
+						progressTitleLabel.Color = col
 						return inset.Layout(gtx, func(gtx C) D {
 							return components.EndToEndRow(gtx, progressTitleLabel.Layout, details.syncingProgress.Layout)
 						})

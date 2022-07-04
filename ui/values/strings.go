@@ -128,6 +128,7 @@ const (
 	StrBlocksScanned               = "blocksScanned"
 	StrBlocksLeft                  = "blocksLeft"
 	StrAutoSync                    = "autoSync"
+	StrAutoSyncInfo ="autoSyncInfo"
 	StrSyncingState                = "syncingState"
 	StrWaitingState                = "waitingState"
 	StrResumeAccountDiscoveryTitle = "resumeAccountDiscoveryTitle"

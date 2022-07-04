@@ -86,15 +86,9 @@ func (pg *AppOverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensio
 					return layout.Dimensions{}
 				}),
 				layout.Rigid(func(gtx C) D {
-					if (syncing || rescanning) && pg.syncDetailsVisibility {
-						return pg.Theme.Separator().Layout(gtx)
-					}
-					return layout.Dimensions{}
-				}),
-				layout.Rigid(func(gtx C) D {
 					if syncing || rescanning {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.Inset{Top: values.MarginPadding14}.Layout(gtx, pg.toggleSyncDetails.Layout)
+						return pg.toggleSyncDetails.Layout(gtx)
 					}
 					return layout.Dimensions{}
 				}),
@@ -152,7 +146,9 @@ func (pg *AppOverviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions 
 	}
 	i := layout.Inset{Right: values.MarginPadding16}
 	if pg.WL.MultiWallet.IsSyncing() {
-		return i.Layout(gtx, pg.syncingIcon.Layout24dp)
+		return i.Layout(gtx,  func(gtx C) D {
+		return pg.syncingIcon.LayoutSize(gtx, values.MarginPadding20)
+	})
 	}
 	return i.Layout(gtx, func(gtx C) D {
 		return syncStatusIcon.Layout(gtx, values.MarginPadding20)
