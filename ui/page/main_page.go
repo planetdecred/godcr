@@ -108,7 +108,7 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
 
 	mp.darkmode = mp.Theme.NewClickable(false)
-	mp.openWalletSelector = mp.Theme.NewClickable(true)
+	mp.openWalletSelector = mp.Theme.NewClickable(false)
 	mp.openWalletSelector.Radius = decredmaterial.Radius(8)
 
 	// init shared page functions
@@ -794,6 +794,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 							Height:      decredmaterial.WrapContent,
 							Orientation: layout.Horizontal,
 							Alignment:   layout.Middle,
+							Clickable:   mp.openWalletSelector,
 						}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{

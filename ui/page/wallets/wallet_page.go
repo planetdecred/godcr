@@ -2,9 +2,11 @@ package wallets
 
 import (
 	"context"
+	"image/color"
 	"sync"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v4"
@@ -15,6 +17,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -72,6 +75,7 @@ type AppOverviewPage struct {
 	autoSyncSwitch               *decredmaterial.Switch
 	walletSyncList               *layout.List
 	syncClickable                *decredmaterial.Clickable
+	toBackup                     decredmaterial.Button
 
 	rescanUpdate         *wallet.RescanUpdate
 	remainingSyncTime    string
@@ -109,6 +113,10 @@ func NewWalletPage(l *load.Load) *AppOverviewPage {
 	pg.initWalletStatusWidgets()
 	pg.initSyncDetailsWidgets()
 
+	pg.toBackup = pg.Theme.Button(values.String(values.StrBackupNow))
+	pg.toBackup.Color = pg.Theme.Color.Primary
+	pg.toBackup.TextSize = values.TextSize14
+	pg.toBackup.Background = color.NRGBA{}
 	return pg
 }
 
@@ -153,11 +161,33 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(pg.headerLayout),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
-									Top: values.MarginPadding16,
-								}.Layout(gtx, pg.separator.Layout)
+									Right: values.MarginPadding10,
+									Left:  values.MarginPadding10,
+								}.Layout(gtx, func(gtx C) D {
+									txt := pg.Theme.Body1(pg.WL.SelectedWallet.Wallet.Name)
+									txt.Font.Weight = text.SemiBold
+									return txt.Layout(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								if len(pg.WL.SelectedWallet.Wallet.EncryptedSeed) > 0 {
+									return layout.Inset{
+										Top: values.MarginPadding16,
+									}.Layout(gtx, func(gtx C) D {
+										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+											layout.Rigid(pg.Theme.Icons.RedAlert.Layout24dp),
+											layout.Rigid(func(gtx C) D {
+												return layout.Inset{
+													Left: values.MarginPadding9,
+												}.Layout(gtx, pg.Theme.Body2("Backup your wallet now to avoid losses").Layout)
+											}),
+											layout.Rigid(pg.toBackup.Layout),
+										)
+									})
+								}
+								return D{}
 							}),
 							layout.Rigid(pg.syncStatusSection),
 						)
@@ -170,29 +200,29 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *AppOverviewPage) headerLayout(gtx layout.Context) D {
-	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(pg.Theme.Icons.WalletIcon.Layout24dp),
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{
-				Right: values.MarginPadding10,
-				Left:  values.MarginPadding10,
-			}.Layout(gtx, func(gtx C) D {
-				return pg.Theme.Body1(pg.WL.SelectedWallet.Wallet.Name).Layout(gtx)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return pg.renameWallet.Layout(gtx, pg.Theme.Icons.EditIcon.Layout24dp)
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				balanceLabel := pg.Theme.Body1(pg.totalBalance)
-				balanceLabel.Color = pg.Theme.Color.GrayText2
-				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
-			})
-		}),
-	)
-}
+// func (pg *AppOverviewPage) headerLayout(gtx layout.Context) D {
+// 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+// 		layout.Rigid(pg.Theme.Icons.WalletIcon.Layout24dp),
+// 		layout.Rigid(func(gtx C) D {
+// 			return layout.Inset{
+// 				Right: values.MarginPadding10,
+// 				Left:  values.MarginPadding10,
+// 			}.Layout(gtx, func(gtx C) D {
+// 				return pg.Theme.Body1(pg.WL.SelectedWallet.Wallet.Name).Layout(gtx)
+// 			})
+// 		}),
+// 		layout.Rigid(func(gtx C) D {
+// 			return pg.renameWallet.Layout(gtx, pg.Theme.Icons.EditIcon.Layout24dp)
+// 		}),
+// 		layout.Flexed(1, func(gtx C) D {
+// 			return layout.E.Layout(gtx, func(gtx C) D {
+// 				balanceLabel := pg.Theme.Body1(pg.totalBalance)
+// 				balanceLabel.Color = pg.Theme.Color.GrayText2
+// 				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
+// 			})
+// 		}),
+// 	)
+// }
 
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
@@ -275,6 +305,10 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 		} else {
 			pg.toggleSyncDetails.Text = values.String(values.StrShowDetails)
 		}
+	}
+
+	for pg.toBackup.Button.Clicked() {
+		pg.ParentNavigator().Display(seedbackup.NewBackupInstructionsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
 	}
 }
 
