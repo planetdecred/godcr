@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"context"
+	"fmt"
 	"image"
 
 	"gioui.org/layout"
@@ -71,26 +72,7 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg.orderDropDown = components.CreateOrderDropDown(l, values.TxDropdownGroup, 1)
 	pg.wallets = pg.WL.SortedWalletList()
 	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
-	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
-		{
-			Text: values.String(values.StrAll),
-		},
-		{
-			Text: values.String(values.StrSent),
-		},
-		{
-			Text: values.String(values.StrReceived),
-		},
-		{
-			Text: values.String(values.StrYourself),
-		},
-		{
-			Text: values.String(values.StrMixed),
-		},
-		{
-			Text: values.String(values.StrStaking),
-		},
-	}, values.TxDropdownGroup, 2)
+	pg.refreshAvailableTxType(l)
 
 	walletTitles := make([]string, 0)
 	for _, wallet := range pg.wallets {
@@ -111,6 +93,36 @@ func (pg *TransactionsPage) OnNavigatedTo() {
 
 	pg.listenForTxNotifications()
 	pg.loadTransactions(pg.walletDropDown.SelectedIndex())
+}
+
+func (pg *TransactionsPage) refreshAvailableTxType(l *load.Load) {
+	txCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterAll)
+	sentTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterSent)
+	receivedTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterReceived)
+	transferredTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterTransferred)
+	mixedTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterMixed)
+	stakingTxCount, _ := pg.WL.SelectedWallet.Wallet.CountTransactions(dcrlibwallet.TxFilterStaking)
+
+	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
+		{
+			Text: fmt.Sprintf("%s (%d)", values.String(values.StrAll), txCount),
+		},
+		{
+			Text: fmt.Sprintf("%s (%d)", values.String(values.StrSent), sentTxCount),
+		},
+		{
+			Text: fmt.Sprintf("%s (%d)", values.String(values.StrReceived), receivedTxCount),
+		},
+		{
+			Text: fmt.Sprintf("%s (%d)", values.String(values.StrTransferred), transferredTxCount),
+		},
+		{
+			Text: fmt.Sprintf("%s (%d)", values.String(values.StrMixed), mixedTxCount),
+		},
+		{
+			Text: fmt.Sprintf("%s (%d)", values.String(values.StrStaking), stakingTxCount),
+		},
+	}, values.TxDropdownGroup, 2)
 }
 
 func (pg *TransactionsPage) loadTransactions(selectedWalletIndex int) {
