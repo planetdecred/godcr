@@ -246,7 +246,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 		pg.autoSyncSwitch.SetChecked(pg.autoSyncSwitch.IsChecked())
 		if pg.autoSyncSwitch.IsChecked() && (!pg.WL.MultiWallet.IsSyncing() || pg.WL.MultiWallet.IsSynced()) {
 			info := modal.NewInfoModal(pg.Load).
-				Title(values.String(values.autoSync)).
+				Title(values.String(values.StrAutoSync)).
 				Body(values.String(values.StrAutoSyncInfo)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(values.String(values.StrContinue), func(isChecked bool) bool {

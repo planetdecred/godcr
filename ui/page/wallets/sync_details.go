@@ -63,56 +63,55 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx C, inset layout.Inset) D {
 	children = append(children, layout.Rigid(syncStatusLabel.Layout))
 
 	if syncing || rescanning {
-		children = append(children,  layout.Flexed(1, pg.progressBarRow))
+		children = append(children, layout.Flexed(1, pg.progressBarRow))
 	}
 
 	children = append(children, layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						// Set gxt to Disabled (Sets Queue to nil) if syncClickable state is disabled, prevents double click.
-						if !pg.syncClickable.Enabled() {
-							gtx = pg.syncClickable.SetEnabled(false, &gtx)
-						}
-						return decredmaterial.LinearLayout{
-							Width:     decredmaterial.WrapContent,
-							Height:    decredmaterial.WrapContent,
-							Clickable: pg.syncClickable,
-							Direction: layout.Center,
-							Alignment: layout.Middle,
-							Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
-							Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
-						}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
-									return D{}
-								}
+		return layout.E.Layout(gtx, func(gtx C) D {
+			// Set gxt to Disabled (Sets Queue to nil) if syncClickable state is disabled, prevents double click.
+			if !pg.syncClickable.Enabled() {
+				gtx = pg.syncClickable.SetEnabled(false, &gtx)
+			}
+			return decredmaterial.LinearLayout{
+				Width:     decredmaterial.WrapContent,
+				Height:    decredmaterial.WrapContent,
+				Clickable: pg.syncClickable,
+				Direction: layout.Center,
+				Alignment: layout.Middle,
+				Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+				Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+						return D{}
+					}
 
-								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-									pg.cachedIcon.Color = pg.Theme.Color.Gray1
-									return pg.cachedIcon.Layout(gtx, values.MarginPadding16)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								sync := pg.Theme.Label(values.TextSize14, values.String(values.StrReconnect))
-								sync.TextSize = values.TextSize14
-								sync.Color = pg.Theme.Color.Text
-								if pg.WL.MultiWallet.IsRescanning() {
-									sync.Text = values.String(values.StrCancel)
-								} else if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
-									sync.Text = values.String(values.StrDisconnect)
-								} else {
-									sync.Text = values.String(values.StrReconnect)
-								}
-
-								return sync.Layout(gtx)
-							}),
-						)
+					return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+						pg.cachedIcon.Color = pg.Theme.Color.Gray1
+						return pg.cachedIcon.Layout(gtx, values.MarginPadding16)
 					})
-		}))
+				}),
+				layout.Rigid(func(gtx C) D {
+					sync := pg.Theme.Label(values.TextSize14, values.String(values.StrReconnect))
+					sync.TextSize = values.TextSize14
+					sync.Color = pg.Theme.Color.Text
+					if pg.WL.MultiWallet.IsRescanning() {
+						sync.Text = values.String(values.StrCancel)
+					} else if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
+						sync.Text = values.String(values.StrDisconnect)
+					} else {
+						sync.Text = values.String(values.StrReconnect)
+					}
 
+					return sync.Layout(gtx)
+				}),
+			)
+		})
+	}))
 
 	return layout.Flex{
-		Axis: layout.Horizontal, 
-		Spacing: layout.SpaceBetween, 
+		Axis:      layout.Horizontal,
+		Spacing:   layout.SpaceBetween,
 		Alignment: layout.Middle,
 	}.Layout(gtx, children...)
 }

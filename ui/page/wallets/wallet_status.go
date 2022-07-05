@@ -146,9 +146,9 @@ func (pg *AppOverviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions 
 	}
 	i := layout.Inset{Right: values.MarginPadding16}
 	if pg.WL.MultiWallet.IsSyncing() {
-		return i.Layout(gtx,  func(gtx C) D {
-		return pg.syncingIcon.LayoutSize(gtx, values.MarginPadding20)
-	})
+		return i.Layout(gtx, func(gtx C) D {
+			return pg.syncingIcon.LayoutSize(gtx, values.MarginPadding20)
+		})
 	}
 	return i.Layout(gtx, func(gtx C) D {
 		return syncStatusIcon.Layout(gtx, values.MarginPadding20)

@@ -9,7 +9,7 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
-	"gioui.org/text"
+	// "gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -743,7 +743,10 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 			}
 			return border.Layout(gtx, func(gtx C) D {
 				return padding.Layout(gtx, func(gtx C) D {
-					return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(mp.Theme.Body1("/").Layout),
+						layout.Rigid(mp.Theme.Body2(mp.totalBalanceUSD).Layout),
+					)
 				})
 			})
 		})
@@ -793,63 +796,26 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 							Alignment:   layout.Middle,
 						}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return decredmaterial.LinearLayout{
-									Width:  gtx.Dp(values.Size180),
-									Height: decredmaterial.WrapContent,
-									Padding: layout.Inset{
-										Right:  values.MarginPadding18,
-										Left:   values.MarginPadding18,
-										Top:    values.MarginPadding10,
-										Bottom: values.MarginPadding10,
-									},
-									Alignment: layout.Middle,
-									Clickable: mp.openWalletSelector,
-									Shadow:    mp.Theme.Shadow(),
-									Border: decredmaterial.Border{
-										Radius: mp.openWalletSelector.Radius,
-										Width:  values.MarginPadding2,
-										Color:  mp.Theme.Color.Gray3,
-									},
-								}.GradientLayout(gtx,
-									layout.Rigid(mp.Theme.Icons.WalletIcon.Layout24dp),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Left: values.MarginPadding10,
-										}.Layout(gtx, func(gtx C) D {
-											txt := mp.Theme.Body1(mp.WL.SelectedWallet.Wallet.Name)
-											txt.Font.Weight = text.Bold
-											return txt.Layout(gtx)
-										})
-									}),
-								)
+								return layout.Inset{
+									Left: values.MarginPadding13,
+								}.Layout(gtx, mp.Theme.Icons.ChevronLeft.Layout12dp)
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
-									Right: values.MarginPadding16,
-									Left:  values.MarginPadding24,
-								}.Layout(gtx,
-									func(gtx C) D {
-										return mp.Theme.Icons.Logo.Layout24dp(gtx)
-									})
+									Left:  values.MarginPadding10,
+									Right: values.MarginPadding10,
+								}.Layout(gtx, mp.Theme.H6("GoDCR").Layout)
 							}),
 							layout.Rigid(func(gtx C) D {
-								return mp.totalDCRBalance(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								if !mp.isBalanceHidden {
-									return mp.LayoutUSDBalance(gtx)
+								if mp.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
+									return mp.Theme.Icons.DcrWatchOnly.Layout24dp(gtx)
 								}
-								return D{}
+								return mp.Theme.Icons.DecredSymbol2.Layout24dp(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
-								if mp.isBalanceHidden {
-									mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
-								}
 								return layout.Inset{
-									Top:  values.MarginPadding1,
-									Left: values.MarginPadding9,
-								}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+									Left: values.MarginPadding10,
+								}.Layout(gtx, mp.Theme.H6(mp.WL.SelectedWallet.Wallet.Name).Layout)
 							}),
 						)
 					})
@@ -859,20 +825,13 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								//todo -- dex functionality
-								return mp.Theme.Icons.DexIcon.Layout24dp(gtx)
+								return mp.totalDCRBalance(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Right: values.MarginPadding24,
-									Left:  values.MarginPadding24,
-								}.Layout(gtx, func(gtx C) D {
-									//todo -- app level settings functionality
-									return mp.Theme.Icons.HeaderSettingsIcon.Layout24dp(gtx)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return mp.darkmode.Layout(gtx, mp.Theme.Icons.DarkmodeIcon.Layout24dp)
+								if !mp.isBalanceHidden {
+									return mp.LayoutUSDBalance(gtx)
+								}
+								return D{}
 							}),
 						)
 					})
