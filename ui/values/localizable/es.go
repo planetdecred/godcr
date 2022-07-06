@@ -469,4 +469,6 @@ syncCompTime" = "Est. Sync completion time"
 "unmixed" = "sin mezclar"
 "allowSpendingFromUnmixedAccount" = "Permitir el gasto de una cuenta no mixta"
 "currentSpendingPassword" = "Contraseña de gasto actual"
+"ticketRevokedTitle"= "Boleto, revocado"
+"ticketVotedTitle"= "Boleto, votado"
 `
