@@ -294,7 +294,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	for pg.changePass.Clicked() {
 		currentSpendingPasswordModal := modal.NewPasswordModal(pg.Load).
 			Title(values.String(values.StrChangeSpendingPass)).
-			Hint(values.String(values.StrCurrentSpendingPassphrase)).
+			Hint(values.String(values.StrCurrentSpendingPassword)).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 				go func() {

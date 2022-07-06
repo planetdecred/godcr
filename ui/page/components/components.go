@@ -742,7 +742,7 @@ func CreateOrderDropDown(l *load.Load, grp uint, pos uint) *decredmaterial.DropD
 func TranslateErr(err error) string {
 	switch err.Error() {
 	case dcrlibwallet.ErrInvalidPassphrase:
-		return values.String(values.StrInvalidPassphrase)
+		return values.String(values.StrInvalidPassword)
 	}
 
 	return err.Error()

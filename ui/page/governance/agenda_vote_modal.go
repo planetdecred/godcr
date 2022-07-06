@@ -232,7 +232,7 @@ func (avm *agendaVoteModal) sendVotes() {
 		err := avm.walletSelector.selectedWallet.SetVoteChoice(avm.agenda.AgendaID, choiceID, "", password)
 		if err != nil {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-				avm.spendingPassword.SetError(values.String(values.StrInvalidPassphrase))
+				avm.spendingPassword.SetError(values.String(values.StrInvalidPassword))
 			} else {
 				avm.Toast.NotifyError(err.Error())
 			}

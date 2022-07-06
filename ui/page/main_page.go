@@ -388,7 +388,7 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 				if err != nil {
 					errText := err.Error()
 					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-						errText = values.String(values.StrInvalidPassphrase)
+						errText = values.String(values.StrInvalidPassword)
 					}
 					pm.SetError(errText)
 					pm.SetLoading(false)
