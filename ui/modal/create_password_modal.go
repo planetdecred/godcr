@@ -209,14 +209,12 @@ func (cm *CreatePasswordModal) Handle() {
 				cm.parent.OnNavigatedTo()
 			}
 			cm.Dismiss()
-			cm.negativeButtonClicked()
 		}
 	}
 
 	if cm.Modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {
 			cm.Dismiss()
-			cm.negativeButtonClicked()
 		}
 	}
 
