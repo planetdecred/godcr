@@ -1,4 +1,4 @@
-package wallets
+package info
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
-	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
@@ -22,7 +21,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const OverviewPageID = "Overview"
+const InfoID = "Overview"
 
 type (
 	C = layout.Context
@@ -38,7 +37,7 @@ type walletSyncDetails struct {
 	syncingProgress    decredmaterial.Label
 }
 
-type AppOverviewPage struct {
+type InfoPage struct {
 	*load.Load
 	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
 	// that helps this Page satisfy the app.Page interface. It also defines
@@ -53,70 +52,45 @@ type AppOverviewPage struct {
 	ctxCancel context.CancelFunc
 	listLock  sync.Mutex
 
-	multiWallet *dcrlibwallet.MultiWallet
+	multiWallet  *dcrlibwallet.MultiWallet
+	rescanUpdate *wallet.RescanUpdate
 
 	container *widget.List
 
-	card      decredmaterial.Card
-	separator decredmaterial.Line
-	accounts  []*dcrlibwallet.Account
+	syncedIcon, notSyncedIcon *decredmaterial.Icon
+	walletStatusIcon          *decredmaterial.Icon
+	syncingIcon               *decredmaterial.Image
+	syncSwitch                *decredmaterial.Switch
+	toBackup                  decredmaterial.Button
+	checkBox                  decredmaterial.CheckBoxStyle
 
-	totalBalance string
-
-	accountsList        *decredmaterial.ClickableList
-	addAcctClickable    *decredmaterial.Clickable
-	backupAcctClickable *decredmaterial.Clickable
-	renameWallet        *decredmaterial.Clickable
-
-	toggleSyncDetails            decredmaterial.Button
-	syncedIcon, notSyncedIcon    *decredmaterial.Icon
-	walletStatusIcon, cachedIcon *decredmaterial.Icon
-	syncingIcon                  *decredmaterial.Image
-	autoSyncSwitch               *decredmaterial.Switch
-	walletSyncList               *layout.List
-	syncClickable                *decredmaterial.Clickable
-	toBackup                     decredmaterial.Button
-
-	rescanUpdate         *wallet.RescanUpdate
 	remainingSyncTime    string
 	syncStepLabel        string
 	headersToFetchOrScan int32
 	stepFetchProgress    int32
 	syncProgress         int
 	syncStep             int
-
-	syncDetailsVisibility bool
+	isBackupModalOpened  bool
 }
 
-func NewWalletPage(l *load.Load) *AppOverviewPage {
-	pg := &AppOverviewPage{
+func NewInfoPage(l *load.Load) *InfoPage {
+	pg := &InfoPage{
 		Load:             l,
-		GenericPageModal: app.NewGenericPageModal(OverviewPageID),
+		GenericPageModal: app.NewGenericPageModal(InfoID),
 		multiWallet:      l.WL.MultiWallet,
 		container: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		card:         l.Theme.Card(),
-		separator:    l.Theme.Separator(),
-		renameWallet: l.Theme.NewClickable(false),
+		checkBox: l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
 	}
-
-	pg.separator.Color = l.Theme.Color.Gray2
-	pg.accountsList = pg.Theme.NewClickableList(layout.Vertical)
-	pg.addAcctClickable = pg.Theme.NewClickable(false)
-
-	backupClickable := pg.Theme.NewClickable(false)
-	backupClickable.ChangeStyle(&values.ClickableStyle{Color: pg.Theme.Color.OrangeRipple})
-	backupClickable.Radius = decredmaterial.CornerRadius{BottomRight: 14, BottomLeft: 14}
-	pg.backupAcctClickable = backupClickable
-
-	pg.initWalletStatusWidgets()
-	pg.initSyncDetailsWidgets()
 
 	pg.toBackup = pg.Theme.Button(values.String(values.StrBackupNow))
 	pg.toBackup.Color = pg.Theme.Color.Primary
 	pg.toBackup.TextSize = values.TextSize14
 	pg.toBackup.Background = color.NRGBA{}
+
+	pg.initWalletStatusWidgets()
+
 	return pg
 }
 
@@ -124,37 +98,20 @@ func NewWalletPage(l *load.Load) *AppOverviewPage {
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *AppOverviewPage) OnNavigatedTo() {
+func (pg *InfoPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.listenForNotifications()
-	pg.loadWalletAccounts()
-
 	autoSync := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false)
-	pg.autoSyncSwitch.SetChecked(autoSync)
-}
+	pg.syncSwitch.SetChecked(autoSync)
 
-func (pg *AppOverviewPage) loadWalletAccounts() {
-	accountsResult, err := pg.WL.SelectedWallet.Wallet.GetAccountsRaw()
-	if err != nil {
-		log.Errorf("Wallet account error: %v", err)
-		return
-	}
-
-	var totalBalance int64
-	for _, acc := range accountsResult.Acc {
-		totalBalance += acc.TotalBalance
-	}
-
-	pg.accounts = accountsResult.Acc
-	pg.totalBalance = dcrutil.Amount(totalBalance).String()
+	pg.listenForNotifications()
 }
 
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 // Layout lays out the widgets for the main wallets pg.
-func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *InfoPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
 			return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
@@ -200,110 +157,45 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-// func (pg *AppOverviewPage) headerLayout(gtx layout.Context) D {
-// 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-// 		layout.Rigid(pg.Theme.Icons.WalletIcon.Layout24dp),
-// 		layout.Rigid(func(gtx C) D {
-// 			return layout.Inset{
-// 				Right: values.MarginPadding10,
-// 				Left:  values.MarginPadding10,
-// 			}.Layout(gtx, func(gtx C) D {
-// 				return pg.Theme.Body1(pg.WL.SelectedWallet.Wallet.Name).Layout(gtx)
-// 			})
-// 		}),
-// 		layout.Rigid(func(gtx C) D {
-// 			return pg.renameWallet.Layout(gtx, pg.Theme.Icons.EditIcon.Layout24dp)
-// 		}),
-// 		layout.Flexed(1, func(gtx C) D {
-// 			return layout.E.Layout(gtx, func(gtx C) D {
-// 				balanceLabel := pg.Theme.Body1(pg.totalBalance)
-// 				balanceLabel.Color = pg.Theme.Color.GrayText2
-// 				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
-// 			})
-// 		}),
-// 	)
-// }
+func (pg *InfoPage) showBackupInfo() {
+	backupNowOrLaterModal := modal.NewInfoModal(pg.Load).
+		SetupWithTemplate(modal.WalletBackupInfoTemplate).
+		SetCancelable(false).
+		SetContentAlignment(layout.W, layout.Center).
+		CheckBox(pg.checkBox, true).
+		NegativeButton(values.String(values.StrBackupLater), func() {
+			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
+		}).
+		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+		PositiveButton(values.String(values.StrBackupNow), func(isChecked bool) bool {
+			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
+			pg.ParentNavigator().Display(seedbackup.NewBackupInstructionsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
+			return true
+		})
+	pg.ParentWindow().ShowModal(backupNowOrLaterModal)
+}
 
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
 // displayed.
 // Part of the load.Page interface.
-func (pg *AppOverviewPage) HandleUserInteractions() {
-	if ok, selectedItem := pg.accountsList.ItemClicked(); ok {
-		pg.ParentNavigator().Display(NewAcctDetailsPage(pg.Load, pg.accounts[selectedItem]))
+func (pg *InfoPage) HandleUserInteractions() {
+	backupLater := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+	needBackup := pg.WL.MultiWallet.NumWalletsNeedingSeedBackup() > 0
+	if needBackup && !backupLater && !pg.isBackupModalOpened {
+		pg.showBackupInfo()
+		pg.isBackupModalOpened = true
 	}
 
-	if pg.syncClickable.Clicked() {
+	if pg.syncSwitch.Changed() {
 		if pg.WL.MultiWallet.IsRescanning() {
 			pg.WL.MultiWallet.CancelRescan()
 		} else {
-			// If connected to the Decred network disable button. Prevents multiple clicks.
-			if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
-				pg.syncClickable.SetEnabled(false, nil)
-			}
-
-			// On exit update button state.
+			pg.WL.MultiWallet.SaveUserConfigValue(load.AutoSyncConfigKey, pg.syncSwitch.IsChecked())
 			go func() {
 				pg.ToggleSync()
-				if !pg.syncClickable.Enabled() {
-					pg.syncClickable.SetEnabled(true, nil)
-				}
 			}()
-		}
-	}
-
-	if pg.renameWallet.Clicked() {
-		textModal := modal.NewTextInputModal(pg.Load).
-			Hint(values.String(values.StrWalletName)).
-			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
-			PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
-				err := pg.multiWallet.RenameWallet(pg.WL.SelectedWallet.Wallet.ID, newName)
-				if err != nil {
-					pg.Toast.NotifyError(err.Error())
-					return false
-				}
-				return true
-			})
-
-		textModal.Title(values.String(values.StrRenameWalletSheetTitle)).
-			NegativeButton(values.String(values.StrCancel), func() {})
-		pg.ParentWindow().ShowModal(textModal)
-	}
-
-	if pg.autoSyncSwitch.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(load.AutoSyncConfigKey, pg.autoSyncSwitch.IsChecked())
-		pg.autoSyncSwitch.SetChecked(pg.autoSyncSwitch.IsChecked())
-		if pg.autoSyncSwitch.IsChecked() && (!pg.WL.MultiWallet.IsSyncing() || pg.WL.MultiWallet.IsSynced()) {
-			info := modal.NewInfoModal(pg.Load).
-				Title(values.String(values.StrAutoSync)).
-				Body(values.String(values.StrAutoSyncInfo)).
-				NegativeButton(values.String(values.StrCancel), func() {}).
-				PositiveButton(values.String(values.StrContinue), func(isChecked bool) bool {
-					for _, wal := range pg.WL.SortedWalletList() {
-						if !wal.HasDiscoveredAccounts && wal.IsLocked() {
-							pg.unlockWalletForSyncing(wal)
-							return true
-						}
-					}
-
-					err := pg.WL.MultiWallet.SpvSync()
-					if err != nil {
-						// show error dialog
-						log.Info("Error starting sync:", err)
-					}
-					return true
-				})
-			pg.ParentWindow().ShowModal(info)
-		}
-	}
-
-	if pg.toggleSyncDetails.Clicked() {
-		pg.syncDetailsVisibility = !pg.syncDetailsVisibility
-		if pg.syncDetailsVisibility {
-			pg.toggleSyncDetails.Text = values.String(values.StrHideDetails)
-		} else {
-			pg.toggleSyncDetails.Text = values.String(values.StrShowDetails)
 		}
 	}
 
@@ -318,7 +210,7 @@ func (pg *AppOverviewPage) HandleUserInteractions() {
 // active blocks sync, rescan or proposals sync, the Layout method auto
 // refreshes the display every set interval. Other sync updates that affect
 // the UI but occur outside of an active sync requires a display refresh.
-func (pg *AppOverviewPage) listenForNotifications() {
+func (pg *InfoPage) listenForNotifications() {
 	switch {
 	case pg.SyncProgressListener != nil:
 		return
@@ -329,14 +221,14 @@ func (pg *AppOverviewPage) listenForNotifications() {
 	}
 
 	pg.SyncProgressListener = listeners.NewSyncProgress()
-	err := pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, OverviewPageID)
+	err := pg.WL.MultiWallet.AddSyncProgressListener(pg.SyncProgressListener, InfoID)
 	if err != nil {
 		log.Errorf("Error adding sync progress listener: %v", err)
 		return
 	}
 
 	pg.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
-	err = pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, OverviewPageID)
+	err = pg.WL.MultiWallet.AddTxAndBlockNotificationListener(pg.TxAndBlockNotificationListener, true, InfoID)
 	if err != nil {
 		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
@@ -395,8 +287,8 @@ func (pg *AppOverviewPage) listenForNotifications() {
 					pg.ParentWindow().Reload()
 				}
 			case <-pg.ctx.Done():
-				pg.WL.MultiWallet.RemoveSyncProgressListener(OverviewPageID)
-				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(OverviewPageID)
+				pg.WL.MultiWallet.RemoveSyncProgressListener(InfoID)
+				pg.WL.MultiWallet.RemoveTxAndBlockNotificationListener(InfoID)
 				pg.WL.MultiWallet.SetBlocksRescanProgressListener(nil)
 
 				close(pg.SyncStatusChan)
@@ -413,66 +305,6 @@ func (pg *AppOverviewPage) listenForNotifications() {
 	}()
 }
 
-func (pg *AppOverviewPage) unlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
-	spendingPasswordModal := modal.NewPasswordModal(pg.Load).
-		Title(values.String(values.StrResumeAccountDiscoveryTitle)).
-		Hint(values.String(values.StrSpendingPassword)).
-		NegativeButton(values.String(values.StrCancel), func() {}).
-		PositiveButton(values.String(values.StrUnlock), func(password string, pm *modal.PasswordModal) bool {
-			go func() {
-				err := pg.WL.MultiWallet.UnlockWallet(wal.ID, []byte(password))
-				if err != nil {
-					errText := err.Error()
-					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-						errText = values.String(values.StrInvalidPassphrase)
-					}
-					pm.SetError(errText)
-					pm.SetLoading(false)
-					return
-				}
-				pm.Dismiss()
-
-				for _, wal := range pg.WL.SortedWalletList() {
-					if !wal.HasDiscoveredAccounts && wal.IsLocked() {
-						pg.unlockWalletForSyncing(wal)
-						return
-					}
-				}
-
-				err = pg.WL.MultiWallet.SpvSync()
-				if err != nil {
-					// show error dialog
-					log.Info("Error starting sync:", err)
-				}
-			}()
-
-			return false
-		})
-	pg.ParentWindow().ShowModal(spendingPasswordModal)
-}
-
-func (pg *AppOverviewPage) updateAccountBalance() {
-	pg.listLock.Lock()
-	defer pg.listLock.Unlock()
-
-	wal := pg.WL.MultiWallet.WalletWithID(pg.WL.SelectedWallet.Wallet.ID)
-	if wal != nil {
-		accountsResult, err := wal.GetAccountsRaw()
-		if err != nil {
-			log.Errorf("Wallet account error: %v", err)
-			return
-		}
-
-		var totalBalance int64
-		for _, acc := range accountsResult.Acc {
-			totalBalance += acc.TotalBalance
-		}
-
-		pg.totalBalance = dcrutil.Amount(totalBalance).String()
-		pg.accounts = accountsResult.Acc
-	}
-}
-
 // OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable
 // features that are irrelevant when the page is NOT displayed.
@@ -480,6 +312,6 @@ func (pg *AppOverviewPage) updateAccountBalance() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *AppOverviewPage) OnNavigatedFrom() {
+func (pg *InfoPage) OnNavigatedFrom() {
 	pg.ctxCancel()
 }

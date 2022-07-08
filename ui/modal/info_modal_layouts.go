@@ -64,7 +64,7 @@ func transactionDetailsInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func backupInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := values.StringF(values.StrBackupInfo, `<span style="text-color: gray">`, `<span style="text-color: danger; font-weight: medium"><br><br>`, `</span></span>`)
+	text := values.StringF(values.StrBackupInfo, `<span style="text-color: danger"> <span style="font-weight: bold">`, `</span>`, `<span style="font-weight: bold">`, `</span>`, `<span style="font-weight: bold">`, `</span></span>`)
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,
 	}

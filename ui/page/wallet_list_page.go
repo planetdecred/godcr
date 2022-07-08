@@ -363,10 +363,10 @@ func (pg *WalletList) syncStatusIcon(gtx C) D {
 			}.Layout(gtx, pg.Theme.Caption(syncStatus).Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
-			if pg.WL.MultiWallet.IsSynced() {
-				return D{}
+			if pg.WL.MultiWallet.IsSyncing() {
+				return pg.Theme.Caption(fmt.Sprintf("%v%%", progress)).Layout(gtx)
 			}
-			return pg.Theme.Caption(fmt.Sprintf("%v%%", progress)).Layout(gtx)
+			return D{}
 		}),
 	)
 }

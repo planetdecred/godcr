@@ -89,13 +89,13 @@ func (p ProgressBarStyle) TextLayout(gtx C, lbl layout.Widget) D {
 
 	return p.Direction.Layout(gtx, func(gtx C) D {
 		return LinearLayout{
-			Width:      gtx.Dp(p.Width),
+			Width:      MatchParent,
 			Height:     gtx.Dp(p.Height),
 			Background: p.TrackColor,
 			Border:     Border{Radius: p.Radius},
 		}.Layout2(gtx, func(gtx C) D {
 			return LinearLayout{
-				Width:      int(float32(p.Width) * clamp1(p.Progress)),
+				Width:      int(float32(MatchParent) * clamp1(p.Progress)),
 				Height:     gtx.Dp(p.Height),
 				Background: p.Color,
 				Border:     Border{Radius: p.Radius},
