@@ -153,7 +153,7 @@ func (mp *MainPage) initNavItems() {
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.OverviewIcon,
 				ImageInactive: mp.Theme.Icons.OverviewIconInactive,
-				Title:         values.String(values.StrOverview),
+				Title:         values.String(values.StrInfo),
 				PageID:        info.InfoID,
 			},
 			{
@@ -216,9 +216,9 @@ func (mp *MainPage) initNavItems() {
 		BottomNaigationItems: []components.BottomNavigationBarHandler{
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Theme.Icons.WalletIcon,
-				ImageInactive: mp.Theme.Icons.WalletIconInactive,
-				Title:         values.String(values.StrWallets),
+				Image:         mp.Theme.Icons.OverviewIcon,
+				ImageInactive: mp.Theme.Icons.OverviewIconInactive,
+				Title:         values.String(values.StrInfo),
 				PageID:        info.InfoID,
 			},
 			{

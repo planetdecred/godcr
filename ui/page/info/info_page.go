@@ -37,7 +37,7 @@ type walletSyncDetails struct {
 	syncingProgress    decredmaterial.Label
 }
 
-type InfoPage struct {
+type WalletInfo struct {
 	*load.Load
 	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
 	// that helps this Page satisfy the app.Page interface. It also defines
@@ -73,8 +73,8 @@ type InfoPage struct {
 	isBackupModalOpened  bool
 }
 
-func NewInfoPage(l *load.Load) *InfoPage {
-	pg := &InfoPage{
+func NewInfoPage(l *load.Load) *WalletInfo {
+	pg := &WalletInfo{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(InfoID),
 		multiWallet:      l.WL.MultiWallet,
@@ -98,7 +98,7 @@ func NewInfoPage(l *load.Load) *InfoPage {
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *InfoPage) OnNavigatedTo() {
+func (pg *WalletInfo) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
 	autoSync := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false)
@@ -111,7 +111,7 @@ func (pg *InfoPage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 // Layout lays out the widgets for the main wallets pg.
-func (pg *InfoPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *WalletInfo) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
 			return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
@@ -157,7 +157,7 @@ func (pg *InfoPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *InfoPage) showBackupInfo() {
+func (pg *WalletInfo) showBackupInfo() {
 	backupNowOrLaterModal := modal.NewInfoModal(pg.Load).
 		SetupWithTemplate(modal.WalletBackupInfoTemplate).
 		SetCancelable(false).
@@ -180,7 +180,7 @@ func (pg *InfoPage) showBackupInfo() {
 // used to update the page's UI components shortly before they are
 // displayed.
 // Part of the load.Page interface.
-func (pg *InfoPage) HandleUserInteractions() {
+func (pg *WalletInfo) HandleUserInteractions() {
 	backupLater := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 	needBackup := pg.WL.MultiWallet.NumWalletsNeedingSeedBackup() > 0
 	if needBackup && !backupLater && !pg.isBackupModalOpened {
@@ -210,7 +210,7 @@ func (pg *InfoPage) HandleUserInteractions() {
 // active blocks sync, rescan or proposals sync, the Layout method auto
 // refreshes the display every set interval. Other sync updates that affect
 // the UI but occur outside of an active sync requires a display refresh.
-func (pg *InfoPage) listenForNotifications() {
+func (pg *WalletInfo) listenForNotifications() {
 	switch {
 	case pg.SyncProgressListener != nil:
 		return
@@ -312,6 +312,6 @@ func (pg *InfoPage) listenForNotifications() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *InfoPage) OnNavigatedFrom() {
+func (pg *WalletInfo) OnNavigatedFrom() {
 	pg.ctxCancel()
 }

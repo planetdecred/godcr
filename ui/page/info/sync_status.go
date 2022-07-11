@@ -12,7 +12,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-func (pg *InfoPage) initWalletStatusWidgets() {
+func (pg *WalletInfo) initWalletStatusWidgets() {
 	pg.syncedIcon = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
 	pg.syncedIcon.Color = pg.Theme.Color.Success
 
@@ -26,7 +26,7 @@ func (pg *InfoPage) initWalletStatusWidgets() {
 }
 
 // syncStatusSection lays out content for displaying sync status.
-func (pg *InfoPage) syncStatusSection(gtx C) D {
+func (pg *WalletInfo) syncStatusSection(gtx C) D {
 	syncing, rescanning := pg.WL.MultiWallet.IsSyncing(), pg.WL.MultiWallet.IsRescanning()
 	uniform := layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding5}
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
@@ -60,7 +60,7 @@ func (pg *InfoPage) syncStatusSection(gtx C) D {
 }
 
 // syncBoxTitleRow lays out widgets in the title row inside the sync status box.
-func (pg *InfoPage) syncBoxTitleRow(gtx C) D {
+func (pg *WalletInfo) syncBoxTitleRow(gtx C) D {
 	statusLabel := pg.Theme.Label(values.TextSize14, values.String(values.StrOffline))
 	pg.walletStatusIcon.Color = pg.Theme.Color.Danger
 	if pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
@@ -98,7 +98,7 @@ func (pg *InfoPage) syncBoxTitleRow(gtx C) D {
 	)
 }
 
-func (pg *InfoPage) syncStatusIcon(gtx C) D {
+func (pg *WalletInfo) syncStatusIcon(gtx C) D {
 	syncStatusIcon := pg.notSyncedIcon
 	syncStatusIcon.Color = pg.Theme.Color.Danger
 	if pg.WL.MultiWallet.IsSynced() {
@@ -118,7 +118,7 @@ func (pg *InfoPage) syncStatusIcon(gtx C) D {
 }
 
 // syncDormantContent lays out sync status content when the wallet is synced or not connected
-func (pg *InfoPage) syncDormantContent(gtx C, uniform layout.Inset) D {
+func (pg *WalletInfo) syncDormantContent(gtx C, uniform layout.Inset) D {
 	return uniform.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -128,7 +128,7 @@ func (pg *InfoPage) syncDormantContent(gtx C, uniform layout.Inset) D {
 	})
 }
 
-func (pg *InfoPage) blockInfoRow(gtx C) D {
+func (pg *WalletInfo) blockInfoRow(gtx C) D {
 	bestBlock := pg.WL.MultiWallet.GetBestBlock()
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -152,7 +152,7 @@ func (pg *InfoPage) blockInfoRow(gtx C) D {
 	)
 }
 
-func (pg *InfoPage) layoutAutoSyncSection(gtx C) D {
+func (pg *WalletInfo) layoutAutoSyncSection(gtx C) D {
 	return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -164,7 +164,7 @@ func (pg *InfoPage) layoutAutoSyncSection(gtx C) D {
 }
 
 // syncDetail returns a walletSyncDetails object containing data of a single wallet sync box
-func (pg *InfoPage) syncDetail(status, headersFetched, progress string) walletSyncDetails {
+func (pg *WalletInfo) syncDetail(status, headersFetched, progress string) walletSyncDetails {
 	return walletSyncDetails{
 		status:             pg.Theme.Body2(status),
 		blockHeaderFetched: pg.Theme.Body2(headersFetched),
@@ -173,7 +173,7 @@ func (pg *InfoPage) syncDetail(status, headersFetched, progress string) walletSy
 }
 
 // syncStatusTextRow lays out sync status text and sync button.
-func (pg *InfoPage) syncStatusTextRow(gtx C) D {
+func (pg *WalletInfo) syncStatusTextRow(gtx C) D {
 	syncing, rescanning := pg.WL.MultiWallet.IsSyncing(), pg.WL.MultiWallet.IsRescanning()
 
 	syncStatusLabel := pg.Theme.Label(values.TextSize14, values.String(values.StrWalletNotSynced))
@@ -199,7 +199,7 @@ func (pg *InfoPage) syncStatusTextRow(gtx C) D {
 }
 
 // progressBarRow lays out the progress bar.
-func (pg *InfoPage) progressBarRow(gtx C) D {
+func (pg *WalletInfo) progressBarRow(gtx C) D {
 	return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 		progress, _ := pg.progressStatusDetails()
 
@@ -216,7 +216,7 @@ func (pg *InfoPage) progressBarRow(gtx C) D {
 }
 
 // progressStatusRow lays out the progress status when the wallet is syncing.
-func (pg *InfoPage) progressStatusDetails() (int, string) {
+func (pg *WalletInfo) progressStatusDetails() (int, string) {
 	timeLeft := pg.remainingSyncTime
 	progress := pg.syncProgress
 	rescanUpdate := pg.rescanUpdate
@@ -234,7 +234,7 @@ func (pg *InfoPage) progressStatusDetails() (int, string) {
 }
 
 //	walletSyncRow layouts a list of wallet sync boxes horizontally.
-func (pg *InfoPage) walletSyncRow(gtx C, inset layout.Inset) D {
+func (pg *WalletInfo) walletSyncRow(gtx C, inset layout.Inset) D {
 	currentSeconds := time.Now().UnixNano() / int64(time.Second)
 	w := pg.WL.SelectedWallet.Wallet
 
@@ -299,7 +299,7 @@ func (pg *InfoPage) walletSyncRow(gtx C, inset layout.Inset) D {
 	)
 }
 
-func (pg *InfoPage) rescanDetailsLayout(gtx C, inset layout.Inset) D {
+func (pg *WalletInfo) rescanDetailsLayout(gtx C, inset layout.Inset) D {
 	rescanUpdate := pg.rescanUpdate
 	if rescanUpdate == nil {
 		return D{}

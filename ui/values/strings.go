@@ -582,4 +582,5 @@ const (
 	StrTicketVotedTitle            = "ticketVotedTitle"
 	StrTicketRevokedTitle          = "ticketRevokedTitle"
 	StrSyncCompTime                = "syncCompTime"
+	StrInfo                        = "info"
 )

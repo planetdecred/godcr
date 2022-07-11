@@ -1,4 +1,4 @@
-package info
+package security
 
 import (
 	"gioui.org/io/clipboard"
