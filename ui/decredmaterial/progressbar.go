@@ -95,7 +95,7 @@ func (p ProgressBarStyle) TextLayout(gtx C, lbl layout.Widget) D {
 			Border:     Border{Radius: p.Radius},
 		}.Layout2(gtx, func(gtx C) D {
 			return LinearLayout{
-				Width:      int(float32(MatchParent) * clamp1(p.Progress)),
+				Width:      int(float32(p.Width) * clamp1(p.Progress)),
 				Height:     gtx.Dp(p.Height),
 				Background: p.Color,
 				Border:     Border{Radius: p.Radius},
@@ -176,8 +176,12 @@ func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 	}
 
 	calProgressWidth := func(progress int) int {
-		val := (progress / mp.total) * 100
-		return (int(mp.Width) / 100) * val
+		if mp.total != 0 {
+			val := (progress / mp.total) * 100
+			return (int(mp.Width) / 100) * val
+		}
+
+		return 0
 	}
 
 	// This takes only 2 layers

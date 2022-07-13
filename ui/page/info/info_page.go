@@ -21,7 +21,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const InfoID = "Overview"
+const InfoID = "Info"
 
 type (
 	C = layout.Context

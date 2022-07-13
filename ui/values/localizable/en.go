@@ -474,4 +474,5 @@ unlockWithPassword = "Unlock with password"
 "ticketVotedTitle" = "Ticket, Voted"
 "ticketRevokedTitle" = "Ticket, Revoked"
 "syncCompTime" = "Est. Sync completion time"
+"info" = "Info"
 `
