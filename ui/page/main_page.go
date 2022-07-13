@@ -442,6 +442,7 @@ func (mp *MainPage) OnDarkModeChanged(isDarkModeOn bool) {
 
 	mp.initNavItems()
 	mp.setNavExpanded()
+	mp.bottomNavigationBar.OnViewCreated()
 }
 
 func (mp *MainPage) OnLanguageChanged() {
@@ -695,8 +696,8 @@ func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 
 func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Flexed(0.08, mp.LayoutTopBar),
-		layout.Flexed(0.795, func(gtx C) D {
+		layout.Rigid(mp.LayoutTopBar),
+		layout.Flexed(1, func(gtx C) D {
 			return layout.Stack{Alignment: layout.N}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
 					currentPage := mp.CurrentPage()
@@ -706,11 +707,11 @@ func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 					return currentPage.Layout(gtx)
 				}),
 				layout.Stacked(func(gtx C) D {
-					return mp.floatingActionButton.LayoutSendReceive(gtx)
+					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, mp.floatingActionButton.LayoutSendReceive)
 				}),
 			)
 		}),
-		layout.Flexed(0.125, mp.bottomNavigationBar.LayoutBottomNavigationBar),
+		layout.Rigid(mp.bottomNavigationBar.LayoutBottomNavigationBar),
 	)
 }
 
@@ -851,7 +852,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 									Left:  values.MarginPadding24,
 								}.Layout(gtx, func(gtx C) D {
 									//todo -- app level settings functionality
-									return mp.Theme.Icons.SettingsIcon.Layout24dp(gtx)
+									return mp.Theme.Icons.HeaderSettingsIcon.Layout24dp(gtx)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {

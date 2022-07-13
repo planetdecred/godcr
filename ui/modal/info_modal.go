@@ -146,6 +146,8 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 		customTemplate = setupMixerInfo(in.Theme)
 	case WalletBackupInfoTemplate:
 		customTemplate = backupInfo(in.Theme)
+	case SecurityToolsInfoTemplate:
+		customTemplate = securityToolsInfo(in.Theme)
 	}
 
 	in.dialogTitle = title

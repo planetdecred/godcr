@@ -140,6 +140,13 @@ func (pg *StatPage) layoutStats(gtx C) D {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *StatPage) Layout(gtx C) D {
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
+
+func (pg *StatPage) layoutDesktop(gtx C) D {
 	container := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -156,6 +163,25 @@ func (pg *StatPage) Layout(gtx C) D {
 	// Refresh frames every 1 second
 	op.InvalidateOp{At: time.Now().Add(time.Second * 1)}.Add(gtx.Ops)
 	return components.UniformPadding(gtx, container)
+}
+
+func (pg *StatPage) layoutMobile(gtx C) D {
+	container := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      values.String(values.StrStatistics),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.ParentNavigator().CloseCurrentPage()
+			},
+			Body: pg.layoutStats,
+		}
+		return sp.Layout(pg.ParentWindow(), gtx)
+	}
+
+	// Refresh frames every 1 second
+	op.InvalidateOp{At: time.Now().Add(time.Second * 1)}.Add(gtx.Ops)
+	return components.UniformMobile(gtx, false, true, container)
 }
 
 func (pg *StatPage) appStartTime() {

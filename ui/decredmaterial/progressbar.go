@@ -152,7 +152,10 @@ func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 	}
 
 	calProgressWidth := func(progress int) int {
-		val := (progress / mp.total) * 100
+		val := 1
+		if mp.total != 0 {
+			val = (progress / mp.total) * 100
+		}
 		return (mp.Width / 100) * val
 	}
 

@@ -81,14 +81,6 @@ func (pg *MorePage) initPageItems() {
 				pg.ParentNavigator().Display(NewAboutPage(pg.Load))
 			},
 		},
-		{
-			clickable: pg.Theme.NewClickable(true),
-			image:     pg.Theme.Icons.DebugIcon,
-			page:      DebugPageID,
-			action: func() {
-				pg.ParentNavigator().Display(NewDebugPage(pg.Load))
-			},
-		},
 	}
 
 	pg.morePageListItemsMobile = []morePageHandler{
@@ -206,18 +198,25 @@ func (pg *MorePage) OnNavigatedFrom() {}
 // Part of the load.Page interface.
 func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
-		container := func(gtx C) D {
-			pg.layoutMoreItemsMobile(gtx)
-			return layout.Dimensions{Size: gtx.Constraints.Max}
-		}
-		return components.UniformPadding(gtx, container)
+		return pg.layoutMobile(gtx)
 	}
+	return pg.layoutDesktop(gtx)
+}
 
+func (pg *MorePage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
 		pg.layoutMoreItemsDesktop(gtx)
 		return layout.Dimensions{Size: gtx.Constraints.Max}
 	}
 	return components.UniformPadding(gtx, container)
+}
+
+func (pg *MorePage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	container := func(gtx C) D {
+		pg.layoutMoreItemsMobile(gtx)
+		return layout.Dimensions{Size: gtx.Constraints.Max}
+	}
+	return components.UniformMobile(gtx, false, false, container)
 }
 
 func (pg *MorePage) layoutMoreItemsDesktop(gtx layout.Context) layout.Dimensions {

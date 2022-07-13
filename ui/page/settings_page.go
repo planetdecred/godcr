@@ -113,7 +113,13 @@ func (pg *SettingsPage) OnNavigatedTo() {
 // Part of the load.Page interface.
 func (pg *SettingsPage) Layout(gtx C) D {
 	pg.updateSettingOptions()
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx)
+	}
+	return pg.layoutDesktop(gtx)
+}
 
+func (pg *SettingsPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -139,6 +145,34 @@ func (pg *SettingsPage) Layout(gtx C) D {
 	}
 
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *SettingsPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	body := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      values.String(values.StrSettings),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.ParentNavigator().CloseCurrentPage()
+			},
+			Body: func(gtx C) D {
+				pageContent := []func(gtx C) D{
+					pg.general(),
+					pg.security(),
+					pg.notification(),
+					pg.connection(),
+				}
+
+				return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
+				})
+			},
+		}
+		return sp.Layout(pg.ParentWindow(), gtx)
+	}
+
+	return components.UniformMobile(gtx, false, true, body)
 }
 
 func (pg *SettingsPage) general() layout.Widget {

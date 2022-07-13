@@ -572,10 +572,13 @@ const (
 	StrDestAddr                    = "destAddr"
 	StrMyAcct                      = "myAcct"
 	StrSelectWalletToOpen          = "selectWalletToOpen"
+	StrSecurityToolsInfo           = "securityToolsInfo"
 	StrContinue                    = "continue"
 	StrNewWallet                   = "newWallet"
 	StrSelectWalletType            = "selectWalletType"
 	StrWhatToCallWallet            = "whatToCallWallet"
 	StrExistingWalletName          = "existingWalletName"
 	StrHideBalance                 = "hideBalance"
+	StrTicketVotedTitle            = "ticketVotedTitle"
+	StrTicketRevokedTitle          = "ticketRevokedTitle"
 )

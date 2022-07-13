@@ -108,85 +108,114 @@ func UniformHorizontalPadding(gtx layout.Context, body layout.Widget) layout.Dim
 	}.Layout(gtx, body)
 }
 
+func UniformMobile(gtx layout.Context, isHorizontal, withList bool, body layout.Widget) layout.Dimensions {
+	insetRight := values.MarginPadding10
+	if withList {
+		insetRight = values.MarginPadding0
+	}
+
+	insetTop := values.MarginPadding24
+	if isHorizontal {
+		insetTop = values.MarginPadding0
+	}
+
+	return layout.Inset{
+		Top:   insetTop,
+		Right: insetRight,
+		Left:  values.MarginPadding10,
+	}.Layout(gtx, body)
+}
+
 func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, ticketSpender *dcrlibwallet.Transaction) *TxStatus {
 	var txStatus TxStatus
 
-	if tx.Type == dcrlibwallet.TxTypeRegular {
-		if tx.Direction == dcrlibwallet.TxDirectionSent {
-			txStatus.Title = values.String(values.StrSent)
-			txStatus.Icon = l.Theme.Icons.SendIcon
-		} else if tx.Direction == dcrlibwallet.TxDirectionReceived {
-			txStatus.Title = values.String(values.StrReceived)
-			txStatus.Icon = l.Theme.Icons.ReceiveIcon
-		} else if tx.Direction == dcrlibwallet.TxDirectionTransferred {
-			txStatus.Title = values.String(values.StrYourself)
-			txStatus.Icon = l.Theme.Icons.Transferred
+	switch tx.Direction {
+	case dcrlibwallet.TxDirectionSent:
+		txStatus.Title = values.String(values.StrSent)
+		txStatus.Icon = l.Theme.Icons.SendIcon
+	case dcrlibwallet.TxDirectionReceived:
+		txStatus.Title = values.String(values.StrReceived)
+		txStatus.Icon = l.Theme.Icons.ReceiveIcon
+	default:
+		txStatus.Title = values.String(values.StrTransferred)
+		txStatus.Icon = l.Theme.Icons.Transferred
+	}
+
+	// replace icon for staking tx types
+	if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
+		switch tx.Type {
+		case dcrlibwallet.TxTypeTicketPurchase:
+			{
+				if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterUnmined) {
+					txStatus.Title = values.String(values.StrUmined)
+					txStatus.Icon = l.Theme.Icons.TicketUnminedIcon
+					txStatus.TicketStatus = dcrlibwallet.TicketStatusUnmined
+					txStatus.Color = l.Theme.Color.LightBlue6
+					txStatus.Background = l.Theme.Color.LightBlue
+				} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
+					txStatus.Title = values.String(values.StrImmature)
+					txStatus.Icon = l.Theme.Icons.TicketImmatureIcon
+					txStatus.Color = l.Theme.Color.LightBlue6
+					txStatus.TicketStatus = dcrlibwallet.TicketStatusImmature
+					txStatus.ProgressBarColor = l.Theme.Color.LightBlue5
+					txStatus.ProgressTrackColor = l.Theme.Color.LightBlue3
+					txStatus.Background = l.Theme.Color.LightBlue
+				} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterLive) {
+					txStatus.Title = values.String(values.StrLive)
+					txStatus.Icon = l.Theme.Icons.TicketLiveIcon
+					txStatus.Color = l.Theme.Color.Primary
+					txStatus.TicketStatus = dcrlibwallet.TicketStatusLive
+					txStatus.ProgressBarColor = l.Theme.Color.Primary
+					txStatus.ProgressTrackColor = l.Theme.Color.LightBlue4
+					txStatus.Background = l.Theme.Color.Primary50
+				} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
+					txStatus.Title = values.String(values.StrExpired)
+					txStatus.Icon = l.Theme.Icons.TicketExpiredIcon
+					txStatus.Color = l.Theme.Color.GrayText2
+					txStatus.TicketStatus = dcrlibwallet.TicketStatusExpired
+					txStatus.Background = l.Theme.Color.Gray4
+				} else {
+					if ticketSpender != nil {
+						if ticketSpender.Type == dcrlibwallet.TxTypeVote {
+							txStatus.Title = values.String(values.StrTicketVotedTitle)
+							txStatus.Icon = l.Theme.Icons.TicketLiveIcon
+							txStatus.Color = l.Theme.Color.Turquoise700
+							txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
+							txStatus.ProgressBarColor = l.Theme.Color.Turquoise300
+							txStatus.ProgressTrackColor = l.Theme.Color.Turquoise100
+							txStatus.Background = l.Theme.Color.Success2
+						} else {
+							txStatus.Title = values.String(values.StrTicketRevokedTitle)
+							txStatus.Icon = l.Theme.Icons.TicketLiveIcon
+							txStatus.Color = l.Theme.Color.Orange
+							txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
+							txStatus.ProgressBarColor = l.Theme.Color.Danger
+							txStatus.ProgressTrackColor = l.Theme.Color.Orange3
+							txStatus.Background = l.Theme.Color.Orange2
+						}
+					}
+				}
+			}
+		case dcrlibwallet.TxTypeVote:
+			txStatus.Title = values.String(values.StrVote)
+			txStatus.Icon = l.Theme.Icons.TicketVotedIcon
+			txStatus.Color = l.Theme.Color.Turquoise700
+			txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
+			txStatus.ProgressBarColor = l.Theme.Color.Turquoise300
+			txStatus.ProgressTrackColor = l.Theme.Color.Turquoise100
+			txStatus.Background = l.Theme.Color.Success2
+		default:
+			txStatus.Title = values.String(values.StrRevocation)
+			txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
+			txStatus.Color = l.Theme.Color.Orange
+			txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
+			txStatus.ProgressBarColor = l.Theme.Color.Danger
+			txStatus.ProgressTrackColor = l.Theme.Color.Orange3
+			txStatus.Background = l.Theme.Color.Orange2
 		}
 	} else if tx.Type == dcrlibwallet.TxTypeMixed {
 		txStatus.Title = values.String(values.StrMixed)
 		txStatus.Icon = l.Theme.Icons.MixedTx
-	} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
-
-		if tx.Type == dcrlibwallet.TxTypeTicketPurchase {
-			if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterUnmined) {
-				txStatus.Title = values.String(values.StrUmined)
-				txStatus.Icon = l.Theme.Icons.TicketUnminedIcon
-				txStatus.TicketStatus = dcrlibwallet.TicketStatusUnmined
-				txStatus.Color = l.Theme.Color.LightBlue6
-				txStatus.Background = l.Theme.Color.LightBlue
-			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
-				txStatus.Title = values.String(values.StrImmature)
-				txStatus.Icon = l.Theme.Icons.TicketImmatureIcon
-				txStatus.Color = l.Theme.Color.LightBlue6
-				txStatus.TicketStatus = dcrlibwallet.TicketStatusImmature
-				txStatus.ProgressBarColor = l.Theme.Color.LightBlue5
-				txStatus.ProgressTrackColor = l.Theme.Color.LightBlue3
-				txStatus.Background = l.Theme.Color.LightBlue
-			} else if ticketSpender != nil {
-				if ticketSpender.Type == dcrlibwallet.TxTypeVote {
-					txStatus.Title = values.String(values.StrVoted)
-					txStatus.Icon = l.Theme.Icons.TicketVotedIcon
-					txStatus.Color = l.Theme.Color.Turquoise700
-					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
-					txStatus.ProgressBarColor = l.Theme.Color.Turquoise300
-					txStatus.ProgressTrackColor = l.Theme.Color.Turquoise100
-					txStatus.Background = l.Theme.Color.Success2
-				} else {
-					txStatus.Title = values.String(values.StrRevoked)
-					txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
-					txStatus.Color = l.Theme.Color.Orange
-					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
-					txStatus.ProgressBarColor = l.Theme.Color.Danger
-					txStatus.ProgressTrackColor = l.Theme.Color.Orange3
-					txStatus.Background = l.Theme.Color.Orange2
-				}
-			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterLive) {
-				txStatus.Title = values.String(values.StrLive)
-				txStatus.Icon = l.Theme.Icons.TicketLiveIcon
-				txStatus.Color = l.Theme.Color.Primary
-				txStatus.TicketStatus = dcrlibwallet.TicketStatusLive
-				txStatus.ProgressBarColor = l.Theme.Color.Primary
-				txStatus.ProgressTrackColor = l.Theme.Color.LightBlue4
-				txStatus.Background = l.Theme.Color.Primary50
-			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
-				txStatus.Title = values.String(values.StrExpired)
-				txStatus.Icon = l.Theme.Icons.TicketExpiredIcon
-				txStatus.Color = l.Theme.Color.GrayText2
-				txStatus.TicketStatus = dcrlibwallet.TicketStatusExpired
-				txStatus.Background = l.Theme.Color.Gray4
-			} else {
-				txStatus.Title = values.String(values.StrPurchased)
-				txStatus.Icon = l.Theme.Icons.NewStakeIcon
-				txStatus.Color = l.Theme.Color.Text
-				txStatus.Background = l.Theme.Color.LightBlue
-			}
-		} else if tx.Type == dcrlibwallet.TxTypeVote {
-			txStatus.Title = values.String(values.StrVote)
-			txStatus.Icon = l.Theme.Icons.TicketVotedIcon
-		} else if tx.Type == dcrlibwallet.TxTypeRevocation {
-			txStatus.Title = values.String(values.StrRevocation)
-			txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
-		}
 	}
 
 	return &txStatus
@@ -445,7 +474,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						}),
 						layout.Rigid(func(gtx C) D {
 							// vote reward
-							if row.Transaction.Type != dcrlibwallet.TxTypeVote {
+							if row.Transaction.Type != dcrlibwallet.TxTypeVote && row.Transaction.Type != dcrlibwallet.TxTypeRevocation {
 								return D{}
 							}
 
@@ -457,11 +486,6 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								Alignment:   layout.Middle,
 							}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									label := l.Theme.Label(values.TextSize14, "+")
-									label.Color = l.Theme.Color.Turquoise800
-									return label.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
 									ic := l.Theme.Icons.DecredSymbol2
 
 									return layout.Inset{
@@ -471,7 +495,10 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								}),
 								layout.Rigid(func(gtx C) D {
 									label := l.Theme.Label(values.TextSize12, dcrutil.Amount(row.Transaction.VoteReward).String())
-									label.Color = l.Theme.Color.Turquoise800
+									label.Color = l.Theme.Color.Orange
+									if row.Transaction.Type == dcrlibwallet.TxTypeVote {
+										label.Color = l.Theme.Color.Turquoise800
+									}
 									return label.Layout(gtx)
 								}),
 							)

@@ -45,7 +45,7 @@ type SignMessagePage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessagePage {
+func NewSignMessagePage(l *load.Load) *SignMessagePage {
 	addressEditor := l.Theme.Editor(new(widget.Editor), values.String(values.StrAddress))
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := l.Theme.Editor(new(widget.Editor), values.String(values.StrMessage))
@@ -64,7 +64,7 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	pg := &SignMessagePage{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(SignMessagePageID),
-		wallet:           wallet,
+		wallet:           l.WL.SelectedWallet.Wallet,
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
@@ -128,7 +128,17 @@ func (pg *SignMessagePage) Layout(gtx C) D {
 		return sp.Layout(pg.ParentWindow(), gtx)
 	}
 
+	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
+		return pg.layoutMobile(gtx, body)
+	}
+	return pg.layoutDesktop(gtx, body)
+}
+func (pg *SignMessagePage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *SignMessagePage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return components.UniformMobile(gtx, false, false, body)
 }
 
 func (pg *SignMessagePage) description() layout.Widget {
