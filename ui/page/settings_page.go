@@ -236,7 +236,7 @@ func (pg *SettingsPage) security() layout.Widget {
 		return pg.mainSection(gtx, values.String(values.StrSecurity), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrStartupPassphrase), pg.startupPassword)
+					return pg.subSectionSwitch(gtx, values.String(values.StrStartupPassword), pg.startupPassword)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.conditionalDisplay(gtx, pg.isStartupPassword, func(gtx C) D {
@@ -538,7 +538,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 
 					// change password
 					newPasswordModal := modal.NewCreatePasswordModal(pg.Load).
-						Title(values.String(values.StrCreateStartupPassphrase)).
+						Title(values.String(values.StrCreateStartupPassword)).
 						EnableName(false).
 						PasswordHint(values.String(values.StrNewStartupPass)).
 						ConfirmPasswordHint(values.String(values.StrConfirmNewStartupPass)).
@@ -567,9 +567,9 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	if pg.startupPassword.Changed() {
 		if pg.startupPassword.IsChecked() {
 			createPasswordModal := modal.NewCreatePasswordModal(pg.Load).
-				Title(values.String(values.StrCreateStartupPassphrase)).
+				Title(values.String(values.StrCreateStartupPassword)).
 				EnableName(false).
-				PasswordHint(values.String(values.StrStartupPassphrase)).
+				PasswordHint(values.String(values.StrStartupPassword)).
 				ConfirmPasswordHint(values.String(values.StrConfirmStartupPass)).
 				NegativeButton(func() {}).
 				PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
@@ -580,7 +580,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							m.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify(values.StringF(values.StrStartupPassphraseEnabled, values.String(values.StrEnabled)))
+						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrEnabled)))
 						m.Dismiss()
 					}()
 					return false
@@ -589,7 +589,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		} else {
 			currentPasswordModal := modal.NewPasswordModal(pg.Load).
 				Title(values.String(values.StrConfirmRemoveStartupPass)).
-				Hint(values.String(values.StrStartupPassphrase)).
+				Hint(values.String(values.StrStartupPassword)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 					go func() {
@@ -605,7 +605,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							pm.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify(values.StringF(values.StrStartupPassphraseEnabled, values.String(values.StrDisabled)))
+						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrDisabled)))
 						pm.Dismiss()
 					}()
 
