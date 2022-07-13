@@ -212,12 +212,6 @@ func (pg *TreasuryPage) Layout(gtx C) D {
 	)
 }
 
-func (pg *TreasuryPage) lineSeparator(inset layout.Inset) layout.Widget {
-	return func(gtx C) D {
-		return inset.Layout(gtx, pg.Theme.Separator().Layout)
-	}
-}
-
 func (pg *TreasuryPage) layoutVerifyGovernanceKeys(gtx C) D {
 	return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 		return pg.viewGovernanceKeys.Layout(gtx, func(gtx C) D {

@@ -1,7 +1,6 @@
 package components
 
 import (
-	"image/color"
 	"strings"
 
 	"gioui.org/layout"
@@ -41,18 +40,14 @@ func TreasuryItemWidget(gtx C, l *load.Load, treasuryItem *TreasuryItem) D {
 
 func layoutPiKey(gtx C, l *load.Load, treasuryKeyPolicy dcrlibwallet.TreasuryKeyPolicy) D {
 
-	var backgroundColor color.NRGBA
-
 	statusLabel := l.Theme.Label(values.TextSize14, treasuryKeyPolicy.PiKey)
-	backgroundColor = l.Theme.Color.LightBlue
+	backgroundColor := l.Theme.Color.LightBlue
 
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			lbl := l.Theme.Label(values.TextSize20, values.String(values.StrPiKey))
 			lbl.Font.Weight = text.SemiBold
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(lbl.Layout),
-			)
+			return lbl.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -61,11 +56,18 @@ func layoutPiKey(gtx C, l *load.Load, treasuryKeyPolicy dcrlibwallet.TreasuryKey
 				Height:     decredmaterial.WrapContent,
 				Direction:  layout.Center,
 				Alignment:  layout.Middle,
-				Border:     decredmaterial.Border{Color: backgroundColor, Width: values.MarginPadding1, Radius: decredmaterial.Radius(4)},
-				Padding:    layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
-				Margin:     layout.Inset{Left: values.MarginPadding10},
-			}.Layout(gtx,
-				layout.Rigid(statusLabel.Layout))
+				Border: decredmaterial.Border{
+					Color:  backgroundColor,
+					Width:  values.MarginPadding1,
+					Radius: decredmaterial.Radius(4),
+				},
+				Padding: layout.Inset{
+					Top:    values.MarginPadding3,
+					Bottom: values.MarginPadding3,
+					Left:   values.MarginPadding8,
+					Right:  values.MarginPadding8},
+				Margin: layout.Inset{Left: values.MarginPadding10},
+			}.Layout2(gtx, statusLabel.Layout)
 		}),
 	)
 }
@@ -88,7 +90,11 @@ func layoutVoteChoice(l *load.Load, treasuryItem *TreasuryItem) layout.Widget {
 }
 
 func layoutItems(l *load.Load, treasuryItem *TreasuryItem) []layout.FlexChild {
-	voteChoices := [...]string{strings.ToLower(values.String(values.StrYes)), strings.ToLower(values.String(values.StrNo)), strings.ToLower(values.String(values.StrAbstain))}
+	voteChoices := [...]string{
+		strings.ToLower(values.String(values.StrYes)),
+		strings.ToLower(values.String(values.StrNo)),
+		strings.ToLower(values.String(values.StrAbstain)),
+	}
 	items := make([]layout.FlexChild, 0)
 	for _, voteChoice := range voteChoices {
 		radioBtn := l.Theme.RadioButton(treasuryItem.OptionsRadioGroup, voteChoice, voteChoice, l.Theme.Color.DeepBlue, l.Theme.Color.Primary)
@@ -113,16 +119,17 @@ func layoutPolicyVoteAction(gtx C, l *load.Load, treasuryItem *TreasuryItem) D {
 
 func LayoutNoPoliciesFound(gtx C, l *load.Load, syncing bool) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	text := l.Theme.Body1(values.String(values.StrNoPoliciesYet))
-	text.Color = l.Theme.Color.GrayText3
+	text := values.String(values.StrNoPoliciesYet)
 	if syncing {
-		text = l.Theme.Body1(values.String(values.StrFetchingPolicies))
+		text = values.String(values.StrFetchingPolicies)
 	}
 	return layout.Center.Layout(gtx, func(gtx C) D {
+		lbl := l.Theme.Body1(text)
+		lbl.Color = l.Theme.Color.GrayText3
 		return layout.Inset{
 			Top:    values.MarginPadding10,
 			Bottom: values.MarginPadding10,
-		}.Layout(gtx, text.Layout)
+		}.Layout(gtx, lbl.Layout)
 	})
 }
 
