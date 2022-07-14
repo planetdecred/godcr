@@ -8,6 +8,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/governance"
+	"github.com/planetdecred/godcr/ui/page/security"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -60,9 +61,9 @@ func (pg *MorePage) initPageItems() {
 		{
 			clickable: pg.Theme.NewClickable(true),
 			image:     pg.Theme.Icons.SecurityIcon,
-			page:      SecurityToolsPageID,
+			page:      security.SecurityToolsPageID,
 			action: func() {
-				pg.ParentNavigator().Display(NewSecurityToolsPage(pg.Load))
+				pg.ParentNavigator().Display(security.NewSecurityToolsPage(pg.Load))
 			},
 		},
 		{
@@ -95,9 +96,9 @@ func (pg *MorePage) initPageItems() {
 		{
 			clickable: pg.Theme.NewClickable(true),
 			image:     pg.Theme.Icons.SecurityIcon,
-			page:      SecurityToolsPageID,
+			page:      security.SecurityToolsPageID,
 			action: func() {
-				pg.ParentNavigator().Display(NewSecurityToolsPage(pg.Load))
+				pg.ParentNavigator().Display(security.NewSecurityToolsPage(pg.Load))
 			},
 		},
 		{
@@ -246,7 +247,7 @@ func (pg *MorePage) layoutMoreItemsDesktop(gtx layout.Context) layout.Dimensions
 					Left: values.MarginPadding18,
 				}.Layout(gtx, func(gtx C) D {
 					page := pg.morePageListItemsDesktop[i].page
-					if page == SecurityToolsPageID {
+					if page == security.SecurityToolsPageID {
 						page = "Security Tools"
 					}
 					return pg.Theme.Body1(page).Layout(gtx)
@@ -283,7 +284,7 @@ func (pg *MorePage) layoutMoreItemsMobile(gtx layout.Context) layout.Dimensions 
 					Left: values.MarginPadding18,
 				}.Layout(gtx, func(gtx C) D {
 					page := pg.morePageListItemsMobile[i].page
-					if page == SecurityToolsPageID {
+					if page == security.SecurityToolsPageID {
 						page = "Security Tools"
 					}
 					return pg.Theme.Body1(page).Layout(gtx)

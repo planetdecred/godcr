@@ -1,4 +1,4 @@
-package page
+package security
 
 import (
 	"gioui.org/layout"

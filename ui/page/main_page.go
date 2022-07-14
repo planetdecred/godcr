@@ -9,7 +9,6 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -25,12 +24,11 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/dexclient"
 	"github.com/planetdecred/godcr/ui/page/governance"
-	"github.com/planetdecred/godcr/ui/page/overview"
+	"github.com/planetdecred/godcr/ui/page/info"
 	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/page/transaction"
-	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -108,7 +106,7 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
 
 	mp.darkmode = mp.Theme.NewClickable(false)
-	mp.openWalletSelector = mp.Theme.NewClickable(true)
+	mp.openWalletSelector = mp.Theme.NewClickable(false)
 	mp.openWalletSelector.Radius = decredmaterial.Radius(8)
 
 	// init shared page functions
@@ -155,8 +153,8 @@ func (mp *MainPage) initNavItems() {
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.OverviewIcon,
 				ImageInactive: mp.Theme.Icons.OverviewIconInactive,
-				Title:         values.String(values.StrOverview),
-				PageID:        overview.OverviewPageID,
+				Title:         values.String(values.StrInfo),
+				PageID:        info.InfoID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -171,14 +169,6 @@ func (mp *MainPage) initNavItems() {
 				ImageInactive: mp.Theme.Icons.ReceiveInactiveIcon,
 				Title:         values.String(values.StrReceive),
 				PageID:        ReceivePageID,
-			},
-			{
-				// TODO -- deprectated in v2 layout
-				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Theme.Icons.WalletIcon,
-				ImageInactive: mp.Theme.Icons.WalletIconInactive,
-				Title:         values.String(values.StrWallets),
-				PageID:        wallets.WalletPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -210,13 +200,6 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Theme.Icons.DexIcon,
-				ImageInactive: mp.Theme.Icons.DexIconInactive,
-				Title:         values.String(values.StrDex),
-				PageID:        dexclient.MarketPageID,
-			},
-			{
-				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.MoreIcon,
 				ImageInactive: mp.Theme.Icons.MoreIconInactive,
 				Title:         values.String(values.StrMore),
@@ -235,8 +218,8 @@ func (mp *MainPage) initNavItems() {
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.OverviewIcon,
 				ImageInactive: mp.Theme.Icons.OverviewIconInactive,
-				Title:         values.String(values.StrOverview),
-				PageID:        overview.OverviewPageID,
+				Title:         values.String(values.StrInfo),
+				PageID:        info.InfoID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -251,13 +234,6 @@ func (mp *MainPage) initNavItems() {
 				ImageInactive: mp.Theme.Icons.StakeIconInactive,
 				Title:         values.String(values.StrStaking),
 				PageID:        staking.OverviewPageID,
-			},
-			{
-				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Theme.Icons.WalletIcon,
-				ImageInactive: mp.Theme.Icons.WalletIconInactive,
-				Title:         values.String(values.StrWallets),
-				PageID:        wallets.WalletPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -302,7 +278,7 @@ func (mp *MainPage) OnNavigatedTo() {
 	mp.listenForNotifications()
 
 	if mp.CurrentPage() == nil {
-		mp.Display(overview.NewOverviewPage(mp.Load)) // TODO: Should pagestack have a start page?
+		mp.Display(info.NewInfoPage(mp.Load)) // TODO: Should pagestack have a start page?
 	}
 	mp.CurrentPage().OnNavigatedTo()
 
@@ -503,14 +479,12 @@ func (mp *MainPage) HandleUserInteractions() {
 		for item.Clickable.Clicked() {
 			var pg app.Page
 			switch item.PageID {
-			case overview.OverviewPageID:
-				pg = overview.NewOverviewPage(mp.Load) // todo :New wallet ui --- current overview page is deprecated.
 			case send.SendPageID:
 				pg = send.NewSendPage(mp.Load)
 			case ReceivePageID:
 				pg = NewReceivePage(mp.Load)
-			case wallets.WalletPageID:
-				pg = wallets.NewWalletPage(mp.Load)
+			case info.InfoID:
+				pg = info.NewInfoPage(mp.Load)
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
 			case privacy.AccountMixerPageID:
@@ -548,14 +522,12 @@ func (mp *MainPage) HandleUserInteractions() {
 		for item.Clickable.Clicked() {
 			var pg app.Page
 			switch item.PageID {
-			case overview.OverviewPageID:
-				pg = overview.NewOverviewPage(mp.Load)
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
 			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
-			case wallets.WalletPageID:
-				pg = wallets.NewWalletPage(mp.Load)
+			case info.InfoID:
+				pg = info.NewInfoPage(mp.Load)
 			case MorePageID:
 				pg = NewMorePage(mp.Load)
 			}
@@ -751,7 +723,10 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 			}
 			return border.Layout(gtx, func(gtx C) D {
 				return padding.Layout(gtx, func(gtx C) D {
-					return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(mp.Theme.Body1("/").Layout),
+						layout.Rigid(mp.Theme.Body2(mp.totalBalanceUSD).Layout),
+					)
 				})
 			})
 		})
@@ -799,65 +774,29 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 							Height:      decredmaterial.WrapContent,
 							Orientation: layout.Horizontal,
 							Alignment:   layout.Middle,
+							Clickable:   mp.openWalletSelector,
 						}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return decredmaterial.LinearLayout{
-									Width:  gtx.Dp(values.Size180),
-									Height: decredmaterial.WrapContent,
-									Padding: layout.Inset{
-										Right:  values.MarginPadding18,
-										Left:   values.MarginPadding18,
-										Top:    values.MarginPadding10,
-										Bottom: values.MarginPadding10,
-									},
-									Alignment: layout.Middle,
-									Clickable: mp.openWalletSelector,
-									Shadow:    mp.Theme.Shadow(),
-									Border: decredmaterial.Border{
-										Radius: mp.openWalletSelector.Radius,
-										Width:  values.MarginPadding2,
-										Color:  mp.Theme.Color.Gray3,
-									},
-								}.GradientLayout(gtx,
-									layout.Rigid(mp.Theme.Icons.WalletIcon.Layout24dp),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Left: values.MarginPadding10,
-										}.Layout(gtx, func(gtx C) D {
-											txt := mp.Theme.Body1(mp.WL.SelectedWallet.Wallet.Name)
-											txt.Font.Weight = text.Bold
-											return txt.Layout(gtx)
-										})
-									}),
-								)
+								return layout.Inset{
+									Left: values.MarginPadding13,
+								}.Layout(gtx, mp.Theme.Icons.ChevronLeft.Layout12dp)
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
-									Right: values.MarginPadding16,
-									Left:  values.MarginPadding24,
-								}.Layout(gtx,
-									func(gtx C) D {
-										return mp.Theme.Icons.Logo.Layout24dp(gtx)
-									})
+									Left:  values.MarginPadding10,
+									Right: values.MarginPadding10,
+								}.Layout(gtx, mp.Theme.H6("GoDCR").Layout)
 							}),
 							layout.Rigid(func(gtx C) D {
-								return mp.totalDCRBalance(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								if !mp.isBalanceHidden {
-									return mp.LayoutUSDBalance(gtx)
+								if mp.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
+									return mp.Theme.Icons.DcrWatchOnly.Layout24dp(gtx)
 								}
-								return D{}
+								return mp.Theme.Icons.DecredSymbol2.Layout24dp(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
-								if mp.isBalanceHidden {
-									mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
-								}
 								return layout.Inset{
-									Top:  values.MarginPadding1,
-									Left: values.MarginPadding9,
-								}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+									Left: values.MarginPadding10,
+								}.Layout(gtx, mp.Theme.H6(mp.WL.SelectedWallet.Wallet.Name).Layout)
 							}),
 						)
 					})
@@ -867,20 +806,13 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								//todo -- dex functionality
-								return mp.Theme.Icons.DexIcon.Layout24dp(gtx)
+								return mp.totalDCRBalance(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Right: values.MarginPadding24,
-									Left:  values.MarginPadding24,
-								}.Layout(gtx, func(gtx C) D {
-									//todo -- app level settings functionality
-									return mp.Theme.Icons.HeaderSettingsIcon.Layout24dp(gtx)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return mp.darkmode.Layout(gtx, mp.Theme.Icons.DarkmodeIcon.Layout24dp)
+								if !mp.isBalanceHidden {
+									return mp.LayoutUSDBalance(gtx)
+								}
+								return D{}
 							}),
 						)
 					})

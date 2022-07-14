@@ -1,4 +1,4 @@
-package wallets
+package security
 
 import (
 	"gioui.org/io/clipboard"

@@ -1,4 +1,4 @@
-package wallets
+package info
 
 import (
 	"image"
