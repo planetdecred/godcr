@@ -585,4 +585,5 @@ const (
 	StrCoordinationServer              = "coordinationServer"
 	StrUnmixed                         = "unmixed"
 	StrAllowSpendingFromUnmixedAccount = "allowSpendingFromUnmixedAccount"
+	StrWalletSettings                  = "walletSettings"
 )

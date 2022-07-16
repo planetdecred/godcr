@@ -10,6 +10,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/governance"
 	"github.com/planetdecred/godcr/ui/page/security"
 	"github.com/planetdecred/godcr/ui/page/staking"
+	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -80,6 +81,14 @@ func (pg *MorePage) initPageItems() {
 			page:      AboutPageID,
 			action: func() {
 				pg.ParentNavigator().Display(NewAboutPage(pg.Load))
+			},
+		},
+		{
+			clickable: pg.Theme.NewClickable(true),
+			image:     pg.Theme.Icons.SettingsIcon,
+			page:      values.String(values.StrWalletSettings),
+			action: func() {
+				pg.ParentNavigator().Display(wallets.NewWalletSettingsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
 			},
 		},
 	}
@@ -153,6 +162,14 @@ func (pg *MorePage) initPageItems() {
 			page:      DebugPageID,
 			action: func() {
 				pg.ParentNavigator().Display(NewDebugPage(pg.Load))
+			},
+		},
+		{
+			clickable: pg.Theme.NewClickable(true),
+			image:     pg.Theme.Icons.SettingsIcon,
+			page:      wallets.WalletSettingsPageID,
+			action: func() {
+				pg.ParentNavigator().Display(wallets.NewWalletSettingsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
 			},
 		},
 	}

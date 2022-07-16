@@ -480,4 +480,5 @@ unlockWithPassword = "Unlock with password"
 "coordinationServer" = "Coordination server"
 "unmixed" = "unmixed"
 "allowSpendingFromUnmixedAccount" = "Allow spending from unmixed account"
+"walletSettings" = "Wallet settings"
 `
