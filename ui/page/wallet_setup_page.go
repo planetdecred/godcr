@@ -13,7 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
-	"github.com/planetdecred/godcr/ui/page/wallets"
+	"github.com/planetdecred/godcr/ui/page/info"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -456,7 +456,7 @@ func (pg *CreateWallet) HandleUserInteractions() {
 			}
 			pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
 		}
-		pg.ParentNavigator().Display(wallets.NewRestorePage(pg.Load, afterRestore))
+		pg.ParentNavigator().Display(info.NewRestorePage(pg.Load, afterRestore))
 	}
 
 	// imported wallet click action control

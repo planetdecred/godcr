@@ -1,4 +1,4 @@
-package page
+package security
 
 import (
 	"gioui.org/io/key"
@@ -29,14 +29,14 @@ type VerifyMessagePage struct {
 	signatureEditor        decredmaterial.Editor
 	clearBtn, verifyButton decredmaterial.Button
 	verifyMessage          decredmaterial.Label
-	EnableEditorSwitch     bool
+	backButton             decredmaterial.IconButton
+	infoButton             decredmaterial.IconButton
 
 	verifyMessageStatus *decredmaterial.Icon
 
-	backButton     decredmaterial.IconButton
-	infoButton     decredmaterial.IconButton
-	addressIsValid bool
-	isEnabled      bool
+	addressIsValid     bool
+	isEnabled          bool
+	EnableEditorSwitch bool
 }
 
 func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {

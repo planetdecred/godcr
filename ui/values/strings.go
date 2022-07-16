@@ -127,7 +127,8 @@ const (
 	StrRescanningBlocks            = "rescanningBlocks"
 	StrBlocksScanned               = "blocksScanned"
 	StrBlocksLeft                  = "blocksLeft"
-	StrAutoSync                    = "autoSync"
+	StrSync                        = "sync"
+	StrAutoSyncInfo                = "autoSyncInfo"
 	StrSyncingState                = "syncingState"
 	StrWaitingState                = "waitingState"
 	StrResumeAccountDiscoveryTitle = "resumeAccountDiscoveryTitle"
@@ -581,4 +582,6 @@ const (
 	StrHideBalance                 = "hideBalance"
 	StrTicketVotedTitle            = "ticketVotedTitle"
 	StrTicketRevokedTitle          = "ticketRevokedTitle"
+	StrSyncCompTime                = "syncCompTime"
+	StrInfo                        = "info"
 )

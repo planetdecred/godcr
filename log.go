@@ -19,11 +19,10 @@ import (
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/governance"
-	"github.com/planetdecred/godcr/ui/page/overview"
+	"github.com/planetdecred/godcr/ui/page/info"
 	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/page/transaction"
-	walletPage "github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -74,8 +73,7 @@ func init() {
 	components.UseLogger(winLog)
 	transaction.UseLogger(winLog)
 	governance.UseLogger(winLog)
-	walletPage.UseLogger(winLog)
-	overview.UseLogger(winLog)
+	info.UseLogger(winLog)
 	staking.UseLogger(winLog)
 	privacy.UseLogger(winLog)
 	modal.UseLogger(winLog)

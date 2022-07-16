@@ -1,4 +1,4 @@
-package page
+package security
 
 import (
 	"image"
@@ -10,13 +10,17 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
-	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 const SecurityToolsPageID = "SecurityTools"
 
-type SecurityToolsPage struct {
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
+type Security struct {
 	*load.Load
 	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
 	// that helps this Page satisfy the app.Page interface. It also defines
@@ -33,9 +37,9 @@ type SecurityToolsPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
+func NewSecurityToolsPage(l *load.Load) *Security {
 
-	pg := &SecurityToolsPage{
+	pg := &Security{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(SecurityToolsPageID),
 		verifyMessage:    l.Theme.NewClickable(true),
@@ -59,7 +63,7 @@ func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 // may be used to initialize page features that are only relevant when
 // the page is displayed.
 // Part of the load.Page interface.
-func (pg *SecurityToolsPage) OnNavigatedTo() {
+func (pg *Security) OnNavigatedTo() {
 
 }
 
@@ -67,7 +71,7 @@ func (pg *SecurityToolsPage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 // main settings layout
-func (pg *SecurityToolsPage) Layout(gtx C) D {
+func (pg *Security) Layout(gtx C) D {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -94,33 +98,33 @@ func (pg *SecurityToolsPage) Layout(gtx C) D {
 	return pg.layoutDesktop(gtx, body)
 }
 
-func (pg *SecurityToolsPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *Security) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *SecurityToolsPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *Security) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return components.UniformMobile(gtx, false, false, body)
 }
 
-func (pg *SecurityToolsPage) message() layout.Widget {
+func (pg *Security) message() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, pg.Theme.Icons.VerifyMessageIcon, pg.verifyMessage, values.String(values.StrVerifyMessage))
 	}
 }
 
-func (pg *SecurityToolsPage) address() layout.Widget {
+func (pg *Security) address() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, pg.Theme.Icons.LocationPinIcon, pg.validateAddress, values.String(values.StrValidateMsg))
 	}
 }
 
-func (pg *SecurityToolsPage) signMessage() layout.Widget {
+func (pg *Security) signMessage() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, pg.Theme.Icons.SignMessageIcon, pg.signMsg, values.String(values.StrSignMessage))
 	}
 }
 
-func (pg *SecurityToolsPage) pageSections(gtx C, icon *decredmaterial.Image, action *decredmaterial.Clickable, title string) D {
+func (pg *Security) pageSections(gtx C, icon *decredmaterial.Image, action *decredmaterial.Clickable, title string) D {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return decredmaterial.LinearLayout{
 			Orientation: layout.Vertical,
@@ -151,7 +155,7 @@ func (pg *SecurityToolsPage) pageSections(gtx C, icon *decredmaterial.Image, act
 // used to update the page's UI components shortly before they are
 // displayed.
 // Part of the load.Page interface.
-func (pg *SecurityToolsPage) HandleUserInteractions() {
+func (pg *Security) HandleUserInteractions() {
 	if pg.verifyMessage.Clicked() {
 		pg.ParentNavigator().Display(NewVerifyMessagePage(pg.Load))
 	}
@@ -161,7 +165,7 @@ func (pg *SecurityToolsPage) HandleUserInteractions() {
 	}
 
 	if pg.signMsg.Clicked() {
-		pg.ParentNavigator().Display(wallets.NewSignMessagePage(pg.Load))
+		pg.ParentNavigator().Display(NewSignMessagePage(pg.Load))
 	}
 }
 
@@ -172,4 +176,4 @@ func (pg *SecurityToolsPage) HandleUserInteractions() {
 // OnNavigatedTo() will be called again. This method should not destroy UI
 // components unless they'll be recreated in the OnNavigatedTo() method.
 // Part of the load.Page interface.
-func (pg *SecurityToolsPage) OnNavigatedFrom() {}
+func (pg *Security) OnNavigatedFrom() {}

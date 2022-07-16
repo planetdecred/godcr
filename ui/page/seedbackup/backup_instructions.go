@@ -96,7 +96,7 @@ func promptToExit(load *load.Load, pageNavigator app.PageNavigator, window app.W
 		Body("Are you sure you want to exit the seed backup process?").
 		NegativeButton("No", func() {}).
 		PositiveButton("Yes", func(isChecked bool) bool {
-			pageNavigator.ClosePagesAfter(components.WalletsPageID)
+			pageNavigator.CloseCurrentPage()
 			return true
 		})
 	window.ShowModal(infoModal)
