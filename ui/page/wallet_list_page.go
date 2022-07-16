@@ -53,6 +53,8 @@ type WalletList struct {
 	walletsList          *decredmaterial.ClickableList
 	watchOnlyWalletsList *decredmaterial.ClickableList
 	addWalClickable      *decredmaterial.Clickable
+	darkmode             *decredmaterial.Clickable
+	settingApp           *decredmaterial.Clickable
 	rescanUpdate         *wallet.RescanUpdate
 
 	wallectSelected func()
@@ -79,6 +81,9 @@ func NewWalletList(l *load.Load, onWalletSelected func()) *WalletList {
 
 	pg.addWalClickable = l.Theme.NewClickable(false)
 	pg.addWalClickable.Radius = decredmaterial.Radius(14)
+
+	pg.darkmode = pg.Theme.NewClickable(false)
+	pg.settingApp = pg.Theme.NewClickable(false)
 
 	return pg
 }
@@ -247,6 +252,21 @@ func (pg *WalletList) HandleUserInteractions() {
 	if pg.addWalClickable.Clicked() {
 		pg.ParentNavigator().Display(NewCreateWallet(pg.Load))
 	}
+
+	for pg.darkmode.Clicked() {
+		isDarkModeOn := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
+		if isDarkModeOn {
+			pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, false)
+		} else {
+			pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, true)
+		}
+
+		pg.RefreshTheme(pg.ParentWindow())
+	}
+
+	for pg.settingApp.Clicked() {
+		pg.ParentNavigator().Display(NewSettingsPage(pg.Load))
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -271,31 +291,37 @@ func (pg *WalletList) Layout(gtx C) D {
 }
 
 func (pg *WalletList) layoutDesktop(gtx C) D {
-	pageContent := []func(gtx C) D{
-		pg.Theme.Label(values.TextSize20, values.String(values.StrSelectWalletToOpen)).Layout,
-		pg.walletSection, // wallet list layout
-		func(gtx C) D {
-			return layout.Inset{
-				Left:   values.MarginPadding5,
-				Bottom: values.MarginPadding10,
-			}.Layout(gtx, pg.layoutAddWalletSection)
-		},
-	}
-
-	gtx.Constraints.Min = gtx.Constraints.Max
 	return components.UniformPadding(gtx, func(gtx C) D {
-		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
-		list := &layout.List{
-			Axis: layout.Vertical,
-		}
-
-		return layout.Center.Layout(gtx, func(gtx C) D {
-			return list.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-				return layout.Inset{Top: values.MarginPadding26}.Layout(gtx, func(gtx C) D {
-					return pageContent[i](gtx)
+		return decredmaterial.LinearLayout{
+			Width:       decredmaterial.MatchParent,
+			Height:      decredmaterial.WrapContent,
+			Orientation: layout.Vertical,
+		}.Layout(gtx,
+			layout.Rigid(pg.topLayout),
+			layout.Rigid(func(gtx C) D {
+				pageContent := []func(gtx C) D{
+					pg.Theme.Label(values.TextSize20, values.String(values.StrSelectWalletToOpen)).Layout,
+					pg.walletSection, // wallet list layout
+					func(gtx C) D {
+						return layout.Inset{
+							Left:   values.MarginPadding5,
+							Bottom: values.MarginPadding10,
+						}.Layout(gtx, pg.layoutAddWalletSection)
+					},
+				}
+				list := &layout.List{
+					Axis: layout.Vertical,
+				}
+				gtx.Constraints.Min = gtx.Constraints.Max
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					return list.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+						return layout.Inset{Top: values.MarginPadding26}.Layout(gtx, func(gtx C) D {
+							return pageContent[i](gtx)
+						})
+					})
 				})
-			})
-		})
+			}),
+		)
 	})
 }
 
@@ -325,6 +351,43 @@ func (pg *WalletList) layoutMobile(gtx C) D {
 			})
 		})
 	})
+}
+
+func (pg *WalletList) topLayout(gtx C) D {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.WrapContent,
+				Height:      decredmaterial.WrapContent,
+				Orientation: layout.Horizontal,
+			}.Layout(gtx,
+				layout.Rigid(pg.Theme.Icons.DecredSymbol2.Layout24dp),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					text := pg.Theme.Label(values.TextSize18, "GoDCR")
+					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, text.Layout)
+				}),
+			)
+		}),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.WrapContent,
+				Height:      decredmaterial.WrapContent,
+				Orientation: layout.Horizontal,
+			}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return pg.settingApp.Layout(gtx, pg.Theme.Icons.HeaderSettingsIcon.Layout24dp)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					text := pg.Theme.Label(values.TextSize18, values.String(values.StrSettings))
+					return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding24}.Layout(gtx, text.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.darkmode.Layout(gtx, pg.Theme.Icons.DarkmodeIcon.Layout24dp)
+				}),
+			)
+		}),
+	)
 }
 
 func (pg *WalletList) syncStatusIcon(gtx C) D {
