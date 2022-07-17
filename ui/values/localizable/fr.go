@@ -448,4 +448,6 @@ const FR = `
 "allowSpendingFromUnmixedAccount" = "Autoriser les dépenses à partir d'un compte non mixte"
 "ticketRevokedTitle"= "Ticket, révoqué"
 "ticketVotedTitle"= "Billet, A voté"
+"syncCompTime" = "Est. Sync completion time"
+"info" = "Info"s
 `

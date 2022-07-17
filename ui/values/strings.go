@@ -127,6 +127,7 @@ const (
 	StrRescanningBlocks                = "rescanningBlocks"
 	StrBlocksScanned                   = "blocksScanned"
 	StrBlocksLeft                      = "blocksLeft"
+	StrSync                            = "sync"
 	StrAutoSync                        = "autoSync"
 	StrSyncingState                    = "syncingState"
 	StrWaitingState                    = "waitingState"
@@ -586,4 +587,6 @@ const (
 	StrUnmixed                         = "unmixed"
 	StrAllowSpendingFromUnmixedAccount = "allowSpendingFromUnmixedAccount"
 	StrWalletSettings                  = "walletSettings"
+	StrSyncCompTime                    = "syncCompTime"
+	StrInfo                            = "info"
 )

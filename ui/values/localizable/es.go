@@ -471,4 +471,6 @@ syncCompTime" = "Est. Sync completion time"
 "currentSpendingPassword" = "Contraseña de gasto actual"
 "ticketRevokedTitle"= "Boleto, revocado"
 "ticketVotedTitle"= "Boleto, votado"
+syncCompTime" = "Est. Sync completion time"
+"info" = "Info"
 `

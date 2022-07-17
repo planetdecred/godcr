@@ -481,4 +481,6 @@ unlockWithPassword = "Unlock with password"
 "unmixed" = "unmixed"
 "allowSpendingFromUnmixedAccount" = "Allow spending from unmixed account"
 "walletSettings" = "Wallet settings"
+"syncCompTime" = "Est. Sync completion time"
+"info" = "Info"
 `

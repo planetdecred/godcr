@@ -22,6 +22,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/info"
 	"github.com/planetdecred/godcr/ui/page/privacy"
 	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
@@ -260,7 +261,7 @@ func (pg *WalletPage) initializeFloatingMenu() {
 			text:   values.String(values.StrImportExistingWallet),
 			button: pg.Theme.NewClickable(true),
 			action: func(l *load.Load) {
-				pg.ParentWindow().Display(NewRestorePage(pg.Load, nil))
+				pg.ParentWindow().Display(info.NewRestorePage(pg.Load, nil))
 			},
 		},
 		{
@@ -340,11 +341,6 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 					NegativeButton(values.String(values.StrCancel), func() {})
 				pg.ParentWindow().ShowModal(textModal)
 			},
-		},
-		{
-			text:   values.String(values.StrSettings),
-			button: pg.Theme.NewClickable(true),
-			id:     WalletSettingsPageID,
 		},
 	}
 }
@@ -1177,7 +1173,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 			pg.listLock.Unlock()
 
 			// TODO: find default account using number
-			pg.ParentNavigator().Display(NewAcctDetailsPage(pg.Load, listItem.accounts[0]))
+			pg.ParentNavigator().Display(info.NewAcctDetailsPage(pg.Load, listItem.accounts[0]))
 		}
 	}
 
@@ -1187,7 +1183,7 @@ func (pg *WalletPage) HandleUserInteractions() {
 
 	for index, listItem := range listItems {
 		if ok, selectedItem := listItem.accountsList.ItemClicked(); ok {
-			pg.ParentNavigator().Display(NewAcctDetailsPage(pg.Load, listItem.accounts[selectedItem]))
+			pg.ParentNavigator().Display(info.NewAcctDetailsPage(pg.Load, listItem.accounts[selectedItem]))
 		}
 
 		if listItem.wal.IsWatchingOnlyWallet() {
