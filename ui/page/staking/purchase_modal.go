@@ -425,7 +425,7 @@ func (tp *stakingModal) purchaseTickets() {
 		_, err := wal.PurchaseTickets(account.Number, int32(tp.ticketCount()), vspHost, vspPubKey, password)
 		if err != nil {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-				tp.spendingPassword.SetError(values.String(values.StrInvalidPassword))
+				tp.spendingPassword.SetError(values.String(values.StrInvalidPassphrase))
 			} else {
 				tp.Toast.NotifyError(err.Error())
 			}

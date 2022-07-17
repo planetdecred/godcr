@@ -199,7 +199,7 @@ const (
 	StrAddNewAccount                   = "addNewAccount"
 	StrBackupSeedPhrase                = "backupSeedPhrase"
 	StrCreateNewAccount                = "createNewAccount"
-	StrInvalidPassword                 = "invalidPassword"
+	StrInvalidPassphrase               = "invalidPassphrase"
 	StrPasswordNotMatch                = "passwordNotMatch"
 	StrCreate                          = "create"
 	StrNotBackedUp                     = "notBackedUp"

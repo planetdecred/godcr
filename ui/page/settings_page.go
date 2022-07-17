@@ -526,7 +526,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 					err := pg.wal.GetMultiWallet().VerifyStartupPassphrase([]byte(password))
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-							error = values.String(values.StrInvalidPassword)
+							error = values.String(values.StrInvalidPassphrase)
 						} else {
 							error = err.Error()
 						}
@@ -597,7 +597,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 						err := pg.wal.GetMultiWallet().RemoveStartupPassphrase([]byte(password))
 						if err != nil {
 							if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-								error = values.String(values.StrInvalidPassword)
+								error = values.String(values.StrInvalidPassphrase)
 							} else {
 								error = err.Error()
 							}
@@ -652,7 +652,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	select {
 	case err := <-pg.errorReceiver:
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-			pg.Toast.NotifyError(values.String(values.StrInvalidPassword))
+			pg.Toast.NotifyError(values.String(values.StrInvalidPassphrase))
 			return
 		}
 		pg.Toast.NotifyError(err.Error())

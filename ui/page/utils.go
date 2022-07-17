@@ -19,7 +19,7 @@ import (
 func translateErr(err error) string {
 	switch err.Error() {
 	case dcrlibwallet.ErrInvalidPassphrase:
-		return values.String(values.StrInvalidPassword)
+		return values.String(values.StrInvalidPassphrase)
 	}
 
 	return err.Error()
