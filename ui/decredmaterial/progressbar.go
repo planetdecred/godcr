@@ -205,9 +205,11 @@ func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 
 func (mp *MultiLayerProgressBar) Layout(gtx C, labelWdg layout.Widget) D {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(labelWdg),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, mp.progressBarLayout)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Center.Layout(gtx, labelWdg)
 		}),
 	)
 }

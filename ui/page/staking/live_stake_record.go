@@ -62,17 +62,17 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 
 func (pg *Page) stakingCountIcon(icon *decredmaterial.Image, count int) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
-		if count == 0 {
-			return D{}
-		}
 		return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return icon.Layout16dp(gtx)
+					label := pg.Theme.Label(values.TextSize16, values.String(values.StrLiveTickets)+":")
+					label.Color = pg.Theme.Color.GrayText2
+					return label.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-						label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("%d", count))
+						label := pg.Theme.Label(values.TextSize16, fmt.Sprintf("%d", count))
+						label.Color = pg.Theme.Color.GrayText2
 						return label.Layout(gtx)
 					})
 				}),

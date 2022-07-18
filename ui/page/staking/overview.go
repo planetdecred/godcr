@@ -45,8 +45,9 @@ type Page struct {
 	autoPurchaseSettings *decredmaterial.Clickable
 	autoPurchase         *decredmaterial.Switch
 
-	stakeBtn  decredmaterial.Button
-	toTickets decredmaterial.TextAndIconButton
+	stakeBtn   decredmaterial.Button
+	toTickets  decredmaterial.TextAndIconButton
+	infoButton decredmaterial.IconButton
 
 	ticketOverview *dcrlibwallet.StakingOverview
 	liveTickets    []*transactionItem
@@ -206,9 +207,6 @@ func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 			return components.UniformHorizontalPadding(gtx, pg.stakePriceSection)
 		},
 		func(gtx C) D {
-			return components.UniformHorizontalPadding(gtx, pg.walletBalanceLayout)
-		},
-		func(gtx C) D {
 			return components.UniformHorizontalPadding(gtx, pg.stakeLiveSection)
 		},
 		func(gtx C) D {
@@ -227,9 +225,6 @@ func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 	widgets := []layout.Widget{
 		func(gtx C) D {
 			return pg.stakePriceSection(gtx)
-		},
-		func(gtx C) D {
-			return pg.walletBalanceLayout(gtx)
 		},
 		func(gtx C) D {
 			return pg.stakeLiveSection(gtx)
@@ -254,7 +249,7 @@ func (pg *Page) pageSections(gtx C, body layout.Widget) D {
 	}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
+			return layout.UniformInset(values.MarginPadding26).Layout(gtx, body)
 		})
 	})
 }
@@ -274,24 +269,24 @@ func (pg *Page) titleRow(gtx C, leftWidget, rightWidget func(C) D) D {
 func (pg *Page) HandleUserInteractions() {
 	pg.setStakingButtonsState()
 
-	if pg.stakeBtn.Clicked() {
-		stakingModal := newStakingModal(pg.Load).
-			TicketPurchased(func() {
-				align := layout.Center
-				successIcon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
-				successIcon.Color = pg.Theme.Color.Success
-				info := modal.NewInfoModal(pg.Load).
-					Icon(successIcon).
-					Title(values.String(values.StrTicketConfirmed)).
-					SetContentAlignment(align, align).
-					PositiveButton(values.String(values.StrBackStaking), func(isChecked bool) bool {
-						return true
-					})
-				pg.ParentWindow().ShowModal(info)
-				pg.loadPageData()
-			})
-		pg.ParentWindow().ShowModal(stakingModal)
-	}
+	// if pg.stakeBtn.Clicked() {
+	// 	stakingModal := newStakingModal(pg.Load).
+	// 		TicketPurchased(func() {
+	// 			align := layout.Center
+	// 			successIcon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
+	// 			successIcon.Color = pg.Theme.Color.Success
+	// 			info := modal.NewInfoModal(pg.Load).
+	// 				Icon(successIcon).
+	// 				Title(values.String(values.StrTicketConfirmed)).
+	// 				SetContentAlignment(align, align).
+	// 				PositiveButton(values.String(values.StrBackStaking), func(isChecked bool) bool {
+	// 					return true
+	// 				})
+	// 			pg.ParentWindow().ShowModal(info)
+	// 			pg.loadPageData()
+	// 		})
+	// 	pg.ParentWindow().ShowModal(stakingModal)
+	// }
 
 	if pg.toTickets.Button.Clicked() {
 		pg.ParentNavigator().Display(newListPage(pg.Load))

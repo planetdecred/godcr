@@ -22,6 +22,7 @@ type Color struct {
 	BlueProgressTint color.NRGBA
 	Danger           color.NRGBA
 	DeepBlue         color.NRGBA
+	NavyBlue         color.NRGBA
 	LightBlue        color.NRGBA
 	LightBlue2       color.NRGBA
 	LightBlue3       color.NRGBA
@@ -92,6 +93,7 @@ func (c *Color) DefaultThemeColors() *Color {
 		BlueProgressTint: rgb(0x73d7ff),
 		Danger:           rgb(0xed6d47),
 		DeepBlue:         rgb(0x091440),
+		NavyBlue:         rgb(0x1F45B0),
 		LightBlue:        rgb(0xe4f6ff),
 		LightBlue2:       rgb(0x75D8FF),
 		LightBlue3:       rgb(0xBCE8FF),
