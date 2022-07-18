@@ -589,4 +589,6 @@ const (
 	StrWalletSettings                  = "walletSettings"
 	StrSyncCompTime                    = "syncCompTime"
 	StrInfo                            = "info"
+	StrChangeWalletName                = "changeWalletName"
+	StrAccount                         = "account"
 )

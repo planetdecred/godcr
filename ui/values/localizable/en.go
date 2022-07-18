@@ -483,4 +483,6 @@ unlockWithPassword = "Unlock with password"
 "walletSettings" = "Wallet settings"
 "syncCompTime" = "Est. Sync completion time"
 "info" = "Info"
+"changeWalletName" = "Change wallet name"
+"account" = "Account"
 `

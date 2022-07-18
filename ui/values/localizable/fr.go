@@ -449,5 +449,7 @@ const FR = `
 "ticketRevokedTitle"= "Ticket, révoqué"
 "ticketVotedTitle"= "Billet, A voté"
 "syncCompTime" = "Est. Sync completion time"
-"info" = "Info"s
+"info" = "Infos"
+"changeWalletName" = "Changer le nom du portefeuille"
+"account" = "Compte"
 `

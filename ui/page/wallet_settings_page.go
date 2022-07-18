@@ -28,6 +28,7 @@ type WalletSettingsPage struct {
 
 	changePass, rescan, deleteWallet                *decredmaterial.Clickable
 	changeAccount, mixedAccount, coordinationServer *decredmaterial.Clickable
+	changeWalletName, addAccount                    *decredmaterial.Clickable
 
 	chevronRightIcon        *decredmaterial.Icon
 	backButton              decredmaterial.IconButton
@@ -46,6 +47,8 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 		changeAccount:      l.Theme.NewClickable(false),
 		mixedAccount:       l.Theme.NewClickable(false),
 		coordinationServer: l.Theme.NewClickable(false),
+		changeWalletName:   l.Theme.NewClickable(false),
+		addAccount:         l.Theme.NewClickable(false),
 
 		chevronRightIcon:        decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
 		allowUnspendUnmixedAcct: l.Theme.Switch(),
@@ -86,6 +89,8 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 						}
 						return layout.Dimensions{}
 					},
+					pg.renameWallet(),
+					pg.account(),
 					pg.stakeshuffle(),
 					pg.debug(),
 					pg.dangerZone(),
@@ -144,6 +149,20 @@ func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrGeneral),
 			pg.bottomSectionLabel(pg.changePass, values.String(values.StrSpendingPassword)))
+	}
+}
+
+func (pg *WalletSettingsPage) renameWallet() layout.Widget {
+	return func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrRenameWalletSheetTitle),
+			pg.bottomSectionLabel(pg.changeWalletName, values.String(values.StrChangeWalletName)))
+	}
+}
+
+func (pg *WalletSettingsPage) account() layout.Widget {
+	return func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrAccount),
+			pg.bottomSectionLabel(pg.addAccount, values.String(values.StrAddNewAccount)))
 	}
 }
 

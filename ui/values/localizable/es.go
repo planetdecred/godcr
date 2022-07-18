@@ -473,4 +473,6 @@ syncCompTime" = "Est. Sync completion time"
 "ticketVotedTitle"= "Boleto, votado"
 syncCompTime" = "Est. Sync completion time"
 "info" = "Info"
+"changeWalletName" = "Cambiar el nombre de la billetera"
+"account" = "Cuenta"
 `
