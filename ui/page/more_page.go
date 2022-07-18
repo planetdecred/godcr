@@ -56,7 +56,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.SettingsIcon,
 			page:      SettingsPageID,
 			action: func() {
-				pg.ParentNavigator().Display(NewSettingsPage(pg.Load))
+				pg.ParentNavigator().Display(info.NewWalletSettingsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
 			},
 		},
 		{
@@ -83,14 +83,6 @@ func (pg *MorePage) initPageItems() {
 				pg.ParentNavigator().Display(NewAboutPage(pg.Load))
 			},
 		},
-		{
-			clickable: pg.Theme.NewClickable(true),
-			image:     pg.Theme.Icons.SettingsIcon,
-			page:      values.String(values.StrWalletSettings),
-			action: func() {
-				pg.ParentNavigator().Display(info.NewWalletSettingsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
-			},
-		},
 	}
 
 	pg.morePageListItemsMobile = []morePageHandler{
@@ -99,7 +91,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.SettingsIcon,
 			page:      SettingsPageID,
 			action: func() {
-				pg.ParentNavigator().Display(NewSettingsPage(pg.Load))
+				pg.ParentNavigator().Display(info.NewWalletSettingsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
 			},
 		},
 		{
@@ -162,14 +154,6 @@ func (pg *MorePage) initPageItems() {
 			page:      DebugPageID,
 			action: func() {
 				pg.ParentNavigator().Display(NewDebugPage(pg.Load))
-			},
-		},
-		{
-			clickable: pg.Theme.NewClickable(true),
-			image:     pg.Theme.Icons.SettingsIcon,
-			page:      values.String(values.StrWalletSettings),
-			action: func() {
-				pg.ParentNavigator().Display(info.NewWalletSettingsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
 			},
 		},
 	}
