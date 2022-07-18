@@ -139,18 +139,12 @@ func (pg *WalletSettingsPage) clickableRow(gtx C, row row) D {
 func (pg *WalletSettingsPage) subSection(gtx C, title string, body layout.Widget) D {
 	return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(pg.subSectionLabel(title)),
+			layout.Rigid(pg.Theme.Body1(title).Layout),
 			layout.Flexed(1, func(gtx C) D {
 				return layout.E.Layout(gtx, body)
 			}),
 		)
 	})
-}
-
-func (pg *WalletSettingsPage) subSectionLabel(title string) layout.Widget {
-	return func(gtx C) D {
-		return pg.Theme.Body1(title).Layout(gtx)
-	}
 }
 
 func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
