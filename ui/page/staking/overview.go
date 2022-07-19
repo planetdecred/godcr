@@ -11,6 +11,7 @@ import (
 	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/app"
+	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -33,6 +34,7 @@ type Page struct {
 	// helper methods for accessing the PageNavigator that displayed this page
 	// and the root WindowNavigator.
 	*app.GenericPageModal
+	*listeners.TxAndBlockNotificationListener
 
 	list *widget.List
 
@@ -41,6 +43,9 @@ type Page struct {
 
 	ticketBuyerWallet *dcrlibwallet.Wallet
 	ticketsLive       *decredmaterial.ClickableList
+
+	tickets     []*transactionItem
+	ticketsList *decredmaterial.ClickableList
 
 	autoPurchaseSettings *decredmaterial.Clickable
 	autoPurchase         *decredmaterial.Switch
@@ -73,6 +78,7 @@ func NewStakingPage(l *load.Load) *Page {
 	pg.initStakePriceWidget()
 	pg.initLiveStakeWidget()
 	pg.loadPageData()
+	pg.initTicketList()
 
 	return pg
 }
@@ -96,6 +102,9 @@ func (pg *Page) OnNavigatedTo() {
 	pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
 
 	pg.setStakingButtonsState()
+
+	pg.listenForTxNotifications()
+	pg.fetchTickets()
 }
 
 // fetch ticket price only when the wallet is synced
@@ -207,11 +216,11 @@ func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 			return components.UniformHorizontalPadding(gtx, pg.stakePriceSection)
 		},
 		func(gtx C) D {
-			return components.UniformHorizontalPadding(gtx, pg.stakeLiveSection)
+			return components.UniformHorizontalPadding(gtx, pg.ticketListLayout)
 		},
-		func(gtx C) D {
-			return components.UniformHorizontalPadding(gtx, pg.stakingRecordSection)
-		},
+		// func(gtx C) D {
+		// 	return components.UniformHorizontalPadding(gtx, pg.stakingRecordSection)
+		// },
 	}
 
 	return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
@@ -288,9 +297,9 @@ func (pg *Page) HandleUserInteractions() {
 	// 	pg.ParentWindow().ShowModal(stakingModal)
 	// }
 
-	if pg.toTickets.Button.Clicked() {
-		pg.ParentNavigator().Display(newListPage(pg.Load))
-	}
+	// if pg.toTickets.Button.Clicked() {
+	// 	pg.ParentNavigator().Display(newListPage(pg.Load))
+	// }
 
 	if clicked, selectedItem := pg.ticketsLive.ItemClicked(); clicked {
 		pg.ParentNavigator().Display(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
@@ -341,6 +350,34 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.WL.MultiWallet.IsSynced() {
 		pg.fetchTicketPrice()
+	}
+
+	if clicked, selectedItem := pg.ticketsList.ItemClicked(); clicked {
+		ticketTx := pg.tickets[selectedItem].transaction
+		pg.ParentNavigator().Display(tpage.NewTransactionDetailsPage(pg.Load, ticketTx))
+
+		// Check if this ticket is fully registered with a VSP
+		// and log any discrepancies.
+		// NOTE: Wallet needs to be unlocked to get the ticket status
+		// from the vsp. Otherwise, only the wallet-stored info will
+		// be retrieved. This is fine because we're only just logging
+		// but where it is necessary to display vsp-stored info, the
+		// wallet passphrase should be requested and used to unlock
+		// the wallet before calling this method.
+		// TODO: Use log.Errorf and log.Warnf instead of fmt.Printf.
+		ticketInfo, err := pg.WL.MultiWallet.VSPTicketInfo(ticketTx.WalletID, ticketTx.Hash)
+		if err != nil {
+			log.Errorf("VSPTicketInfo error: %v\n", err)
+		} else {
+			if ticketInfo.FeeTxStatus != dcrlibwallet.VSPFeeProcessConfirmed {
+				log.Errorf("[WARN] Ticket %s has unconfirmed fee tx %s with status %q, vsp %s \n",
+					ticketTx.Hash, ticketInfo.FeeTxHash, ticketInfo.FeeTxStatus.String(), ticketInfo.VSP)
+			}
+			if ticketInfo.ConfirmedByVSP == nil || !*ticketInfo.ConfirmedByVSP {
+				log.Errorf("[WARN] Ticket %s is not confirmed by VSP %s. Fee tx %s, status %q \n",
+					ticketTx.Hash, ticketInfo.VSP, ticketInfo.FeeTxHash, ticketInfo.FeeTxStatus.String())
+			}
+		}
 	}
 }
 
