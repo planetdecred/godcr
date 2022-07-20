@@ -209,14 +209,12 @@ func (cm *CreatePasswordModal) Handle() {
 				cm.parent.OnNavigatedTo()
 			}
 			cm.Dismiss()
-			cm.negativeButtonClicked()
 		}
 	}
 
 	if cm.Modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {
 			cm.Dismiss()
-			cm.negativeButtonClicked()
 		}
 	}
 
@@ -308,7 +306,11 @@ func (cm *CreatePasswordModal) Layout(gtx C) D {
 						layout.Rigid(func(gtx C) D {
 							txt := cm.Theme.Label(values.TextSize12, strconv.Itoa(cm.passwordEditor.Editor.Len()))
 							txt.Color = cm.Theme.Color.GrayText1
-							return layout.E.Layout(gtx, txt.Layout)
+
+							if txt.Text != "0" {
+								return layout.E.Layout(gtx, txt.Layout)
+							}
+							return D{}
 						}),
 					)
 				})
@@ -317,7 +319,22 @@ func (cm *CreatePasswordModal) Layout(gtx C) D {
 	})
 
 	w = append(w, cm.passwordStrength.Layout)
-	w = append(w, cm.confirmPasswordEditor.Layout)
+	w = append(w, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(cm.confirmPasswordEditor.Layout),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+					txt := cm.Theme.Label(values.TextSize12, strconv.Itoa(cm.confirmPasswordEditor.Editor.Len()))
+					txt.Color = cm.Theme.Color.GrayText1
+					if txt.Text != "0" {
+						return layout.E.Layout(gtx, txt.Layout)
+					}
+
+					return D{}
+				})
+			}),
+		)
+	})
 
 	w = append(w, func(gtx C) D {
 		return layout.E.Layout(gtx, func(gtx C) D {
