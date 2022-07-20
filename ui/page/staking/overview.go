@@ -41,21 +41,15 @@ type Page struct {
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
+	tickets []*transactionItem
+
 	ticketBuyerWallet *dcrlibwallet.Wallet
-	ticketsLive       *decredmaterial.ClickableList
+	ticketOverview    *dcrlibwallet.StakingOverview
 
-	tickets     []*transactionItem
-	ticketsList *decredmaterial.ClickableList
-
-	autoPurchaseSettings *decredmaterial.Clickable
-	autoPurchase         *decredmaterial.Switch
-
-	stakeBtn   decredmaterial.Button
-	toTickets  decredmaterial.TextAndIconButton
-	infoButton decredmaterial.IconButton
-
-	ticketOverview *dcrlibwallet.StakingOverview
-	liveTickets    []*transactionItem
+	ticketsList   *decredmaterial.ClickableList
+	stakeSettings *decredmaterial.Clickable
+	stake         *decredmaterial.Switch
+	infoButton    decredmaterial.IconButton
 
 	ticketPrice  string
 	totalRewards string
@@ -76,8 +70,6 @@ func NewStakingPage(l *load.Load) *Page {
 	pg.ticketOverview = new(dcrlibwallet.StakingOverview)
 
 	pg.initStakePriceWidget()
-	pg.initLiveStakeWidget()
-	pg.loadPageData()
 	pg.initTicketList()
 
 	return pg
@@ -99,7 +91,7 @@ func (pg *Page) OnNavigatedTo() {
 
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
 
-	pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+	pg.stake.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
 
 	pg.setStakingButtonsState()
 
@@ -109,26 +101,19 @@ func (pg *Page) OnNavigatedTo() {
 
 // fetch ticket price only when the wallet is synced
 func (pg *Page) fetchTicketPrice() {
-	if pg.WL.MultiWallet.IsSyncing() {
-		pg.ticketPrice = values.String(values.StrLoadingPrice)
+	ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
+	if err != nil && !pg.WL.MultiWallet.IsSynced() {
+		log.Error(err)
+		pg.ticketPrice = values.String(values.StrNotAvailable)
+		pg.Toast.NotifyError(values.String(values.StrWalletNotSynced))
 	} else {
-		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
-		if err != nil && !pg.WL.MultiWallet.IsSynced() {
-			log.Error(err)
-			pg.ticketPrice = values.String(values.StrNotAvailable)
-			pg.Toast.NotifyError(values.String(values.StrWalletNotSynced))
-		} else {
-			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
-		}
+		pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
 	}
 }
 
 func (pg *Page) setStakingButtonsState() {
-	//disable staking btn is wallet if not synced
-	pg.stakeBtn.SetEnabled(pg.WL.MultiWallet.IsSynced())
-
 	//disable auto ticket purchase if wallet is not synced
-	pg.autoPurchase.SetEnabled(!pg.WL.MultiWallet.IsSynced())
+	pg.stake.SetEnabled(!pg.WL.MultiWallet.IsSynced())
 }
 
 func (pg *Page) setTBWallet() {
@@ -169,35 +154,6 @@ func (pg *Page) loadPageData() {
 
 		pg.ParentWindow().Reload()
 	}()
-
-	go func() {
-		mw := pg.WL.MultiWallet
-		tickets, err := allLiveTickets(mw)
-		if err != nil {
-			pg.Toast.NotifyError(err.Error())
-			return
-		}
-
-		txItems, err := stakeToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
-			switch filter {
-			case dcrlibwallet.TxFilterUnmined:
-				fallthrough
-			case dcrlibwallet.TxFilterImmature:
-				fallthrough
-			case dcrlibwallet.TxFilterLive:
-				return true
-			}
-
-			return false
-		})
-		if err != nil {
-			pg.Toast.NotifyError(err.Error())
-			return
-		}
-
-		pg.liveTickets = txItems
-		pg.ParentWindow().Reload()
-	}()
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -218,9 +174,6 @@ func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 		func(gtx C) D {
 			return components.UniformHorizontalPadding(gtx, pg.ticketListLayout)
 		},
-		// func(gtx C) D {
-		// 	return components.UniformHorizontalPadding(gtx, pg.stakingRecordSection)
-		// },
 	}
 
 	return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
@@ -232,15 +185,8 @@ func (pg *Page) layoutDesktop(gtx layout.Context) layout.Dimensions {
 
 func (pg *Page) layoutMobile(gtx layout.Context) layout.Dimensions {
 	widgets := []layout.Widget{
-		func(gtx C) D {
-			return pg.stakePriceSection(gtx)
-		},
-		func(gtx C) D {
-			return pg.stakeLiveSection(gtx)
-		},
-		func(gtx C) D {
-			return pg.stakingRecordSection(gtx)
-		},
+		pg.stakePriceSection,
+		pg.ticketListLayout,
 	}
 
 	return components.UniformMobile(gtx, true, true, func(gtx layout.Context) layout.Dimensions {
@@ -263,13 +209,6 @@ func (pg *Page) pageSections(gtx C, body layout.Widget) D {
 	})
 }
 
-func (pg *Page) titleRow(gtx C, leftWidget, rightWidget func(C) D) D {
-	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(leftWidget),
-		layout.Rigid(rightWidget),
-	)
-}
-
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
@@ -278,34 +217,7 @@ func (pg *Page) titleRow(gtx C, leftWidget, rightWidget func(C) D) D {
 func (pg *Page) HandleUserInteractions() {
 	pg.setStakingButtonsState()
 
-	// if pg.stakeBtn.Clicked() {
-	// 	stakingModal := newStakingModal(pg.Load).
-	// 		TicketPurchased(func() {
-	// 			align := layout.Center
-	// 			successIcon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
-	// 			successIcon.Color = pg.Theme.Color.Success
-	// 			info := modal.NewInfoModal(pg.Load).
-	// 				Icon(successIcon).
-	// 				Title(values.String(values.StrTicketConfirmed)).
-	// 				SetContentAlignment(align, align).
-	// 				PositiveButton(values.String(values.StrBackStaking), func(isChecked bool) bool {
-	// 					return true
-	// 				})
-	// 			pg.ParentWindow().ShowModal(info)
-	// 			pg.loadPageData()
-	// 		})
-	// 	pg.ParentWindow().ShowModal(stakingModal)
-	// }
-
-	// if pg.toTickets.Button.Clicked() {
-	// 	pg.ParentNavigator().Display(newListPage(pg.Load))
-	// }
-
-	if clicked, selectedItem := pg.ticketsLive.ItemClicked(); clicked {
-		pg.ParentNavigator().Display(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
-	}
-
-	if pg.autoPurchase.Changed() && pg.autoPurchase.IsChecked() {
+	if pg.stake.Changed() && pg.stake.IsChecked() {
 		if pg.ticketBuyerWallet.TicketBuyerConfigIsSet() {
 			// get ticket buyer config to check if the saved wallet account is mixed
 			//check if mixer is set, if yes check if allow spend from unmixed account
@@ -326,7 +238,7 @@ func (pg *Page) HandleUserInteractions() {
 		pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
 	}
 
-	if pg.autoPurchaseSettings.Clicked() {
+	if pg.stakeSettings.Clicked() {
 		if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
 			pg.Toast.NotifyError(values.String(values.StrAutoTicketWarn))
 			return
@@ -338,7 +250,7 @@ func (pg *Page) HandleUserInteractions() {
 				pg.setTBWallet()
 			}).
 			OnCancel(func() {
-				pg.autoPurchase.SetChecked(false)
+				pg.stake.SetChecked(false)
 			})
 		pg.ParentWindow().ShowModal(ticketBuyerModal)
 	}
@@ -379,12 +291,25 @@ func (pg *Page) HandleUserInteractions() {
 			}
 		}
 	}
+
+	if pg.infoButton.Button.Clicked() {
+		backupNowOrLaterModal := modal.NewInfoModal(pg.Load).
+			Title(values.String(values.StrStatistics)).
+			SetCancelable(true).
+			UseCustomWidget(func(gtx C) D {
+				return pg.stakingRecordStatistics(gtx)
+			}).
+			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				return true
+			})
+		pg.ParentWindow().ShowModal(backupNowOrLaterModal)
+	}
 }
 
 func (pg *Page) ticketBuyerSettingsModal() {
 	ticketBuyerModal := newTicketBuyerModal(pg.Load).
 		OnCancel(func() {
-			pg.autoPurchase.SetChecked(false)
+			pg.stake.SetChecked(false)
 		}).
 		OnSettingsSaved(func() {
 			pg.startTicketBuyerPasswordModal()
@@ -441,13 +366,13 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			)
 		}).
 		NegativeButton(values.String(values.StrCancel), func() {
-			pg.autoPurchase.SetChecked(false)
+			pg.stake.SetChecked(false)
 		}).
 		PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 			if !pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
 				pg.Toast.NotifyError(values.String(values.StrNotConnected))
 				pm.SetLoading(false)
-				pg.autoPurchase.SetChecked(false)
+				pg.stake.SetChecked(false)
 				return false
 			}
 
@@ -459,7 +384,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 					return
 				}
 
-				pg.autoPurchase.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+				pg.stake.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
 				pg.ParentWindow().Reload()
 			}()
 			pm.Dismiss()

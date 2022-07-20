@@ -632,7 +632,6 @@ func (mp *MainPage) OnNavigatedFrom() {
 	}
 
 	mp.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, false)
-	// mp.isBackupModalOpened = false
 
 	mp.ctxCancel()
 }

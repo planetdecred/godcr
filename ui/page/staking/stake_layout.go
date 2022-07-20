@@ -13,11 +13,10 @@ import (
 )
 
 func (pg *Page) initStakePriceWidget() *Page {
-	// pg.stakeBtn = pg.Theme.Button(values.String(values.StrStake))
-	pg.autoPurchaseSettings = pg.Theme.NewClickable(false)
+	pg.stakeSettings = pg.Theme.NewClickable(false)
 	_, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 
-	pg.autoPurchase = pg.Theme.Switch()
+	pg.stake = pg.Theme.Switch()
 	return pg
 }
 
@@ -28,18 +27,24 @@ func (pg *Page) stakePriceSection(gtx C) D {
 				return layout.Inset{
 					Bottom: values.MarginPadding11,
 				}.Layout(gtx, func(gtx C) D {
-
+					col := pg.Theme.Color.GrayText2
 					leftWg := func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										title := pg.Theme.Label(values.TextSize16, values.String(values.StrTicketPrice)+":")
-										title.Color = pg.Theme.Color.GrayText2
+										title.Color = col
 										return title.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
 										return layout.Center.Layout(gtx, func(gtx C) D {
+											if pg.WL.MultiWallet.IsSyncing() {
+												title := pg.Theme.Label(values.TextSize16, values.String(values.StrLoadingPrice))
+												title.Color = col
+												return title.Layout(gtx)
+											}
+
 											return components.LayoutBalanceSize(gtx, pg.Load, pg.ticketPrice, values.TextSize16)
 										})
 									}),
@@ -52,7 +57,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 									layout.Rigid(func(gtx C) D {
 										secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
 										txt := pg.Theme.Label(values.TextSize16, nextTicketRemaining(int(secs)))
-										txt.Color = pg.Theme.Color.GrayText2
+										txt.Color = col
 
 										if pg.WL.MultiWallet.IsSyncing() {
 											txt.Text = values.String(values.StrSyncingState)
@@ -62,7 +67,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								)
 							}),
 							pg.dataRows(values.String(values.StrLiveTickets), pg.ticketOverview.Unmined),
-							pg.dataRows("Can Buy", pg.CalculateTotalTicketsCanBuy()), // todo == add total number of ticket functionality.
+							pg.dataRows("Can Buy", pg.CalculateTotalTicketsCanBuy()),
 						)
 					}
 
@@ -70,14 +75,14 @@ func (pg *Page) stakePriceSection(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								title := pg.Theme.Label(values.TextSize16, values.String(values.StrStake))
-								title.Color = pg.Theme.Color.GrayText2
+								title.Color = col
 								return title.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
 									Right: values.MarginPadding20,
 									Left:  values.MarginPadding4,
-								}.Layout(gtx, pg.autoPurchase.Layout)
+								}.Layout(gtx, pg.stake.Layout)
 							}),
 							layout.Rigid(func(gtx C) D {
 								icon := pg.Theme.Icons.HeaderSettingsIcon
@@ -85,7 +90,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								// if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
 								// 	icon = pg.Theme.Icons.SettingsInactiveIcon
 								// }
-								return pg.autoPurchaseSettings.Layout(gtx, icon.Layout24dp)
+								return pg.stakeSettings.Layout(gtx, icon.Layout24dp)
 							}),
 							layout.Rigid(func(gtx C) D {
 								pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
@@ -94,7 +99,11 @@ func (pg *Page) stakePriceSection(gtx C) D {
 							}),
 						)
 					}
-					return pg.titleRow(gtx, leftWg, rightWg)
+
+					return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+						layout.Rigid(leftWg),
+						layout.Rigid(rightWg),
+					)
 				})
 			}),
 			layout.Rigid(pg.balanceProgressBarLayout),
@@ -156,10 +165,10 @@ func (pg *Page) balanceProgressBarLayout(gtx C) D {
 		return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.layoutIconAndText(gtx, "Staked"+": ", totalBalance.LockedByTickets.String(), items[1].Color)
+					return pg.layoutIconAndText(gtx, "Staked"+": ", totalBalance.LockedByTickets.String(), items[0].Color)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.layoutIconAndText(gtx, values.String(values.StrLabelSpendable)+": ", totalBalance.Spendable.String(), items[0].Color)
+					return pg.layoutIconAndText(gtx, values.String(values.StrLabelSpendable)+": ", totalBalance.Spendable.String(), items[1].Color)
 				}),
 			)
 		})
@@ -192,4 +201,24 @@ func (pg *Page) layoutIconAndText(gtx C, title string, val string, col color.NRG
 			}),
 		)
 	})
+}
+
+func (pg *Page) stakingRecordStatistics(gtx C) D {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(pg.stakingRecord(pg.totalRewards, fmt.Sprintf("%s %s", values.String(values.StrTotal), values.String(values.StrReward)))),
+		layout.Rigid(pg.stakingRecord(fmt.Sprintf("%d", pg.ticketOverview.Voted), values.String(values.StrVoted))),
+		layout.Rigid(pg.stakingRecord(fmt.Sprintf("%d", pg.ticketOverview.Revoked), values.String(values.StrRevoked))),
+		layout.Rigid(pg.stakingRecord(fmt.Sprintf("%d", pg.ticketOverview.Immature), values.String(values.StrImmature))),
+		layout.Rigid(pg.stakingRecord(fmt.Sprintf("%d", pg.ticketOverview.Unmined), values.String(values.StrUmined))),
+		layout.Rigid(pg.stakingRecord(fmt.Sprintf("%d", pg.ticketOverview.Expired), values.String(values.StrExpired))),
+	)
+}
+
+func (pg *Page) stakingRecord(count, status string) layout.Widget {
+	return func(gtx C) D {
+		return components.EndToEndRow(gtx,
+			pg.Theme.Label(values.TextSize14, status).Layout,
+			pg.Theme.Label(values.TextSize14, count).Layout,
+		)
+	}
 }
