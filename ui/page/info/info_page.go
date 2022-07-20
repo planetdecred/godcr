@@ -14,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/listeners"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
+	// "github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
@@ -99,6 +99,13 @@ func NewInfoPage(l *load.Load) *WalletInfo {
 func (pg *WalletInfo) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
+	// backupLater := pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+	// needBackup := pg.WL.SelectedWallet.Wallet.EncryptedSeed != nil
+	// if needBackup && !backupLater && !pg.isBackupModalOpened {
+	// 	pg.showBackupInfo()
+	// 	pg.isBackupModalOpened = true
+	// }
+
 	autoSync := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false)
 	pg.syncSwitch.SetChecked(autoSync)
 
@@ -155,23 +162,23 @@ func (pg *WalletInfo) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *WalletInfo) showBackupInfo() {
-	backupNowOrLaterModal := modal.NewInfoModal(pg.Load).
-		SetupWithTemplate(modal.WalletBackupInfoTemplate).
-		SetCancelable(false).
-		SetContentAlignment(layout.W, layout.Center).
-		CheckBox(pg.checkBox, true).
-		NegativeButton(values.String(values.StrBackupLater), func() {
-			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
-		}).
-		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
-		PositiveButton(values.String(values.StrBackupNow), func(isChecked bool) bool {
-			pg.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
-			pg.ParentNavigator().Display(seedbackup.NewBackupInstructionsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
-			return true
-		})
-	pg.ParentWindow().ShowModal(backupNowOrLaterModal)
-}
+// func (pg *WalletInfo) showBackupInfo() {
+// 	backupNowOrLaterModal := modal.NewInfoModal(pg.Load).
+// 		SetupWithTemplate(modal.WalletBackupInfoTemplate).
+// 		SetCancelable(false).
+// 		SetContentAlignment(layout.W, layout.Center).
+// 		CheckBox(pg.checkBox, true).
+// 		NegativeButton(values.String(values.StrBackupLater), func() {
+// 			pg.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
+// 		}).
+// 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+// 		PositiveButton(values.String(values.StrBackupNow), func(isChecked bool) bool {
+// 			pg.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
+// 			pg.ParentNavigator().Display(seedbackup.NewBackupInstructionsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
+// 			return true
+// 		})
+// 	pg.ParentWindow().ShowModal(backupNowOrLaterModal)
+// }
 
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
@@ -179,12 +186,12 @@ func (pg *WalletInfo) showBackupInfo() {
 // displayed.
 // Part of the load.Page interface.
 func (pg *WalletInfo) HandleUserInteractions() {
-	backupLater := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
-	needBackup := pg.WL.MultiWallet.NumWalletsNeedingSeedBackup() > 0
-	if needBackup && !backupLater && !pg.isBackupModalOpened {
-		pg.showBackupInfo()
-		pg.isBackupModalOpened = true
-	}
+	// backupLater := pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+	// needBackup := pg.WL.SelectedWallet.Wallet.EncryptedSeed != nil
+	// if needBackup && !backupLater && !pg.isBackupModalOpened {
+	// 	pg.showBackupInfo()
+	// 	pg.isBackupModalOpened = true
+	// }
 
 	if pg.syncSwitch.Changed() {
 		if pg.WL.MultiWallet.IsRescanning() {
