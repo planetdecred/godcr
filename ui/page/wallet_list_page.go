@@ -292,10 +292,8 @@ func (pg *WalletList) Layout(gtx C) D {
 
 func (pg *WalletList) layoutDesktop(gtx C) D {
 	return components.UniformPadding(gtx, func(gtx C) D {
-		return decredmaterial.LinearLayout{
-			Width:       decredmaterial.MatchParent,
-			Height:      decredmaterial.WrapContent,
-			Orientation: layout.Vertical,
+		return layout.Flex{
+			Axis: layout.Vertical,
 		}.Layout(gtx,
 			layout.Rigid(pg.topLayout),
 			layout.Rigid(func(gtx C) D {
@@ -313,10 +311,13 @@ func (pg *WalletList) layoutDesktop(gtx C) D {
 					Axis: layout.Vertical,
 				}
 				gtx.Constraints.Min = gtx.Constraints.Max
-				return layout.Center.Layout(gtx, func(gtx C) D {
-					return list.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-						return layout.Inset{Top: values.MarginPadding26}.Layout(gtx, func(gtx C) D {
-							return pageContent[i](gtx)
+				return components.UniformPadding(gtx, func(gtx C) D {
+					gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
+					return layout.Center.Layout(gtx, func(gtx C) D {
+						return list.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+							return layout.Inset{Top: values.MarginPadding26}.Layout(gtx, func(gtx C) D {
+								return pageContent[i](gtx)
+							})
 						})
 					})
 				})
@@ -376,11 +377,12 @@ func (pg *WalletList) topLayout(gtx C) D {
 				Orientation: layout.Horizontal,
 			}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return pg.settingApp.Layout(gtx, pg.Theme.Icons.HeaderSettingsIcon.Layout24dp)
-				}),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					text := pg.Theme.Label(values.TextSize18, values.String(values.StrSettings))
-					return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding24}.Layout(gtx, text.Layout)
+					return layout.Inset{
+						Right: values.MarginPadding10,
+					}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						return pg.settingApp.Layout(gtx, pg.Theme.Icons.HeaderSettingsIcon.Layout24dp)
+					})
+
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.darkmode.Layout(gtx, pg.Theme.Icons.DarkmodeIcon.Layout24dp)
