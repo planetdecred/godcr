@@ -1,4 +1,4 @@
-package info
+package page
 
 import (
 	"gioui.org/layout"
@@ -24,23 +24,35 @@ type WalletSettingsPage struct {
 
 	wallet *dcrlibwallet.Wallet
 
-	changePass, rescan, deleteWallet *decredmaterial.Clickable
+	pageContainer layout.List
 
-	chevronRightIcon *decredmaterial.Icon
-	backButton       decredmaterial.IconButton
-	infoButton       decredmaterial.IconButton
+	changePass, rescan, deleteWallet                *decredmaterial.Clickable
+	changeAccount, mixedAccount, coordinationServer *decredmaterial.Clickable
+	changeWalletName, addAccount                    *decredmaterial.Clickable
+
+	chevronRightIcon        *decredmaterial.Icon
+	backButton              decredmaterial.IconButton
+	infoButton              decredmaterial.IconButton
+	allowUnspendUnmixedAcct *decredmaterial.Switch
 }
 
 func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettingsPage {
 	pg := &WalletSettingsPage{
-		Load:             l,
-		GenericPageModal: app.NewGenericPageModal(WalletSettingsPageID),
-		wallet:           wal,
-		changePass:       l.Theme.NewClickable(false),
-		rescan:           l.Theme.NewClickable(false),
-		deleteWallet:     l.Theme.NewClickable(false),
+		Load:               l,
+		GenericPageModal:   app.NewGenericPageModal(WalletSettingsPageID),
+		wallet:             wal,
+		changePass:         l.Theme.NewClickable(false),
+		rescan:             l.Theme.NewClickable(false),
+		deleteWallet:       l.Theme.NewClickable(false),
+		changeAccount:      l.Theme.NewClickable(false),
+		mixedAccount:       l.Theme.NewClickable(false),
+		coordinationServer: l.Theme.NewClickable(false),
+		changeWalletName:   l.Theme.NewClickable(false),
+		addAccount:         l.Theme.NewClickable(false),
 
-		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
+		chevronRightIcon:        decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
+		allowUnspendUnmixedAcct: l.Theme.Switch(),
+		pageContainer:           layout.List{Axis: layout.Vertical},
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -69,17 +81,24 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			Back: func() {
 				pg.ParentNavigator().CloseCurrentPage()
 			},
-			Body: func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			Body: func(gtx C) D {
+				w := []func(gtx C) D{
+					func(gtx C) D {
 						if !pg.wallet.IsWatchingOnlyWallet() {
 							return pg.changePassphrase()(gtx)
 						}
 						return layout.Dimensions{}
-					}),
-					layout.Rigid(pg.debug()),
-					layout.Rigid(pg.dangerZone()),
-				)
+					},
+					pg.renameWallet(),
+					pg.account(),
+					pg.stakeshuffle(),
+					pg.debug(),
+					pg.dangerZone(),
+				}
+
+				return pg.pageContainer.Layout(gtx, len(w), func(gtx C, i int) D {
+					return w[i](gtx)
+				})
 			},
 		}
 		return sp.Layout(pg.ParentWindow(), gtx)
@@ -98,10 +117,52 @@ func (pg *WalletSettingsPage) layoutMobile(gtx layout.Context, body layout.Widge
 	return components.UniformMobile(gtx, false, false, body)
 }
 
+func (pg *WalletSettingsPage) clickableRow(gtx C, row row) D {
+	return row.clickable.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
+			return pg.subSection(gtx, row.title, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(row.label.Layout),
+					layout.Rigid(func(gtx C) D {
+						ic := row.icon
+						ic.Color = pg.Theme.Color.Gray3
+						return ic.Layout(gtx, values.MarginPadding22)
+					}),
+				)
+			})
+		})
+	})
+}
+
+func (pg *WalletSettingsPage) subSection(gtx C, title string, body layout.Widget) D {
+	return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{}.Layout(gtx,
+			layout.Rigid(pg.Theme.Body1(title).Layout),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.E.Layout(gtx, body)
+			}),
+		)
+	})
+}
+
 func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrGeneral),
 			pg.bottomSectionLabel(pg.changePass, values.String(values.StrSpendingPassword)))
+	}
+}
+
+func (pg *WalletSettingsPage) renameWallet() layout.Widget {
+	return func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrRenameWalletSheetTitle),
+			pg.bottomSectionLabel(pg.changeWalletName, values.String(values.StrChangeWalletName)))
+	}
+}
+
+func (pg *WalletSettingsPage) account() layout.Widget {
+	return func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrAccount),
+			pg.bottomSectionLabel(pg.addAccount, values.String(values.StrAddNewAccount)))
 	}
 }
 
@@ -112,10 +173,63 @@ func (pg *WalletSettingsPage) debug() layout.Widget {
 	}
 }
 
+func (pg *WalletSettingsPage) stakeshuffle() layout.Widget {
+	return func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrStakeShuffle),
+			func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						mixedAccountRow := row{
+							title:     values.String(values.StrMixedAccount),
+							clickable: pg.mixedAccount,
+							icon:      pg.chevronRightIcon,
+							label:     pg.Theme.Body2(values.String(values.StrMixed)),
+						}
+						return pg.clickableRow(gtx, mixedAccountRow)
+					}),
+					layout.Rigid(pg.Theme.Separator().Layout),
+					layout.Rigid(func(gtx C) D {
+						changeAccountRow := row{
+							title:     values.String(values.StrChangeAccount),
+							clickable: pg.changeAccount,
+							icon:      pg.chevronRightIcon,
+							label:     pg.Theme.Body2(values.String(values.StrUnmixed)), // TODO
+						}
+						return pg.clickableRow(gtx, changeAccountRow)
+					}),
+					layout.Rigid(pg.Theme.Separator().Layout),
+					layout.Rigid(func(gtx C) D {
+						coordinationServerRow := row{
+							title:     values.String(values.StrCoordinationServer),
+							clickable: pg.coordinationServer,
+							icon:      pg.chevronRightIcon,
+							label:     pg.Theme.Body2("cspp.decred.org"),
+						}
+						return pg.clickableRow(gtx, coordinationServerRow)
+					}),
+				)
+			})
+	}
+}
+
 func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrDangerZone),
-			pg.bottomSectionLabel(pg.deleteWallet, values.String(values.StrRemoveWallet)))
+			func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{}.Layout(gtx,
+								layout.Rigid(pg.Theme.Label(values.TextSize16, values.String(values.StrAllowSpendingFromUnmixedAccount)).Layout),
+								layout.Flexed(1, func(gtx C) D {
+									return layout.E.Layout(gtx, pg.allowUnspendUnmixedAcct.Layout)
+								}),
+							)
+						})
+					}),
+					layout.Rigid(pg.bottomSectionLabel(pg.deleteWallet, values.String(values.StrRemoveWallet))),
+				)
+			})
 	}
 }
 
@@ -186,7 +300,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	for pg.changePass.Clicked() {
 		currentSpendingPasswordModal := modal.NewPasswordModal(pg.Load).
 			Title(values.String(values.StrChangeSpendingPass)).
-			Hint("Current spending password").
+			Hint(values.String(values.StrCurrentSpendingPassword)).
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 				go func() {
@@ -203,8 +317,8 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 					newSpendingPasswordModal := modal.NewCreatePasswordModal(pg.Load).
 						Title(values.String(values.StrChangeSpendingPass)).
 						EnableName(false).
-						PasswordHint("New spending password").
-						ConfirmPasswordHint("Confirm new spending password").
+						PasswordHint(values.String(values.StrNewSpendingPassword)).
+						ConfirmPasswordHint(values.String(values.StrConfirmNewSpendingPassword)).
 						PasswordCreated(func(walletName, newPassword string, m *modal.CreatePasswordModal) bool {
 							go func() {
 								err := pg.WL.MultiWallet.ChangePrivatePassphraseForWallet(pg.wallet.ID, []byte(password),
@@ -214,7 +328,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify("Spending password updated")
+								pg.Toast.Notify(values.String(values.StrSpendingPasswordUpdated))
 								m.Dismiss()
 							}()
 							return false
@@ -233,8 +347,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 		go func() {
 			info := modal.NewInfoModal(pg.Load).
 				Title(values.String(values.StrRescanBlockchain)).
-				Body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
-					" blockchain for transactions").
+				Body(values.String(values.StrRescanInfo)).
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(values.String(values.StrRescan), func(isChecked bool) bool {
 					err := pg.WL.MultiWallet.RescanBlocks(pg.wallet.ID)
@@ -257,9 +370,9 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	}
 
 	for pg.deleteWallet.Clicked() {
-		warningMsg := "Make sure to have the seed word backed up before removing the wallet"
+		warningMsg := values.String(values.StrWalletRemoveInfo)
 		if pg.wallet.IsWatchingOnlyWallet() {
-			warningMsg = "The watch-only wallet will be removed from your app"
+			warningMsg = values.String(values.StrWatchOnlyWalletRemoveInfo)
 		}
 		confirmRemoveWalletModal := modal.NewInfoModal(pg.Load)
 		confirmRemoveWalletModal.Title(values.String(values.StrRemoveWallet)).
