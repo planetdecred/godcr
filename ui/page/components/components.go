@@ -177,16 +177,16 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 				} else {
 					if ticketSpender != nil {
 						if ticketSpender.Type == dcrlibwallet.TxTypeVote {
-							txStatus.Title = values.String(values.StrTicketVotedTitle)
-							txStatus.Icon = l.Theme.Icons.TicketLiveIcon
+							txStatus.Title = values.String(values.StrVoted)
+							txStatus.Icon = l.Theme.Icons.TicketVotedIcon
 							txStatus.Color = l.Theme.Color.Turquoise700
 							txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
 							txStatus.ProgressBarColor = l.Theme.Color.Turquoise300
 							txStatus.ProgressTrackColor = l.Theme.Color.Turquoise100
 							txStatus.Background = l.Theme.Color.Success2
 						} else {
-							txStatus.Title = values.String(values.StrTicketRevokedTitle)
-							txStatus.Icon = l.Theme.Icons.TicketLiveIcon
+							txStatus.Title = values.String(values.StrRevoked)
+							txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
 							txStatus.Color = l.Theme.Color.Orange
 							txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
 							txStatus.ProgressBarColor = l.Theme.Color.Danger

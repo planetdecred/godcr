@@ -138,14 +138,14 @@ func (pg *Page) loadPageData() {
 			}
 		}
 
-		totalRewards, err := pg.WL.MultiWallet.TotalStakingRewards()
+		totalRewards, err := pg.WL.SelectedWallet.Wallet.TotalStakingRewards()
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
 		} else {
 			pg.totalRewards = dcrutil.Amount(totalRewards).String()
 		}
 
-		overview, err := pg.WL.MultiWallet.StakingOverview()
+		overview, err := pg.WL.SelectedWallet.Wallet.StakingOverview()
 		if err != nil {
 			pg.Toast.NotifyError(err.Error())
 		} else {
