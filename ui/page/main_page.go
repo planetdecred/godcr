@@ -997,20 +997,20 @@ func (mp *MainPage) listenForNotifications() {
 	}()
 }
 
-func (pg *MainPage) showBackupInfo() {
-	backupNowOrLaterModal := modal.NewInfoModal(pg.Load).
+func (mp *MainPage) showBackupInfo() {
+	backupNowOrLaterModal := modal.NewInfoModal(mp.Load).
 		SetupWithTemplate(modal.WalletBackupInfoTemplate).
 		SetCancelable(false).
 		SetContentAlignment(layout.W, layout.Center).
-		CheckBox(pg.checkBox, true).
+		CheckBox(mp.checkBox, true).
 		NegativeButton(values.String(values.StrBackupLater), func() {
-			pg.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
+			mp.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
 		}).
-		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+		PositiveButtonStyle(mp.Load.Theme.Color.Primary, mp.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrBackupNow), func(isChecked bool) bool {
-			pg.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
-			pg.ParentNavigator().Display(seedbackup.NewBackupInstructionsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
+			mp.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
+			mp.ParentNavigator().Display(seedbackup.NewBackupInstructionsPage(mp.Load, mp.WL.SelectedWallet.Wallet))
 			return true
 		})
-	pg.ParentWindow().ShowModal(backupNowOrLaterModal)
+	mp.ParentWindow().ShowModal(backupNowOrLaterModal)
 }

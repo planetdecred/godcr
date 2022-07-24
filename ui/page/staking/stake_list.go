@@ -62,22 +62,32 @@ func (pg *Page) fetchTickets() {
 }
 
 func (pg *Page) ticketListLayout(gtx C) D {
-	return pg.pageSections(gtx, func(gtx C) D {
-		tickets := pg.tickets
+	return layout.Inset{
+		Bottom: values.MarginPadding8,
+	}.Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
+		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+			return layout.Inset{
+				Left:   values.MarginPadding26,
+				Top:    values.MarginPadding26,
+				Bottom: values.MarginPadding26,
+			}.Layout(gtx, func(gtx C) D {
+				tickets := pg.tickets
 
-		if len(tickets) == 0 {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				if len(tickets) == 0 {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-			txt := pg.Theme.Body1(values.String(values.StrNoTickets))
-			txt.Color = pg.Theme.Color.GrayText3
-			txt.Alignment = text.Middle
-			return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding16}.Layout(gtx, txt.Layout)
-		}
+					txt := pg.Theme.Body1(values.String(values.StrNoTickets))
+					txt.Color = pg.Theme.Color.GrayText3
+					txt.Alignment = text.Middle
+					return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding16}.Layout(gtx, txt.Layout)
+				}
 
-		return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-			var ticket = tickets[index]
-
-			return ticketListLayout(gtx, pg.Load, ticket, index, false)
+				return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
+					var ticket = tickets[index]
+					return ticketListLayout(gtx, pg.Load, ticket, index)
+				})
+			})
 		})
 	})
 }

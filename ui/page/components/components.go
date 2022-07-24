@@ -633,7 +633,7 @@ func WalletLabel(gtx layout.Context, l *load.Load, walletName string) D {
 
 // EndToEndRow layouts out its content on both ends of its horizontal layout.
 func EndToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
-	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(leftWidget),
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, rightWidget)
