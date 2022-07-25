@@ -191,7 +191,6 @@ func (v *vspSelectorModal) title(title string) *vspSelectorModal {
 
 func (v *vspSelectorModal) vspSelected(callback func(*dcrlibwallet.VSP)) *vspSelectorModal {
 	v.vspSelectedCallback = callback
-	v.Dismiss()
 	return v
 }
 

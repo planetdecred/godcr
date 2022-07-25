@@ -262,7 +262,8 @@ func ticketStatusDetails(gtx C, l *load.Load, tx *transactionItem) D {
 
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				lbl := l.Theme.Label(values.TextSize16, fmt.Sprintf("Mature in 120 of 256 blocks (%v)", maturityDuration.String()))
+				lbl := l.Theme.Label(values.TextSize16, values.StringF(values.StrImmatureInfo, tx.transaction.BlockHeight, maturity,
+					maturityDuration.String()))
 				lbl.Color = col
 				return lbl.Layout(gtx)
 			}),
@@ -273,16 +274,18 @@ func ticketStatusDetails(gtx C, l *load.Load, tx *transactionItem) D {
 			}),
 		)
 	case dcrlibwallet.TicketStatusLive:
-		return multiContent(gtx, l, "Live for 18days", "Expires in 112days")
+		lbl := l.Theme.Label(values.TextSize16, values.String(values.StrLiveInfoDisc))
+		lbl.Color = col
+		return lbl.Layout(gtx)
 	case dcrlibwallet.TicketStatusVotedOrRevoked:
 		if tx.ticketSpender.Type == dcrlibwallet.TxTypeVote {
-			return multiContent(gtx, l, dateTime, fmt.Sprintf("Voted %v", components.TimeAgo(tx.transaction.Timestamp)))
+			return multiContent(gtx, l, dateTime, fmt.Sprintf("%s %v", values.String(values.StrVoted), components.TimeAgo(tx.transaction.Timestamp)))
 		}
 		lbl := l.Theme.Label(values.TextSize16, dateTime)
 		lbl.Color = col
 		return lbl.Layout(gtx)
 	case dcrlibwallet.TicketStatusExpired:
-		return multiContent(gtx, l, dateTime, fmt.Sprintf("Expired %v", components.TimeAgo(tx.transaction.Timestamp)))
+		return multiContent(gtx, l, dateTime, fmt.Sprintf("%s %v", values.String(values.StrExpired), components.TimeAgo(tx.transaction.Timestamp)))
 	default:
 		return D{}
 	}

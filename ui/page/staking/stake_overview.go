@@ -101,7 +101,7 @@ func (pg *Page) OnNavigatedTo() {
 
 // fetch ticket price only when the wallet is synced
 func (pg *Page) fetchTicketPrice() {
-	ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
+	ticketPrice, err := pg.WL.SelectedWallet.Wallet.TicketPrice()
 	if err != nil && !pg.WL.MultiWallet.IsSynced() {
 		log.Error(err)
 		pg.ticketPrice = values.String(values.StrNotAvailable)
