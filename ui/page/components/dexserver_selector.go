@@ -89,6 +89,7 @@ func (ds *DexServerSelector) DexServersLayout(gtx C) D {
 			return ds.materialLoader.Layout(gtx)
 		})
 	}
+
 	knownDexServers := ds.mapKnowDexServers()
 	dexServers := sortDexExchanges(knownDexServers)
 	return ds.knownDexServers.Layout(gtx, len(dexServers), func(gtx C, i int) D {

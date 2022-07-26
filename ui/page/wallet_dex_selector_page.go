@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/app"
@@ -34,6 +33,7 @@ type WalletDexServerSelector struct {
 	dexServerSelector *components.DexServerSelector
 	addWalClickable   *decredmaterial.Clickable
 	addDexClickable   *decredmaterial.Clickable
+	settings          *decredmaterial.Clickable
 }
 
 func NewWalletDexServerSelector(l *load.Load, onWalletSelected func(), onDexServerSelected func(server string)) *WalletDexServerSelector {
@@ -57,6 +57,8 @@ func NewWalletDexServerSelector(l *load.Load, onWalletSelected func(), onDexServ
 
 	pg.addDexClickable = l.Theme.NewClickable(false)
 	pg.addDexClickable.Radius = decredmaterial.Radius(14)
+
+	pg.settings = l.Theme.NewClickable(false)
 
 	return pg
 }
@@ -92,6 +94,10 @@ func (pg *WalletDexServerSelector) HandleUserInteractions() {
 		})
 		pg.ParentWindow().ShowModal(dm)
 	}
+
+	if pg.settings.Clicked() {
+		pg.ParentNavigator().Display(NewSettingsPage(pg.Load))
+	}
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
@@ -109,7 +115,7 @@ func (pg *WalletDexServerSelector) OnNavigatedFrom() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *WalletDexServerSelector) Layout(gtx C) D {
-	gtx.Constraints.Min = gtx.Constraints.Max
+	pg.SetCurrentAppWidth(gtx.Constraints.Max.X)
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx)
 	}
@@ -117,11 +123,10 @@ func (pg *WalletDexServerSelector) Layout(gtx C) D {
 }
 
 func (pg *WalletDexServerSelector) layoutDesktop(gtx C) D {
-	return components.UniformPadding(gtx, func(gtx C) D {
+	return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.pageHeaderLayout),
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
 				return pg.pageContentLayout(gtx)
 			}),
 		)
@@ -138,45 +143,53 @@ func (pg *WalletDexServerSelector) layoutMobile(gtx C) D {
 }
 
 func (pg *WalletDexServerSelector) pageHeaderLayout(gtx C) D {
-	return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(pg.Theme.Icons.DecredLogo.Layout24dp),
-					layout.Rigid(func(gtx C) D {
-						godcrText := pg.Theme.Label(values.TextSize20, "GoDCR")
-						godcrText.Font.Weight = text.Bold
-						return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, godcrText.Layout)
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, pg.Theme.Icons.SettingsIcon.Layout24dp)
-					}),
-					layout.Rigid(func(gtx C) D {
-						// TODO: setting functionality
-						return pg.Theme.Label(values.TextSize14, "Settings").Layout(gtx)
-					}),
-				)
-			}),
-		)
-	})
+	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return layout.Inset{
+					Right:  values.MarginPadding15,
+					Bottom: values.MarginPadding30,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.settings.Layout(gtx, pg.Theme.Icons.SettingsIcon.Layout24dp)
+				})
+			})
+		}),
+	)
 }
 
-func (pg *WalletDexServerSelector) pageContentLayout(gtx C) layout.Dimensions {
+func (pg *WalletDexServerSelector) sectionTitle(title string) layout.Widget {
+	return func(gtx C) D {
+		return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, pg.Theme.Label(values.TextSize20, title).Layout)
+	}
+}
+
+func (pg *WalletDexServerSelector) pageContentLayout(gtx C) D {
 	pageContent := []func(gtx C) D{
-		pg.Theme.Label(values.TextSize20, values.String(values.StrSelectWalletToOpen)).Layout,
+		pg.sectionTitle(values.String(values.StrSelectWalletToOpen)),
 		pg.walletSelector.WalletListLayout,
 		pg.layoutAddMoreRowSection(pg.addWalClickable, values.String(values.StrAddWallet), pg.Theme.Icons.NewWalletIcon.Layout24dp),
-		pg.Theme.Label(values.TextSize20, values.String(values.StrSelectWalletToOpen)).Layout,
+		pg.sectionTitle(values.String(values.StrSelectWalletToOpen)),
 		pg.dexServerSelector.DexServersLayout,
 		pg.layoutAddMoreRowSection(pg.addDexClickable, values.String(values.StrAddDexServer), pg.Theme.Icons.DexIcon.Layout16dp),
 	}
-	return layout.Center.Layout(gtx, func(gtx C) D {
-		return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
-			return layout.Inset{Top: values.MarginPadding26}.Layout(gtx, pageContent[i])
+
+	return decredmaterial.LinearLayout{
+		Width:     decredmaterial.MatchParent,
+		Height:    decredmaterial.MatchParent,
+		Direction: layout.Center,
+	}.Layout2(gtx, func(gtx C) D {
+		return decredmaterial.LinearLayout{
+			Width:  gtx.Dp(values.MarginPadding550),
+			Height: decredmaterial.MatchParent,
+			Margin: layout.Inset{
+				Bottom: values.MarginPadding30,
+			},
+		}.Layout2(gtx, func(gtx C) D {
+			return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+				return layout.Inset{
+					Right: values.MarginPadding48,
+				}.Layout(gtx, pageContent[i])
+			})
 		})
 	})
 }
@@ -185,7 +198,8 @@ func (pg *WalletDexServerSelector) layoutAddMoreRowSection(clk *decredmaterial.C
 	return func(gtx C) D {
 		return layout.Inset{
 			Left:   values.MarginPadding5,
-			Bottom: values.MarginPadding10,
+			Top:    values.MarginPadding10,
+			Bottom: values.MarginPadding48,
 		}.Layout(gtx, func(gtx C) D {
 			pg.shadowBox.SetShadowRadius(14)
 			return decredmaterial.LinearLayout{

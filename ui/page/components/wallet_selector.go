@@ -65,6 +65,10 @@ func (ws *WalletSelector) Expose(ctx context.Context) {
 	ws.ctx = ctx
 	ws.listenForTxNotifications()
 	ws.loadWallets()
+
+	if ws.WL.MultiWallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false) {
+		ws.startSyncing()
+	}
 }
 
 func (ws *WalletSelector) loadWallets() {
@@ -188,16 +192,16 @@ func (ws *WalletSelector) syncStatusIcon(gtx C) D {
 		syncStatusIcon = ws.Theme.Icons.SyncingIcon
 		syncStatus = values.String(values.StrSyncingState)
 	default:
-		syncStatusIcon = ws.Theme.Icons.FailedIcon
+		syncStatusIcon = ws.Theme.Icons.NotSynced
 		syncStatus = values.String(values.StrWalletNotSynced)
 	}
 
-	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(syncStatusIcon.Layout16dp),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
 				Left: values.MarginPadding5,
-			}.Layout(gtx, ws.Theme.Caption(syncStatus).Layout)
+			}.Layout(gtx, ws.Theme.Label(values.TextSize16, syncStatus).Layout)
 		}),
 	)
 }
@@ -320,56 +324,31 @@ func (ws *WalletSelector) walletWrapper(gtx C, item *load.WalletItem, isWatching
 				return ws.Theme.Icons.DecredSymbol2.LayoutSize(gtx, values.MarginPadding30)
 			})
 		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return ws.Theme.Label(values.TextSize16, item.Wallet.Name).Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{
-						Axis:      layout.Horizontal,
-						Alignment: layout.Middle,
-					}.Layout(gtx,
-						layout.Rigid(ws.syncStatusIcon),
-						layout.Rigid(func(gtx C) D {
-							if len(item.Wallet.EncryptedSeed) > 0 {
-								return layout.Flex{
-									Axis:      layout.Horizontal,
-									Alignment: layout.Middle,
-								}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										ic := decredmaterial.NewIcon(ws.Theme.Icons.ImageBrightness1)
-										ic.Color = ws.Theme.Color.Gray1
-										return layout.Inset{
-											Left:  values.MarginPadding7,
-											Right: values.MarginPadding7,
-										}.Layout(gtx, func(gtx C) D {
-											return ic.Layout(gtx, values.MarginPadding4)
-										})
-									}),
-									layout.Rigid(ws.Theme.Icons.RedAlert.Layout16dp),
-									layout.Rigid(func(gtx C) D {
-										txt := ws.Theme.Caption(values.String(values.StrNotBackedUp))
-										txt.Color = ws.Theme.Color.Danger
-										return layout.Inset{
-											Left: values.MarginPadding5,
-										}.Layout(gtx, txt.Layout)
-									}),
-								)
-							}
-							return D{}
-						}),
-					)
-				}),
-			)
-		}),
+		layout.Rigid(ws.Theme.Label(values.TextSize16, item.Wallet.Name).Layout),
 		layout.Flexed(1, func(gtx C) D {
-			balanceLabel := ws.Theme.Body1(item.TotalBalance)
-			balanceLabel.Color = ws.Theme.Color.GrayText2
-			return layout.Inset{
-				Right: values.MarginPadding10,
-			}.Layout(gtx, func(gtx C) D {
-				return layout.E.Layout(gtx, balanceLabel.Layout)
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return layout.Flex{
+					Axis:      layout.Horizontal,
+					Alignment: layout.Middle,
+				}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						if len(item.Wallet.EncryptedSeed) > 0 {
+							return layout.Flex{
+								Axis:      layout.Horizontal,
+								Alignment: layout.Middle,
+							}.Layout(gtx,
+								layout.Rigid(ws.Theme.Icons.RedAlert.Layout16dp),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{
+										Right: values.MarginPadding10,
+									}.Layout(gtx, ws.Theme.Label(values.TextSize16, values.String(values.StrNotBackedUp)).Layout)
+								}),
+							)
+						}
+						return D{}
+					}),
+					layout.Rigid(ws.syncStatusIcon),
+				)
 			})
 		}),
 	)
@@ -452,4 +431,45 @@ func (ws *WalletSelector) updateAccountBalance() {
 			item.TotalBalance = dcrutil.Amount(totalBalance).String()
 		}
 	}
+}
+
+func (ws *WalletSelector) startSyncing() {
+	for _, wal := range ws.WL.SortedWalletList() {
+		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
+			ws.UnlockWalletForSyncing(wal)
+			return
+		}
+	}
+
+	err := ws.WL.MultiWallet.SpvSync()
+	if err != nil {
+		// show error dialog
+		log.Info("Error starting sync:", err)
+	}
+}
+
+func (ws *WalletSelector) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
+	spendingPasswordModal := modal.NewPasswordModal(ws.Load).
+		Title(values.String(values.StrResumeAccountDiscoveryTitle)).
+		Hint(values.String(values.StrSpendingPassword)).
+		NegativeButton(values.String(values.StrCancel), func() {}).
+		PositiveButton(values.String(values.StrUnlock), func(password string, pm *modal.PasswordModal) bool {
+			go func() {
+				err := ws.WL.MultiWallet.UnlockWallet(wal.ID, []byte(password))
+				if err != nil {
+					errText := err.Error()
+					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+						errText = values.String(values.StrInvalidPassphrase)
+					}
+					pm.SetError(errText)
+					pm.SetLoading(false)
+					return
+				}
+				pm.Dismiss()
+				ws.startSyncing()
+			}()
+
+			return false
+		})
+	ws.ParentWindow().ShowModal(spendingPasswordModal)
 }

@@ -57,12 +57,10 @@ type WalletInfo struct {
 
 	container *widget.List
 
-	syncedIcon, notSyncedIcon *decredmaterial.Icon
-	walletStatusIcon          *decredmaterial.Icon
-	syncingIcon               *decredmaterial.Image
-	syncSwitch                *decredmaterial.Switch
-	toBackup                  decredmaterial.Button
-	checkBox                  decredmaterial.CheckBoxStyle
+	walletStatusIcon *decredmaterial.Icon
+	syncSwitch       *decredmaterial.Switch
+	toBackup         decredmaterial.Button
+	checkBox         decredmaterial.CheckBoxStyle
 
 	remainingSyncTime    string
 	syncStepLabel        string
