@@ -2,6 +2,7 @@ package governance
 
 import (
 	"context"
+	"encoding/hex"
 	"time"
 
 	"gioui.org/io/clipboard"
@@ -172,8 +173,9 @@ func (pg *TreasuryPage) FetchPolicies() {
 
 	// Fetch (or re-fetch) treasury policies in background as this makes
 	// a network call. Refresh the window once the call completes.
+	key := hex.EncodeToString(pg.WL.MultiWallet.PiKeys()[0])
 	go func() {
-		pg.treasuryItems = components.LoadPolicies(pg.Load, selectedWallet, pg.WL.MultiWallet.PiKey(0))
+		pg.treasuryItems = components.LoadPolicies(pg.Load, selectedWallet, key)
 		pg.isPolicyFetchInProgress = true
 		pg.ParentWindow().Reload()
 	}()
