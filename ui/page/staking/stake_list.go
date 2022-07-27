@@ -72,21 +72,54 @@ func (pg *Page) ticketListLayout(gtx C) D {
 				Top:    values.MarginPadding26,
 				Bottom: values.MarginPadding26,
 			}.Layout(gtx, func(gtx C) D {
-				tickets := pg.tickets
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						txt := pg.Theme.Body1(values.String(values.StrTickets))
+						txt.Color = pg.Theme.Color.GrayText2
+						return layout.Inset{Bottom: values.MarginPadding18}.Layout(gtx, txt.Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						tickets := pg.tickets
 
-				if len(tickets) == 0 {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						if len(tickets) == 0 {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-					txt := pg.Theme.Body1(values.String(values.StrNoTickets))
-					txt.Color = pg.Theme.Color.GrayText3
-					txt.Alignment = text.Middle
-					return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding16}.Layout(gtx, txt.Layout)
-				}
+							txt := pg.Theme.Body1(values.String(values.StrNoTickets))
+							txt.Color = pg.Theme.Color.GrayText3
+							txt.Alignment = text.Middle
+							return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding16}.Layout(gtx, txt.Layout)
+						}
 
-				return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-					var ticket = tickets[index]
-					return ticketListLayout(gtx, pg.Load, ticket, index)
-				})
+						return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
+							var ticket = tickets[index]
+
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								// gray separator line
+								layout.Rigid(func(gtx C) D {
+									if index == 0 {
+										return D{}
+									}
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									separator := pg.Theme.Separator()
+									separator.Width = gtx.Constraints.Max.X
+									return layout.Inset{
+										Bottom: values.MarginPadding5,
+										Left:   values.MarginPadding40,
+									}.Layout(gtx, func(gtx C) D {
+										return layout.E.Layout(gtx, separator.Layout)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{
+										Bottom: values.MarginPadding5,
+									}.Layout(gtx, func(gtx C) D {
+										return ticketListLayout(gtx, pg.Load, ticket)
+									})
+								}),
+							)
+						})
+					}),
+				)
 			})
 		})
 	})

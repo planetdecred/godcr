@@ -37,11 +37,10 @@ type ManualMixerSetupPage struct {
 	toPrivacySetup decredmaterial.Button
 }
 
-func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualMixerSetupPage {
+func NewManualMixerSetupPage(l *load.Load) *ManualMixerSetupPage {
 	pg := &ManualMixerSetupPage{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(ManualMixerSetupPageID),
-		wallet:           wallet,
 		toPrivacySetup:   l.Theme.Button("Set up"),
 	}
 
@@ -114,7 +113,6 @@ func (pg *ManualMixerSetupPage) Layout(gtx layout.Context) layout.Dimensions {
 		page := components.SubPage{
 			Load:       pg.Load,
 			Title:      "Manual setup",
-			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.ParentNavigator().CloseCurrentPage()
@@ -200,29 +198,29 @@ func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
 			go func() {
 				mixedAcctNumber := pg.mixedAccountSelector.SelectedAccount().Number
 				unmixedAcctNumber := pg.unmixedAccountSelector.SelectedAccount().Number
-				err := pg.wallet.SetAccountMixerConfig(mixedAcctNumber, unmixedAcctNumber, password)
+				err := pg.WL.SelectedWallet.Wallet.SetAccountMixerConfig(mixedAcctNumber, unmixedAcctNumber, password)
 				if err != nil {
 					pm.SetError(err.Error())
 					pm.SetLoading(false)
 					return
 				}
-				pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
+				pg.WL.SelectedWallet.Wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 
 				// rename mixed account
-				err = pg.wallet.RenameAccount(mixedAcctNumber, "mixed")
+				err = pg.WL.SelectedWallet.Wallet.RenameAccount(mixedAcctNumber, "mixed")
 				if err != nil {
 					log.Error(err)
 				}
 
 				// rename unmixed account
-				err = pg.wallet.RenameAccount(unmixedAcctNumber, "unmixed")
+				err = pg.WL.SelectedWallet.Wallet.RenameAccount(unmixedAcctNumber, "unmixed")
 				if err != nil {
 					log.Error(err)
 				}
 
 				pm.Dismiss()
 
-				pg.ParentNavigator().Display(NewAccountMixerPage(pg.Load, pg.wallet))
+				pg.ParentNavigator().Display(NewAccountMixerPage(pg.Load))
 			}()
 
 			return false

@@ -558,54 +558,34 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 	)
 }
 
-func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		// gray separator line
-		layout.Rigid(func(gtx C) D {
-			if i == 0 {
-				return D{}
-			}
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			separator := l.Theme.Separator()
-			separator.Width = gtx.Constraints.Max.X
-			return layout.Inset{
-				Top:    values.MarginPadding5,
-				Bottom: values.MarginPadding5,
-				Left:   values.MarginPadding40,
-			}.Layout(gtx, func(gtx C) D {
-				return layout.E.Layout(gtx, separator.Layout)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{
-				Right: values.MarginPadding26,
-			}.Layout(gtx, func(gtx C) D {
-				return components.EndToEndRow(gtx,
-					func(gtx C) D {
-						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								wrapIcon := l.Theme.Card()
-								wrapIcon.Color = ticket.status.Background
-								wrapIcon.Radius = decredmaterial.Radius(8)
-								dims := wrapIcon.Layout(gtx, func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding10).Layout(gtx, ticket.status.Icon.Layout24dp)
-								})
+func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem) layout.Dimensions {
+	return layout.Inset{
+		Right: values.MarginPadding26,
+	}.Layout(gtx, func(gtx C) D {
+		return components.EndToEndRow(gtx,
+			func(gtx C) D {
+				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						wrapIcon := l.Theme.Card()
+						wrapIcon.Color = ticket.status.Background
+						wrapIcon.Radius = decredmaterial.Radius(8)
+						dims := wrapIcon.Layout(gtx, func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding10).Layout(gtx, ticket.status.Icon.Layout24dp)
+						})
 
-								return layout.Inset{
-									Right: values.MarginPadding16,
-								}.Layout(gtx, func(gtx C) D {
-									return dims
-								})
-							}),
-							layout.Rigid(l.Theme.Label(values.TextSize18, ticket.status.Title).Layout),
-						)
-					},
-					func(gtx C) D {
-						return ticketStatusDetails(gtx, l, ticket)
-					})
+						return layout.Inset{
+							Right: values.MarginPadding16,
+						}.Layout(gtx, func(gtx C) D {
+							return dims
+						})
+					}),
+					layout.Rigid(l.Theme.Label(values.TextSize18, ticket.status.Title).Layout),
+				)
+			},
+			func(gtx C) D {
+				return ticketStatusDetails(gtx, l, ticket)
 			})
-		}),
-	)
+	})
 }
 
 // todo: cleanup

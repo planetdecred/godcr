@@ -7,7 +7,6 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
-	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -29,8 +28,6 @@ type SetupMixerAccountsPage struct {
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
-	wallet *dcrlibwallet.Wallet
-
 	backButton              decredmaterial.IconButton
 	infoButton              decredmaterial.IconButton
 	autoSetupClickable      *decredmaterial.Clickable
@@ -38,11 +35,10 @@ type SetupMixerAccountsPage struct {
 	autoSetupIcon, nextIcon *decredmaterial.Icon
 }
 
-func NewSetupMixerAccountsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SetupMixerAccountsPage {
+func NewSetupMixerAccountsPage(l *load.Load) *SetupMixerAccountsPage {
 	pg := &SetupMixerAccountsPage{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(SetupMixerAccountsPageID),
-		wallet:           wallet,
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -74,7 +70,7 @@ func (pg *SetupMixerAccountsPage) Layout(gtx layout.Context) layout.Dimensions {
 		page := components.SubPage{
 			Load:       pg.Load,
 			Title:      "Set up needed accounts",
-			WalletName: pg.wallet.Name,
+			WalletName: pg.WL.SelectedWallet.Wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.ParentNavigator().CloseCurrentPage()
@@ -235,13 +231,12 @@ func (pg *SetupMixerAccountsPage) HandleUserInteractions() {
 			Load:          pg.Load,
 			window:        pg.ParentWindow(),
 			pageNavigator: pg.ParentNavigator(),
-			wallet:        pg.wallet,
 			checkBox:      pg.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
 		})
 	}
 
 	if pg.manualSetupClickable.Clicked() {
-		pg.ParentNavigator().Display(NewManualMixerSetupPage(pg.Load, pg.wallet))
+		pg.ParentNavigator().Display(NewManualMixerSetupPage(pg.Load))
 	}
 }
 

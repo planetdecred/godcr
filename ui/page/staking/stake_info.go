@@ -80,7 +80,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
-									Right: values.MarginPadding20,
+									Right: values.MarginPadding40,
 									Left:  values.MarginPadding4,
 								}.Layout(gtx, pg.stake.Layout)
 							}),
@@ -95,7 +95,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 							layout.Rigid(func(gtx C) D {
 								pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
 								pg.infoButton.Size = values.MarginPadding22
-								return pg.infoButton.Layout(gtx)
+								return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, pg.infoButton.Layout)
 							}),
 						)
 					}

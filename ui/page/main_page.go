@@ -499,7 +499,7 @@ func (mp *MainPage) HandleUserInteractions() {
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
 			case privacy.AccountMixerPageID:
-				pg = privacy.NewAccountMixerPage(mp.Load, mp.WL.SelectedWallet.Wallet) // todo implement new staking ui
+				pg = privacy.NewAccountMixerPage(mp.Load)
 			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
 			case governance.GovernancePageID:

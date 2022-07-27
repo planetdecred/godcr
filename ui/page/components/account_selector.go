@@ -120,7 +120,6 @@ func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
 }
 
 func (as *AccountSelector) UpdateSelectedAccountBalance() {
-	// wal := as.multiWallet.WalletWithID(as.SelectedAccount().WalletID)
 	bal, err := as.WL.SelectedWallet.Wallet.GetAccountBalance(as.SelectedAccount().Number)
 	if err == nil {
 		as.totalBalance = dcrutil.Amount(bal.Total).String()

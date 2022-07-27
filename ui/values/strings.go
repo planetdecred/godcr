@@ -270,6 +270,7 @@ const (
 	StrCurrencyConversion              = "currencyConversion"
 	StrTransactions                    = "transactions"
 	StrWallets                         = "wallets"
+	StrTickets                         = "tickets"
 	StrMore                            = "more"
 	StrOverview                        = "overview"
 	StrEnglish                         = "english"

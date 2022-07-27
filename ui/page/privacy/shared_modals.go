@@ -19,7 +19,6 @@ type sharedModalConfig struct {
 	*load.Load
 	window        app.WindowNavigator
 	pageNavigator app.PageNavigator
-	wallet        *dcrlibwallet.Wallet
 	checkBox      decredmaterial.CheckBoxStyle
 }
 
@@ -61,7 +60,7 @@ func showModalSetupMixerInfo(conf *sharedModalConfig) {
 }
 
 func showModalSetupMixerAcct(conf *sharedModalConfig, movefundsChecked bool) {
-	accounts, _ := conf.wallet.GetAccountsRaw()
+	accounts, _ := conf.WL.SelectedWallet.Wallet.GetAccountsRaw()
 	txt := "There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup."
 	for _, acct := range accounts.Acc {
 		if acct.Name == "mixed" || acct.Name == "unmixed" {
@@ -85,13 +84,13 @@ func showModalSetupMixerAcct(conf *sharedModalConfig, movefundsChecked bool) {
 		NegativeButton("Cancel", func() {}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-				err := conf.wallet.CreateMixerAccounts("mixed", "unmixed", password)
+				err := conf.WL.SelectedWallet.Wallet.CreateMixerAccounts("mixed", "unmixed", password)
 				if err != nil {
 					pm.SetError(err.Error())
 					pm.SetLoading(false)
 					return
 				}
-				conf.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
+				conf.WL.SelectedWallet.Wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 
 				if movefundsChecked {
 					err := moveFundsFromDefaultToUnmixed(conf, password)
@@ -104,7 +103,7 @@ func showModalSetupMixerAcct(conf *sharedModalConfig, movefundsChecked bool) {
 
 				pm.Dismiss()
 
-				conf.pageNavigator.Display(NewAccountMixerPage(conf.Load, conf.wallet))
+				conf.pageNavigator.Display(NewAccountMixerPage(conf.Load))
 			}()
 
 			return false
@@ -115,16 +114,16 @@ func showModalSetupMixerAcct(conf *sharedModalConfig, movefundsChecked bool) {
 // moveFundsFromDefaultToUnmixed moves funds from the default wallet account to the
 // newly created unmixed account
 func moveFundsFromDefaultToUnmixed(conf *sharedModalConfig, password string) error {
-	acc, err := conf.wallet.GetAccountsRaw()
+	acc, err := conf.WL.SelectedWallet.Wallet.GetAccountsRaw()
 	if err != nil {
 		return err
 	}
 
 	// get the first account in the wallet as this is the default
 	sourceAccount := acc.Acc[0]
-	destinationAccount := conf.wallet.UnmixedAccountNumber()
+	destinationAccount := conf.WL.SelectedWallet.Wallet.UnmixedAccountNumber()
 
-	destinationAddress, err := conf.wallet.CurrentAddress(destinationAccount)
+	destinationAddress, err := conf.WL.SelectedWallet.Wallet.CurrentAddress(destinationAccount)
 	if err != nil {
 		return err
 	}

@@ -34,7 +34,6 @@ type SetupPrivacyPage struct {
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
-	wallet         *dcrlibwallet.Wallet
 	pageContainer  layout.List
 	toPrivacySetup decredmaterial.Button
 
@@ -42,11 +41,10 @@ type SetupPrivacyPage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func NewSetupPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SetupPrivacyPage {
+func NewSetupPrivacyPage(l *load.Load) *SetupPrivacyPage {
 	pg := &SetupPrivacyPage{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(SetupPrivacyPageID),
-		wallet:           wallet,
 		pageContainer:    layout.List{Axis: layout.Vertical},
 		toPrivacySetup:   l.Theme.Button("Set up mixer for this wallet"),
 	}
@@ -72,7 +70,6 @@ func (pg *SetupPrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 		sp := components.SubPage{
 			Load:       pg.Load,
 			Title:      "StakeShuffle",
-			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
@@ -152,7 +149,7 @@ func (pg *SetupPrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimens
 // Part of the load.Page interface.
 func (pg *SetupPrivacyPage) HandleUserInteractions() {
 	if pg.toPrivacySetup.Clicked() {
-		accounts, err := pg.wallet.GetAccountsRaw()
+		accounts, err := pg.WL.SelectedWallet.Wallet.GetAccountsRaw()
 		if err != nil {
 			log.Error(err)
 		}
@@ -170,11 +167,10 @@ func (pg *SetupPrivacyPage) HandleUserInteractions() {
 				Load:          pg.Load,
 				window:        pg.ParentWindow(),
 				pageNavigator: pg.ParentNavigator(),
-				wallet:        pg.wallet,
 				checkBox:      pg.Theme.CheckBox(new(widget.Bool), "Automatically move funds from default to unmixed account"),
 			})
 		} else {
-			pg.ParentNavigator().Display(NewSetupMixerAccountsPage(pg.Load, pg.wallet))
+			pg.ParentNavigator().Display(NewSetupMixerAccountsPage(pg.Load))
 		}
 	}
 }

@@ -43,8 +43,7 @@ type Page struct {
 
 	tickets []*transactionItem
 
-	ticketBuyerWallet *dcrlibwallet.Wallet
-	ticketOverview    *dcrlibwallet.StakingOverview
+	ticketOverview *dcrlibwallet.StakingOverview
 
 	ticketsList   *decredmaterial.ClickableList
 	stakeSettings *decredmaterial.Clickable
@@ -84,14 +83,11 @@ func (pg *Page) OnNavigatedTo() {
 	// canceled in OnNavigatedFrom().
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	// set up auto ticekt buyer wallets
-	pg.setTBWallet()
-
 	pg.fetchTicketPrice()
 
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
 
-	pg.stake.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+	pg.stake.SetChecked(pg.WL.SelectedWallet.Wallet.IsAutoTicketsPurchaseActive())
 
 	pg.setStakingButtonsState()
 
@@ -113,20 +109,7 @@ func (pg *Page) fetchTicketPrice() {
 
 func (pg *Page) setStakingButtonsState() {
 	//disable auto ticket purchase if wallet is not synced
-	pg.stake.SetEnabled(!pg.WL.MultiWallet.IsSynced())
-}
-
-func (pg *Page) setTBWallet() {
-	for _, wal := range pg.WL.SortedWalletList() {
-		if wal.TicketBuyerConfigIsSet() {
-			pg.ticketBuyerWallet = wal
-		}
-	}
-
-	// if there are no wallets with config set, select the first wallet.
-	if pg.ticketBuyerWallet == nil {
-		pg.ticketBuyerWallet = pg.WL.SortedWalletList()[0]
-	}
+	pg.stake.SetEnabled(!pg.WL.MultiWallet.IsSynced() || pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet())
 }
 
 func (pg *Page) loadPageData() {
@@ -218,15 +201,15 @@ func (pg *Page) HandleUserInteractions() {
 	pg.setStakingButtonsState()
 
 	if pg.stake.Changed() && pg.stake.IsChecked() {
-		if pg.ticketBuyerWallet.TicketBuyerConfigIsSet() {
+		if pg.WL.SelectedWallet.Wallet.TicketBuyerConfigIsSet() {
 			// get ticket buyer config to check if the saved wallet account is mixed
 			//check if mixer is set, if yes check if allow spend from unmixed account
 			//if not set, check if the saved account is mixed before opening modal
 			// if it is not, open stake config modal
-			tbConfig := pg.ticketBuyerWallet.AutoTicketsBuyerConfig()
-			if pg.ticketBuyerWallet.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
-				!pg.ticketBuyerWallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) &&
-				(tbConfig.PurchaseAccount == pg.ticketBuyerWallet.MixedAccountNumber()) {
+			tbConfig := pg.WL.SelectedWallet.Wallet.AutoTicketsBuyerConfig()
+			if pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
+				!pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) &&
+				(tbConfig.PurchaseAccount == pg.WL.SelectedWallet.Wallet.MixedAccountNumber()) {
 				pg.startTicketBuyerPasswordModal()
 			} else {
 				pg.ticketBuyerSettingsModal()
@@ -235,11 +218,11 @@ func (pg *Page) HandleUserInteractions() {
 			pg.ticketBuyerSettingsModal()
 		}
 	} else {
-		pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.ticketBuyerWallet.ID)
+		pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.WL.SelectedWallet.Wallet.ID)
 	}
 
-	if pg.stakeSettings.Clicked() {
-		if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
+	if pg.stakeSettings.Clicked() && !pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
+		if pg.WL.SelectedWallet.Wallet.IsAutoTicketsPurchaseActive() {
 			pg.Toast.NotifyError(values.String(values.StrAutoTicketWarn))
 			return
 		}
@@ -247,7 +230,6 @@ func (pg *Page) HandleUserInteractions() {
 		ticketBuyerModal := newTicketBuyerModal(pg.Load).
 			OnSettingsSaved(func() {
 				pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
-				pg.setTBWallet()
 			}).
 			OnCancel(func() {
 				pg.stake.SetChecked(false)
@@ -319,9 +301,9 @@ func (pg *Page) ticketBuyerSettingsModal() {
 }
 
 func (pg *Page) startTicketBuyerPasswordModal() {
-	tbConfig := pg.ticketBuyerWallet.AutoTicketsBuyerConfig()
+	tbConfig := pg.WL.SelectedWallet.Wallet.AutoTicketsBuyerConfig()
 	balToMaintain := dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain)
-	name, err := pg.ticketBuyerWallet.AccountNameRaw(uint32(tbConfig.PurchaseAccount))
+	name, err := pg.WL.SelectedWallet.Wallet.AccountNameRaw(uint32(tbConfig.PurchaseAccount))
 	if err != nil {
 		pg.Toast.NotifyError(values.StringF(values.StrTicketError, err))
 		return
@@ -332,7 +314,7 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 		SetCancelable(false).
 		UseCustomWidget(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.Theme.Label(values.TextSize14, values.StringF(values.StrWalletToPurchaseFrom, pg.ticketBuyerWallet.Name)).Layout),
+				layout.Rigid(pg.Theme.Label(values.TextSize14, values.StringF(values.StrWalletToPurchaseFrom, pg.WL.SelectedWallet.Wallet.Name)).Layout),
 				layout.Rigid(pg.Theme.Label(values.TextSize14, values.StringF(values.StrSelectedAccount, name)).Layout),
 				layout.Rigid(pg.Theme.Label(values.TextSize14, values.StringF(values.StrBalToMaintainValue, balToMaintain)).Layout), layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", tbConfig.VspHost))
@@ -377,14 +359,14 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			}
 
 			go func() {
-				err := pg.ticketBuyerWallet.StartTicketBuyer([]byte(password))
+				err := pg.WL.SelectedWallet.Wallet.StartTicketBuyer([]byte(password))
 				if err != nil {
 					pg.Toast.NotifyError(err.Error())
 					pm.SetLoading(false)
 					return
 				}
 
-				pg.stake.SetChecked(pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive())
+				pg.stake.SetChecked(pg.WL.SelectedWallet.Wallet.IsAutoTicketsPurchaseActive())
 				pg.ParentWindow().Reload()
 			}()
 			pm.Dismiss()

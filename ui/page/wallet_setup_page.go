@@ -434,7 +434,7 @@ func (pg *CreateWallet) HandleUserInteractions() {
 						m.SetLoading(false)
 						return
 					}
-					pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
+					wal.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 					m.Dismiss()
 
 					pg.handlerWalletDexServerSelectorCallBacks()
