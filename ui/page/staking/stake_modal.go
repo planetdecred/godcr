@@ -89,7 +89,7 @@ func (tb *ticketBuyerModal) OnResume() {
 				(tbConfig.PurchaseAccount == wal.MixedAccountNumber()) {
 				tb.accountSelector.SetSelectedAccount(acct)
 			} else {
-				err := tb.accountSelector.SelectFirstWalletValidAccount(nil)
+				err := tb.accountSelector.SelectFirstWalletValidAccount()
 				if err != nil {
 					tb.Toast.NotifyError(err.Error())
 				}
@@ -102,7 +102,7 @@ func (tb *ticketBuyerModal) OnResume() {
 	}
 
 	if tb.accountSelector.SelectedAccount() == nil {
-		err := tb.accountSelector.SelectFirstWalletValidAccount(nil)
+		err := tb.accountSelector.SelectFirstWalletValidAccount()
 		if err != nil {
 			tb.Toast.NotifyError(err.Error())
 		}
@@ -171,7 +171,7 @@ func (tb *ticketBuyerModal) canSave() bool {
 }
 
 func (tb *ticketBuyerModal) initializeAccountSelector() {
-	tb.accountSelector = components.NewAccountSelector(tb.Load, nil).
+	tb.accountSelector = components.NewAccountSelector(tb.Load).
 		Title(values.String(values.StrPurchasingAcct)).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {

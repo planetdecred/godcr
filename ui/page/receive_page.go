@@ -108,7 +108,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.copyAddressButton.TextSize = values.TextSize14
 	pg.copyAddressButton.Inset = layout.UniformInset(values.MarginPadding0)
 
-	pg.selector = components.NewAccountSelector(pg.Load, nil).
+	pg.selector = components.NewAccountSelector(pg.Load).
 		Title(values.String(values.StrReceivingAddress)).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)
@@ -142,7 +142,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 func (pg *ReceivePage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.selector.ListenForTxNotifications(pg.ctx, pg.ParentWindow())
-	pg.selector.SelectFirstWalletValidAccount(nil) // Want to reset the user's selection everytime this page appears?
+	pg.selector.SelectFirstWalletValidAccount() // Want to reset the user's selection everytime this page appears?
 	// might be better to track the last selection in a variable and reselect it.
 	selectedWallet := pg.multiWallet.WalletWithID(pg.selector.SelectedAccount().WalletID)
 	currentAddress, err := selectedWallet.CurrentAddress(pg.selector.SelectedAccount().Number)

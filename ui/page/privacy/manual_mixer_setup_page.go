@@ -46,7 +46,7 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 	}
 
 	// Mixed account picker
-	pg.mixedAccountSelector = components.NewAccountSelector(l, wallet).
+	pg.mixedAccountSelector = components.NewAccountSelector(l).
 		Title("Mixed account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
@@ -68,7 +68,7 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 		})
 
 	// Unmixed account picker
-	pg.unmixedAccountSelector = components.NewAccountSelector(l, wallet).
+	pg.unmixedAccountSelector = components.NewAccountSelector(l).
 		Title("Unmixed account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
@@ -102,8 +102,8 @@ func NewManualMixerSetupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *ManualM
 func (pg *ManualMixerSetupPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
-	pg.mixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet)
-	pg.unmixedAccountSelector.SelectFirstWalletValidAccount(pg.wallet)
+	pg.mixedAccountSelector.SelectFirstWalletValidAccount()
+	pg.unmixedAccountSelector.SelectFirstWalletValidAccount()
 }
 
 // Layout draws the page UI components into the provided layout context
