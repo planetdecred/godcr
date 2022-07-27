@@ -384,11 +384,13 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 					if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
 						pg.Toast.Notify(values.String(values.StrWalletRemoved))
 						confirmRemoveWalletModal.Dismiss()
+						pg.ParentNavigator().CloseCurrentPage()
 						onWalSelected := func() {
-							pg.ParentNavigator().CloseCurrentPage()
+							pg.ParentWindow().CloseCurrentPage()
 						}
 						pg.ParentWindow().Display(NewWalletList(pg.Load, onWalSelected))
 					} else {
+						confirmRemoveWalletModal.Dismiss()
 						pg.ParentWindow().CloseAllPages()
 					}
 				}
