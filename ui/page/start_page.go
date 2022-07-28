@@ -98,7 +98,10 @@ func (sp *startPage) openWallets(password string) error {
 	onWalSelected := func() {
 		sp.ParentNavigator().ClearStackAndDisplay(NewMainPage(sp.Load))
 	}
-	sp.ParentNavigator().ClearStackAndDisplay(NewWalletList(sp.Load, onWalSelected))
+	onDexServerSelected := func(server string) {
+		log.Info("Not implemented yet...", server)
+	}
+	sp.ParentNavigator().ClearStackAndDisplay(NewWalletDexServerSelector(sp.Load, onWalSelected, onDexServerSelected))
 	return nil
 }
 

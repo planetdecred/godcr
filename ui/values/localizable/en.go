@@ -485,4 +485,6 @@ unlockWithPassword = "Unlock with password"
 "info" = "Info"
 "changeWalletName" = "Change wallet name"
 "account" = "Account"
+"selectDexServerToOpen" = "Select the Dex server you would like to open."
+"addDexServer" = "Add dex server"
 `

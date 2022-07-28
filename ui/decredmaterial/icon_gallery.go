@@ -24,7 +24,7 @@ type Icons struct {
 	DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon, LogoDarkMode, TimerDarkMode, Rebroadcast,
 	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon,
 	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon,
-	ChevronExpand, ChevronCollapse, ChevronLeft *Image
+	ChevronExpand, ChevronCollapse, ChevronLeft, NotSynced *Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -150,6 +150,7 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.ChevronExpand = NewImage(decredIcons["chevron_coll"])
 	i.ChevronCollapse = NewImage(decredIcons["chevron_expand"])
 	i.ChevronLeft = NewImage(decredIcons["chevron_left"])
+	i.NotSynced = NewImage(decredIcons["notSynced"])
 
 	return i
 }

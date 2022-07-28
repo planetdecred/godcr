@@ -15,7 +15,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-type addDexModal struct {
+type AddDexModal struct {
 	*load.Load
 	*decredmaterial.Modal
 	addDexServerBtn  decredmaterial.Button
@@ -25,81 +25,39 @@ type addDexModal struct {
 	materialLoader   material.LoaderStyle
 	cert             decredmaterial.Editor
 
-	onDexAdded            func()
-	knownServers          map[string]*decredmaterial.Clickable
-	selectedServer        string
-	pickServerFromListBtn decredmaterial.Button
-	useCustomServerBtn    decredmaterial.Button
-	isUseCustomServer     bool
+	onDexAdded func()
 }
 
-func newAddDexModal(l *load.Load) *addDexModal {
-	tabButton := func(text string, active bool) decredmaterial.Button {
-		btn := l.Theme.OutlineButton(text)
-		btn.CornerRadius = values.MarginPadding0
-		btn.Inset = layout.Inset{
-			Top:    values.MarginPadding5,
-			Bottom: values.MarginPadding5,
-			Left:   values.MarginPadding9,
-			Right:  values.MarginPadding9,
-		}
-		btn.TextSize = values.TextSize14
-		if !active {
-			btn.Background = l.Theme.Color.Background
-		}
-		return btn
-	}
-
-	md := &addDexModal{
-		Load:                  l,
-		Modal:                 l.Theme.ModalFloatTitle("add_dex_modal"),
-		dexServerAddress:      l.Theme.Editor(&widget.Editor{Submit: true}, strDexAddr),
-		cert:                  l.Theme.Editor(new(widget.Editor), strTLSCert),
-		addDexServerBtn:       l.Theme.Button(strSubmit),
-		cancelBtn:             l.Theme.OutlineButton(values.String(values.StrCancel)),
-		materialLoader:        material.Loader(l.Theme.Base),
-		pickServerFromListBtn: tabButton(strPickAServer, true),
-		useCustomServerBtn:    tabButton(strCustomServer, false),
+func NewAddDexModal(l *load.Load) *AddDexModal {
+	md := &AddDexModal{
+		Load:             l,
+		Modal:            l.Theme.ModalFloatTitle("add_dex_modal"),
+		dexServerAddress: l.Theme.Editor(&widget.Editor{Submit: true}, strDexAddr),
+		cert:             l.Theme.Editor(new(widget.Editor), strTLSCert),
+		addDexServerBtn:  l.Theme.Button(values.String(values.StrContinue)),
+		cancelBtn:        l.Theme.OutlineButton(values.String(values.StrCancel)),
+		materialLoader:   material.Loader(l.Theme.Base),
 	}
 	md.addDexServerBtn.SetEnabled(false)
-
-	clickable := func() *decredmaterial.Clickable {
-		cl := md.Theme.NewClickable(true)
-		cl.Radius = decredmaterial.Radius(0)
-		return cl
-	}
-
-	dexServers := sortExchanges(core.CertStore[md.Dexc().Core().Network()])
-	md.knownServers = make(map[string]*decredmaterial.Clickable, len(dexServers))
-	for _, server := range dexServers {
-		md.knownServers[server] = clickable()
-	}
-	if len(dexServers) > 0 {
-		md.selectedServer = dexServers[0]
-	}
 
 	return md
 }
 
-func (md *addDexModal) OnDismiss() {}
+func (md *AddDexModal) OnDismiss() {}
 
-func (md *addDexModal) OnResume() {}
+func (md *AddDexModal) OnResume() {}
 
-func (md *addDexModal) OnDexAdded(callback func()) *addDexModal {
+func (md *AddDexModal) OnDexAdded(callback func()) *AddDexModal {
 	md.onDexAdded = callback
 	return md
 }
 
-func (md *addDexModal) validateInputs() (bool, string) {
+func (md *AddDexModal) validateInputs() (bool, string) {
 	if md.isSending {
 		return false, ""
 	}
 
-	dexServer := md.selectedServer
-	if md.isUseCustomServer {
-		dexServer = md.dexServerAddress.Editor.Text()
-	}
-
+	dexServer := md.dexServerAddress.Editor.Text()
 	if dexServer == "" {
 		md.addDexServerBtn.SetEnabled(false)
 		return false, ""
@@ -109,7 +67,7 @@ func (md *addDexModal) validateInputs() (bool, string) {
 	return true, dexServer
 }
 
-func (md *addDexModal) Handle() {
+func (md *AddDexModal) Handle() {
 	canSubmit, dexServer := md.validateInputs()
 
 	if isDexSubmit, _ := decredmaterial.HandleEditorEvents(md.dexServerAddress.Editor); isDexSubmit && canSubmit {
@@ -120,36 +78,12 @@ func (md *addDexModal) Handle() {
 		md.doAddDexServer(dexServer)
 	}
 
-	if md.pickServerFromListBtn.Clicked() {
-		md.isUseCustomServer = false
-		md.pickServerFromListBtn.Background = md.Theme.Color.Surface
-		md.useCustomServerBtn.Background = md.Theme.Color.Background
-	}
-
-	if md.useCustomServerBtn.Clicked() {
-		md.isUseCustomServer = true
-		md.dexServerAddress.Editor.Focus()
-		md.useCustomServerBtn.Background = md.Theme.Color.Surface
-		md.pickServerFromListBtn.Background = md.Theme.Color.Background
-	}
-
 	if md.cancelBtn.Clicked() && !md.isSending {
 		md.Dismiss()
 	}
-
-	for host, cl := range md.knownServers {
-		if cl.Clicked() {
-			if md.selectedServer == host {
-				md.selectedServer = ""
-				break
-			}
-			md.selectedServer = host
-			break
-		}
-	}
 }
 
-func (md *addDexModal) doAddDexServer(serverAddr string) {
+func (md *AddDexModal) doAddDexServer(serverAddr string) {
 	if md.isSending {
 		return
 	}
@@ -162,10 +96,7 @@ func (md *addDexModal) doAddDexServer(serverAddr string) {
 			md.Modal.SetDisabled(false)
 		}()
 
-		var cert []byte
-		if md.isUseCustomServer {
-			cert = []byte(md.cert.Editor.Text())
-		}
+		cert := []byte(md.cert.Editor.Text())
 
 		dexServer, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(DEXClientPass), cert)
 		if err != nil {
@@ -183,28 +114,24 @@ func (md *addDexModal) doAddDexServer(serverAddr string) {
 	}()
 }
 
-func (md *addDexModal) Layout(gtx layout.Context) D {
+func (md *AddDexModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
-		md.Load.Theme.Label(values.TextSize20, strAddADex).Layout,
+		md.Load.Theme.Label(values.TextSize20, values.String(values.StrAddDexServer)).Layout,
 		func(gtx C) D {
-			return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-				layout.Flexed(.5, md.pickServerFromListBtn.Layout),
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(md.dexServerAddress.Layout),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left:  values.MarginPadding1,
-						Right: values.MarginPadding1,
-					}.Layout(gtx, func(gtx C) D { return D{} })
+					gtx.Constraints.Max.Y = 300
+					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, md.cert.Layout)
 				}),
-				layout.Flexed(.5, md.useCustomServerBtn.Layout),
 			)
 		},
-		func(gtx C) D {
-			if md.isUseCustomServer {
-				return md.customServerLayout(gtx)
-			}
-			return md.serversLayout(gtx)
-		},
 		md.Theme.Separator().Layout,
+		func(gtx C) D {
+			customServerText := md.Theme.Label(values.TextSize16, strCustomServer)
+			customServerText.Color = md.Theme.Color.Primary
+			return customServerText.Layout(gtx)
+		},
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -234,52 +161,7 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 	return md.Modal.Layout(gtx, w)
 }
 
-func (md *addDexModal) serversLayout(gtx C) D {
-	dexServers := sortExchanges(core.CertStore[md.Dexc().Core().Network()])
-	serverWidgets := make([]layout.FlexChild, len(dexServers))
-
-	for i := 0; i < len(dexServers); i++ {
-		host := dexServers[i]
-		serverWidgets[i] = layout.Rigid(func(gtx C) D {
-			return md.knownServers[host].Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return layout.Inset{
-					Top:    values.MarginPadding8,
-					Bottom: values.MarginPadding8,
-					Left:   values.MarginPadding12,
-					Right:  values.MarginPadding12,
-				}.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.Y = 45
-					return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(md.Theme.Label(values.TextSize14, host).Layout),
-						layout.Rigid(func(gtx C) D {
-							if md.selectedServer != host {
-								return D{}
-							}
-							ic := decredmaterial.NewIcon(md.Theme.Icons.NavigationCheck)
-							ic.Color = md.Theme.Color.Success
-							return ic.Layout(gtx, values.MarginPadding20)
-						}),
-					)
-				})
-			})
-		})
-	}
-
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx, serverWidgets...)
-}
-
-func (md *addDexModal) customServerLayout(gtx C) D {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(md.dexServerAddress.Layout),
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Max.Y = 300
-			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, md.cert.Layout)
-		}),
-	)
-}
-
-func (md *addDexModal) payFeeAndRegister(dexServer *core.Exchange, cert []byte) {
+func (md *AddDexModal) payFeeAndRegister(dexServer *core.Exchange, cert []byte) {
 	// Create the assetSelectorModal now, it'll remain open/visible
 	// until the fee is paid and registration is completed or the
 	// user manually closes it.
@@ -312,6 +194,7 @@ func (md *addDexModal) payFeeAndRegister(dexServer *core.Exchange, cert []byte) 
 					}
 					assetSelectorModal.Dismiss()
 					md.onDexAdded()
+					md.saveDexServer(dexServer.Host, cert)
 				}()
 				return true
 			})
@@ -351,4 +234,18 @@ func confirmRegisterModalDesc(dexServer *core.Exchange, selectedFeeAsset string)
 	feeAsset := dexServer.RegFees[selectedFeeAsset]
 	feeAmt := formatAmountUnit(feeAsset.ID, selectedFeeAsset, feeAsset.Amt)
 	return fmt.Sprintf("Confirm DEX registration. When you submit this form, %s will be spent from your wallet to pay registration fees.", feeAmt)
+}
+
+// saveDexServer after pay the fee success save the host and cert to db.
+func (md *AddDexModal) saveDexServer(host string, cert []byte) {
+	dexServer := new(components.DexServer)
+	err := md.Load.WL.MultiWallet.ReadUserConfigValue(components.KnownDexServersConfigKey, &dexServer)
+	if err != nil {
+		return
+	}
+	if dexServer.SavedHosts == nil {
+		dexServer.SavedHosts = make(map[string][]byte)
+	}
+	dexServer.SavedHosts[host] = cert
+	md.Load.WL.MultiWallet.SaveUserConfigValue(components.KnownDexServersConfigKey, dexServer)
 }

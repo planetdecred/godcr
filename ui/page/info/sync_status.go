@@ -13,14 +13,6 @@ import (
 )
 
 func (pg *WalletInfo) initWalletStatusWidgets() {
-	pg.syncedIcon = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
-	pg.syncedIcon.Color = pg.Theme.Color.Success
-
-	pg.syncingIcon = pg.Theme.Icons.SyncingIcon
-
-	pg.notSyncedIcon = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
-	pg.notSyncedIcon.Color = pg.Theme.Color.Danger
-
 	pg.walletStatusIcon = decredmaterial.NewIcon(pg.Theme.Icons.ImageBrightness1)
 	pg.syncSwitch = pg.Theme.Switch()
 }
@@ -99,21 +91,16 @@ func (pg *WalletInfo) syncBoxTitleRow(gtx C) D {
 }
 
 func (pg *WalletInfo) syncStatusIcon(gtx C) D {
-	syncStatusIcon := pg.notSyncedIcon
-	syncStatusIcon.Color = pg.Theme.Color.Danger
+	icon := pg.Theme.Icons.SyncingIcon
 	if pg.WL.MultiWallet.IsSynced() {
-		syncStatusIcon = pg.syncedIcon
-		syncStatusIcon.Color = pg.Theme.Color.Success
-	}
-	i := layout.Inset{Right: values.MarginPadding16}
-	if pg.WL.MultiWallet.IsSyncing() {
-		return i.Layout(gtx, func(gtx C) D {
-			return pg.syncingIcon.LayoutSize(gtx, values.MarginPadding20)
-		})
+		icon = pg.Theme.Icons.SuccessIcon
+	} else if pg.WL.MultiWallet.IsSyncing() {
+		icon = pg.Theme.Icons.SyncingIcon
 	}
 
+	i := layout.Inset{Right: values.MarginPadding16}
 	return i.Layout(gtx, func(gtx C) D {
-		return syncStatusIcon.Layout(gtx, values.MarginPadding20)
+		return icon.LayoutSize(gtx, values.MarginPadding20)
 	})
 }
 
