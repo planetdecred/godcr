@@ -5,7 +5,7 @@ import (
 
 	"gioui.org/layout"
 
-	"github.com/decred/dcrd/dcrutil"
+	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
@@ -65,116 +65,61 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
-	d := func(gtx C) D {
-		sp := components.SubPage{
-			Load:       pg.Load,
-			Title:      values.String(values.StrStakeShuffle),
-			WalletName: pg.WL.SelectedWallet.Wallet.Name,
-			BackButton: pg.backButton,
-			InfoButton: pg.infoButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
-			},
-			InfoTemplate: modal.PrivacyInfoTemplate,
-			Body: func(gtx layout.Context) layout.Dimensions {
-				widgets := []func(gtx C) D{
-					func(gtx C) D {
-						return components.MixerInfoLayout(gtx, pg.Load, pg.WL.SelectedWallet.Wallet.IsAccountMixerActive(),
-							pg.toggleMixer.Layout, func(gtx C) D {
-								mixedBalance := "0.00"
-								unmixedBalance := "0.00"
-								accounts, _ := pg.WL.SelectedWallet.Wallet.GetAccountsRaw()
-								for _, acct := range accounts.Acc {
-									if acct.Number == pg.WL.SelectedWallet.Wallet.MixedAccountNumber() {
-										mixedBalance = dcrutil.Amount(acct.TotalBalance).String()
-									} else if acct.Number == pg.WL.SelectedWallet.Wallet.UnmixedAccountNumber() {
-										unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
-									}
-								}
-
-								return components.MixerInfoContentWrapper(gtx, pg.Load, func(gtx C) D {
-									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													txt := pg.Theme.Label(values.TextSize14, "Unmixed balance")
-													txt.Color = pg.Theme.Color.GrayText2
-													return txt.Layout(gtx)
-												}),
-												layout.Rigid(func(gtx C) D {
-													return components.LayoutBalance(gtx, pg.Load, unmixedBalance)
-												}),
-											)
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Center.Layout(gtx, pg.Theme.Icons.ArrowDownIcon.Layout24dp)
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													t := pg.Theme.Label(values.TextSize14, "Mixed balance")
-													t.Color = pg.Theme.Color.GrayText2
-													return t.Layout(gtx)
-												}),
-												layout.Rigid(func(gtx C) D {
-													return components.LayoutBalance(gtx, pg.Load, mixedBalance)
-												}),
-											)
-										}),
-									)
-								})
-							})
-					},
-					func(gtx C) D {
-						return pg.mixerSettingsLayout(gtx)
-					},
-				}
-				return pg.pageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
-					m := values.MarginPadding10
-					if i == len(widgets) {
-						m = values.MarginPadding0
-					}
-					return layout.Inset{Bottom: m}.Layout(gtx, widgets[i])
-				})
-
-			},
-		}
-		return sp.Layout(pg.ParentWindow(), gtx)
-	}
-
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
-		return pg.layoutMobile(gtx, d)
+		return pg.layoutMobile(gtx)
 	}
-	return pg.layoutDesktop(gtx, d)
+	return pg.layoutDesktop(gtx)
 }
 
-func (pg *AccountMixerPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformPadding(gtx, body)
-}
+func (pg *AccountMixerPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
+	return components.UniformPadding(gtx, func(gtx C) D {
+		return components.MixerInfoLayout(gtx, pg.Load, pg.wallet.IsAccountMixerActive(), pg.toggleMixer.Layout, func(gtx C) D {
+			mixedBalance := "0.00"
+			unmixedBalance := "0.00"
+			accounts, _ := pg.wallet.GetAccountsRaw()
 
-func (pg *AccountMixerPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, false, body)
-}
+			for _, acct := range accounts.Acc {
+				if acct.Number == pg.wallet.MixedAccountNumber() {
+					mixedBalance = dcrutil.Amount(acct.TotalBalance).String()
+				} else if acct.Number == pg.wallet.UnmixedAccountNumber() {
+					unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
+				}
+			}
 
-func (pg *AccountMixerPage) mixerSettingsLayout(gtx layout.Context) layout.Dimensions {
-	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		mixedAccountName, _ := pg.WL.SelectedWallet.Wallet.AccountName(pg.WL.SelectedWallet.Wallet.MixedAccountNumber())
-		unmixedAccountName, _ := pg.WL.SelectedWallet.Wallet.AccountName(pg.WL.SelectedWallet.Wallet.UnmixedAccountNumber())
-
-		row := func(txt1, txt2 string) D {
-			return layout.Inset{
-				Left:   values.MarginPadding15,
-				Right:  values.MarginPadding15,
-				Top:    values.MarginPadding10,
-				Bottom: values.MarginPadding10,
-			}.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(pg.Theme.Label(values.TextSize16, txt1).Layout),
-					layout.Rigid(pg.Theme.Body2(txt2).Layout),
+			return components.MixerInfoContentWrapper(gtx, pg.Load, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								txt := pg.Theme.Label(values.TextSize14, "Unmixed balance")
+								txt.Color = pg.Theme.Color.GrayText2
+								return txt.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return components.LayoutBalance(gtx, pg.Load, unmixedBalance)
+							}),
+						)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Center.Layout(gtx, pg.Theme.Icons.ArrowDownIcon.Layout24dp)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								t := pg.Theme.Label(values.TextSize14, "Mixed balance")
+								t.Color = pg.Theme.Color.GrayText2
+								return t.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return components.LayoutBalance(gtx, pg.Load, mixedBalance)
+							}),
+						)
+					}),
 				)
 			})
-		}
+		})
+	})
+}
 
 func (pg *AccountMixerPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return D{}
