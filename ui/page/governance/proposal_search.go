@@ -124,7 +124,8 @@ func (pg *ProposalsPage) searchProposal(searchTerm string) {
 		log.Error(err)
 		return
 	}
-	log.Info(searchResults)
+
+	log.Infof("Search Result: %v", searchResults)
 
 	var hits []*searchResult
 	for _, v := range searchResults.Hits {
@@ -146,9 +147,8 @@ func (pg *ProposalsPage) searchProposal(searchTerm string) {
 			Username: username,
 		})
 	}
-	if len(hits) > 0 {
-		pg.proposalSearchChan <- hits
-	}
+
+	pg.proposalSearchChan <- hits
 	return
 }
 

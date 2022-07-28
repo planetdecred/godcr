@@ -394,6 +394,18 @@ func (pg *ProposalsPage) layoutContent(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 						if pg.searchResultAvailable {
+							if len(pg.proposalSearchResult) == 0 {
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								text := pg.Load.Theme.Body1("No matches")
+								text.Color = pg.Load.Theme.Color.GrayText3
+
+								return layout.Center.Layout(gtx, func(gtx C) D {
+									return layout.Inset{
+										Top:    values.MarginPadding10,
+										Bottom: values.MarginPadding10,
+									}.Layout(gtx, text.Layout)
+								})
+							}
 							return pg.searchResultList.Layout(gtx, len(pg.proposalSearchResult), func(gtx C, i int) D {
 								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
