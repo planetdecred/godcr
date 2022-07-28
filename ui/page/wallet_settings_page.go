@@ -388,7 +388,10 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 						onWalSelected := func() {
 							pg.ParentWindow().CloseCurrentPage()
 						}
-						pg.ParentWindow().Display(NewWalletList(pg.Load, onWalSelected))
+						onDexServerSelected := func(server string) {
+							log.Info("Not implemented yet...", server)
+						}
+						pg.ParentWindow().Display(NewWalletDexServerSelector(pg.Load, onWalSelected, onDexServerSelected))
 					} else {
 						confirmRemoveWalletModal.Dismiss()
 						pg.ParentWindow().CloseAllPages()
