@@ -383,8 +383,17 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 				walletDeleted := func() {
 					if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
 						pg.Toast.Notify(values.String(values.StrWalletRemoved))
+						confirmRemoveWalletModal.Dismiss()
 						pg.ParentNavigator().CloseCurrentPage()
+						onWalSelected := func() {
+							pg.ParentWindow().CloseCurrentPage()
+						}
+						onDexServerSelected := func(server string) {
+							log.Info("Not implemented yet...", server)
+						}
+						pg.ParentWindow().Display(NewWalletDexServerSelector(pg.Load, onWalSelected, onDexServerSelected))
 					} else {
+						confirmRemoveWalletModal.Dismiss()
 						pg.ParentWindow().CloseAllPages()
 					}
 				}
@@ -399,7 +408,6 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 							confirmRemoveWalletModal.SetLoading(false)
 						} else {
 							walletDeleted()
-							confirmRemoveWalletModal.Dismiss()
 						}
 					}()
 					return false
