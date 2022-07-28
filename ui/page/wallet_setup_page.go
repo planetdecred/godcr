@@ -437,10 +437,7 @@ func (pg *CreateWallet) HandleUserInteractions() {
 					pg.WL.MultiWallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 					m.Dismiss()
 
-					onWalSelected := func() {
-						pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
-					}
-					pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
+					pg.handlerWalletDexServerSelectorCallBacks()
 				}()
 				return false
 			})
@@ -451,10 +448,7 @@ func (pg *CreateWallet) HandleUserInteractions() {
 	if pg.restoreBtn.Clicked() {
 		afterRestore := func() {
 			// todo setup mixer for restored accounts automatically
-			onWalSelected := func() {
-				pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
-			}
-			pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
+			pg.handlerWalletDexServerSelectorCallBacks()
 		}
 		pg.ParentNavigator().Display(info.NewRestorePage(pg.Load, afterRestore))
 	}
@@ -467,11 +461,7 @@ func (pg *CreateWallet) HandleUserInteractions() {
 				pg.watchOnlyWalletHex.SetError(err.Error())
 				return
 			}
-
-			onWalSelected := func() {
-				pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
-			}
-			pg.ParentNavigator().ClearStackAndDisplay(NewWalletList(pg.Load, onWalSelected))
+			pg.handlerWalletDexServerSelectorCallBacks()
 		}()
 	}
 }
@@ -490,4 +480,14 @@ func (pg *CreateWallet) validInputs() bool {
 	}
 
 	return true
+}
+
+func (pg *CreateWallet) handlerWalletDexServerSelectorCallBacks() {
+	onWalSelected := func() {
+		pg.ParentNavigator().ClearStackAndDisplay(NewMainPage(pg.Load))
+	}
+	onDexServerSelected := func(server string) {
+		log.Info("Not implemented yet...", server)
+	}
+	pg.ParentNavigator().ClearStackAndDisplay(NewWalletDexServerSelector(pg.Load, onWalSelected, onDexServerSelected))
 }

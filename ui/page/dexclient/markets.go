@@ -167,7 +167,7 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.addDexBtn.Button.Clicked() {
-		newAddDexModal := newAddDexModal(pg.Load).OnDexAdded(func() {
+		newAddDexModal := NewAddDexModal(pg.Load).OnDexAdded(func() {
 			pg.ParentWindow().Reload()
 		})
 		pg.ParentWindow().ShowModal(newAddDexModal)
