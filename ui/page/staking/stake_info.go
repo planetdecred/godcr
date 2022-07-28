@@ -33,7 +33,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 							layout.Rigid(func(gtx C) D {
 								return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										title := pg.Theme.Label(values.TextSize16, values.String(values.StrTicketPrice)+":")
+										title := pg.Theme.Label(values.TextSize16, values.String(values.StrTicketPrice)+": ")
 										title.Color = col
 										return title.Layout(gtx)
 									}),
@@ -67,7 +67,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								)
 							}),
 							pg.dataRows(values.String(values.StrLiveTickets), pg.ticketOverview.Unmined),
-							pg.dataRows("Can Buy", pg.CalculateTotalTicketsCanBuy()),
+							pg.dataRows(values.String(values.StrCanBuy), pg.CalculateTotalTicketsCanBuy()),
 						)
 					}
 
@@ -76,13 +76,19 @@ func (pg *Page) stakePriceSection(gtx C) D {
 							layout.Rigid(func(gtx C) D {
 								title := pg.Theme.Label(values.TextSize16, values.String(values.StrStake))
 								title.Color = col
-								return title.Layout(gtx)
+								if !pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
+									return title.Layout(gtx)
+								}
+								return D{}
 							}),
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Right: values.MarginPadding40,
-									Left:  values.MarginPadding4,
-								}.Layout(gtx, pg.stake.Layout)
+								if !pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
+									return layout.Inset{
+										Right: values.MarginPadding40,
+										Left:  values.MarginPadding4,
+									}.Layout(gtx, pg.stake.Layout)
+								}
+								return D{}
 							}),
 							layout.Rigid(func(gtx C) D {
 								icon := pg.Theme.Icons.HeaderSettingsIcon
@@ -90,7 +96,10 @@ func (pg *Page) stakePriceSection(gtx C) D {
 								// if pg.ticketBuyerWallet.IsAutoTicketsPurchaseActive() {
 								// 	icon = pg.Theme.Icons.SettingsInactiveIcon
 								// }
-								return pg.stakeSettings.Layout(gtx, icon.Layout24dp)
+								if !pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
+									return pg.stakeSettings.Layout(gtx, icon.Layout24dp)
+								}
+								return D{}
 							}),
 							layout.Rigid(func(gtx C) D {
 								pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
