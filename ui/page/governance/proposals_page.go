@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/blevesearch/bleve/v2"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/listeners"
@@ -45,6 +46,7 @@ type ProposalsPage struct {
 	orderDropDown    *decredmaterial.DropDown
 	categoryDropDown *decredmaterial.DropDown
 	proposalsList    *decredmaterial.ClickableList
+	searchResultList *decredmaterial.ClickableList
 	syncButton       *widget.Clickable
 	searchEditor     decredmaterial.Editor
 
@@ -53,6 +55,11 @@ type ProposalsPage struct {
 	updatedIcon *decredmaterial.Icon
 
 	proposalItems []*components.ProposalItem
+
+	proposalSearchChan    chan []*searchResult
+	proposalIndex         bleve.Index
+	proposalSearchResult  []*searchResult
+	searchResultAvailable bool
 
 	syncCompleted bool
 	isSyncing     bool
@@ -78,6 +85,9 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
 	pg.proposalsList.IsShadowEnabled = true
 
+	pg.searchResultList = pg.Theme.NewClickableList(layout.Vertical)
+	pg.searchResultList.IsShadowEnabled = true
+
 	_, pg.infoButton = components.SubpageHeaderButtons(l)
 	pg.infoButton.Size = values.MarginPadding20
 
@@ -98,6 +108,10 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 			Text: values.String(values.StrAbandoned),
 		},
 	}, values.ProposalDropdownGroup, 1)
+
+	pg.proposalSearchChan = make(chan []*searchResult, 2)
+	pg.proposalIndex = nil
+	pg.searchResultAvailable = false
 
 	return pg
 }
@@ -127,6 +141,9 @@ func (pg *ProposalsPage) fetchProposals() {
 	}
 
 	proposalItems := components.LoadProposals(proposalFilter, newestFirst, pg.Load)
+	go func() {
+		pg.indexProposal(proposalItems)
+	}()
 
 	// group 'In discussion' and 'Active' proposals into under review
 	listItems := make([]*components.ProposalItem, 0)
@@ -160,7 +177,9 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 	}
 
 	pg.searchEditor.EditorIconButtonEvent = func() {
-		//TODO: Proposals search functionality
+		go func() {
+			pg.searchProposal(pg.searchEditor.Editor.Text())
+		}()
 	}
 
 	if clicked, selectedItem := pg.proposalsList.ItemClicked(); clicked {
@@ -170,6 +189,20 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 
 		pg.ParentNavigator().Display(NewProposalDetailsPage(pg.Load, &selectedProposal))
 	}
+
+	if clicked, itemIndex := pg.searchResultList.ItemClicked(); clicked {
+		searchItem := pg.proposalSearchResult[itemIndex]
+		go func() {
+			prop, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(searchItem.Token)
+			if err != nil {
+				log.Errorf("Error fetching proposal: %v", err)
+			}
+
+			pg.ParentNavigator().Display(NewProposalDetailsPage(pg.Load, prop))
+		}()
+	}
+
+	pg.handleSearchEditorEvents()
 
 	for pg.syncButton.Clicked() {
 		go pg.multiWallet.Politeia.Sync()
@@ -203,6 +236,28 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 	}
 }
 
+func (pg *ProposalsPage) handleSearchEditorEvents() {
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pg.searchEditor.Editor)
+	if isSubmit {
+		go func() {
+			pg.searchProposal(pg.searchEditor.Editor.Text())
+		}()
+
+		return
+	}
+
+	if isChanged {
+		if pg.searchEditor.Editor.Len() == 0 && pg.searchResultAvailable {
+			pg.searchResultAvailable = false
+			return
+		}
+
+		go func() {
+			pg.searchProposal(pg.searchEditor.Editor.Text())
+		}()
+	}
+}
+
 // OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable
 // features that are irrelevant when the page is NOT displayed.
@@ -212,6 +267,12 @@ func (pg *ProposalsPage) HandleUserInteractions() {
 // Part of the load.Page interface.
 func (pg *ProposalsPage) OnNavigatedFrom() {
 	pg.ctxCancel()
+
+	if pg.proposalIndex != nil {
+		// Close the proposal index.
+		pg.proposalIndex.Close()
+		pg.proposalIndex = nil
+	}
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -234,21 +295,21 @@ func (pg *ProposalsPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, pg.layoutContent)
 					}),
 					//TODO: temp removal till after V1
-					// layout.Expanded(func(gtx C) D {
-					// 	gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding150)
-					// 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					layout.Expanded(func(gtx C) D {
+						gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding150)
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-					// 	card := pg.Theme.Card()
-					// 	card.Radius = decredmaterial.Radius(8)
-					// 	return card.Layout(gtx, func(gtx C) D {
-					// 		return layout.Inset{
-					// 			Left:   values.MarginPadding10,
-					// 			Right:  values.MarginPadding10,
-					// 			Top:    values.MarginPadding2,
-					// 			Bottom: values.MarginPadding2,
-					// 		}.Layout(gtx, pg.searchEditor.Layout)
-					// 	})
-					// }),
+						card := pg.Theme.Card()
+						card.Radius = decredmaterial.Radius(8)
+						return card.Layout(gtx, func(gtx C) D {
+							return layout.Inset{
+								Left:   values.MarginPadding10,
+								Right:  values.MarginPadding10,
+								Top:    values.MarginPadding2,
+								Bottom: values.MarginPadding2,
+							}.Layout(gtx, pg.searchEditor.Layout)
+						})
+					}),
 					layout.Expanded(func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.E.Layout(gtx, func(gtx C) D {
@@ -332,9 +393,23 @@ func (pg *ProposalsPage) layoutContent(gtx C) D {
 			return pg.Theme.List(pg.listContainer).Layout(gtx, 1, func(gtx C, i int) D {
 				return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+						if pg.searchResultAvailable {
+							return pg.searchResultList.Layout(gtx, len(pg.proposalSearchResult), func(gtx C, i int) D {
+								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return pg.layoutSearchResult(gtx, pg.Load, pg.proposalSearchResult[i])
+									}),
+									layout.Rigid(func(gtx C) D {
+										return pg.Theme.Separator().Layout(gtx)
+									}),
+								)
+							})
+						}
+
 						if len(proposalItems) == 0 {
 							return components.LayoutNoProposalsFound(gtx, pg.Load, pg.isSyncing, int32(pg.categoryDropDown.SelectedIndex()))
 						}
+
 						return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
@@ -432,6 +507,10 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 					pg.fetchProposals()
 					pg.ParentWindow().Reload()
 				}
+			case p := <-pg.proposalSearchChan:
+				pg.proposalSearchResult = p
+				pg.searchResultAvailable = true
+				pg.ParentWindow().Reload()
 			case <-pg.ctx.Done():
 				pg.WL.MultiWallet.Politeia.RemoveNotificationListener(ProposalsPageID)
 				close(pg.ProposalNotifChan)

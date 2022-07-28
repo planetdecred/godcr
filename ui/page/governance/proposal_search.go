@@ -10,9 +10,10 @@ import (
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/v2/analysis/lang/en"
 	"github.com/blevesearch/bleve/v2/mapping"
-	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/blevesearch/bleve/v2/search/highlight/highlighter/ansi"
 
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -21,19 +22,20 @@ const (
 	proposalIndexDir = "/proposalindex.bleve"
 	nameField        = "name"
 	usernameField    = "username"
+	tokenField       = "token"
 )
 
 // searchResult models the search result.
 // It's fields are proposal indexed fields.
 type searchResult struct {
+	Token    string
 	Name     string
 	Username string
 }
 
-//
 func (pg *ProposalsPage) getIndex() (index bleve.Index, err error) {
 	if pg.proposalIndex == nil {
-		indexPath := pg.WL.Wallet.Root + proposalIndexDir
+		indexPath := pg.WL.WalletDirectory() + proposalIndexDir
 		if indexPath == "" {
 			return index, errors.New("Error: Empty config root")
 		}
@@ -99,6 +101,7 @@ func (pg *ProposalsPage) buildIndexMapping() (mapping.IndexMapping, error) {
 	proposalMapping := bleve.NewDocumentMapping()
 	proposalMapping.AddFieldMappingsAt(nameField, engTextFieldMapping)
 	proposalMapping.AddFieldMappingsAt(usernameField, keywordFieldMapping)
+	proposalMapping.AddFieldMappingsAt(tokenField, keywordFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
 	indexMapping.AddDocumentMapping("proposal", proposalMapping)
@@ -114,12 +117,14 @@ func (pg *ProposalsPage) searchProposal(searchTerm string) {
 	}
 	query := bleve.NewMatchQuery(searchTerm)
 	search := bleve.NewSearchRequest(query)
-	search.Fields = []string{nameField, usernameField}
+	search.Highlight = bleve.NewHighlightWithStyle(ansi.Name)
+	search.Fields = []string{nameField, usernameField, tokenField}
 	searchResults, err := proposalIndex.Search(search)
 	if err != nil {
 		log.Error(err)
 		return
 	}
+	log.Info(searchResults)
 
 	var hits []*searchResult
 	for _, v := range searchResults.Hits {
@@ -127,11 +132,16 @@ func (pg *ProposalsPage) searchProposal(searchTerm string) {
 		if !ok {
 			log.Error("Can't assert proposal " + nameField)
 		}
-		username, ok := v.Fields["username"].(string)
+		username, ok := v.Fields[usernameField].(string)
 		if !ok {
 			log.Error("Can't assert proposal " + usernameField)
 		}
+		token, ok := v.Fields[tokenField].(string)
+		if !ok {
+			log.Error("Can't assert proposal " + tokenField)
+		}
 		hits = append(hits, &searchResult{
+			Token:    token,
 			Name:     name,
 			Username: username,
 		})
