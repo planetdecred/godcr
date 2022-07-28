@@ -405,7 +405,6 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 							confirmRemoveWalletModal.SetLoading(false)
 						} else {
 							walletDeleted()
-							confirmRemoveWalletModal.Dismiss()
 						}
 					}()
 					return false
