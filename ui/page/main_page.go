@@ -791,8 +791,10 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 						}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
-									Left: values.MarginPadding13,
-								}.Layout(gtx, mp.Theme.Icons.ChevronLeft.Layout12dp)
+									Left: values.MarginPadding12,
+								}.Layout(gtx, func(gtx C) D {
+									return mp.Theme.Icons.ChevronLeft.LayoutSize(gtx, values.MarginPadding8)
+								})
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
