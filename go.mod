@@ -8,6 +8,7 @@ require (
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
+	github.com/blevesearch/bleve/v2 v2.3.2
 	github.com/decred/dcrd/dcrutil/v4 v4.0.0
 	github.com/decred/slog v1.2.0
 	github.com/gen2brain/beeep v0.0.0-20220402123239-6a3042f4b71a
@@ -30,11 +31,27 @@ require (
 	gioui.org/cpu v0.0.0-20210817075930-8d6a761490d2 // indirect
 	gioui.org/shader v1.0.6 // indirect
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
+	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/aead/siphash v1.0.1 // indirect
 	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/asdine/storm v0.0.0-20190216191021-fe89819f6282 // indirect
 	github.com/benoitkugler/textlayout v0.1.1 // indirect
+	github.com/bits-and-blooms/bitset v1.2.0 // indirect
+	github.com/blevesearch/bleve_index_api v1.0.1 // indirect
+	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
+	github.com/blevesearch/gtreap v0.1.1 // indirect
+	github.com/blevesearch/mmap-go v1.0.3 // indirect
+	github.com/blevesearch/scorch_segment_api/v2 v2.1.0 // indirect
+	github.com/blevesearch/segment v0.9.0 // indirect
+	github.com/blevesearch/snowballstem v0.9.0 // indirect
+	github.com/blevesearch/upsidedown_store_api v1.0.1 // indirect
+	github.com/blevesearch/vellum v1.0.7 // indirect
+	github.com/blevesearch/zapx/v11 v11.3.3 // indirect
+	github.com/blevesearch/zapx/v12 v12.3.3 // indirect
+	github.com/blevesearch/zapx/v13 v13.3.3 // indirect
+	github.com/blevesearch/zapx/v14 v14.3.3 // indirect
+	github.com/blevesearch/zapx/v15 v15.3.3 // indirect
 	github.com/btcsuite/btcd v0.22.0-beta.0.20211026140004-31791ba4dc6e // indirect
 	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
 	github.com/btcsuite/btcutil v1.0.3-0.20210527170813-e2ba6805a890 // indirect
@@ -114,6 +131,7 @@ require (
 	github.com/lightningnetwork/lnd/queue v1.0.1 // indirect
 	github.com/lightningnetwork/lnd/ticker v1.0.0 // indirect
 	github.com/marcopeereboom/sbox v1.1.0 // indirect
+	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
