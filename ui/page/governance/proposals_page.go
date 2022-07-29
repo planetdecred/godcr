@@ -396,7 +396,7 @@ func (pg *ProposalsPage) layoutContent(gtx C) D {
 						if pg.searchResultAvailable {
 							if len(pg.proposalSearchResult) == 0 {
 								gtx.Constraints.Min.X = gtx.Constraints.Max.X
-								text := pg.Load.Theme.Body1("No matches")
+								text := pg.Load.Theme.Body1(values.String(values.StrNoProposalSearchMatch))
 								text.Color = pg.Load.Theme.Color.GrayText3
 
 								return layout.Center.Layout(gtx, func(gtx C) D {

@@ -19,10 +19,11 @@ import (
 
 // The proposal bleve index directory name.
 const (
-	proposalIndexDir = "/proposalindex.bleve"
-	nameField        = "name"
-	usernameField    = "username"
-	tokenField       = "token"
+	proposalIndexDir  = "/proposalindex.bleve"
+	nameField         = "name"
+	usernameField     = "username"
+	tokenField        = "token"
+	proposalIndexName = "proposal"
 )
 
 // searchResult models the search result.
@@ -66,6 +67,16 @@ func (pg *ProposalsPage) indexProposal(proposals []*components.ProposalItem) err
 		return err
 	}
 
+	docCount, err := proposalIndex.DocCount()
+	if err != nil {
+		return err
+	}
+
+	if int(docCount) == len(proposals) {
+		// No new proposal to index return
+		return nil
+	}
+
 	// index proposals.
 	go func() {
 		err = pg.createProposalIndex(proposalIndex, proposals)
@@ -80,7 +91,14 @@ func (pg *ProposalsPage) indexProposal(proposals []*components.ProposalItem) err
 
 func (pg *ProposalsPage) createProposalIndex(propIndex bleve.Index, proposals []*components.ProposalItem) error {
 	for _, prop := range proposals {
-		err := propIndex.Index(prop.Proposal.Name, prop.Proposal) // index proposal using proposal name as ID.
+		doc, err := propIndex.Document(prop.Proposal.Name)
+		if err != nil {
+			return err
+		}
+		if doc != nil {
+			continue
+		}
+		err = propIndex.Index(prop.Proposal.Name, prop.Proposal) // index proposal using proposal name as ID.
 		if err != nil {
 			log.Error(err)
 			return err
@@ -104,7 +122,7 @@ func (pg *ProposalsPage) buildIndexMapping() (mapping.IndexMapping, error) {
 	proposalMapping.AddFieldMappingsAt(tokenField, keywordFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
-	indexMapping.AddDocumentMapping("proposal", proposalMapping)
+	indexMapping.AddDocumentMapping(proposalIndexName, proposalMapping)
 
 	return indexMapping, nil
 }
@@ -124,8 +142,6 @@ func (pg *ProposalsPage) searchProposal(searchTerm string) {
 		log.Error(err)
 		return
 	}
-
-	log.Infof("Search Result: %v", searchResults)
 
 	var hits []*searchResult
 	for _, v := range searchResults.Hits {
