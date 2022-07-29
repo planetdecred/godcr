@@ -43,22 +43,18 @@ func (pg *ProposalsPage) getIndex() (index bleve.Index, err error) {
 		index, err = bleve.Open(indexPath)
 		if err == bleve.ErrorIndexPathDoesNotExist {
 			var indexMapping mapping.IndexMapping
-			indexMapping, err = pg.buildIndexMapping()
-			if err != nil {
-				return
-			}
-
+			indexMapping = pg.buildIndexMapping()
 			index, err = bleve.New(indexPath, indexMapping)
 			if err != nil {
-				return
+				return index, err
 			}
 		}
 
 		pg.proposalIndex = index
-		return
-	} else {
-		return pg.proposalIndex, nil
+		return index, err
 	}
+
+	return pg.proposalIndex, nil
 }
 
 func (pg *ProposalsPage) indexProposal(proposals []*components.ProposalItem) error {
@@ -83,7 +79,6 @@ func (pg *ProposalsPage) indexProposal(proposals []*components.ProposalItem) err
 		if err != nil {
 			log.Error(err)
 		}
-		return
 	}()
 
 	return nil
@@ -107,7 +102,7 @@ func (pg *ProposalsPage) createProposalIndex(propIndex bleve.Index, proposals []
 	return nil
 }
 
-func (pg *ProposalsPage) buildIndexMapping() (mapping.IndexMapping, error) {
+func (pg *ProposalsPage) buildIndexMapping() mapping.IndexMapping {
 	// a generic reusable mapping for english word text
 	engTextFieldMapping := bleve.NewTextFieldMapping()
 	engTextFieldMapping.Analyzer = en.AnalyzerName
@@ -124,7 +119,7 @@ func (pg *ProposalsPage) buildIndexMapping() (mapping.IndexMapping, error) {
 	indexMapping := bleve.NewIndexMapping()
 	indexMapping.AddDocumentMapping(proposalIndexName, proposalMapping)
 
-	return indexMapping, nil
+	return indexMapping
 }
 
 func (pg *ProposalsPage) searchProposal(searchTerm string) {
@@ -165,7 +160,6 @@ func (pg *ProposalsPage) searchProposal(searchTerm string) {
 	}
 
 	pg.proposalSearchChan <- hits
-	return
 }
 
 func (pg *ProposalsPage) layoutSearchResult(gtx C, l *load.Load, result *searchResult) D {
