@@ -42,8 +42,7 @@ func (pg *ProposalsPage) getIndex() (index bleve.Index, err error) {
 		}
 		index, err = bleve.Open(indexPath)
 		if err == bleve.ErrorIndexPathDoesNotExist {
-			var indexMapping mapping.IndexMapping
-			indexMapping = pg.buildIndexMapping()
+			indexMapping := pg.buildIndexMapping()
 			index, err = bleve.New(indexPath, indexMapping)
 			if err != nil {
 				return index, err
