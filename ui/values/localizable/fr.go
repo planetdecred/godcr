@@ -457,6 +457,7 @@ const FR = `
 "selectDexServerToOpen" = "Select the Dex server you would like to open."
 "addDexServer" = "Add dex server"
 "canBuy" = "Can Buy"
+"mix" = "Mélanger"
 "ok" = "D'accord"
 "removeWalletInfo" = "%v Are you sure you want to remove %v %s%v? Enter the name of the wallet below to verify. %v"
 "propNotif" = "Proposal notification"

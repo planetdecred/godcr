@@ -98,7 +98,7 @@ func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive boo
 									}),
 									layout.Flexed(1, func(gtx C) D {
 										return layout.E.Layout(gtx, func(gtx C) D {
-											txt := l.Theme.H6("Mix")
+											txt := l.Theme.H6(values.String(values.StrMix))
 											return layout.Flex{}.Layout(gtx,
 												layout.Rigid(func(gtx C) D {
 													return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
