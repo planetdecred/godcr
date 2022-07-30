@@ -46,7 +46,7 @@ func NewAccountMixerPage(l *load.Load) *AccountMixerPage {
 	pg := &AccountMixerPage{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(AccountMixerPageID),
-		wallet:           wallet,
+		wallet:           l.WL.SelectedWallet.Wallet,
 		toggleMixer:      l.Theme.Switch(),
 		mixerProgress:    l.Theme.ProgressBar(0),
 	}
