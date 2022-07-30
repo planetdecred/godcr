@@ -55,7 +55,7 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget) *createWalle
 		walletInfoWidget: wallInfo,
 	}
 	md.submitBtn.SetEnabled(false)
-	md.sourceAccountSelector = components.NewAccountSelector(md.Load, nil).
+	md.sourceAccountSelector = components.NewAccountSelector(md.Load).
 		Title(strSelectAccountForDex).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
@@ -79,7 +79,7 @@ func (md *createWalletModal) OnResume() {
 	md.ctx, md.ctxCancel = context.WithCancel(context.TODO())
 	md.sourceAccountSelector.ListenForTxNotifications(md.ctx, md.ParentWindow())
 
-	err := md.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
+	err := md.sourceAccountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
 		md.Toast.NotifyError(err.Error())
 	}

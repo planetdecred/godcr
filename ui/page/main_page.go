@@ -26,6 +26,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/governance"
 	"github.com/planetdecred/godcr/ui/page/info"
 	"github.com/planetdecred/godcr/ui/page/privacy"
+	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/page/transaction"
@@ -67,6 +68,7 @@ type MainPage struct {
 	*listeners.SyncProgressListener
 	*listeners.TxAndBlockNotificationListener
 	*listeners.ProposalNotificationListener
+
 	ctx                  context.Context
 	ctxCancel            context.CancelFunc
 	drawerNav            components.NavDrawer
@@ -81,6 +83,7 @@ type MainPage struct {
 	refreshExchangeRateBtn *decredmaterial.Clickable
 	darkmode               *decredmaterial.Clickable
 	openWalletSelector     *decredmaterial.Clickable
+	checkBox               decredmaterial.CheckBoxStyle
 
 	// page state variables
 	dcrUsdtBittrex load.DCRUSDTBittrex
@@ -90,14 +93,16 @@ type MainPage struct {
 	isFetchingExchangeRate bool
 	isBalanceHidden        bool
 	isNavExpanded          bool
-	setNavExpanded         func()
-	totalBalanceUSD        string
+
+	setNavExpanded  func()
+	totalBalanceUSD string
 }
 
 func NewMainPage(l *load.Load) *MainPage {
 	mp := &MainPage{
 		Load:       l,
 		MasterPage: app.NewMasterPage(MainPageID),
+		checkBox:   l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
 	}
 
 	mp.hideBalanceItem.hideBalanceButton = mp.Theme.IconButton(mp.Theme.Icons.ConcealIcon)
@@ -124,9 +129,6 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp.initNavItems()
 
 	mp.refreshExchangeRateBtn = mp.Theme.NewClickable(true)
-
-	// Show a seed backup prompt if necessary.
-	mp.WL.MultiWallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, false)
 
 	mp.setNavExpanded = func() {
 		mp.drawerNav.DrawerToggled(mp.isNavExpanded)
@@ -276,6 +278,12 @@ func (mp *MainPage) OnNavigatedTo() {
 
 	mp.ctx, mp.ctxCancel = context.WithCancel(context.TODO())
 	mp.listenForNotifications()
+
+	backupLater := mp.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+	needBackup := mp.WL.SelectedWallet.Wallet.EncryptedSeed != nil
+	if needBackup && !backupLater {
+		mp.showBackupInfo()
+	}
 
 	if mp.CurrentPage() == nil {
 		mp.Display(info.NewInfoPage(mp.Load)) // TODO: Should pagestack have a start page?
@@ -491,7 +499,7 @@ func (mp *MainPage) HandleUserInteractions() {
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
 			case privacy.AccountMixerPageID:
-				pg = privacy.NewAccountMixerPage(mp.Load, mp.WL.SelectedWallet.Wallet) // todo implement new staking ui
+				pg = privacy.NewAccountMixerPage(mp.Load)
 			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
 			case governance.GovernancePageID:
@@ -622,6 +630,8 @@ func (mp *MainPage) OnNavigatedFrom() {
 	if mp.receivePage != nil {
 		mp.receivePage.OnNavigatedFrom()
 	}
+
+	mp.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, false)
 
 	mp.ctxCancel()
 }
@@ -985,4 +995,22 @@ func (mp *MainPage) listenForNotifications() {
 			}
 		}
 	}()
+}
+
+func (mp *MainPage) showBackupInfo() {
+	backupNowOrLaterModal := modal.NewInfoModal(mp.Load).
+		SetupWithTemplate(modal.WalletBackupInfoTemplate).
+		SetCancelable(false).
+		SetContentAlignment(layout.W, layout.Center).
+		CheckBox(mp.checkBox, true).
+		NegativeButton(values.String(values.StrBackupLater), func() {
+			mp.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
+		}).
+		PositiveButtonStyle(mp.Load.Theme.Color.Primary, mp.Load.Theme.Color.InvText).
+		PositiveButton(values.String(values.StrBackupNow), func(isChecked bool) bool {
+			mp.WL.SelectedWallet.Wallet.SaveUserConfigValue(load.SeedBackupNotificationConfigKey, true)
+			mp.ParentNavigator().Display(seedbackup.NewBackupInstructionsPage(mp.Load, mp.WL.SelectedWallet.Wallet))
+			return true
+		})
+	mp.ParentWindow().ShowModal(backupNowOrLaterModal)
 }

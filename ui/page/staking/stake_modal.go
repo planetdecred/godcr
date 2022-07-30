@@ -75,34 +75,30 @@ func (tb *ticketBuyerModal) OnResume() {
 	// loop through all available wallets and select the one with ticket buyer config.
 	// if non, set the selected wallet to the first.
 	// temporary work around for only one wallet.
-	// TODO: extend functionality to allow for multiwallet config
-	for _, wal := range tb.WL.SortedWalletList() {
-		if wal.TicketBuyerConfigIsSet() {
-			tbConfig := wal.AutoTicketsBuyerConfig()
-			acct, err := wal.GetAccount(tbConfig.PurchaseAccount)
+	if tb.WL.SelectedWallet.Wallet.TicketBuyerConfigIsSet() {
+		tbConfig := tb.WL.SelectedWallet.Wallet.AutoTicketsBuyerConfig()
+		acct, err := tb.WL.SelectedWallet.Wallet.GetAccount(tbConfig.PurchaseAccount)
+		if err != nil {
+			tb.Toast.NotifyError(err.Error())
+		}
+
+		if tb.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
+			!tb.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) &&
+			(tbConfig.PurchaseAccount == tb.WL.SelectedWallet.Wallet.MixedAccountNumber()) {
+			tb.accountSelector.SetSelectedAccount(acct)
+		} else {
+			err := tb.accountSelector.SelectFirstWalletValidAccount()
 			if err != nil {
 				tb.Toast.NotifyError(err.Error())
 			}
-
-			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
-				!wal.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) &&
-				(tbConfig.PurchaseAccount == wal.MixedAccountNumber()) {
-				tb.accountSelector.SetSelectedAccount(acct)
-			} else {
-				err := tb.accountSelector.SelectFirstWalletValidAccount(nil)
-				if err != nil {
-					tb.Toast.NotifyError(err.Error())
-				}
-			}
-
-			tb.vspSelector.SelectVSP(tbConfig.VspHost)
-			tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain), 'f', 0, 64))
-			break
 		}
+
+		tb.vspSelector.SelectVSP(tbConfig.VspHost)
+		tb.balToMaintainEditor.Editor.SetText(strconv.FormatFloat(dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain), 'f', 0, 64))
 	}
 
 	if tb.accountSelector.SelectedAccount() == nil {
-		err := tb.accountSelector.SelectFirstWalletValidAccount(nil)
+		err := tb.accountSelector.SelectFirstWalletValidAccount()
 		if err != nil {
 			tb.Toast.NotifyError(err.Error())
 		}
@@ -171,20 +167,19 @@ func (tb *ticketBuyerModal) canSave() bool {
 }
 
 func (tb *ticketBuyerModal) initializeAccountSelector() {
-	tb.accountSelector = components.NewAccountSelector(tb.Load, nil).
+	tb.accountSelector = components.NewAccountSelector(tb.Load).
 		Title(values.String(values.StrPurchasingAcct)).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
-			wal := tb.WL.MultiWallet.WalletWithID(account.WalletID)
-
 			// Imported and watch only wallet accounts are invalid for sending
-			accountIsValid := account.Number != dcrlibwallet.ImportedAccountNumber && !wal.IsWatchingOnlyWallet()
+			accountIsValid := account.Number != dcrlibwallet.ImportedAccountNumber && !tb.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet()
 
-			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
-				!wal.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) {
+			if tb.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
+				!tb.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) {
 				// Spending from unmixed accounts is disabled for the selected wallet
-				accountIsValid = account.Number == wal.MixedAccountNumber()
+				accountIsValid = account.Number == tb.WL.SelectedWallet.Wallet.MixedAccountNumber()
 			}
+
 			return accountIsValid
 		})
 }
@@ -211,20 +206,8 @@ func (tb *ticketBuyerModal) Handle() {
 
 		balToMaintain := dcrlibwallet.AmountAtom(amount)
 		account := tb.accountSelector.SelectedAccount()
-		wal := tb.WL.MultiWallet.WalletWithID(account.WalletID)
-		if wal == nil {
-			tb.Toast.NotifyError(values.StringF(values.StrWalletNotExist, wal.ID))
-			return
-		}
 
-		// clear all wallets config when a new wallet is selected.
-		// temporary work around for only one wallet.
-		// TODO: extend functionality to allow for multiwallet config
-		for _, wal := range tb.WL.SortedWalletList() {
-			tb.WL.MultiWallet.ClearTicketBuyerConfig(wal.ID)
-		}
-
-		wal.SetAutoTicketsBuyerConfig(vspHost, account.Number, balToMaintain)
+		tb.WL.SelectedWallet.Wallet.SetAutoTicketsBuyerConfig(vspHost, account.Number, balToMaintain)
 		tb.settingsSaved()
 		tb.Dismiss()
 	}

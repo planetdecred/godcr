@@ -302,7 +302,7 @@ const FR = `
 "insufficentFund" = "Des fonds insuffisants"
 "ticketPrice" = "Prix du ticket"
 "unminedInfo" = "Ce pieu attend dans mempool d'être inclus dans un bloc."
-"immatureInfo" = "Cette mise entrera dans le pool de mise et deviendra une mise en direct après %d blocs (~%s)."
+"immatureInfo" = "Mature dans %v blocs sur %v (%v)."
 "liveInfo" = "En attendant d'être choisi pour voter."
 "liveInfoDisc" = "Le temps moyen de vote est de 28 jours, mais peut prendre jusqu'à 142 jours."
 "liveInfoDiscSub" = "Il y a 0,5% de chances d'expirer avant d'être choisi pour voter (cette expiration renvoie le prix d'origine du Stake sans récompense)."
@@ -454,4 +454,5 @@ const FR = `
 "account" = "Compte"
 "selectDexServerToOpen" = "Select the Dex server you would like to open."
 "addDexServer" = "Add dex server"
+"canBuy" = "Can Buy"
 `

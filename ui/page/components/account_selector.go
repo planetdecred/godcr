@@ -24,30 +24,24 @@ type AccountSelector struct {
 	*load.Load
 	*listeners.TxAndBlockNotificationListener
 
-	multiWallet     *dcrlibwallet.MultiWallet
 	selectedAccount *dcrlibwallet.Account
-	selectedWallet  *dcrlibwallet.Wallet
-
-	accountIsValid func(*dcrlibwallet.Account) bool
-	callback       func(*dcrlibwallet.Account)
+	accountIsValid  func(*dcrlibwallet.Account) bool
+	callback        func(*dcrlibwallet.Account)
 
 	openSelectorDialog *decredmaterial.Clickable
 	selectorModal      *AccountSelectorModal
 
-	dialogTitle        string
-	selectedWalletName string
-	totalBalance       string
-	changed            bool
+	dialogTitle  string
+	totalBalance string
+	changed      bool
 }
 
 // NewAccountSelector opens up a modal to select the desired account. If a
 // nil value is passed for selectedWallet, then accounts for all wallets
 // are shown, otherwise only accounts for the selectedWallet is shown.
-func NewAccountSelector(l *load.Load, selectedWallet *dcrlibwallet.Wallet) *AccountSelector {
+func NewAccountSelector(l *load.Load) *AccountSelector {
 	return &AccountSelector{
 		Load:               l,
-		multiWallet:        l.WL.MultiWallet,
-		selectedWallet:     selectedWallet,
 		accountIsValid:     func(*dcrlibwallet.Account) bool { return true },
 		openSelectorDialog: l.Theme.NewClickable(true),
 	}
@@ -76,7 +70,7 @@ func (as *AccountSelector) Changed() bool {
 
 func (as *AccountSelector) Handle(window app.WindowNavigator) {
 	for as.openSelectorDialog.Clicked() {
-		as.selectorModal = newAccountSelectorModal(as.Load, as.selectedAccount, as.selectedWallet).
+		as.selectorModal = newAccountSelectorModal(as.Load, as.selectedAccount).
 			title(as.dialogTitle).
 			accountValidator(as.accountIsValid).
 			accountSelected(func(account *dcrlibwallet.Account) {
@@ -96,42 +90,24 @@ func (as *AccountSelector) Handle(window app.WindowNavigator) {
 // SelectFirstWalletValidAccount selects the first valid account from the
 // first wallet in the SortedWalletList
 // If selectedWallet is not nil, the first account for the selectWallet is selected.
-func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibwallet.Wallet) error {
+func (as *AccountSelector) SelectFirstWalletValidAccount() error {
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
 		as.UpdateSelectedAccountBalance()
 		// no need to select account
 		return nil
 	}
 
-	if selectedWallet != nil {
-		accountsResult, err := selectedWallet.GetAccountsRaw()
-		if err != nil {
-			return err
-		}
-
-		accounts := accountsResult.Acc
-		for _, account := range accounts {
-			if as.accountIsValid(account) {
-				as.SetSelectedAccount(account)
-				as.callback(account)
-				return nil
-			}
-		}
+	accountsResult, err := as.WL.SelectedWallet.Wallet.GetAccountsRaw()
+	if err != nil {
+		return err
 	}
 
-	for _, wal := range as.WL.SortedWalletList() {
-		accountsResult, err := wal.GetAccountsRaw()
-		if err != nil {
-			return err
-		}
-
-		accounts := accountsResult.Acc
-		for _, account := range accounts {
-			if as.accountIsValid(account) {
-				as.SetSelectedAccount(account)
-				as.callback(account)
-				return nil
-			}
+	accounts := accountsResult.Acc
+	for _, account := range accounts {
+		if as.accountIsValid(account) {
+			as.SetSelectedAccount(account)
+			as.callback(account)
+			return nil
 		}
 	}
 
@@ -139,16 +115,12 @@ func (as *AccountSelector) SelectFirstWalletValidAccount(selectedWallet *dcrlibw
 }
 
 func (as *AccountSelector) SetSelectedAccount(account *dcrlibwallet.Account) {
-	wal := as.multiWallet.WalletWithID(account.WalletID)
-
 	as.selectedAccount = account
-	as.selectedWalletName = wal.Name
 	as.totalBalance = dcrutil.Amount(account.TotalBalance).String()
 }
 
 func (as *AccountSelector) UpdateSelectedAccountBalance() {
-	wal := as.multiWallet.WalletWithID(as.SelectedAccount().WalletID)
-	bal, err := wal.GetAccountBalance(as.SelectedAccount().Number)
+	bal, err := as.WL.SelectedWallet.Wallet.GetAccountBalance(as.SelectedAccount().Number)
 	if err == nil {
 		as.totalBalance = dcrutil.Amount(bal.Total).String()
 	}
@@ -162,10 +134,14 @@ func (as *AccountSelector) Layout(window app.WindowNavigator, gtx C) D {
 	as.Handle(window)
 
 	return decredmaterial.LinearLayout{
-		Width:     decredmaterial.MatchParent,
-		Height:    decredmaterial.WrapContent,
-		Padding:   layout.UniformInset(values.MarginPadding12),
-		Border:    decredmaterial.Border{Width: values.MarginPadding2, Color: as.Theme.Color.Gray2, Radius: decredmaterial.Radius(8)},
+		Width:   decredmaterial.MatchParent,
+		Height:  decredmaterial.WrapContent,
+		Padding: layout.UniformInset(values.MarginPadding12),
+		Border: decredmaterial.Border{
+			Width:  values.MarginPadding2,
+			Color:  as.Theme.Color.Gray2,
+			Radius: decredmaterial.Radius(8),
+		},
 		Clickable: as.openSelectorDialog,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -179,31 +155,6 @@ func (as *AccountSelector) Layout(window app.WindowNavigator, gtx C) D {
 		}),
 		layout.Rigid(func(gtx C) D {
 			return as.Theme.Body1(as.selectedAccount.Name).Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			inset := layout.Inset{
-				Left: values.MarginPadding4,
-				Top:  values.MarginPadding2,
-			}
-			return inset.Layout(gtx, func(gtx C) D {
-				return decredmaterial.Card{
-					Color: as.Theme.Color.Gray4,
-				}.Layout(gtx, func(gtx C) D {
-					m2 := values.MarginPadding2
-					m4 := values.MarginPadding4
-					inset := layout.Inset{
-						Left:   m4,
-						Top:    m2,
-						Bottom: m2,
-						Right:  m4,
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						text := as.Theme.Caption(as.selectedWalletName)
-						text.Color = as.Theme.Color.GrayText2
-						return text.Layout(gtx)
-					})
-				})
-			})
 		}),
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
@@ -280,13 +231,10 @@ type AccountSelectorModal struct {
 	onExit         func()
 
 	walletInfoButton decredmaterial.IconButton
-	walletsList      layout.List
 	accountsList     layout.List
 
 	currentSelectedAccount *dcrlibwallet.Account
-	selectedWallet         *dcrlibwallet.Wallet
-	filteredWallet         []*dcrlibwallet.Wallet
-	accounts               map[int][]*selectorAccount // key = wallet id
+	accounts               []*selectorAccount // key = wallet id
 	eventQueue             event.Queue
 	walletMu               sync.Mutex
 
@@ -300,15 +248,13 @@ type selectorAccount struct {
 	clickable *decredmaterial.Clickable
 }
 
-func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Account, selectedWallet *dcrlibwallet.Wallet) *AccountSelectorModal {
+func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Account) *AccountSelectorModal {
 	asm := &AccountSelectorModal{
 		Load:         l,
 		Modal:        l.Theme.ModalFloatTitle("AccountSelectorModal"),
-		walletsList:  layout.List{Axis: layout.Vertical},
 		accountsList: layout.List{Axis: layout.Vertical},
 
 		currentSelectedAccount: currentSelectedAccount,
-		selectedWallet:         selectedWallet,
 		isCancelable:           true,
 	}
 
@@ -325,53 +271,26 @@ func (asm *AccountSelectorModal) OnResume() {
 }
 
 func (asm *AccountSelectorModal) setupWalletAccounts() {
-	wals := make([]*dcrlibwallet.Wallet, 0)
-	walletAccounts := make(map[int][]*selectorAccount)
+	walletAccounts := make([]*selectorAccount, 0)
 
-	for _, wal := range asm.WL.SortedWalletList() {
-		if wal.IsWatchingOnlyWallet() {
-			continue
+	if !asm.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
+		accountsResult, err := asm.WL.SelectedWallet.Wallet.GetAccountsRaw()
+		if err != nil {
+			log.Errorf("Error getting accounts:", err)
+			return
 		}
 
-		if asm.selectedWallet == nil {
-			wals = append(wals, wal)
-
-			accountsResult, err := wal.GetAccountsRaw()
-			if err != nil {
-				log.Errorf("Error getting accounts:", err)
-				continue
-			}
-
-			accounts := accountsResult.Acc
-			walletAccounts[wal.ID] = make([]*selectorAccount, 0)
-			for _, account := range accounts {
-				if asm.accountIsValid(account) {
-					walletAccounts[wal.ID] = append(walletAccounts[wal.ID], &selectorAccount{
-						Account:   account,
-						clickable: asm.Theme.NewClickable(true),
-					})
-				}
-			}
-		} else if wal.ID == asm.selectedWallet.ID {
-			accountsResult, err := wal.GetAccountsRaw()
-			if err != nil {
-				log.Errorf("Error getting accounts:", err)
-				continue
-			}
-
-			accounts := accountsResult.Acc
-			walletAccounts[wal.ID] = make([]*selectorAccount, 0)
-			for _, account := range accounts {
-				if asm.accountIsValid(account) {
-					walletAccounts[wal.ID] = append(walletAccounts[wal.ID], &selectorAccount{
-						Account:   account,
-						clickable: asm.Theme.NewClickable(true),
-					})
-				}
+		accounts := accountsResult.Acc
+		walletAccounts = make([]*selectorAccount, 0)
+		for _, account := range accounts {
+			if asm.accountIsValid(account) {
+				walletAccounts = append(walletAccounts, &selectorAccount{
+					Account:   account,
+					clickable: asm.Theme.NewClickable(true),
+				})
 			}
 		}
 	}
-	asm.filteredWallet = wals
 	asm.accounts = walletAccounts
 }
 
@@ -382,13 +301,11 @@ func (asm *AccountSelectorModal) SetCancelable(min bool) *AccountSelectorModal {
 
 func (asm *AccountSelectorModal) Handle() {
 	if asm.eventQueue != nil {
-		for _, accounts := range asm.accounts {
-			for _, account := range accounts {
-				for account.clickable.Clicked() {
-					asm.callback(account.Account)
-					asm.onExit()
-					asm.Dismiss()
-				}
+		for _, account := range asm.accounts {
+			for account.clickable.Clicked() {
+				asm.callback(account.Account)
+				asm.onExit()
+				asm.Dismiss()
 			}
 		}
 	}
@@ -417,44 +334,6 @@ func (asm *AccountSelectorModal) accountSelected(callback func(*dcrlibwallet.Acc
 func (asm *AccountSelectorModal) Layout(gtx C) D {
 	asm.eventQueue = gtx
 
-	asm.walletMu.Lock()
-	wallets := asm.filteredWallet
-	asm.walletMu.Unlock()
-
-	wallAcctGroup := func(gtx C, title string, body layout.Widget) D {
-		return layout.Inset{
-			Bottom: values.MarginPadding10,
-		}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							txt := asm.Theme.Body2(title)
-							txt.Color = asm.Theme.Color.Text
-							inset := layout.Inset{
-								Bottom: values.MarginPadding15,
-							}
-							return inset.Layout(gtx, txt.Layout)
-						}),
-						layout.Rigid(func(gtx C) D {
-							showInfoBtn := false
-							if showInfoBtn {
-								inset := layout.Inset{
-									Top: values.MarginPadding2,
-								}
-								return inset.Layout(gtx, func(gtx C) D {
-									return asm.walletInfoButton.Layout(gtx)
-								})
-							}
-							return D{}
-						}),
-					)
-				}),
-				layout.Rigid(body),
-			)
-		})
-	}
-
 	w := []layout.Widget{
 		func(gtx C) D {
 			title := asm.Theme.H6(asm.dialogTitle)
@@ -465,26 +344,9 @@ func (asm *AccountSelectorModal) Layout(gtx C) D {
 		func(gtx C) D {
 			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					if asm.selectedWallet != nil {
-						return asm.walletsList.Layout(gtx, 1, func(gtx C, windex int) D {
-							wal := asm.selectedWallet
-							return wallAcctGroup(gtx, wal.Name, func(gtx C) D {
-								accounts := asm.accounts[wal.ID]
-								return asm.accountsList.Layout(gtx, len(accounts), func(gtx C, aindex int) D {
-									return asm.walletAccountLayout(gtx, accounts[aindex])
-								})
-							})
-						})
-					}
-
-					return asm.walletsList.Layout(gtx, len(wallets), func(gtx C, windex int) D {
-						wal := wallets[windex]
-						return wallAcctGroup(gtx, wal.Name, func(gtx C) D {
-							accounts := asm.accounts[wal.ID]
-							return asm.accountsList.Layout(gtx, len(accounts), func(gtx C, aindex int) D {
-								return asm.walletAccountLayout(gtx, accounts[aindex])
-							})
-						})
+					accounts := asm.accounts
+					return asm.accountsList.Layout(gtx, len(accounts), func(gtx C, aindex int) D {
+						return asm.walletAccountLayout(gtx, accounts[aindex])
 					})
 				}),
 				layout.Stacked(func(gtx C) D {
@@ -560,8 +422,7 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx C, account *selectorAcc
 				})
 			}
 
-			if account.Number == asm.currentSelectedAccount.Number &&
-				account.WalletID == asm.currentSelectedAccount.WalletID {
+			if account.Number == asm.currentSelectedAccount.Number {
 				return sections(gtx)
 			}
 			return D{}

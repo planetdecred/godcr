@@ -33,7 +33,6 @@ type AccountMixerPage struct {
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
-	wallet                *dcrlibwallet.Wallet
 	pageContainer         layout.List
 	dangerZoneCollapsible *decredmaterial.Collapsible
 
@@ -45,11 +44,10 @@ type AccountMixerPage struct {
 	mixerCompleted bool
 }
 
-func NewAccountMixerPage(l *load.Load, wallet *dcrlibwallet.Wallet) *AccountMixerPage {
+func NewAccountMixerPage(l *load.Load) *AccountMixerPage {
 	pg := &AccountMixerPage{
 		Load:                    l,
 		GenericPageModal:        app.NewGenericPageModal(AccountMixerPageID),
-		wallet:                  wallet,
 		pageContainer:           layout.List{Axis: layout.Vertical},
 		toggleMixer:             l.Theme.Switch(),
 		allowUnspendUnmixedAcct: l.Theme.Switch(),
@@ -68,9 +66,9 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
 	pg.listenForMixerNotifications()
-	pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
+	pg.toggleMixer.SetChecked(pg.WL.SelectedWallet.Wallet.IsAccountMixerActive())
 
-	isSpendUnmixedFunds := pg.wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false)
+	isSpendUnmixedFunds := pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false)
 	pg.allowUnspendUnmixedAcct.SetChecked(isSpendUnmixedFunds)
 }
 
@@ -82,7 +80,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 		sp := components.SubPage{
 			Load:       pg.Load,
 			Title:      values.String(values.StrStakeShuffle),
-			WalletName: pg.wallet.Name,
+			WalletName: pg.WL.SelectedWallet.Wallet.Name,
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
@@ -92,15 +90,15 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 			Body: func(gtx layout.Context) layout.Dimensions {
 				widgets := []func(gtx C) D{
 					func(gtx C) D {
-						return components.MixerInfoLayout(gtx, pg.Load, pg.wallet.IsAccountMixerActive(),
+						return components.MixerInfoLayout(gtx, pg.Load, pg.WL.SelectedWallet.Wallet.IsAccountMixerActive(),
 							pg.toggleMixer.Layout, func(gtx C) D {
 								mixedBalance := "0.00"
 								unmixedBalance := "0.00"
-								accounts, _ := pg.wallet.GetAccountsRaw()
+								accounts, _ := pg.WL.SelectedWallet.Wallet.GetAccountsRaw()
 								for _, acct := range accounts.Acc {
-									if acct.Number == pg.wallet.MixedAccountNumber() {
+									if acct.Number == pg.WL.SelectedWallet.Wallet.MixedAccountNumber() {
 										mixedBalance = dcrutil.Amount(acct.TotalBalance).String()
-									} else if acct.Number == pg.wallet.UnmixedAccountNumber() {
+									} else if acct.Number == pg.WL.SelectedWallet.Wallet.UnmixedAccountNumber() {
 										unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
 									}
 								}
@@ -175,8 +173,8 @@ func (pg *AccountMixerPage) layoutMobile(gtx layout.Context, body layout.Widget)
 func (pg *AccountMixerPage) mixerSettingsLayout(gtx layout.Context) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		mixedAccountName, _ := pg.wallet.AccountName(pg.wallet.MixedAccountNumber())
-		unmixedAccountName, _ := pg.wallet.AccountName(pg.wallet.UnmixedAccountNumber())
+		mixedAccountName, _ := pg.WL.SelectedWallet.Wallet.AccountName(pg.WL.SelectedWallet.Wallet.MixedAccountNumber())
+		unmixedAccountName, _ := pg.WL.SelectedWallet.Wallet.AccountName(pg.WL.SelectedWallet.Wallet.UnmixedAccountNumber())
 
 		row := func(txt1, txt2 string) D {
 			return layout.Inset{
@@ -257,7 +255,7 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 				NegativeButton("No", func() {}).
 				PositiveButton("Yes", func(isChecked bool) bool {
 					pg.toggleMixer.SetChecked(false)
-					go pg.WL.MultiWallet.StopAccountMixer(pg.wallet.ID)
+					go pg.WL.MultiWallet.StopAccountMixer(pg.WL.SelectedWallet.Wallet.ID)
 					return true
 				})
 			pg.ParentWindow().ShowModal(info)
@@ -281,7 +279,7 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 						tim.SetError("confirmation text is incorrect")
 						tim.SetLoading(false)
 					} else {
-						pg.wallet.SetBoolConfigValueForKey(load.SpendUnmixedFundsKey, true)
+						pg.WL.SelectedWallet.Wallet.SetBoolConfigValueForKey(load.SpendUnmixedFundsKey, true)
 						tim.Dismiss()
 					}
 					return false
@@ -294,7 +292,7 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 			pg.ParentWindow().ShowModal(textModal)
 
 		} else {
-			pg.wallet.SetBoolConfigValueForKey(load.SpendUnmixedFundsKey, false)
+			pg.WL.SelectedWallet.Wallet.SetBoolConfigValueForKey(load.SpendUnmixedFundsKey, false)
 		}
 
 		if pg.dangerZoneCollapsible.IsExpanded() {
@@ -315,7 +313,7 @@ func (pg *AccountMixerPage) showModalPasswordStartAccountMixer() {
 		}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-				err := pg.WL.MultiWallet.StartAccountMixer(pg.wallet.ID, password)
+				err := pg.WL.MultiWallet.StartAccountMixer(pg.WL.SelectedWallet.Wallet.ID, password)
 				if err != nil {
 					pm.SetError(err.Error())
 					pm.SetLoading(false)

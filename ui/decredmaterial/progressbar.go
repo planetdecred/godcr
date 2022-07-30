@@ -23,6 +23,10 @@ type ProgressBarStyle struct {
 	material.ProgressBarStyle
 }
 
+type ProgressCircleStyle struct {
+	material.ProgressCircleStyle
+}
+
 type ProgressBarItem struct {
 	Value   int
 	Color   color.NRGBA
@@ -205,11 +209,21 @@ func (mp *MultiLayerProgressBar) progressBarLayout(gtx C) D {
 
 func (mp *MultiLayerProgressBar) Layout(gtx C, labelWdg layout.Widget) D {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(labelWdg),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, mp.progressBarLayout)
 		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Center.Layout(gtx, labelWdg)
+		}),
 	)
+}
+
+func (t *Theme) ProgressBarCirle(progress int) ProgressCircleStyle {
+	return ProgressCircleStyle{ProgressCircleStyle: material.ProgressCircle(t.Base, float32(progress)/100)}
+}
+
+func (p ProgressCircleStyle) Layout(gtx layout.Context) layout.Dimensions {
+	return p.ProgressCircleStyle.Layout(gtx)
 }
 
 // clamp1 limits mp.to range [0..1].

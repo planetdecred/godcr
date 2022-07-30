@@ -98,7 +98,7 @@ func UniformHorizontalPadding(gtx layout.Context, body layout.Widget) layout.Dim
 	padding := values.MarginPadding24
 
 	if (width - 2*gtx.Dp(padding)) > gtx.Dp(MaxWidth) {
-		paddingValue := float32(width-gtx.Dp(MaxWidth)) / 2
+		paddingValue := float32(width-gtx.Dp(MaxWidth)) / 3
 		padding = unit.Dp(paddingValue)
 	}
 
@@ -177,16 +177,16 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 				} else {
 					if ticketSpender != nil {
 						if ticketSpender.Type == dcrlibwallet.TxTypeVote {
-							txStatus.Title = values.String(values.StrTicketVotedTitle)
-							txStatus.Icon = l.Theme.Icons.TicketLiveIcon
+							txStatus.Title = values.String(values.StrVoted)
+							txStatus.Icon = l.Theme.Icons.TicketVotedIcon
 							txStatus.Color = l.Theme.Color.Turquoise700
 							txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
 							txStatus.ProgressBarColor = l.Theme.Color.Turquoise300
 							txStatus.ProgressTrackColor = l.Theme.Color.Turquoise100
 							txStatus.Background = l.Theme.Color.Success2
 						} else {
-							txStatus.Title = values.String(values.StrTicketRevokedTitle)
-							txStatus.Icon = l.Theme.Icons.TicketLiveIcon
+							txStatus.Title = values.String(values.StrRevoked)
+							txStatus.Icon = l.Theme.Icons.TicketRevokedIcon
 							txStatus.Color = l.Theme.Color.Orange
 							txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
 							txStatus.ProgressBarColor = l.Theme.Color.Danger
@@ -633,7 +633,7 @@ func WalletLabel(gtx layout.Context, l *load.Load, walletName string) D {
 
 // EndToEndRow layouts out its content on both ends of its horizontal layout.
 func EndToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
-	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(leftWidget),
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, rightWidget)

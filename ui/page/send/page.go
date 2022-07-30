@@ -104,7 +104,7 @@ func NewSendPage(l *load.Load) *Page {
 	}
 
 	// Source account picker
-	pg.sourceAccountSelector = components.NewAccountSelector(l, nil).
+	pg.sourceAccountSelector = components.NewAccountSelector(l).
 		Title(values.String(values.StrSendingAcct)).
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			pg.validateAndConstructTx()
@@ -129,12 +129,12 @@ func NewSendPage(l *load.Load) *Page {
 
 	pg.sendDestination.destinationAccountSelector.AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 		pg.validateAndConstructTx()
-		pg.sourceAccountSelector.SelectFirstWalletValidAccount(nil) // refresh source account
+		pg.sourceAccountSelector.SelectFirstWalletValidAccount() // refresh source account
 	})
 
 	pg.sendDestination.addressChanged = func() {
 		// refresh selected account when addressChanged is called
-		pg.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
+		pg.sourceAccountSelector.SelectFirstWalletValidAccount()
 		pg.validateAndConstructTx()
 	}
 
@@ -163,8 +163,8 @@ func (pg *Page) OnNavigatedTo() {
 
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.sourceAccountSelector.ListenForTxNotifications(pg.ctx, pg.ParentWindow())
-	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount(nil)
-	pg.sourceAccountSelector.SelectFirstWalletValidAccount(nil)
+	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
+	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()
 
 	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)

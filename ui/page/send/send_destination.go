@@ -40,7 +40,7 @@ func newSendDestination(l *load.Load) *destination {
 	})
 
 	// Destination account picker
-	dst.destinationAccountSelector = components.NewAccountSelector(dst.Load, nil).
+	dst.destinationAccountSelector = components.NewAccountSelector(dst.Load).
 		Title(values.String(values.StrReceivingAddress)).
 		AccountValidator(func(account *dcrlibwallet.Account) bool {
 

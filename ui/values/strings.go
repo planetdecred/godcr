@@ -270,6 +270,7 @@ const (
 	StrCurrencyConversion              = "currencyConversion"
 	StrTransactions                    = "transactions"
 	StrWallets                         = "wallets"
+	StrTickets                         = "tickets"
 	StrMore                            = "more"
 	StrOverview                        = "overview"
 	StrEnglish                         = "english"
@@ -593,4 +594,5 @@ const (
 	StrAccount                         = "account"
 	StrSelectDexServerToOpen           = "selectDexServerToOpen"
 	StrAddDexServer                    = "addDexServer"
+	StrCanBuy                          = "canBuy"
 )
