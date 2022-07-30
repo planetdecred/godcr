@@ -723,25 +723,13 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 		})
 	case len(mp.totalBalanceUSD) > 0:
 		inset := layout.Inset{
-			Top:  values.MarginPadding3,
 			Left: values.MarginPadding8,
 		}
-		border := widget.Border{Color: mp.Theme.Color.Gray2, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
 		return inset.Layout(gtx, func(gtx C) D {
-			padding := layout.Inset{
-				Top:    values.MarginPadding3,
-				Bottom: values.MarginPadding3,
-				Left:   values.MarginPadding6,
-				Right:  values.MarginPadding6,
-			}
-			return border.Layout(gtx, func(gtx C) D {
-				return padding.Layout(gtx, func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(mp.Theme.Body1("/").Layout),
-						layout.Rigid(mp.Theme.Body2(mp.totalBalanceUSD).Layout),
-					)
-				})
-			})
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(mp.Theme.Body1("/ ").Layout),
+				layout.Rigid(mp.Theme.Label(values.TextSize20, mp.totalBalanceUSD).Layout),
+			)
 		})
 	default:
 		return D{}
@@ -791,16 +779,11 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 						}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
-									Left: values.MarginPadding12,
+									Left:  values.MarginPadding12,
+									Right: values.MarginPadding24,
 								}.Layout(gtx, func(gtx C) D {
-									return mp.Theme.Icons.ChevronLeft.LayoutSize(gtx, values.MarginPadding8)
+									return mp.Theme.Icons.ChevronLeft.LayoutSize(gtx, values.MarginPadding12)
 								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Left:  values.MarginPadding10,
-									Right: values.MarginPadding10,
-								}.Layout(gtx, mp.Theme.H6("GoDCR").Layout)
 							}),
 							layout.Rigid(func(gtx C) D {
 								if mp.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
