@@ -724,7 +724,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	}
 }
 
-func (mp *MainPage) totalDCRBalance(gtx C) D {
+func (mp *MainPage) TotalDCRBalance(gtx C) D {
 	if mp.isBalanceHidden {
 		hiddenBalanceText := mp.Theme.Label(values.TextSize18*0.8, "*******************")
 		return layout.Inset{Bottom: values.MarginPadding0, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -795,7 +795,8 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								icon := mp.Theme.Icons.RevealIcon
+<<<<<<< HEAD
+								mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
 								if mp.isBalanceHidden {
 									icon = mp.Theme.Icons.ConcealIcon
 								}
@@ -808,6 +809,9 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func(gtx C) D {
 								return mp.totalDCRBalance(gtx)
+=======
+								return mp.TotalDCRBalance(gtx)
+>>>>>>> e75b013 (Create framework for new UI)
 							}),
 							layout.Rigid(func(gtx C) D {
 								if !mp.isBalanceHidden {

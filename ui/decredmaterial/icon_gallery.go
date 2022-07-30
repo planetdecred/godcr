@@ -24,6 +24,7 @@ type Icons struct {
 	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon,
 	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon, ConcealIcon,
 	RevealIcon, ChevronExpand, ChevronCollapse, ChevronLeft, NotSynced, InfoAction, LightMode, DarkMode, AddIcon *Image
+	ChevronExpand, ChevronCollapse, ChevronLeft, MixedTxIcon, UnmixedTxIcon, MixerIcon *Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -150,6 +151,9 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.ChevronCollapse = NewImage(decredIcons["chevron_expand"])
 	i.ChevronLeft = NewImage(decredIcons["chevron_left"])
 	i.NotSynced = NewImage(decredIcons["notSynced"])
+	i.UnmixedTxIcon = NewImage(decredIcons["unmixed_icon"])
+	i.MixedTxIcon = NewImage(decredIcons["mixed_icon"])
+	i.MixerIcon = NewImage(decredIcons["mixer_icon"])
 	i.InfoAction = NewImage(decredIcons["info_icon"])
 	i.DarkMode = NewImage(decredIcons["ic_moon"])
 	i.LightMode = NewImage(decredIcons["ic_sun"])

@@ -37,6 +37,9 @@ type AccountMixerPage struct {
 	toggleMixer *decredmaterial.Switch
 
 	mixerCompleted bool
+
+	totalBalance  dcrutil.Amount
+	mixerProgress decredmaterial.ProgressBarStyle
 }
 
 func NewAccountMixerPage(l *load.Load) *AccountMixerPage {
@@ -45,7 +48,12 @@ func NewAccountMixerPage(l *load.Load) *AccountMixerPage {
 		GenericPageModal: app.NewGenericPageModal(AccountMixerPageID),
 		wallet:           wallet,
 		toggleMixer:      l.Theme.Switch(),
+		mixerProgress:    l.Theme.ProgressBar(0),
 	}
+	pg.mixerProgress.Height = values.MarginPadding18
+	pg.mixerProgress.Radius = decredmaterial.Radius(2)
+	totalBalance, _ := components.CalculateTotalWalletsBalance(pg.Load)
+	pg.totalBalance = totalBalance.Total
 
 	return pg
 }
@@ -61,6 +69,141 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 	pg.toggleMixer.SetChecked(pg.WL.SelectedWallet.Wallet.IsAccountMixerActive())
 }
 
+func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive bool, button layout.Widget, mixerInfo layout.Widget) D {
+	mixedBalance := "0.00"
+	unmixedBalance := "0.00"
+	accounts, _ := pg.wallet.GetAccountsRaw()
+
+	for _, acct := range accounts.Acc {
+		if acct.Number == pg.wallet.MixedAccountNumber() {
+			mixedBalance = dcrutil.Amount(acct.TotalBalance).String()
+		} else if acct.Number == pg.wallet.UnmixedAccountNumber() {
+			unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
+		}
+	}
+	return l.Theme.Card().Layout(gtx, func(gtx C) D {
+		txt := l.Theme.H6(values.String(values.StrBalance))
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding40).Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+								return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+									layout.Rigid(txt.Layout),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+											return components.LayoutBalance(gtx, pg.Load, pg.totalBalance.String())
+										})
+									}),
+									layout.Flexed(1, func(gtx C) D {
+										return layout.E.Layout(gtx, func(gtx C) D {
+											txt := l.Theme.H6("Mix")
+											return layout.Flex{}.Layout(gtx,
+												layout.Rigid(func(gtx C) D {
+													return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+														return txt.Layout(gtx)
+													})
+												}),
+												layout.Rigid(button),
+											)
+										})
+									}),
+								)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return l.Theme.Separator().Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+								return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										txt := l.Theme.H6(values.String(values.StrMixer))
+										return txt.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
+											return pg.mixerProgress.Layout(gtx)
+										})
+									}),
+								)
+							})
+						}),
+					)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Right: values.MarginPadding15, Left: values.MarginPadding15, Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							ic := l.Theme.Icons.Mixer
+							return ic.Layout12dp(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							txt := l.Theme.H6(values.String(values.StrMixed))
+							return layout.Inset{Left: values.MarginPadding11}.Layout(gtx, func(gtx C) D {
+								return txt.Layout(gtx)
+							})
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.Inset{Right: values.MarginPadding25}.Layout(gtx, func(gtx C) D {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									return components.LayoutBalance(gtx, pg.Load, mixedBalance)
+								})
+							})
+						}),
+					)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Right: values.MarginPadding40, Left: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							gtx.Constraints.Max.X = gtx.Constraints.Max.X/2 - 20
+							return layout.W.Layout(gtx, l.Theme.Separator().Layout)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding10, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+								ic := l.Theme.Icons.Mixer
+								return layout.Center.Layout(gtx, func(gtx C) D {
+									return ic.Layout36dp(gtx)
+								})
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.E.Layout(gtx, l.Theme.Separator().Layout)
+						}),
+					)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Right: values.MarginPadding15, Left: values.MarginPadding15, Bottom: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							ic := l.Theme.Icons.Mixer
+							return ic.Layout12dp(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							txt := l.Theme.H6(values.String(values.StrUnmixed))
+							return layout.Inset{Left: values.MarginPadding11}.Layout(gtx, func(gtx C) D {
+								return txt.Layout(gtx)
+							})
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.Inset{Right: values.MarginPadding25}.Layout(gtx, func(gtx C) D {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									return components.LayoutBalance(gtx, pg.Load, unmixedBalance)
+								})
+							})
+						}),
+					)
+				})
+			}),
+		)
+	})
+}
+
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
@@ -73,7 +216,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *AccountMixerPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, func(gtx C) D {
-		return components.MixerInfoLayout(gtx, pg.Load, pg.wallet.IsAccountMixerActive(), pg.toggleMixer.Layout, func(gtx C) D {
+		return pg.MixerInfoLayout(gtx, pg.Load, pg.wallet.IsAccountMixerActive(), pg.toggleMixer.Layout, func(gtx C) D {
 			mixedBalance := "0.00"
 			unmixedBalance := "0.00"
 			accounts, _ := pg.wallet.GetAccountsRaw()
