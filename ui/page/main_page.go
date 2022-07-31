@@ -804,6 +804,16 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
+								mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
+								if mp.isBalanceHidden {
+									mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
+								}
+								return layout.Inset{
+									Top:  values.MarginPadding1,
+									Left: values.MarginPadding9,
+								}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+							}),
+							layout.Rigid(func(gtx C) D {
 								return mp.totalDCRBalance(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
