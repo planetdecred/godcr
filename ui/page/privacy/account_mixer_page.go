@@ -52,7 +52,7 @@ func NewAccountMixerPage(l *load.Load) *AccountMixerPage {
 	}
 	pg.mixerProgress.Height = values.MarginPadding18
 	pg.mixerProgress.Radius = decredmaterial.Radius(2)
-	totalBalance, _ := components.CalculateTotalWalletsBalance(pg.Load)
+	totalBalance, _ := components.CalculateTotalWalletsBalance(pg.Load) // TODO - handle error
 	pg.totalBalance = totalBalance.Total
 
 	return pg
@@ -72,7 +72,7 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive bool, button layout.Widget) D {
 	mixedBalance := "0.00"
 	unmixedBalance := "0.00"
-	accounts, _ := pg.wallet.GetAccountsRaw()
+	accounts, _ := pg.wallet.GetAccountsRaw() // TODO - handle errors
 
 	for _, acct := range accounts.Acc {
 		if acct.Number == pg.wallet.MixedAccountNumber() {
@@ -101,9 +101,7 @@ func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive boo
 											txt := l.Theme.H6(values.String(values.StrMix))
 											return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 												layout.Rigid(func(gtx C) D {
-													return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-														return txt.Layout(gtx)
-													})
+													return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, txt.Layout)
 												}),
 												layout.Rigid(button),
 											)
@@ -123,9 +121,7 @@ func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive boo
 										return txt.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
-											return pg.mixerProgress.Layout(gtx)
-										})
+										return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding40}.Layout(gtx, pg.mixerProgress.Layout)
 									}),
 								)
 							})
@@ -142,9 +138,7 @@ func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive boo
 						}),
 						layout.Rigid(func(gtx C) D {
 							txt := l.Theme.H6(values.String(values.StrMixed))
-							return layout.Inset{Left: values.MarginPadding11}.Layout(gtx, func(gtx C) D {
-								return txt.Layout(gtx)
-							})
+							return layout.Inset{Left: values.MarginPadding11}.Layout(gtx, txt.Layout)
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							return layout.Inset{Right: values.MarginPadding25}.Layout(gtx, func(gtx C) D {
@@ -166,9 +160,7 @@ func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive boo
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding10, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 								ic := l.Theme.Icons.MixerIcon
-								return layout.Center.Layout(gtx, func(gtx C) D {
-									return ic.Layout36dp(gtx)
-								})
+								return layout.Center.Layout(gtx, ic.Layout36dp)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -224,15 +216,6 @@ func (pg *AccountMixerPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return D{}
 }
 
-/*
-func (pg *AccountMixerPage) shufflePortForCurrentNet() string {
-	if pg.WL.Wallet.Net == dcrlibwallet.Testnet3 {
-		return dcrlibwallet.TestnetShufflePort
-	}
-
-	return dcrlibwallet.MainnetShufflePort
-}
-
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
@@ -261,10 +244,6 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 		pg.toggleMixer.SetChecked(false)
 		pg.mixerCompleted = false
 		pg.ParentWindow().Reload()
-	}
-
-	if pg.backButton.Button.Clicked() {
-		pg.ParentNavigator().ClosePagesAfter(components.WalletsPageID)
 	}
 }
 
