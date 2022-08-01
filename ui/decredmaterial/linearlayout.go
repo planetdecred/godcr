@@ -137,7 +137,7 @@ func (ll LinearLayout) GradientLayout(gtx C, children ...layout.FlexChild) D {
 							Stop1:  layout.FPt(dr.Min),
 							Stop2:  layout.FPt(dr.Max),
 							Color1: color.NRGBA{R: 0xAD, G: 0xC2, B: 0xED, A: 0xff},
-							Color2: color.NRGBA{R: 0xAE, G: 0xFF, B: 0xD1, A: 0xff},
+							Color2: color.NRGBA{R: 0xB8, G: 0xEC, B: 0xDD, A: 0xff},
 						}.Add(gtx.Ops)
 
 						defer clip.RRect{
