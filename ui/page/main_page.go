@@ -305,6 +305,7 @@ func (mp *MainPage) OnNavigatedTo() {
 	}
 
 	mp.updateBalance()
+	mp.updateExchangeSetting()
 
 }
 
