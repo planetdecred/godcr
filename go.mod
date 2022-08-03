@@ -15,7 +15,7 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jrick/logrotate v1.0.0
 	github.com/nxadm/tail v1.4.4
-	github.com/planetdecred/dcrlibwallet v1.7.0
+	github.com/planetdecred/dcrlibwallet v1.7.1-0.20220802190450-f4374efae977
 	github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-20220425133823-833d52a7cdd5 // indirect
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20210722180016-6781d3edade3
@@ -138,5 +138,3 @@ require (
 // the android OS using gomobile. This replace can be removed once any
 // of those projects update their github.com/lib/pq dependency.
 replace github.com/lib/pq => github.com/lib/pq v1.10.4
-
-replace github.com/planetdecred/dcrlibwallet => github.com/dreacot/dcrlibwallet v1.6.1-0.20220727154925-dced69c7c544
