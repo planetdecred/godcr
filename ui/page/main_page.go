@@ -739,12 +739,12 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 
 func (mp *MainPage) totalDCRBalance(gtx C) D {
 	if mp.isBalanceHidden {
-		hiddenBalanceText := mp.Theme.Label(values.TextSize18*0.8, "**********DCR")
+		hiddenBalanceText := mp.Theme.Label(values.TextSize18*0.8, "*******************")
 		return layout.Inset{Bottom: values.MarginPadding0, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 			return hiddenBalanceText.Layout(gtx)
 		})
 	}
-	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
+	return components.LayoutBalanceWithUnit(gtx, mp.Load, mp.totalBalance.String())
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
