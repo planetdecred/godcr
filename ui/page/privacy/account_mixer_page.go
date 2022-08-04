@@ -70,8 +70,8 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 }
 
 func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive bool, button layout.Widget) D {
-	mixedBalance := "0.00"
-	unmixedBalance := "0.00"
+	mixedBalance := "0 DCR"
+	unmixedBalance := "0 DCR"
 	accounts, _ := pg.wallet.GetAccountsRaw() // TODO - handle errors
 
 	for _, acct := range accounts.Acc {
@@ -156,7 +156,7 @@ func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive boo
 							return layout.W.Layout(gtx, l.Theme.Separator().Layout)
 						}),
 						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding10, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 								return layout.Center.Layout(gtx, l.Theme.Icons.MixerIcon.Layout36dp)
 							})
 						}),
