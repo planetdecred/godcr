@@ -267,7 +267,7 @@ const (
 	StrGeneral                         = "general"
 	StrChangeUserAgent                 = "changeUserAgent"
 	StrCreateStartupPassword           = "createStartupPassword"
-	StrCurrencyConversion              = "currencyConversion"
+	StrExchangeRate                    = "exchangeRate"
 	StrTransactions                    = "transactions"
 	StrWallets                         = "wallets"
 	StrTickets                         = "tickets"

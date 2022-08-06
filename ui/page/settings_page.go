@@ -40,6 +40,8 @@ type SettingsPage struct {
 	changeStartupPass   *decredmaterial.Clickable
 	language            *decredmaterial.Clickable
 	currency            *decredmaterial.Clickable
+	help                *decredmaterial.Clickable
+	about               *decredmaterial.Clickable
 
 	chevronRightIcon *decredmaterial.Icon
 	backButton       decredmaterial.IconButton
@@ -93,6 +95,8 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		changeStartupPass:   l.Theme.NewClickable(false),
 		language:            l.Theme.NewClickable(false),
 		currency:            l.Theme.NewClickable(false),
+		help:                l.Theme.NewClickable(false),
+		about:               l.Theme.NewClickable(false),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -120,85 +124,108 @@ func (pg *SettingsPage) Layout(gtx C) D {
 }
 
 func (pg *SettingsPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
-	body := func(gtx C) D {
-		sp := components.SubPage{
-			Load:       pg.Load,
-			Title:      values.String(values.StrSettings),
-			BackButton: pg.backButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
-			},
-			Body: func(gtx C) D {
-				pageContent := []func(gtx C) D{
-					pg.general(),
-					pg.security(),
-					pg.notification(),
-					pg.connection(),
-				}
+	return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.pageHeaderLayout),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, pg.pageContentLayout)
+			}),
+		)
+	})
+}
 
-				return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
-				})
-			},
-		}
-		return sp.Layout(pg.ParentWindow(), gtx)
+func (pg *SettingsPage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.W.Layout(gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Right: values.MarginPadding16,
+							Top:   values.MarginPaddingMinus2,
+						}.Layout(gtx, pg.backButton.Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.Theme.Label(values.TextSize20, values.String(values.StrSettings)).Layout(gtx)
+					}),
+				)
+			})
+		}),
+	)
+}
+
+func (pg *SettingsPage) pageContentLayout(gtx layout.Context) layout.Dimensions {
+	pageContent := []func(gtx C) D{
+		pg.general(),
+		pg.security(),
+		pg.info(),
+		// pg.notification(),
+		// pg.connection(),
 	}
-
-	return components.UniformPadding(gtx, body)
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+		return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+			return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
+		})
+	})
 }
 
 func (pg *SettingsPage) layoutMobile(gtx layout.Context) layout.Dimensions {
-	body := func(gtx C) D {
-		sp := components.SubPage{
-			Load:       pg.Load,
-			Title:      values.String(values.StrSettings),
-			BackButton: pg.backButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
-			},
-			Body: func(gtx C) D {
-				pageContent := []func(gtx C) D{
-					pg.general(),
-					pg.security(),
-					pg.notification(),
-					pg.connection(),
-				}
+	return layout.Dimensions{}
+}
 
-				return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
-				})
-			},
-		}
-		return sp.Layout(pg.ParentWindow(), gtx)
-	}
+func (pg *SettingsPage) settingLine(gtx C) D {
+	line := pg.Theme.Line(1, 0)
+	line.Color = pg.Theme.Color.Gray3
+	return line.Layout(gtx)
+}
 
-	return components.UniformMobile(gtx, false, true, body)
+func (pg *SettingsPage) wrapSection(gtx C, title string, body layout.Widget) D {
+	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := pg.Theme.Body2(title)
+							txt.Color = pg.Theme.Color.GrayText2
+							return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, txt.Layout)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							if title == values.String(values.StrSecurity) {
+								pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
+								pg.infoButton.Size = values.MarginPadding20
+								return layout.E.Layout(gtx, pg.infoButton.Layout)
+							}
+							return D{}
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, pg.settingLine)
+				}),
+				layout.Rigid(body),
+			)
+		})
+	})
 }
 
 func (pg *SettingsPage) general() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, values.String(values.StrGeneral), func(gtx C) D {
+		return pg.wrapSection(gtx, values.String(values.StrGeneral), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrDarkMode), pg.isDarkModeOn)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrGovernance), pg.governance)
-				}),
-				layout.Rigid(pg.lineSeparator()),
-				layout.Rigid(func(gtx C) D {
-					currencyConversionRow := row{
-						title:     values.String(values.StrCurrencyConversion),
+					exchangeRate := row{
+						title:     values.String(values.StrExchangeRate),
 						clickable: pg.currency,
 						icon:      pg.chevronRightIcon,
 						label:     pg.Theme.Body2(pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
 					}
-					return pg.clickableRow(gtx, currencyConversionRow)
+					return pg.clickableRow(gtx, exchangeRate)
 				}),
-				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
 					languageRow := row{
 						title:     values.String(values.StrLanguage),
@@ -208,23 +235,8 @@ func (pg *SettingsPage) general() layout.Widget {
 					}
 					return pg.clickableRow(gtx, languageRow)
 				}),
-			)
-		})
-	}
-}
-
-func (pg *SettingsPage) notification() layout.Widget {
-	return func(gtx C) D {
-		return pg.mainSection(gtx, values.String(values.StrNotifications), func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
-				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.StringF(values.StrTxNotification, ""), pg.transactionNotification)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.StringF(values.StrPropNotification, ""), pg.proposalNotification)
 				}),
 			)
 		})
@@ -233,7 +245,7 @@ func (pg *SettingsPage) notification() layout.Widget {
 
 func (pg *SettingsPage) security() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, values.String(values.StrSecurity), func(gtx C) D {
+		return pg.wrapSection(gtx, values.String(values.StrSecurity), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.String(values.StrStartupPassword), pg.startupPassword)
@@ -254,28 +266,28 @@ func (pg *SettingsPage) security() layout.Widget {
 	}
 }
 
-func (pg *SettingsPage) connection() layout.Widget {
+func (pg *SettingsPage) info() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, values.String(values.StrConnection), func(gtx C) D {
+		return pg.wrapSection(gtx, values.String(values.StrInfo), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrConnectToSpecificPeer), pg.connectToPeer)
+					helpRow := row{
+						title:     values.String(values.StrHelp),
+						clickable: pg.help,
+						icon:      pg.chevronRightIcon,
+						label:     pg.Theme.Body2(""),
+					}
+					return pg.clickableRow(gtx, helpRow)
 				}),
 				layout.Rigid(func(gtx C) D {
-					peerLabel := pg.Theme.Body1(pg.peerAddr)
-					peerLabel.Color = pg.Theme.Color.GrayText2
-					peerAddrRow := row{
-						title:     values.String(values.StrChangeSpecificPeer),
-						clickable: pg.updateConnectToPeer,
+					aboutRow := row{
+						title:     values.String(values.StrAbout),
+						clickable: pg.about,
 						icon:      pg.chevronRightIcon,
-						label:     peerLabel,
+						label:     pg.Theme.Body2(""),
 					}
-					return pg.conditionalDisplay(gtx, pg.peerAddr != "", func(gtx C) D {
-						return pg.clickableRow(gtx, peerAddrRow)
-					})
+					return pg.clickableRow(gtx, aboutRow)
 				}),
-				layout.Rigid(pg.lineSeparator()),
-				layout.Rigid(pg.agent()),
 			)
 		})
 	}
@@ -377,7 +389,7 @@ func (pg *SettingsPage) clickableRow(gtx C, row row) D {
 					layout.Rigid(row.label.Layout),
 					layout.Rigid(func(gtx C) D {
 						ic := row.icon
-						ic.Color = pg.Theme.Color.Gray3
+						ic.Color = pg.Theme.Color.Gray1
 						return ic.Layout(gtx, values.MarginPadding22)
 					}),
 				)
@@ -440,11 +452,15 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		break
 	}
 
+	for pg.backButton.Button.Clicked() {
+		pg.ParentNavigator().CloseCurrentPage()
+	}
+
 	for pg.currency.Clicked() {
 		currencySelectorModal := preference.NewListPreference(pg.Load,
 			dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue,
 			values.ArrExchangeCurrencies).
-			Title(values.StrCurrencyConversion).
+			Title(values.StrExchangeRate).
 			UpdateValues(func() {})
 		pg.ParentWindow().ShowModal(currencySelectorModal)
 		break
