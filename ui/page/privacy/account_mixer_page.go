@@ -81,6 +81,7 @@ func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive boo
 			unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
 		}
 	}
+
 	return l.Theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
