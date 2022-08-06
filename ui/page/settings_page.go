@@ -42,12 +42,15 @@ type SettingsPage struct {
 	currency            *decredmaterial.Clickable
 	help                *decredmaterial.Clickable
 	about               *decredmaterial.Clickable
+	appearanceMode      *decredmaterial.Clickable
+
+	appearanceIcon *decredmaterial.Image
 
 	chevronRightIcon *decredmaterial.Icon
 	backButton       decredmaterial.IconButton
 	infoButton       decredmaterial.IconButton
 
-	isDarkModeOn            *decredmaterial.Switch
+	isDarkModeOn            bool
 	spendUnconfirmed        *decredmaterial.Switch
 	startupPassword         *decredmaterial.Switch
 	beepNewBlocks           *decredmaterial.Switch
@@ -76,7 +79,6 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		},
 		wal: l.WL.Wallet,
 
-		isDarkModeOn:            l.Theme.Switch(),
 		spendUnconfirmed:        l.Theme.Switch(),
 		startupPassword:         l.Theme.Switch(),
 		beepNewBlocks:           l.Theme.Switch(),
@@ -87,6 +89,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		transactionNotification: l.Theme.Switch(),
 
 		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
+		appearanceIcon:   l.Theme.Icons.LightMode,
 
 		errorReceiver: make(chan error),
 
@@ -97,9 +100,11 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		currency:            l.Theme.NewClickable(false),
 		help:                l.Theme.NewClickable(false),
 		about:               l.Theme.NewClickable(false),
+		appearanceMode:      l.Theme.NewClickable(false),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.isDarkModeOn = pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
 
 	return pg
 }
@@ -159,8 +164,6 @@ func (pg *SettingsPage) pageContentLayout(gtx layout.Context) layout.Dimensions 
 		pg.general(),
 		pg.security(),
 		pg.info(),
-		// pg.notification(),
-		// pg.connection(),
 	}
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -199,6 +202,11 @@ func (pg *SettingsPage) wrapSection(gtx C, title string, body layout.Widget) D {
 								pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
 								pg.infoButton.Size = values.MarginPadding20
 								return layout.E.Layout(gtx, pg.infoButton.Layout)
+							}
+							if title == values.String(values.StrGeneral) {
+								layout.E.Layout(gtx, func(gtx C) D {
+									return pg.appearanceMode.Layout(gtx, pg.appearanceIcon.Layout24dp)
+								})
 							}
 							return D{}
 						}),
@@ -466,8 +474,13 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		break
 	}
 
-	if pg.isDarkModeOn.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())
+	for pg.appearanceMode.Clicked() {
+		pg.isDarkModeOn = !pg.isDarkModeOn
+		pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, pg.isDarkModeOn)
+		pg.appearanceIcon = pg.Theme.Icons.LightMode
+		if pg.isDarkModeOn {
+			pg.appearanceIcon = pg.Theme.Icons.DarkMode
+		}
 		pg.RefreshTheme(pg.ParentWindow())
 	}
 
@@ -718,9 +731,9 @@ func (pg *SettingsPage) updateSettingOptions() {
 	}
 
 	isDarkModeOn := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
-	pg.isDarkModeOn.SetChecked(false)
+	pg.appearanceIcon = pg.Theme.Icons.LightMode
 	if isDarkModeOn {
-		pg.isDarkModeOn.SetChecked(isDarkModeOn)
+		pg.appearanceIcon = pg.Theme.Icons.DarkMode
 	}
 
 	isSpendUnconfirmed := pg.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false)
