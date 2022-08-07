@@ -535,13 +535,22 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	}
 
 	if pg.infoButton.Button.Clicked() {
-		info := modal.NewInfoModal(pg.Load).
-			Title(values.String(values.StrSetupStartupPassword)).
+		info := modal.NewInfoModal2(pg.Load).
+			SetContentAlignment(layout.Center, layout.Center).
 			Body(values.String(values.StrStartupPasswordInfo)).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+			PositiveButtonWidth(values.MarginPadding100).
+			PositiveButton(values.String(values.StrOk), func(isChecked bool) bool {
 				return true
 			})
 		pg.ParentWindow().ShowModal(info)
+	}
+
+	if pg.help.Clicked() {
+		pg.ParentNavigator().Display(NewHelpPage(pg.Load))
+	}
+
+	if pg.about.Clicked() {
+		pg.ParentNavigator().Display(NewAboutPage(pg.Load))
 	}
 
 	for pg.changeStartupPass.Clicked() {
@@ -579,7 +588,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify(values.String(values.StrStartupPassConfirm))
+								pg.showNoticeSuccess(values.String(values.StrStartupPassConfirm))
 								m.Dismiss()
 							}()
 							return false
@@ -609,7 +618,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							m.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrEnabled)))
+						pg.showNoticeSuccess(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrEnabled)))
 						m.Dismiss()
 					}()
 					return false
@@ -634,7 +643,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							pm.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrDisabled)))
+						pg.showNoticeSuccess(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrDisabled)))
 						pm.Dismiss()
 					}()
 
@@ -687,6 +696,20 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		pg.Toast.NotifyError(err.Error())
 	default:
 	}
+}
+
+func (pg *SettingsPage) showNoticeSuccess(title string) {
+	icon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
+	icon.Color = pg.Theme.Color.Green500
+	info := modal.NewInfoModal2(pg.Load).
+		SetContentAlignment(layout.Center, layout.Center).
+		Title(title).
+		Icon(icon).
+		PositiveButtonWidth(values.MarginPadding100).
+		PositiveButton(values.String(values.StrOk), func(isChecked bool) bool {
+			return true
+		})
+	pg.ParentWindow().ShowModal(info)
 }
 
 func (pg *SettingsPage) showSPVPeerDialog() {

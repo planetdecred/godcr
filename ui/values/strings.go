@@ -595,4 +595,5 @@ const (
 	StrSelectDexServerToOpen           = "selectDexServerToOpen"
 	StrAddDexServer                    = "addDexServer"
 	StrCanBuy                          = "canBuy"
+	StrOk                              = "ok"
 )

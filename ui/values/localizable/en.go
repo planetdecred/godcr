@@ -488,4 +488,5 @@ unlockWithPassword = "Unlock with password"
 "selectDexServerToOpen" = "Select the Dex server you would like to open."
 "addDexServer" = "Add dex server"
 "canBuy" = "Can Buy"
+"ok" = "OK"
 `
