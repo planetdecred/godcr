@@ -305,6 +305,7 @@ func (mp *MainPage) OnNavigatedTo() {
 	}
 
 	mp.updateBalance()
+	mp.updateExchangeSetting()
 
 }
 
@@ -723,25 +724,13 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 		})
 	case len(mp.totalBalanceUSD) > 0:
 		inset := layout.Inset{
-			Top:  values.MarginPadding3,
 			Left: values.MarginPadding8,
 		}
-		border := widget.Border{Color: mp.Theme.Color.Gray2, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
 		return inset.Layout(gtx, func(gtx C) D {
-			padding := layout.Inset{
-				Top:    values.MarginPadding3,
-				Bottom: values.MarginPadding3,
-				Left:   values.MarginPadding6,
-				Right:  values.MarginPadding6,
-			}
-			return border.Layout(gtx, func(gtx C) D {
-				return padding.Layout(gtx, func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(mp.Theme.Body1("/").Layout),
-						layout.Rigid(mp.Theme.Body2(mp.totalBalanceUSD).Layout),
-					)
-				})
-			})
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(mp.Theme.Body1("/ ").Layout),
+				layout.Rigid(mp.Theme.Label(values.TextSize20, mp.totalBalanceUSD).Layout),
+			)
 		})
 	default:
 		return D{}
@@ -750,12 +739,12 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 
 func (mp *MainPage) totalDCRBalance(gtx C) D {
 	if mp.isBalanceHidden {
-		hiddenBalanceText := mp.Theme.Label(values.TextSize18*0.8, "**********DCR")
+		hiddenBalanceText := mp.Theme.Label(values.TextSize18*0.8, "*******************")
 		return layout.Inset{Bottom: values.MarginPadding0, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 			return hiddenBalanceText.Layout(gtx)
 		})
 	}
-	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
+	return components.LayoutBalanceWithUnit(gtx, mp.Load, mp.totalBalance.String())
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
@@ -791,14 +780,11 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 						}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
-									Left: values.MarginPadding13,
-								}.Layout(gtx, mp.Theme.Icons.ChevronLeft.Layout12dp)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Left:  values.MarginPadding10,
-									Right: values.MarginPadding10,
-								}.Layout(gtx, mp.Theme.H6("GoDCR").Layout)
+									Left:  values.MarginPadding12,
+									Right: values.MarginPadding24,
+								}.Layout(gtx, func(gtx C) D {
+									return mp.Theme.Icons.ChevronLeft.LayoutSize(gtx, values.MarginPadding12)
+								})
 							}),
 							layout.Rigid(func(gtx C) D {
 								if mp.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
@@ -818,6 +804,16 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
+								if mp.isBalanceHidden {
+									mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
+								}
+								return layout.Inset{
+									Top:  values.MarginPadding1,
+									Left: values.MarginPadding9,
+								}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+							}),
 							layout.Rigid(func(gtx C) D {
 								return mp.totalDCRBalance(gtx)
 							}),
