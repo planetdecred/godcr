@@ -155,19 +155,19 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 				} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
 					txStatus.Title = values.String(values.StrImmature)
 					txStatus.Icon = l.Theme.Icons.TicketImmatureIcon
-					txStatus.Color = l.Theme.Color.LightBlue6
+					txStatus.Color = l.Theme.Color.Yellow
 					txStatus.TicketStatus = dcrlibwallet.TicketStatusImmature
-					txStatus.ProgressBarColor = l.Theme.Color.LightBlue5
-					txStatus.ProgressTrackColor = l.Theme.Color.LightBlue3
-					txStatus.Background = l.Theme.Color.LightBlue
+					txStatus.ProgressBarColor = l.Theme.Color.OrangeYellow
+					txStatus.ProgressTrackColor = l.Theme.Color.Gray6
+					txStatus.Background = l.Theme.Color.Yellow
 				} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterLive) {
 					txStatus.Title = values.String(values.StrLive)
 					txStatus.Icon = l.Theme.Icons.TicketLiveIcon
-					txStatus.Color = l.Theme.Color.Primary
+					txStatus.Color = l.Theme.Color.Success2
 					txStatus.TicketStatus = dcrlibwallet.TicketStatusLive
-					txStatus.ProgressBarColor = l.Theme.Color.Primary
-					txStatus.ProgressTrackColor = l.Theme.Color.LightBlue4
-					txStatus.Background = l.Theme.Color.Primary50
+					txStatus.ProgressBarColor = l.Theme.Color.Success2
+					txStatus.ProgressTrackColor = l.Theme.Color.Success2
+					txStatus.Background = l.Theme.Color.Success2
 				} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
 					txStatus.Title = values.String(values.StrExpired)
 					txStatus.Icon = l.Theme.Icons.TicketExpiredIcon

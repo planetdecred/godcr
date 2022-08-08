@@ -351,6 +351,7 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 	}
 }
 
+// deprecated to be removed in subsequent code clean uo
 // ticketCard layouts out Stake info with the shadow box, use for list horizontal or list grid
 func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalletName bool) layout.Dimensions {
 	wal := l.WL.MultiWallet.WalletWithID(tx.transaction.WalletID)

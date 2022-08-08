@@ -35,6 +35,7 @@ type Color struct {
 	Gray3            color.NRGBA
 	Gray4            color.NRGBA
 	Gray5            color.NRGBA
+	Gray6            color.NRGBA
 	Green50          color.NRGBA
 	Green500         color.NRGBA
 	Orange           color.NRGBA
@@ -50,6 +51,7 @@ type Color struct {
 	Turquoise700     color.NRGBA
 	Turquoise800     color.NRGBA
 	Yellow           color.NRGBA
+	OrangeYellow     color.NRGBA
 	White            color.NRGBA
 }
 
@@ -107,6 +109,7 @@ func (c *Color) DefaultThemeColors() *Color {
 		Gray3:            rgb(0xc4cbd2), // InactiveGray #C4CBD2
 		Gray4:            rgb(0xf3f5f6), //active n light gray combined f3f5f6
 		Gray5:            rgb(0xf3f5f6),
+		Gray6:            rgb(0xD8D8D8),
 		Green50:          rgb(0xE8F7EA),
 		Green500:         rgb(0x41BE53),
 		Orange:           rgb(0xD34A21),
@@ -120,7 +123,8 @@ func (c *Color) DefaultThemeColors() *Color {
 		Turquoise300:     rgb(0x2DD8A3),
 		Turquoise700:     rgb(0x00A05F),
 		Turquoise800:     rgb(0x008F52),
-		Yellow:           rgb(0xffc84e),
+		Yellow:           rgb(0xFEE3AA),
+		OrangeYellow:     rgb(0xd8a93e),
 		White:            rgb(0xffffff),
 	}
 
