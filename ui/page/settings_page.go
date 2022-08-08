@@ -35,14 +35,12 @@ type SettingsPage struct {
 	pageContainer *widget.List
 	wal           *wallet.Wallet
 
-	updateConnectToPeer *decredmaterial.Clickable
-	updateUserAgent     *decredmaterial.Clickable
-	changeStartupPass   *decredmaterial.Clickable
-	language            *decredmaterial.Clickable
-	currency            *decredmaterial.Clickable
-	help                *decredmaterial.Clickable
-	about               *decredmaterial.Clickable
-	appearanceMode      *decredmaterial.Clickable
+	changeStartupPass *decredmaterial.Clickable
+	language          *decredmaterial.Clickable
+	currency          *decredmaterial.Clickable
+	help              *decredmaterial.Clickable
+	about             *decredmaterial.Clickable
+	appearanceMode    *decredmaterial.Clickable
 
 	appearanceIcon *decredmaterial.Image
 
@@ -51,20 +49,10 @@ type SettingsPage struct {
 	infoButton       decredmaterial.IconButton
 
 	isDarkModeOn            bool
-	spendUnconfirmed        *decredmaterial.Switch
 	startupPassword         *decredmaterial.Switch
-	beepNewBlocks           *decredmaterial.Switch
-	connectToPeer           *decredmaterial.Switch
-	userAgent               *decredmaterial.Switch
-	governance              *decredmaterial.Switch
-	proposalNotification    *decredmaterial.Switch
 	transactionNotification *decredmaterial.Switch
 
-	peerLabel, agentLabel decredmaterial.Label
-
 	isStartupPassword bool
-	peerAddr          string
-	agentValue        string
 	errorReceiver     chan error
 }
 
@@ -79,13 +67,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		},
 		wal: l.WL.Wallet,
 
-		spendUnconfirmed:        l.Theme.Switch(),
 		startupPassword:         l.Theme.Switch(),
-		beepNewBlocks:           l.Theme.Switch(),
-		connectToPeer:           l.Theme.Switch(),
-		userAgent:               l.Theme.Switch(),
-		governance:              l.Theme.Switch(),
-		proposalNotification:    l.Theme.Switch(),
 		transactionNotification: l.Theme.Switch(),
 
 		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
@@ -93,14 +75,12 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 
 		errorReceiver: make(chan error),
 
-		updateConnectToPeer: l.Theme.NewClickable(false),
-		updateUserAgent:     l.Theme.NewClickable(false),
-		changeStartupPass:   l.Theme.NewClickable(false),
-		language:            l.Theme.NewClickable(false),
-		currency:            l.Theme.NewClickable(false),
-		help:                l.Theme.NewClickable(false),
-		about:               l.Theme.NewClickable(false),
-		appearanceMode:      l.Theme.NewClickable(false),
+		changeStartupPass: l.Theme.NewClickable(false),
+		language:          l.Theme.NewClickable(false),
+		currency:          l.Theme.NewClickable(false),
+		help:              l.Theme.NewClickable(false),
+		about:             l.Theme.NewClickable(false),
+		appearanceMode:    l.Theme.NewClickable(false),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -301,79 +281,6 @@ func (pg *SettingsPage) info() layout.Widget {
 	}
 }
 
-func (pg *SettingsPage) agent() layout.Widget {
-	return func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						m10 := values.MarginPadding10
-						return layout.Inset{Top: m10, Bottom: m10}.Layout(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(pg.subSectionLabel(values.String(values.StrCustomUserAgent))),
-								layout.Rigid(func(gtx C) D {
-									txt := pg.Theme.Body2(values.String(values.StrHTTPRequest))
-									txt.Color = pg.Theme.Color.GrayText2
-									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										return txt.Layout(gtx)
-									})
-								}),
-							)
-						})
-					}),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-							return layout.E.Layout(gtx, pg.userAgent.Layout)
-						})
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx C) D {
-				agentLabel := pg.Theme.Body1(pg.agentValue)
-				agentLabel.Color = pg.Theme.Color.GrayText2
-				return pg.conditionalDisplay(gtx, pg.agentValue != "", func(gtx C) D {
-					userAgentRow := row{
-						title:     values.String(values.StrUserAgentDialogTitle),
-						clickable: pg.updateUserAgent,
-						icon:      pg.chevronRightIcon,
-						label:     agentLabel,
-					}
-					return pg.clickableRow(gtx, userAgentRow)
-				})
-			}),
-		)
-	}
-}
-
-func (pg *SettingsPage) mainSection(gtx C, title string, body layout.Widget) D {
-	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								txt := pg.Theme.Body2(title)
-								txt.Color = pg.Theme.Color.GrayText2
-								return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, txt.Layout)
-							}),
-							layout.Flexed(1, func(gtx C) D {
-								if title == values.String(values.StrSecurity) {
-									pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
-									pg.infoButton.Size = values.MarginPadding20
-									return layout.E.Layout(gtx, pg.infoButton.Layout)
-								}
-								return D{}
-							}),
-						)
-					}),
-					layout.Rigid(body),
-				)
-			})
-		})
-	})
-}
-
 func (pg *SettingsPage) subSection(gtx C, title string, body layout.Widget) D {
 	return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
@@ -482,47 +389,6 @@ func (pg *SettingsPage) HandleUserInteractions() {
 			pg.appearanceIcon = pg.Theme.Icons.DarkMode
 		}
 		pg.RefreshTheme(pg.ParentWindow())
-	}
-
-	if pg.spendUnconfirmed.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.IsChecked())
-	}
-
-	if pg.governance.Changed() {
-		if pg.governance.IsChecked() {
-			go pg.WL.MultiWallet.Politeia.Sync()
-			pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, pg.governance.IsChecked())
-			pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrEnabled), values.String(values.StrCheckGovernace)))
-		} else {
-			info := modal.NewInfoModal(pg.Load).
-				Title(values.String(values.StrGovernance)).
-				Body(values.String(values.StrGovernanceSettingsInfo)).
-				NegativeButton(values.String(values.StrCancel), func() {}).
-				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-				PositiveButton(values.String(values.StrDisable), func(isChecked bool) bool {
-					if pg.WL.MultiWallet.Politeia.IsSyncing() {
-						go pg.WL.MultiWallet.Politeia.StopSync()
-					}
-					pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, !pg.governance.IsChecked())
-					pg.WL.MultiWallet.Politeia.ClearSavedProposals()
-					pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrDisabled)))
-					return true
-				})
-			pg.ParentWindow().ShowModal(info)
-		}
-	}
-
-	if pg.beepNewBlocks.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.IsChecked())
-	}
-
-	if pg.proposalNotification.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(load.ProposalNotificationConfigKey, pg.proposalNotification.IsChecked())
-		if pg.proposalNotification.IsChecked() {
-			pg.Toast.Notify(values.StringF(values.StrPropNotification, values.String(values.StrEnabled)))
-		} else {
-			pg.Toast.Notify(values.StringF(values.StrPropNotification, values.String(values.StrDisabled)))
-		}
 	}
 
 	if pg.transactionNotification.Changed() {
@@ -653,40 +519,6 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		}
 	}
 
-	specificPeerKey := dcrlibwallet.SpvPersistentPeerAddressesConfigKey
-	if pg.connectToPeer.Changed() {
-		if pg.connectToPeer.IsChecked() {
-			pg.showSPVPeerDialog()
-			return
-		}
-
-		title := values.String(values.StrRemovePeer)
-		msg := values.String(values.StrRemovePeerWarn)
-		pg.showWarningModalDialog(title, msg, specificPeerKey)
-	}
-
-	for pg.updateConnectToPeer.Clicked() {
-		pg.showSPVPeerDialog()
-		break
-	}
-
-	userAgentKey := dcrlibwallet.UserAgentConfigKey
-	for pg.updateUserAgent.Clicked() {
-		pg.showUserAgentDialog()
-		break
-	}
-
-	if pg.userAgent.Changed() {
-		if pg.userAgent.IsChecked() {
-			pg.showUserAgentDialog()
-			return
-		}
-
-		title := values.String(values.StrRemoveUserAgent)
-		msg := values.String(values.StrRemoveUserAgentWarn)
-		pg.showWarningModalDialog(title, msg, userAgentKey)
-	}
-
 	select {
 	case err := <-pg.errorReceiver:
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
@@ -757,44 +589,6 @@ func (pg *SettingsPage) updateSettingOptions() {
 	pg.appearanceIcon = pg.Theme.Icons.LightMode
 	if isDarkModeOn {
 		pg.appearanceIcon = pg.Theme.Icons.DarkMode
-	}
-
-	isSpendUnconfirmed := pg.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false)
-	pg.spendUnconfirmed.SetChecked(false)
-	if isSpendUnconfirmed {
-		pg.spendUnconfirmed.SetChecked(isSpendUnconfirmed)
-	}
-
-	beep := pg.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
-	pg.beepNewBlocks.SetChecked(false)
-	if beep {
-		pg.beepNewBlocks.SetChecked(beep)
-	}
-
-	pg.peerAddr = pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
-	pg.connectToPeer.SetChecked(false)
-	if pg.peerAddr != "" {
-		pg.peerLabel.Text = pg.peerAddr
-		pg.connectToPeer.SetChecked(true)
-	}
-
-	pg.agentValue = pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
-	pg.userAgent.SetChecked(false)
-	if pg.agentValue != "" {
-		pg.agentLabel.Text = pg.agentValue
-		pg.userAgent.SetChecked(true)
-	}
-
-	governanceSet := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false)
-	pg.governance.SetChecked(false)
-	if governanceSet {
-		pg.governance.SetChecked(governanceSet)
-	}
-
-	proposalNotification := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey, false)
-	pg.proposalNotification.SetChecked(false)
-	if proposalNotification {
-		pg.proposalNotification.SetChecked(proposalNotification)
 	}
 
 	transactionNotification := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey, false)
