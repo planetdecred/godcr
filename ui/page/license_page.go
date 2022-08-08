@@ -71,29 +71,14 @@ func (pg *LicensePage) Layout(gtx C) D {
 }
 
 func (pg *LicensePage) layoutDesktop(gtx layout.Context) layout.Dimensions {
-	d := func(gtx C) D {
-		sp := components.SubPage{
-			Load:       pg.Load,
-			Title:      values.String(values.StrLicense),
-			BackButton: pg.backButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
-			},
-			Body: func(gtx C) D {
-				return pg.Theme.List(pg.pageContainer).Layout(gtx, 1, func(gtx C, i int) D {
-					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
-							licenseText := pg.Theme.Body1(license)
-							licenseText.Color = pg.Theme.Color.GrayText2
-							return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, licenseText.Layout)
-						})
-					})
-				})
-			},
-		}
-		return sp.Layout(pg.ParentWindow(), gtx)
-	}
-	return components.UniformPadding(gtx, d)
+	return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.pageHeaderLayout),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding20}.Layout(gtx, pg.pageContentLayout)
+			}),
+		)
+	})
 }
 
 func (pg *LicensePage) layoutMobile(gtx layout.Context) layout.Dimensions {
@@ -122,12 +107,54 @@ func (pg *LicensePage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return components.UniformMobile(gtx, false, false, d)
 }
 
+func (pg *LicensePage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.W.Layout(gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Right: values.MarginPadding16,
+							Top:   values.MarginPaddingMinus2,
+						}.Layout(gtx, pg.backButton.Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.Theme.Label(values.TextSize20, values.String(values.StrLicense)).Layout(gtx)
+					}),
+				)
+			})
+		}),
+	)
+}
+
+func (pg *LicensePage) pageContentLayout(gtx layout.Context) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+		return pg.Theme.List(pg.pageContainer).Layout(gtx, 1, func(gtx C, i int) D {
+			return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
+					licenseText := pg.Theme.Body1(license)
+					licenseText.Color = pg.Theme.Color.GrayText2
+					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, licenseText.Layout)
+				})
+			})
+		})
+	})
+}
+
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
 // displayed.
 // Part of the load.Page interface.
-func (pg *LicensePage) HandleUserInteractions() {}
+func (pg *LicensePage) HandleUserInteractions() {
+	if pg.backButton.Button.Clicked() {
+		pg.ParentNavigator().CloseCurrentPage()
+	}
+}
 
 // OnNavigatedFrom is called when the page is about to be removed from
 // the displayed window. This method should ideally be used to disable

@@ -67,26 +67,14 @@ func (pg *HelpPage) Layout(gtx C) D {
 }
 
 func (pg *HelpPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
-	body := func(gtx C) D {
-		sp := components.SubPage{
-			Load:       pg.Load,
-			Title:      values.String(values.StrHelp),
-			SubTitle:   values.String(values.StrHelpInfo),
-			BackButton: pg.backButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
-			},
-			Body: func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Spacing: layout.SpaceBetween, WeightSum: 2}.Layout(gtx,
-						layout.Flexed(1, pg.document()),
-					)
-				})
-			},
-		}
-		return sp.Layout(pg.ParentWindow(), gtx)
-	}
-	return components.UniformPadding(gtx, body)
+	return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.pageHeaderLayout),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding20}.Layout(gtx, pg.pageContentLayout)
+			}),
+		)
+	})
 }
 
 func (pg *HelpPage) layoutMobile(gtx layout.Context) layout.Dimensions {
@@ -114,6 +102,45 @@ func (pg *HelpPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	return components.UniformMobile(gtx, false, false, body)
 }
 
+func (pg *HelpPage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.W.Layout(gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Right: values.MarginPadding16,
+							Top:   values.MarginPaddingMinus2,
+						}.Layout(gtx, pg.backButton.Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.Theme.Label(values.TextSize20, values.String(values.StrHelp)).Layout(gtx)
+					}),
+				)
+			})
+		}),
+	)
+}
+
+func (pg *HelpPage) pageContentLayout(gtx layout.Context) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+		return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{WeightSum: 3, Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					sub := pg.Load.Theme.Label(values.TextSize14, values.String(values.StrHelpInfo))
+					sub.Color = pg.Load.Theme.Color.GrayText2
+					return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, sub.Layout)
+				}),
+				layout.Flexed(1, pg.document()),
+			)
+		})
+	})
+}
+
 func (pg *HelpPage) document() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, pg.Theme.Icons.DocumentationIcon, pg.documentation, values.String(values.StrDocumentation))
@@ -128,7 +155,6 @@ func (pg *HelpPage) pageSections(gtx C, icon *decredmaterial.Image, action *decr
 			Height:      decredmaterial.WrapContent,
 			Background:  pg.Theme.Color.Surface,
 			Clickable:   action,
-			Direction:   layout.Center,
 			Alignment:   layout.Middle,
 			Shadow:      pg.shadowBox,
 			Border:      decredmaterial.Border{Radius: decredmaterial.Radius(14)},
@@ -229,6 +255,10 @@ func (pg *HelpPage) HandleUserInteractions() {
 				return true
 			})
 		pg.ParentWindow().ShowModal(info)
+	}
+
+	if pg.backButton.Button.Clicked() {
+		pg.ParentNavigator().CloseCurrentPage()
 	}
 }
 
