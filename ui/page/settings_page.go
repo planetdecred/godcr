@@ -147,8 +147,8 @@ func (pg *SettingsPage) pageContentLayout(gtx layout.Context) layout.Dimensions 
 	}
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding550)
-		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding500)
+		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding500)
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 		return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
 			return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
