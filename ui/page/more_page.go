@@ -55,7 +55,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.SettingsIcon,
 			page:      SettingsPageID,
 			action: func() {
-				pg.ParentNavigator().Display(NewWalletSettingsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
+				pg.ParentNavigator().Display(NewWalletSettingsPage(pg.Load))
 			},
 		},
 		{
@@ -90,7 +90,7 @@ func (pg *MorePage) initPageItems() {
 			image:     pg.Theme.Icons.SettingsIcon,
 			page:      SettingsPageID,
 			action: func() {
-				pg.ParentNavigator().Display(NewWalletSettingsPage(pg.Load, pg.WL.SelectedWallet.Wallet))
+				pg.ParentNavigator().Display(NewWalletSettingsPage(pg.Load))
 			},
 		},
 		{

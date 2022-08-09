@@ -26,33 +26,48 @@ type WalletSettingsPage struct {
 
 	pageContainer layout.List
 
-	changePass, rescan, deleteWallet                *decredmaterial.Clickable
-	changeAccount, mixedAccount, coordinationServer *decredmaterial.Clickable
-	changeWalletName, addAccount                    *decredmaterial.Clickable
+	changePass, rescan, resetDexData           *decredmaterial.Clickable
+	changeAccount, checklog, checkStats        *decredmaterial.Clickable
+	changeWalletName, addAccount, deleteWallet *decredmaterial.Clickable
+	verifyMessage, validateMsg, signMessage    *decredmaterial.Clickable
 
-	chevronRightIcon        *decredmaterial.Icon
-	backButton              decredmaterial.IconButton
-	infoButton              decredmaterial.IconButton
-	allowUnspendUnmixedAcct *decredmaterial.Switch
+	chevronRightIcon *decredmaterial.Icon
+	backButton       decredmaterial.IconButton
+	infoButton       decredmaterial.IconButton
+
+	fetchProposal     *decredmaterial.Switch
+	proposalNotif     *decredmaterial.Switch
+	spendUnconfirmed  *decredmaterial.Switch
+	SpendUnmixedFunds *decredmaterial.Switch
+	connectToPeer     *decredmaterial.Switch
 }
 
-func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettingsPage {
+func NewWalletSettingsPage(l *load.Load) *WalletSettingsPage {
 	pg := &WalletSettingsPage{
-		Load:               l,
-		GenericPageModal:   app.NewGenericPageModal(WalletSettingsPageID),
-		wallet:             wal,
-		changePass:         l.Theme.NewClickable(false),
-		rescan:             l.Theme.NewClickable(false),
-		deleteWallet:       l.Theme.NewClickable(false),
-		changeAccount:      l.Theme.NewClickable(false),
-		mixedAccount:       l.Theme.NewClickable(false),
-		coordinationServer: l.Theme.NewClickable(false),
-		changeWalletName:   l.Theme.NewClickable(false),
-		addAccount:         l.Theme.NewClickable(false),
+		Load:             l,
+		GenericPageModal: app.NewGenericPageModal(WalletSettingsPageID),
+		wallet:           l.WL.SelectedWallet.Wallet,
+		changePass:       l.Theme.NewClickable(false),
+		rescan:           l.Theme.NewClickable(false),
+		resetDexData:     l.Theme.NewClickable(false),
+		changeAccount:    l.Theme.NewClickable(false),
+		checklog:         l.Theme.NewClickable(false),
+		checkStats:       l.Theme.NewClickable(false),
+		changeWalletName: l.Theme.NewClickable(false),
+		addAccount:       l.Theme.NewClickable(false),
+		deleteWallet:     l.Theme.NewClickable(false),
+		verifyMessage:    l.Theme.NewClickable(false),
+		validateMsg:      l.Theme.NewClickable(false),
+		signMessage:      l.Theme.NewClickable(false),
 
-		chevronRightIcon:        decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
-		allowUnspendUnmixedAcct: l.Theme.Switch(),
-		pageContainer:           layout.List{Axis: layout.Vertical},
+		fetchProposal:     l.Theme.Switch(),
+		proposalNotif:     l.Theme.Switch(),
+		spendUnconfirmed:  l.Theme.Switch(),
+		SpendUnmixedFunds: l.Theme.Switch(),
+		connectToPeer:     l.Theme.Switch(),
+
+		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
+		pageContainer:    layout.List{Axis: layout.Vertical},
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -70,28 +85,20 @@ func (pg *WalletSettingsPage) OnNavigatedTo() {
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
-
+func (pg *WalletSettingsPage) Layout(gtx C) D {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
 			Title:      values.String(values.StrSettings),
-			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.ParentNavigator().CloseCurrentPage()
 			},
 			Body: func(gtx C) D {
 				w := []func(gtx C) D{
-					func(gtx C) D {
-						if !pg.wallet.IsWatchingOnlyWallet() {
-							return pg.changePassphrase()(gtx)
-						}
-						return layout.Dimensions{}
-					},
-					pg.renameWallet(),
+					pg.generalSection(),
 					pg.account(),
-					pg.stakeshuffle(),
+					pg.securityTools(),
 					pg.debug(),
 					pg.dangerZone(),
 				}
@@ -109,150 +116,102 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	return pg.layoutDesktop(gtx, body)
 }
 
-func (pg *WalletSettingsPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *WalletSettingsPage) layoutDesktop(gtx C, body layout.Widget) D {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *WalletSettingsPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *WalletSettingsPage) layoutMobile(gtx C, body layout.Widget) D {
 	return components.UniformMobile(gtx, false, false, body)
 }
 
-func (pg *WalletSettingsPage) clickableRow(gtx C, row row) D {
-	return row.clickable.Layout(gtx, func(gtx C) D {
-		return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
-			return pg.subSection(gtx, row.title, func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(row.label.Layout),
-					layout.Rigid(func(gtx C) D {
-						ic := row.icon
-						ic.Color = pg.Theme.Color.Gray3
-						return ic.Layout(gtx, values.MarginPadding22)
-					}),
-				)
-			})
-		})
-	})
-}
-
-func (pg *WalletSettingsPage) subSection(gtx C, title string, body layout.Widget) D {
-	return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(pg.Theme.Body1(title).Layout),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.E.Layout(gtx, body)
-			}),
+func (pg *WalletSettingsPage) generalSection() layout.Widget {
+	dim := func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.sectionContent(pg.changePass, values.String(values.StrSpendingPassword))),
+			layout.Rigid(pg.sectionContent(pg.changeWalletName, values.String(values.StrRenameWalletSheetTitle))),
+			layout.Rigid(pg.subSectionSwitch(values.String(values.StrFetchProposals), pg.fetchProposal)),
+			layout.Rigid(pg.subSectionSwitch("Proposal notification", pg.proposalNotif)),
+			layout.Rigid(pg.subSectionSwitch("Spend unconfirmed funds", pg.spendUnconfirmed)),
+			layout.Rigid(pg.subSectionSwitch(values.String(values.StrAllowSpendingFromUnmixedAccount), pg.SpendUnmixedFunds)),
+			layout.Rigid(pg.subSectionSwitch(values.String(values.StrConnectToSpecificPeer), pg.connectToPeer)),
 		)
-	})
-}
-
-func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
-	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrGeneral),
-			pg.bottomSectionLabel(pg.changePass, values.String(values.StrSpendingPassword)))
 	}
-}
 
-func (pg *WalletSettingsPage) renameWallet() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrRenameWalletSheetTitle),
-			pg.bottomSectionLabel(pg.changeWalletName, values.String(values.StrChangeWalletName)))
+		return pg.pageSections(gtx, values.String(values.StrGeneral), dim)
 	}
 }
 
 func (pg *WalletSettingsPage) account() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrAccount),
-			pg.bottomSectionLabel(pg.addAccount, values.String(values.StrAddNewAccount)))
+			pg.sectionContent(pg.addAccount, values.String(values.StrAddNewAccount)))
 	}
 }
 
 func (pg *WalletSettingsPage) debug() layout.Widget {
+	dims := func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.sectionContent(pg.rescan, values.String(values.StrRescanBlockchain))),
+			layout.Rigid(pg.sectionContent(pg.checklog, "Check wallet log")),
+			layout.Rigid(pg.sectionContent(pg.checkStats, values.String(values.StrCheckStatistics))),
+			layout.Rigid(pg.sectionContent(pg.resetDexData, values.String(values.StrResetDexClient))),
+		)
+	}
+
 	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrDebug),
-			pg.bottomSectionLabel(pg.rescan, values.String(values.StrRescanBlockchain)))
+		return pg.pageSections(gtx, values.String(values.StrDebug), dims)
 	}
 }
 
-func (pg *WalletSettingsPage) stakeshuffle() layout.Widget {
+func (pg *WalletSettingsPage) securityTools() layout.Widget {
+	dims := func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.sectionContent(pg.verifyMessage, values.String(values.StrVerifyMessage))),
+			layout.Rigid(pg.sectionContent(pg.validateMsg, values.String(values.StrValidateMsg))),
+			layout.Rigid(pg.sectionContent(pg.signMessage, values.String(values.StrSignMessage))),
+		)
+	}
+
 	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrStakeShuffle),
-			func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						mixedAccountRow := row{
-							title:     values.String(values.StrMixedAccount),
-							clickable: pg.mixedAccount,
-							icon:      pg.chevronRightIcon,
-							label:     pg.Theme.Body2(values.String(values.StrMixed)),
-						}
-						return pg.clickableRow(gtx, mixedAccountRow)
-					}),
-					layout.Rigid(pg.Theme.Separator().Layout),
-					layout.Rigid(func(gtx C) D {
-						changeAccountRow := row{
-							title:     values.String(values.StrChangeAccount),
-							clickable: pg.changeAccount,
-							icon:      pg.chevronRightIcon,
-							label:     pg.Theme.Body2(values.String(values.StrUnmixed)), // TODO
-						}
-						return pg.clickableRow(gtx, changeAccountRow)
-					}),
-					layout.Rigid(pg.Theme.Separator().Layout),
-					layout.Rigid(func(gtx C) D {
-						coordinationServerRow := row{
-							title:     values.String(values.StrCoordinationServer),
-							clickable: pg.coordinationServer,
-							icon:      pg.chevronRightIcon,
-							label:     pg.Theme.Body2("cspp.decred.org"),
-						}
-						return pg.clickableRow(gtx, coordinationServerRow)
-					}),
-				)
-			})
+		return pg.pageSections(gtx, values.String(values.StrSecurityTools), dims)
 	}
 }
 
 func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrDangerZone),
-			func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-							return layout.Flex{}.Layout(gtx,
-								layout.Rigid(pg.Theme.Label(values.TextSize16, values.String(values.StrAllowSpendingFromUnmixedAccount)).Layout),
-								layout.Flexed(1, func(gtx C) D {
-									return layout.E.Layout(gtx, pg.allowUnspendUnmixedAcct.Layout)
-								}),
-							)
-						})
-					}),
-					layout.Rigid(pg.bottomSectionLabel(pg.deleteWallet, values.String(values.StrRemoveWallet))),
-				)
-			})
+			pg.sectionContent(pg.deleteWallet, values.String(values.StrRemoveWallet)),
+		)
 	}
 }
 
-func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
-	dims := func(gtx layout.Context, title string, body layout.Widget) D {
+func (pg *WalletSettingsPage) pageSections(gtx C, title string, body layout.Widget) D {
+	dims := func(gtx C, title string, body layout.Widget) D {
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.Body2(title)
+							txt := pg.Theme.Label(values.TextSize14, title)
 							txt.Color = pg.Theme.Color.GrayText2
 							return txt.Layout(gtx)
 						}),
 						layout.Flexed(1, func(gtx C) D {
-							if title == values.String(values.StrGeneral) {
+							if title == values.String(values.StrSecurityTools) {
 								pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
-								pg.infoButton.Size = values.MarginPadding20
+								pg.infoButton.Size = values.MarginPadding16
 								return layout.E.Layout(gtx, pg.infoButton.Layout)
 							}
 							return D{}
 						}),
 					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Bottom: values.MarginPadding10,
+						Top:    values.MarginPadding7,
+					}.Layout(gtx, pg.Theme.Separator().Layout)
 				}),
 				layout.Rigid(body),
 			)
@@ -260,22 +219,19 @@ func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, bod
 	}
 
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-			return dims(gtx, title, body)
-		})
+		return dims(gtx, title, body)
 	})
 }
 
-func (pg *WalletSettingsPage) bottomSectionLabel(clickable *decredmaterial.Clickable, title string) layout.Widget {
+func (pg *WalletSettingsPage) sectionContent(clickable *decredmaterial.Clickable, title string) layout.Widget {
 	return func(gtx C) D {
 		return clickable.Layout(gtx, func(gtx C) D {
-			textLabel := pg.Theme.Body1(title)
+			textLabel := pg.Theme.Label(values.TextSize16, title)
 			if title == values.String(values.StrRemoveWallet) {
 				textLabel.Color = pg.Theme.Color.Danger
 			}
 			return layout.Inset{
-				Top:    values.MarginPadding15,
-				Bottom: values.MarginPadding4,
+				Bottom: values.MarginPadding20,
 			}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(textLabel.Layout),
@@ -288,6 +244,23 @@ func (pg *WalletSettingsPage) bottomSectionLabel(clickable *decredmaterial.Click
 				)
 			})
 		})
+	}
+}
+
+func (pg *WalletSettingsPage) subSection(gtx C, title string, body layout.Widget) D {
+	return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{}.Layout(gtx,
+			layout.Rigid(pg.Theme.Label(values.TextSize16, title).Layout),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.E.Layout(gtx, body)
+			}),
+		)
+	})
+}
+
+func (pg *WalletSettingsPage) subSectionSwitch(title string, option *decredmaterial.Switch) layout.Widget {
+	return func(gtx C) D {
+		return pg.subSection(gtx, title, option.Layout)
 	}
 }
 
