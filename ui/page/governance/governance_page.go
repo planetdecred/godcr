@@ -32,6 +32,7 @@ type Page struct {
 var governanceTabTitles = []string{
 	values.String(values.StrProposal),
 	values.String(values.StrConsensusChange),
+	values.String(values.StrTreasurySpending),
 }
 
 func NewGovernancePage(l *load.Load) *Page {
@@ -98,7 +99,14 @@ func (pg *Page) HandleUserInteractions() {
 			pg.Display(NewProposalsPage(pg.Load)) // Display should do nothing if the page is already displayed.
 		} else if clickedTabIndex == 1 {
 			pg.Display(NewConsensusPage(pg.Load))
+		} else {
+			pg.Display(NewTreasuryPage(pg.Load))
 		}
+	}
+
+	// Handle individual page user interactions.
+	if activeTab := pg.CurrentPage(); activeTab != nil {
+		activeTab.HandleUserInteractions()
 	}
 }
 
@@ -152,6 +160,8 @@ func (pg *Page) selectedTabIndex() int {
 		return 0
 	case ConsensusPageID:
 		return 1
+	case TreasuryPageID:
+		return 2
 	default:
 		return -1
 	}
