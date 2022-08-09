@@ -113,9 +113,7 @@ func (pg *HelpPage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
 							Top:   values.MarginPaddingMinus2,
 						}.Layout(gtx, pg.backButton.Layout)
 					}),
-					layout.Rigid(func(gtx C) D {
-						return pg.Theme.Label(values.TextSize20, values.String(values.StrHelp)).Layout(gtx)
-					}),
+					layout.Rigid(pg.Theme.Label(values.TextSize20, values.String(values.StrHelp)).Layout),
 				)
 			})
 		}),

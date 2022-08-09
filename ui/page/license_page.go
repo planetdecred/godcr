@@ -118,9 +118,7 @@ func (pg *LicensePage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
 							Top:   values.MarginPaddingMinus2,
 						}.Layout(gtx, pg.backButton.Layout)
 					}),
-					layout.Rigid(func(gtx C) D {
-						return pg.Theme.Label(values.TextSize20, values.String(values.StrLicense)).Layout(gtx)
-					}),
+					layout.Rigid(pg.Theme.Label(values.TextSize20, values.String(values.StrLicense)).Layout),
 				)
 			})
 		}),
@@ -131,7 +129,7 @@ func (pg *LicensePage) pageContentLayout(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding550)
-		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Max.X = gtx.Constraints.Min.X
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 		return pg.Theme.List(pg.pageContainer).Layout(gtx, 1, func(gtx C, i int) D {
 			return pg.Theme.Card().Layout(gtx, func(gtx C) D {

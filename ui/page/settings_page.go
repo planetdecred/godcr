@@ -42,8 +42,6 @@ type SettingsPage struct {
 	about             *decredmaterial.Clickable
 	appearanceMode    *decredmaterial.Clickable
 
-	appearanceIcon *decredmaterial.Image
-
 	chevronRightIcon *decredmaterial.Icon
 	backButton       decredmaterial.IconButton
 	infoButton       decredmaterial.IconButton
@@ -71,7 +69,6 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		transactionNotification: l.Theme.Switch(),
 
 		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
-		appearanceIcon:   l.Theme.Icons.LightMode,
 
 		errorReceiver: make(chan error),
 
@@ -130,9 +127,7 @@ func (pg *SettingsPage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
 							Top:   values.MarginPaddingMinus2,
 						}.Layout(gtx, pg.backButton.Layout)
 					}),
-					layout.Rigid(func(gtx C) D {
-						return pg.Theme.Label(values.TextSize20, values.String(values.StrSettings)).Layout(gtx)
-					}),
+					layout.Rigid(pg.Theme.Label(values.TextSize20, values.String(values.StrSettings)).Layout),
 				)
 			})
 		}),
@@ -148,7 +143,7 @@ func (pg *SettingsPage) pageContentLayout(gtx layout.Context) layout.Dimensions 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding500)
-		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding500)
+		gtx.Constraints.Max.X = gtx.Constraints.Min.X
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 		return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
 			return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
@@ -185,7 +180,11 @@ func (pg *SettingsPage) wrapSection(gtx C, title string, body layout.Widget) D {
 							}
 							if title == values.String(values.StrGeneral) {
 								layout.E.Layout(gtx, func(gtx C) D {
-									return pg.appearanceMode.Layout(gtx, pg.appearanceIcon.Layout24dp)
+									appearanceIcon := pg.Theme.Icons.LightMode
+									if pg.isDarkModeOn {
+										appearanceIcon = pg.Theme.Icons.DarkMode
+									}
+									return pg.appearanceMode.Layout(gtx, appearanceIcon.Layout24dp)
 								})
 							}
 							return D{}
@@ -384,10 +383,6 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	for pg.appearanceMode.Clicked() {
 		pg.isDarkModeOn = !pg.isDarkModeOn
 		pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, pg.isDarkModeOn)
-		pg.appearanceIcon = pg.Theme.Icons.LightMode
-		if pg.isDarkModeOn {
-			pg.appearanceIcon = pg.Theme.Icons.DarkMode
-		}
 		pg.RefreshTheme(pg.ParentWindow())
 	}
 
@@ -583,12 +578,6 @@ func (pg *SettingsPage) updateSettingOptions() {
 	if isPassword {
 		pg.startupPassword.SetChecked(isPassword)
 		pg.isStartupPassword = true
-	}
-
-	isDarkModeOn := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
-	pg.appearanceIcon = pg.Theme.Icons.LightMode
-	if isDarkModeOn {
-		pg.appearanceIcon = pg.Theme.Icons.DarkMode
 	}
 
 	transactionNotification := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey, false)
