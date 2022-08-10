@@ -29,7 +29,7 @@ type TextInputModal struct {
 
 func NewTextInputModal(l *load.Load) *TextInputModal {
 	tm := &TextInputModal{
-		InfoModal:    NewInfoModalWithKey(l, "text_input_modal"),
+		InfoModal:    NewInfoModalWithKey(l, "text_input_modal", Outline),
 		isCancelable: true,
 	}
 
@@ -65,7 +65,7 @@ func (tm *TextInputModal) PositiveButton(text string, callback func(string, *Tex
 }
 
 func (tm *TextInputModal) PositiveButtonStyle(background, text color.NRGBA) *TextInputModal {
-	tm.positiveButtonColor, tm.btnPositve.Color = background, text
+	tm.positiveButtonColor, tm.btnPositive.Color = background, text
 	return tm
 }
 
@@ -93,10 +93,10 @@ func (tm *TextInputModal) SetTextWithTemplate(template string) *TextInputModal {
 func (tm *TextInputModal) Handle() {
 
 	if editorsNotEmpty(tm.textInput.Editor) {
-		tm.btnPositve.Background = tm.positiveButtonColor
+		tm.btnPositive.Background = tm.positiveButtonColor
 		tm.isEnabled = true
 	} else {
-		tm.btnPositve.Background = tm.Theme.Color.Gray3
+		tm.btnPositive.Background = tm.Theme.Color.Gray3
 		tm.isEnabled = false
 	}
 
@@ -105,7 +105,7 @@ func (tm *TextInputModal) Handle() {
 		tm.textInput.SetError("")
 	}
 
-	if (tm.btnPositve.Clicked() || isSubmit) && tm.isEnabled {
+	if (tm.btnPositive.Clicked() || isSubmit) && tm.isEnabled {
 		if tm.isLoading {
 			return
 		}

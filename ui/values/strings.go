@@ -606,4 +606,5 @@ const (
 	StrConfirmVote                     = "confirmVote"
 	StrPolicySetSuccessful             = "policySetSuccessfully"
 	StrColon                           = "colon"
+	StrOk                              = "ok"
 )

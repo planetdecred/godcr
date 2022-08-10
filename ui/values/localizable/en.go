@@ -499,4 +499,5 @@ unlockWithPassword = "Unlock with password"
 "confirmVote" = "Confirm your vote"
 "policySetSuccessfully" = "Your treasury policy has been successfully updated!"
 "colon" = ": "
+"ok" = "OK"
 `
