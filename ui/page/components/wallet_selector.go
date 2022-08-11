@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"gioui.org/layout"
@@ -478,7 +477,5 @@ func (ws *WalletSelector) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 
 			return false
 		})
-	fmt.Println("==================>", ws.ParentWindow())
-	fmt.Println("==================>", spendingPasswordModal)
 	ws.ParentWindow().ShowModal(spendingPasswordModal)
 }

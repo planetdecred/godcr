@@ -609,4 +609,5 @@ const (
 	StrOk                              = "ok"
 	StrDexDataReset                    = "dexDataReset"
 	StrDexDataResetFalse               = "dexDataResetFalse"
+	StrNotSameAccoutMixUnmix           = "notSameAccoutMixUnmix"
 )

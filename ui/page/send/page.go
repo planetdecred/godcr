@@ -320,7 +320,10 @@ func (pg *Page) feeEstimationError(err string) {
 		pg.amount.setError(invalidAmountErr)
 	} else {
 		pg.amount.setError(err)
-		pg.Toast.NotifyError(values.StringF(values.StrTxEstimateErr, err))
+		errModal := modal.NewErrorModal(pg.Load, values.StringF(values.StrTxEstimateErr, err), func(isChecked bool) bool {
+			return true
+		})
+		pg.ParentWindow().ShowModal(errModal)
 	}
 
 	pg.clearEstimates()

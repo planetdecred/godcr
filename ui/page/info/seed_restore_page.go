@@ -496,7 +496,10 @@ func (pg *SeedRestore) verifySeeds() bool {
 	if isValid {
 		pg.seedPhrase = seedphrase
 		if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
-			pg.Toast.NotifyError(values.String(values.StrInvalidSeedPhrase))
+			errModal := modal.NewErrorModal(pg.Load, values.String(values.StrInvalidSeedPhrase), func(isChecked bool) bool {
+				return true
+			})
+			pg.ParentWindow().ShowModal(errModal)
 			return false
 		}
 	}
@@ -510,7 +513,10 @@ func (pg *SeedRestore) verifySeeds() bool {
 	}
 
 	if walletWithSameSeed != -1 {
-		pg.Toast.NotifyError(values.String(values.StrSeedAlreadyExist))
+		errModal := modal.NewErrorModal(pg.Load, values.String(values.StrSeedAlreadyExist), func(isChecked bool) bool {
+			return true
+		})
+		pg.ParentWindow().ShowModal(errModal)
 		return false
 	}
 
@@ -573,7 +579,10 @@ func (pg *SeedRestore) HandleUserInteractions() {
 						return
 					}
 
-					pg.Toast.Notify(values.String(values.StrWalletRestored))
+					infoModal := modal.NewErrorModal(pg.Load, values.String(values.StrWalletRestored), func(isChecked bool) bool {
+						return true
+					})
+					pg.ParentWindow().ShowModal(infoModal)
 					pg.resetSeeds()
 					m.Dismiss()
 					if pg.restoreComplete == nil {

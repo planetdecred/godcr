@@ -101,7 +101,10 @@ func (pg *Page) fetchTicketPrice() {
 	if err != nil && !pg.WL.MultiWallet.IsSynced() {
 		log.Error(err)
 		pg.ticketPrice = values.String(values.StrNotAvailable)
-		pg.Toast.NotifyError(values.String(values.StrWalletNotSynced))
+		errModal := modal.NewErrorModal(pg.Load, values.String(values.StrWalletNotSynced), func(isChecked bool) bool {
+			return true
+		})
+		pg.ParentWindow().ShowModal(errModal)
 	} else {
 		pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
 	}
@@ -123,14 +126,20 @@ func (pg *Page) loadPageData() {
 
 		totalRewards, err := pg.WL.SelectedWallet.Wallet.TotalStakingRewards()
 		if err != nil {
-			pg.Toast.NotifyError(err.Error())
+			errModal := modal.NewErrorModal(pg.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			pg.ParentWindow().ShowModal(errModal)
 		} else {
 			pg.totalRewards = dcrutil.Amount(totalRewards).String()
 		}
 
 		overview, err := pg.WL.SelectedWallet.Wallet.StakingOverview()
 		if err != nil {
-			pg.Toast.NotifyError(err.Error())
+			errModal := modal.NewErrorModal(pg.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			pg.ParentWindow().ShowModal(errModal)
 		} else {
 			pg.ticketOverview = overview
 		}
@@ -223,13 +232,19 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.stakeSettings.Clicked() && !pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
 		if pg.WL.SelectedWallet.Wallet.IsAutoTicketsPurchaseActive() {
-			pg.Toast.NotifyError(values.String(values.StrAutoTicketWarn))
+			errModal := modal.NewErrorModal(pg.Load, values.String(values.StrAutoTicketWarn), func(isChecked bool) bool {
+				return true
+			})
+			pg.ParentWindow().ShowModal(errModal)
 			return
 		}
 
 		ticketBuyerModal := newTicketBuyerModal(pg.Load).
 			OnSettingsSaved(func() {
-				pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
+				infoModal := modal.NewSuccessModal(pg.Load, values.String(values.StrTicketSettingSaved), func(isChecked bool) bool {
+					return true
+				})
+				pg.ParentWindow().ShowModal(infoModal)
 			}).
 			OnCancel(func() {
 				pg.stake.SetChecked(false)
@@ -295,7 +310,10 @@ func (pg *Page) ticketBuyerSettingsModal() {
 		}).
 		OnSettingsSaved(func() {
 			pg.startTicketBuyerPasswordModal()
-			pg.Toast.Notify(values.String(values.StrTicketSettingSaved))
+			infoModal := modal.NewSuccessModal(pg.Load, values.String(values.StrTicketSettingSaved), func(isChecked bool) bool {
+				return true
+			})
+			pg.ParentWindow().ShowModal(infoModal)
 		})
 	pg.ParentWindow().ShowModal(ticketBuyerModal)
 }
@@ -305,7 +323,10 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 	balToMaintain := dcrlibwallet.AmountCoin(tbConfig.BalanceToMaintain)
 	name, err := pg.WL.SelectedWallet.Wallet.AccountNameRaw(uint32(tbConfig.PurchaseAccount))
 	if err != nil {
-		pg.Toast.NotifyError(values.StringF(values.StrTicketError, err))
+		errModal := modal.NewErrorModal(pg.Load, values.StringF(values.StrTicketError, err), func(isChecked bool) bool {
+			return true
+		})
+		pg.ParentWindow().ShowModal(errModal)
 		return
 	}
 
@@ -352,7 +373,10 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 		}).
 		PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 			if !pg.WL.MultiWallet.IsConnectedToDecredNetwork() {
-				pg.Toast.NotifyError(values.String(values.StrNotConnected))
+				errModal := modal.NewErrorModal(pg.Load, values.String(values.StrNotConnected), func(isChecked bool) bool {
+					return true
+				})
+				pg.ParentWindow().ShowModal(errModal)
 				pm.SetLoading(false)
 				pg.stake.SetChecked(false)
 				return false
@@ -361,7 +385,10 @@ func (pg *Page) startTicketBuyerPasswordModal() {
 			go func() {
 				err := pg.WL.SelectedWallet.Wallet.StartTicketBuyer([]byte(password))
 				if err != nil {
-					pg.Toast.NotifyError(err.Error())
+					errModal := modal.NewErrorModal(pg.Load, err.Error(), func(isChecked bool) bool {
+						return true
+					})
+					pg.ParentWindow().ShowModal(errModal)
 					pm.SetLoading(false)
 					return
 				}

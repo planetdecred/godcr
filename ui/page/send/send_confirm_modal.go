@@ -11,6 +11,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -72,10 +73,16 @@ func (scm *sendConfirmModal) broadcastTransaction() {
 		scm.isSending = false
 		scm.Modal.SetDisabled(false)
 		if err != nil {
-			scm.Toast.NotifyError(err.Error())
+			errModal := modal.NewErrorModal(scm.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			scm.ParentWindow().ShowModal(errModal)
 			return
 		}
-		scm.Toast.Notify(values.String(values.StrTxSent))
+		successModal := modal.NewSuccessModal(scm.Load, values.String(values.StrTxSent), func(isChecked bool) bool {
+			return true
+		})
+		scm.ParentWindow().ShowModal(successModal)
 
 		scm.txSent()
 		scm.Dismiss()

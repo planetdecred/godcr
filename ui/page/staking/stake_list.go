@@ -6,6 +6,7 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/listeners"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -46,7 +47,10 @@ func (pg *Page) listenForTxNotifications() {
 func (pg *Page) fetchTickets() {
 	txs, err := pg.WL.SelectedWallet.Wallet.GetTransactionsRaw(0, 0, dcrlibwallet.TxFilterTickets, true)
 	if err != nil {
-		pg.Toast.NotifyError(err.Error())
+		errModal := modal.NewErrorModal(pg.Load, err.Error(), func(isChecked bool) bool {
+			return true
+		})
+		pg.ParentWindow().ShowModal(errModal)
 		return
 	}
 
@@ -54,7 +58,10 @@ func (pg *Page) fetchTickets() {
 		return filter == dcrlibwallet.TxFilterTickets
 	})
 	if err != nil {
-		pg.Toast.NotifyError(err.Error())
+		errModal := modal.NewErrorModal(pg.Load, err.Error(), func(isChecked bool) bool {
+			return true
+		})
+		pg.ParentWindow().ShowModal(errModal)
 		return
 	}
 

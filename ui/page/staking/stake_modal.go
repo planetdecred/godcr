@@ -11,6 +11,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -79,7 +80,10 @@ func (tb *ticketBuyerModal) OnResume() {
 		tbConfig := tb.WL.SelectedWallet.Wallet.AutoTicketsBuyerConfig()
 		acct, err := tb.WL.SelectedWallet.Wallet.GetAccount(tbConfig.PurchaseAccount)
 		if err != nil {
-			tb.Toast.NotifyError(err.Error())
+			errModal := modal.NewErrorModal(tb.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			tb.ParentWindow().ShowModal(errModal)
 		}
 
 		if tb.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
@@ -89,7 +93,10 @@ func (tb *ticketBuyerModal) OnResume() {
 		} else {
 			err := tb.accountSelector.SelectFirstWalletValidAccount()
 			if err != nil {
-				tb.Toast.NotifyError(err.Error())
+				errModal := modal.NewErrorModal(tb.Load, err.Error(), func(isChecked bool) bool {
+					return true
+				})
+				tb.ParentWindow().ShowModal(errModal)
 			}
 		}
 
@@ -100,7 +107,10 @@ func (tb *ticketBuyerModal) OnResume() {
 	if tb.accountSelector.SelectedAccount() == nil {
 		err := tb.accountSelector.SelectFirstWalletValidAccount()
 		if err != nil {
-			tb.Toast.NotifyError(err.Error())
+			errModal := modal.NewErrorModal(tb.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			tb.ParentWindow().ShowModal(errModal)
 		}
 	}
 }
@@ -200,7 +210,10 @@ func (tb *ticketBuyerModal) Handle() {
 		vspHost := tb.vspSelector.SelectedVSP().Host
 		amount, err := strconv.ParseFloat(tb.balToMaintainEditor.Editor.Text(), 64)
 		if err != nil {
-			tb.Toast.NotifyError(err.Error())
+			errModal := modal.NewErrorModal(tb.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			tb.ParentWindow().ShowModal(errModal)
 			return
 		}
 

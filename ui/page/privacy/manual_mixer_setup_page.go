@@ -187,7 +187,10 @@ func (pg *ManualMixerSetupPage) mixerAccountSections(gtx layout.Context, title s
 
 func (pg *ManualMixerSetupPage) showModalSetupMixerAcct() {
 	if pg.mixedAccountSelector.SelectedAccount().Number == pg.unmixedAccountSelector.SelectedAccount().Number {
-		pg.Toast.NotifyError("Cannot use same account for mixed & unmixed")
+		errModal := modal.NewErrorModal(pg.Load, values.String(values.StrNotSameAccoutMixUnmix), func(isChecked bool) bool {
+			return true
+		})
+		pg.ParentWindow().ShowModal(errModal)
 		return
 	}
 
