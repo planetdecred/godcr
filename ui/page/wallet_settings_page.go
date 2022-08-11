@@ -328,7 +328,10 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify(values.String(values.StrSpendingPasswordUpdated))
+								infoModal := modal.NewSuccessModal(pg.Load, values.String(values.StrSpendingPasswordUpdated), func(isChecked bool) bool {
+									return true
+								})
+								pg.ParentWindow().ShowModal(infoModal)
 								m.Dismiss()
 							}()
 							return false
@@ -352,15 +355,21 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 				PositiveButton(values.String(values.StrRescan), func(isChecked bool) bool {
 					err := pg.WL.MultiWallet.RescanBlocks(pg.wallet.ID)
 					if err != nil {
+						errMess := err.Error()
 						if err.Error() == dcrlibwallet.ErrNotConnected {
-							pg.Toast.NotifyError(values.String(values.StrNotConnected))
-							return true
+							errMess = values.String(values.StrNotConnected)
 						}
-						pg.Toast.NotifyError(err.Error())
+						errorModal := modal.NewErrorModal(pg.Load, errMess, func(isChecked bool) bool {
+							return true
+						})
+						pg.ParentWindow().ShowModal(errorModal)
 						return true
 					}
 					msg := values.String(values.StrRescanProgressNotification)
-					pg.Toast.Notify(msg)
+					infoModal := modal.NewSuccessModal(pg.Load, msg, func(isChecked bool) bool {
+						return true
+					})
+					pg.ParentWindow().ShowModal(infoModal)
 					return true
 				})
 
@@ -382,7 +391,10 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 			PositiveButton(values.String(values.StrRemove), func(isChecked bool) bool {
 				walletDeleted := func() {
 					if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
-						pg.Toast.Notify(values.String(values.StrWalletRemoved))
+						infoModal := modal.NewSuccessModal(pg.Load, values.String(values.StrWalletRemoved), func(isChecked bool) bool {
+							return true
+						})
+						pg.ParentWindow().ShowModal(infoModal)
 						confirmRemoveWalletModal.Dismiss()
 						pg.ParentNavigator().CloseCurrentPage()
 						onWalSelected := func() {
@@ -404,7 +416,10 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 						// no password is required for watching only wallets.
 						err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, nil)
 						if err != nil {
-							pg.Toast.NotifyError(err.Error())
+							infoModal := modal.NewSuccessModal(pg.Load, err.Error(), func(isChecked bool) bool {
+								return true
+							})
+							pg.ParentWindow().ShowModal(infoModal)
 							confirmRemoveWalletModal.SetLoading(false)
 						} else {
 							walletDeleted()

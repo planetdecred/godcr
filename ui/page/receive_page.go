@@ -148,7 +148,10 @@ func (pg *ReceivePage) OnNavigatedTo() {
 	currentAddress, err := selectedWallet.CurrentAddress(pg.selector.SelectedAccount().Number)
 	if err != nil {
 		log.Errorf("Error getting current address: %v", err)
-		pg.Toast.NotifyError(fmt.Sprintf("Error getting current address: %v", err))
+		errModal := modal.NewErrorModal(pg.Load, fmt.Sprintf("Error getting current address: %v", err), func(isChecked bool) bool {
+			return true
+		})
+		pg.ParentWindow().ShowModal(errModal)
 	} else {
 		pg.currentAddress = currentAddress
 		pg.generateQRForAddress()

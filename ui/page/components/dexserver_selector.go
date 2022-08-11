@@ -10,6 +10,7 @@ import (
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -60,7 +61,10 @@ func (ds *DexServerSelector) isLoadingDexClient() bool {
 func (ds *DexServerSelector) startDexClient() {
 	_, err := ds.WL.MultiWallet.StartDexClient()
 	if err != nil {
-		ds.Toast.NotifyError(err.Error())
+		errModal := modal.NewErrorModal(ds.Load, err.Error(), func(isChecked bool) bool {
+			return true
+		})
+		ds.ParentWindow().ShowModal(errModal)
 		return
 	}
 
@@ -68,7 +72,10 @@ func (ds *DexServerSelector) startDexClient() {
 	if !ds.Dexc().Initialized() {
 		err = ds.Dexc().InitializeWithPassword([]byte(values.DEXClientPass))
 		if err != nil {
-			ds.Toast.NotifyError(err.Error())
+			errModal := modal.NewErrorModal(ds.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			ds.ParentWindow().ShowModal(errModal)
 			return
 		}
 	}
@@ -76,7 +83,10 @@ func (ds *DexServerSelector) startDexClient() {
 	if !ds.Dexc().IsLoggedIn() {
 		err := ds.Dexc().Login([]byte(values.DEXClientPass))
 		if err != nil {
-			ds.Toast.NotifyError(err.Error())
+			errModal := modal.NewErrorModal(ds.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			ds.ParentWindow().ShowModal(errModal)
 			return
 		}
 	}

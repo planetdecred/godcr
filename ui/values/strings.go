@@ -607,4 +607,6 @@ const (
 	StrPolicySetSuccessful             = "policySetSuccessfully"
 	StrColon                           = "colon"
 	StrOk                              = "ok"
+	StrDexDataReset                    = "dexDataReset"
+	StrDexDataResetFalse               = "dexDataResetFalse"
 )

@@ -346,7 +346,10 @@ func (pg *AcctDetailsPage) HandleUserInteractions() {
 					return false
 				}
 				pg.account.Name = newName
-				pg.Toast.Notify(values.String(values.StrAcctRenamed))
+				successModal := modal.NewSuccessModal(pg.Load, values.String(values.StrAcctRenamed), func(isChecked bool) bool {
+					return true
+				})
+				pg.ParentWindow().ShowModal(successModal)
 				return true
 			})
 

@@ -276,13 +276,19 @@ func (pg *TreasuryPage) updatePolicyPreference(treasuryItem *components.Treasury
 					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 						pm.SetError(values.String(values.StrInvalidPassphrase))
 					} else {
-						pm.Toast.NotifyError(err.Error())
+						errModal := modal.NewErrorModal(pg.Load, err.Error(), func(isChecked bool) bool {
+							return true
+						})
+						pg.ParentWindow().ShowModal(errModal)
 					}
 					pm.SetLoading(false)
 					return
 				}
 				go pg.FetchPolicies() // re-fetch policies when voting is done.
-				pm.Toast.Notify(values.String(values.StrPolicySetSuccessful))
+				infoModal := modal.NewSuccessModal(pg.Load, values.String(values.StrPolicySetSuccessful), func(isChecked bool) bool {
+					return true
+				})
+				pg.ParentWindow().ShowModal(infoModal)
 				pm.Dismiss()
 			}()
 

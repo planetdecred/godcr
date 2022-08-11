@@ -500,4 +500,6 @@ unlockWithPassword = "Unlock with password"
 "policySetSuccessfully" = "Your treasury policy has been successfully updated!"
 "colon" = ": "
 "ok" = "OK"
+"dexDataReset" = "DEX client data reset complete."
+"dexDataResetFalse" = "DEX client data reset failed. Check the logs."
 `

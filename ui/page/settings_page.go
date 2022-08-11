@@ -463,7 +463,10 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		if pg.governance.IsChecked() {
 			go pg.WL.MultiWallet.Politeia.Sync()
 			pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, pg.governance.IsChecked())
-			pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrEnabled), values.String(values.StrCheckGovernace)))
+			infoModal := modal.NewSuccessModal(pg.Load, values.StringF(values.StrPropFetching, values.String(values.StrEnabled), values.String(values.StrCheckGovernace)), func(isChecked bool) bool {
+				return true
+			})
+			pg.ParentWindow().ShowModal(infoModal)
 		} else {
 			info := modal.NewInfoModal(pg.Load).
 				Title(values.String(values.StrGovernance)).
@@ -476,7 +479,10 @@ func (pg *SettingsPage) HandleUserInteractions() {
 					}
 					pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, !pg.governance.IsChecked())
 					pg.WL.MultiWallet.Politeia.ClearSavedProposals()
-					pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrDisabled)))
+					infoModal := modal.NewSuccessModal(pg.Load, values.StringF(values.StrPropFetching, values.String(values.StrDisabled)), func(isChecked bool) bool {
+						return true
+					})
+					pg.ParentWindow().ShowModal(infoModal)
 					return true
 				})
 			pg.ParentWindow().ShowModal(info)
@@ -489,20 +495,28 @@ func (pg *SettingsPage) HandleUserInteractions() {
 
 	if pg.proposalNotification.Changed() {
 		pg.WL.MultiWallet.SaveUserConfigValue(load.ProposalNotificationConfigKey, pg.proposalNotification.IsChecked())
-		if pg.proposalNotification.IsChecked() {
-			pg.Toast.Notify(values.StringF(values.StrPropNotification, values.String(values.StrEnabled)))
-		} else {
-			pg.Toast.Notify(values.StringF(values.StrPropNotification, values.String(values.StrDisabled)))
+		infoModal := modal.NewSuccessModal(pg.Load, values.StringF(values.StrPropNotification, values.String(values.StrEnabled)), func(isChecked bool) bool {
+			return true
+		})
+		if !pg.proposalNotification.IsChecked() {
+			infoModal = modal.NewSuccessModal(pg.Load, values.StringF(values.StrPropNotification, values.String(values.StrDisabled)), func(isChecked bool) bool {
+				return true
+			})
 		}
+		pg.ParentWindow().ShowModal(infoModal)
 	}
 
 	if pg.transactionNotification.Changed() {
 		pg.WL.MultiWallet.SaveUserConfigValue(load.TransactionNotificationConfigKey, pg.transactionNotification.IsChecked())
+		infoModal := modal.NewSuccessModal(pg.Load, values.StringF(values.StrTxNotification, values.String(values.StrDisabled)), func(isChecked bool) bool {
+			return true
+		})
 		if pg.transactionNotification.IsChecked() {
-			pg.Toast.Notify(values.StringF(values.StrTxNotification, values.String(values.StrEnabled)))
-		} else {
-			pg.Toast.Notify(values.StringF(values.StrTxNotification, values.String(values.StrDisabled)))
+			infoModal = modal.NewSuccessModal(pg.Load, values.StringF(values.StrTxNotification, values.String(values.StrEnabled)), func(isChecked bool) bool {
+				return true
+			})
 		}
+		pg.ParentWindow().ShowModal(infoModal)
 	}
 
 	if pg.infoButton.Button.Clicked() {
@@ -550,7 +564,10 @@ func (pg *SettingsPage) HandleUserInteractions() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify(values.String(values.StrStartupPassConfirm))
+								infoModal := modal.NewSuccessModal(pg.Load, values.String(values.StrStartupPassConfirm), func(isChecked bool) bool {
+									return true
+								})
+								pg.ParentWindow().ShowModal(infoModal)
 								m.Dismiss()
 							}()
 							return false
@@ -580,7 +597,10 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							m.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrEnabled)))
+						infoModal := modal.NewSuccessModal(pg.Load, values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrEnabled)), func(isChecked bool) bool {
+							return true
+						})
+						pg.ParentWindow().ShowModal(infoModal)
 						m.Dismiss()
 					}()
 					return false
@@ -605,7 +625,10 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							pm.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrDisabled)))
+						infoModal := modal.NewSuccessModal(pg.Load, values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrDisabled)), func(isChecked bool) bool {
+							return true
+						})
+						pg.ParentWindow().ShowModal(infoModal)
 						pm.Dismiss()
 					}()
 
@@ -651,11 +674,14 @@ func (pg *SettingsPage) HandleUserInteractions() {
 
 	select {
 	case err := <-pg.errorReceiver:
+		erro := err.Error()
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-			pg.Toast.NotifyError(values.String(values.StrInvalidPassphrase))
-			return
+			erro = values.String(values.StrInvalidPassphrase)
 		}
-		pg.Toast.NotifyError(err.Error())
+		infoModal := modal.NewErrorModal(pg.Load, erro, func(isChecked bool) bool {
+			return true
+		})
+		pg.ParentWindow().ShowModal(infoModal)
 	default:
 	}
 }

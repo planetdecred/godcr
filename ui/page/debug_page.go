@@ -182,11 +182,15 @@ func (pg *DebugPage) resetDexData() {
 		Body(values.String(values.StrDexResetInfo)).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton(values.String(values.StrResetDexClient), func(isChecked bool) bool {
+			suc := modal.NewErrorModal(pg.Load, values.StrDexDataResetFalse, func(isChecked bool) bool {
+				return true
+			})
 			if pg.Dexc().Reset() {
-				pg.Toast.Notify("DEX client data reset complete.")
-			} else {
-				pg.Toast.NotifyError("DEX client data reset failed. Check the logs.")
+				suc = modal.NewSuccessModal(pg.Load, values.StrDexDataReset, func(isChecked bool) bool {
+					return true
+				})
 			}
+			pg.ParentWindow().ShowModal(suc)
 			return true
 		})
 	pg.ParentWindow().ShowModal(confirmModal)

@@ -18,8 +18,6 @@ type InfoModal struct {
 	*load.Load
 	*decredmaterial.Modal
 
-	enterKeyPressed bool
-
 	dialogIcon *decredmaterial.Icon
 
 	dialogTitle    string
@@ -62,6 +60,16 @@ func NewInfoModal(l *load.Load) *InfoModal {
 func NewSuccessModal(l *load.Load, title string, clicked func(isChecked bool) bool) *InfoModal {
 	icon := decredmaterial.NewIcon(l.Theme.Icons.ActionCheckCircle)
 	icon.Color = l.Theme.Color.Green500
+	return NewNotice(l, title, icon, clicked)
+}
+
+func NewErrorModal(l *load.Load, title string, clicked func(isChecked bool) bool) *InfoModal {
+	icon := decredmaterial.NewIcon(l.Theme.Icons.ErrorIcon)
+	icon.Color = l.Theme.Color.Danger
+	return NewNotice(l, title, icon, clicked)
+}
+
+func NewNotice(l *load.Load, title string, icon *decredmaterial.Icon, clicked func(isChecked bool) bool) *InfoModal {
 	info := NewInfoModalWithKey(l, "info_modal", Normal)
 	info.positiveButtonText = values.String(values.StrOk)
 	info.positiveButtonClicked = clicked

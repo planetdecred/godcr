@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"gioui.org/layout"
@@ -137,10 +138,16 @@ func (ws *WalletSelector) deleteBadWallet(badWalletID int) {
 			go func() {
 				err := ws.WL.MultiWallet.DeleteBadWallet(badWalletID)
 				if err != nil {
-					ws.Toast.NotifyError(err.Error())
+					errorModal := modal.NewErrorModal(ws.Load, err.Error(), func(isChecked bool) bool {
+						return true
+					})
+					ws.ParentWindow().ShowModal(errorModal)
 					return
 				}
-				ws.Toast.Notify(values.String(values.StrWalletRemoved))
+				infoModal := modal.NewSuccessModal(ws.Load, values.String(values.StrWalletRemoved), func(isChecked bool) bool {
+					return true
+				})
+				ws.ParentWindow().ShowModal(infoModal)
 				ws.loadBadWallets() // refresh bad wallets list
 				ws.ParentWindow().Reload()
 			}()
@@ -471,5 +478,7 @@ func (ws *WalletSelector) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 
 			return false
 		})
+	fmt.Println("==================>", ws.ParentWindow())
+	fmt.Println("==================>", spendingPasswordModal)
 	ws.ParentWindow().ShowModal(spendingPasswordModal)
 }

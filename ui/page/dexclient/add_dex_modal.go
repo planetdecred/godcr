@@ -100,7 +100,10 @@ func (md *AddDexModal) doAddDexServer(serverAddr string) {
 
 		dexServer, paid, err := md.Dexc().Core().DiscoverAccount(serverAddr, []byte(DEXClientPass), cert)
 		if err != nil {
-			md.Toast.NotifyError(err.Error())
+			errorModal := modal.NewErrorModal(md.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			md.ParentWindow().ShowModal(errorModal)
 			return
 		}
 

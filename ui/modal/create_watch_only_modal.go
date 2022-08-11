@@ -132,12 +132,19 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		matchedWalletID, err := cm.WL.MultiWallet.WalletWithXPub(cm.extendedPubKey.Editor.Text())
 		if err != nil {
 			log.Errorf("Error checking xpub: %v", err)
-			cm.Toast.NotifyError(values.StringF(values.StrXpubKeyErr, err)) // Error maybe useful to user.
+			errorModal := NewErrorModal(cm.Load, values.StringF(values.StrXpubKeyErr, err), func(isChecked bool) bool {
+				return true
+			})
+			cm.ParentWindow().ShowModal(errorModal)
+
 			return
 		}
 
 		if matchedWalletID != -1 {
-			cm.Toast.NotifyError(values.String(values.StrXpubWalletExist))
+			errorModal := NewErrorModal(cm.Load, values.String(values.StrXpubWalletExist), func(isChecked bool) bool {
+				return true
+			})
+			cm.ParentWindow().ShowModal(errorModal)
 			return
 		}
 

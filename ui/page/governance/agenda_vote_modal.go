@@ -12,6 +12,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -92,7 +93,10 @@ func (avm *agendaVoteModal) FetchUnspentUnexpiredTickets(walletID int) {
 		wallet := avm.WL.MultiWallet.WalletWithID(walletID)
 		tickets, err := wallet.UnspentUnexpiredTickets()
 		if err != nil {
-			avm.Toast.NotifyError(err.Error())
+			errorModal := modal.NewErrorModal(avm.Load, err.Error(), func(isChecked bool) bool {
+				return true
+			})
+			avm.ParentWindow().ShowModal(errorModal)
 			return
 		}
 
@@ -234,12 +238,17 @@ func (avm *agendaVoteModal) sendVotes() {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 				avm.spendingPassword.SetError(values.String(values.StrInvalidPassphrase))
 			} else {
-				avm.Toast.NotifyError(err.Error())
+				errorModal := modal.NewErrorModal(avm.Load, err.Error(), func(isChecked bool) bool {
+					return true
+				})
+				avm.ParentWindow().ShowModal(errorModal)
 			}
 			return
 		}
-		avm.Toast.Notify(values.String(values.StrVoteUpdated))
-
+		successModal := modal.NewSuccessModal(avm.Load, values.String(values.StrVoteUpdated), func(isChecked bool) bool {
+			return true
+		})
+		avm.ParentWindow().ShowModal(successModal)
 		avm.Dismiss()
 		avm.onPreferenceUpdated()
 	}()
