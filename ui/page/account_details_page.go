@@ -264,7 +264,7 @@ func (pg *AcctDetailsPage) acctBalLayout(gtx C, balType string, balance string, 
 					return components.LayoutBalanceSize(gtx, pg.Load, balance, values.TextSize34)
 				}
 
-				return components.LayoutBalance(gtx, pg.Load, balance)
+				return components.LayoutBalanceWithUnit(gtx, pg.Load, balance)
 			}),
 			layout.Rigid(func(gtx C) D {
 				txt := pg.theme.Body2(balType)

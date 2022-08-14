@@ -79,7 +79,7 @@ func (pg *AccountMixerPage) toggleMixerAndProgres(gtx C, l *load.Load, button la
 							layout.Rigid(l.Theme.H6(values.String(values.StrBalance)).Layout),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									return components.LayoutBalance(gtx, pg.Load, pg.totalBalance.String())
+									return components.LayoutBalanceWithUnit(gtx, pg.Load, pg.totalBalance.String())
 								})
 							}),
 							layout.Flexed(1, func(gtx C) D {
@@ -130,7 +130,7 @@ func (pg *AccountMixerPage) mixedBalanceInfo(gtx C, l *load.Load, mixedBalance s
 				layout.Flexed(1, func(gtx C) D {
 					return layout.Inset{Right: values.MarginPadding25}.Layout(gtx, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							return components.LayoutBalance(gtx, pg.Load, mixedBalance)
+							return components.LayoutBalanceWithUnit(gtx, pg.Load, mixedBalance)
 						})
 					})
 				}),
@@ -172,7 +172,7 @@ func (pg *AccountMixerPage) unmixedBalanceInfo(gtx C, l *load.Load, unmixedBalan
 				layout.Flexed(1, func(gtx C) D {
 					return layout.Inset{Right: values.MarginPadding25}.Layout(gtx, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							return components.LayoutBalance(gtx, pg.Load, unmixedBalance)
+							return components.LayoutBalanceWithUnit(gtx, pg.Load, unmixedBalance)
 						})
 					})
 				}),
