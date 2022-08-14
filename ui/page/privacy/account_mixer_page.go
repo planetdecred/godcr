@@ -69,7 +69,119 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 	pg.toggleMixer.SetChecked(pg.WL.SelectedWallet.Wallet.IsAccountMixerActive())
 }
 
-func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive bool, button layout.Widget) D {
+func (pg *AccountMixerPage) toggleMixerAndProgres(gtx C, l *load.Load, button layout.Widget) layout.FlexChild {
+	return layout.Rigid(func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding40).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(l.Theme.H6(values.String(values.StrBalance)).Layout),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+									return components.LayoutBalance(gtx, pg.Load, pg.totalBalance.String())
+								})
+							}),
+							layout.Flexed(1, func(gtx C) D {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, l.Theme.H6(values.String(values.StrMix)).Layout)
+										}),
+										layout.Rigid(button),
+									)
+								})
+							}),
+						)
+					})
+				}),
+				layout.Rigid(l.Theme.Separator().Layout),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								txt := l.Theme.H6(values.String(values.StrMixer))
+								txt.Color = l.Theme.Color.GrayText3
+								return txt.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding40}.Layout(gtx, pg.mixerProgress.Layout)
+							}),
+						)
+					})
+				}),
+			)
+		})
+	})
+}
+
+func (pg *AccountMixerPage) mixedBalanceInfo(gtx C, l *load.Load, mixedBalance string) layout.FlexChild {
+	return layout.Rigid(func(gtx C) D {
+		insetValue := values.MarginPadding15
+		return layout.Inset{Right: insetValue,
+			Left: insetValue,
+			Top:  insetValue,
+		}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(l.Theme.Icons.MixedTxIcon.Layout12dp),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding11}.Layout(gtx, l.Theme.H6(values.String(values.StrMixed)).Layout)
+				}),
+				layout.Flexed(1, func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding25}.Layout(gtx, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return components.LayoutBalance(gtx, pg.Load, mixedBalance)
+						})
+					})
+				}),
+			)
+		})
+	})
+}
+
+func (pg *AccountMixerPage) mixerImage(gtx C, l *load.Load) layout.FlexChild {
+	return layout.Rigid(func(gtx C) D {
+		insetValue := values.MarginPadding40
+		return layout.Inset{Right: insetValue, Left: insetValue}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					gtx.Constraints.Max.X = gtx.Constraints.Max.X/2 - 40
+					return layout.W.Layout(gtx, l.Theme.Separator().Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+						return layout.Center.Layout(gtx, l.Theme.Icons.MixerIcon.Layout36dp)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.E.Layout(gtx, l.Theme.Separator().Layout)
+				}),
+			)
+		})
+	})
+}
+
+func (pg *AccountMixerPage) unmixedBalanceInfo(gtx C, l *load.Load, unmixedBalance string) layout.FlexChild {
+	return layout.Rigid(func(gtx C) D {
+		return layout.Inset{Right: values.MarginPadding15, Left: values.MarginPadding15, Bottom: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(l.Theme.Icons.UnmixedTxIcon.Layout12dp),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding11}.Layout(gtx, l.Theme.H6(values.String(values.StrUnmixed)).Layout)
+				}),
+				layout.Flexed(1, func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding25}.Layout(gtx, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return components.LayoutBalance(gtx, pg.Load, unmixedBalance)
+						})
+					})
+				}),
+			)
+		})
+	})
+}
+
+func (pg *AccountMixerPage) LayoutMixerPage(gtx C, l *load.Load, mixerActive bool, button layout.Widget) D {
 	mixedBalance := "0 DCR"
 	unmixedBalance := "0 DCR"
 	accounts, _ := pg.wallet.GetAccountsRaw() // TODO - handle errors
@@ -84,106 +196,10 @@ func (pg *AccountMixerPage) MixerInfoLayout(gtx C, l *load.Load, mixerActive boo
 
 	return l.Theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding40).Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-									layout.Rigid(l.Theme.H6(values.String(values.StrBalance)).Layout),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-											return components.LayoutBalance(gtx, pg.Load, pg.totalBalance.String())
-										})
-									}),
-									layout.Flexed(1, func(gtx C) D {
-										return layout.E.Layout(gtx, func(gtx C) D {
-											return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, l.Theme.H6(values.String(values.StrMix)).Layout)
-												}),
-												layout.Rigid(button),
-											)
-										})
-									}),
-								)
-							})
-						}),
-						layout.Rigid(l.Theme.Separator().Layout),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										txt := l.Theme.H6(values.String(values.StrMixer))
-										txt.Color = l.Theme.Color.GrayText3
-										return txt.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding40}.Layout(gtx, pg.mixerProgress.Layout)
-									}),
-								)
-							})
-						}),
-					)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				insetValue := values.MarginPadding15
-				return layout.Inset{Right: insetValue,
-					Left: insetValue,
-					Top:  insetValue,
-				}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(l.Theme.Icons.MixedTxIcon.Layout12dp),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding11}.Layout(gtx, l.Theme.H6(values.String(values.StrMixed)).Layout)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.Inset{Right: values.MarginPadding25}.Layout(gtx, func(gtx C) D {
-								return layout.E.Layout(gtx, func(gtx C) D {
-									return components.LayoutBalance(gtx, pg.Load, mixedBalance)
-								})
-							})
-						}),
-					)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				insetValue := values.MarginPadding40
-				return layout.Inset{Right: insetValue, Left: insetValue}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							gtx.Constraints.Max.X = gtx.Constraints.Max.X/2 - 40
-							return layout.W.Layout(gtx, l.Theme.Separator().Layout)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-								return layout.Center.Layout(gtx, l.Theme.Icons.MixerIcon.Layout36dp)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.E.Layout(gtx, l.Theme.Separator().Layout)
-						}),
-					)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Right: values.MarginPadding15, Left: values.MarginPadding15, Bottom: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(l.Theme.Icons.UnmixedTxIcon.Layout12dp),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding11}.Layout(gtx, l.Theme.H6(values.String(values.StrUnmixed)).Layout)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.Inset{Right: values.MarginPadding25}.Layout(gtx, func(gtx C) D {
-								return layout.E.Layout(gtx, func(gtx C) D {
-									return components.LayoutBalance(gtx, pg.Load, unmixedBalance)
-								})
-							})
-						}),
-					)
-				})
-			}),
+			pg.toggleMixerAndProgres(gtx, l, button),
+			pg.mixedBalanceInfo(gtx, l, mixedBalance),
+			pg.mixerImage(gtx, l),
+			pg.unmixedBalanceInfo(gtx, l, unmixedBalance),
 		)
 	})
 }
@@ -201,7 +217,7 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 func (pg *AccountMixerPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding50).Layout(gtx, func(gtx C) D {
-			return pg.MixerInfoLayout(gtx, pg.Load, pg.wallet.IsAccountMixerActive(), pg.toggleMixer.Layout)
+			return pg.LayoutMixerPage(gtx, pg.Load, pg.wallet.IsAccountMixerActive(), pg.toggleMixer.Layout)
 		})
 	})
 }
