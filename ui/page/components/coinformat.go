@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -19,11 +20,7 @@ var (
 	noDecimal                 = regexp.MustCompile(`([0-9]{1,3},*)+`)
 )
 
-<<<<<<< HEAD
-func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Sp, scale float32, col color.NRGBA, withUnit bool) D {
-=======
 func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Sp, scale float32, col color.NRGBA, displayUnitText bool) D {
->>>>>>> 6639604 (FIx app crash when mixer page is navigated to)
 
 	startIndex := 0
 	stopIndex := 0
@@ -39,13 +36,9 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 		startIndex = loc[1] // start scaling from the end
 	}
 
-<<<<<<< HEAD
-	mainText, subText := amount[:startIndex], amount[startIndex:]
-=======
 	stopIndex = strings.Index(amount, " DCR")
 
 	mainText, subText, unitText := amount[:startIndex], amount[startIndex:stopIndex], amount[stopIndex:]
->>>>>>> 6639604 (FIx app crash when mixer page is navigated to)
 
 	subTextSize := unit.Sp(float32(mainTextSize) * scale)
 
@@ -60,8 +53,6 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 			txt.Color = col
 			return txt.Layout(gtx)
 		}),
-<<<<<<< HEAD
-=======
 		layout.Rigid(func(gtx C) D {
 			txt := l.Theme.Label(values.TextSize20, unitText)
 			txt.Color = col
@@ -72,7 +63,6 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 
 			return D{}
 		}),
->>>>>>> 6639604 (FIx app crash when mixer page is navigated to)
 	)
 }
 
