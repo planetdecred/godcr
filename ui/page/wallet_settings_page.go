@@ -10,6 +10,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/security"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -36,7 +37,7 @@ type WalletSettingsPage struct {
 	changePass, rescan, resetDexData           *decredmaterial.Clickable
 	changeAccount, checklog, checkStats        *decredmaterial.Clickable
 	changeWalletName, addAccount, deleteWallet *decredmaterial.Clickable
-	verifyMessage, validateMsg, signMessage    *decredmaterial.Clickable
+	verifyMessage, validateAddr, signMessage   *decredmaterial.Clickable
 	updateConnectToPeer                        *decredmaterial.Clickable
 
 	chevronRightIcon *decredmaterial.Icon
@@ -66,7 +67,7 @@ func NewWalletSettingsPage(l *load.Load) *WalletSettingsPage {
 		addAccount:          l.Theme.NewClickable(false),
 		deleteWallet:        l.Theme.NewClickable(false),
 		verifyMessage:       l.Theme.NewClickable(false),
-		validateMsg:         l.Theme.NewClickable(false),
+		validateAddr:        l.Theme.NewClickable(false),
 		signMessage:         l.Theme.NewClickable(false),
 		updateConnectToPeer: l.Theme.NewClickable(false),
 
@@ -208,7 +209,7 @@ func (pg *WalletSettingsPage) securityTools() layout.Widget {
 	dims := func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.sectionContent(pg.verifyMessage, values.String(values.StrVerifyMessage))),
-			layout.Rigid(pg.sectionContent(pg.validateMsg, values.String(values.StrValidateMsg))),
+			layout.Rigid(pg.sectionContent(pg.validateAddr, values.String(values.StrValidateMsg))),
 			layout.Rigid(pg.sectionContent(pg.signMessage, values.String(values.StrSignMessage))),
 		)
 	}
@@ -468,22 +469,6 @@ func (pg *WalletSettingsPage) clickableRow(gtx C, row clickableRowData) D {
 	})
 }
 
-// func (pg *WalletSettingsPage) showUserAgentDialog() {
-// 	textModal := modal.NewTextInputModal(pg.Load).
-// 		Hint(values.String(values.StrUserAgent)).
-// 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
-// 		PositiveButton(values.String(values.StrConfirm), func(userAgent string, tim *modal.TextInputModal) bool {
-// 			if userAgent != "" {
-// 				pg.WL.SelectedWallet.Wallet.SaveUserConfigValue(dcrlibwallet.UserAgentConfigKey, userAgent)
-// 			}
-// 			return true
-// 		})
-
-// 	textModal.Title(values.String(values.StrChangeUserAgent)).
-// 		NegativeButton(values.String(values.StrCancel), func() {})
-// 	pg.ParentWindow().ShowModal(textModal)
-// }
-
 func (pg *WalletSettingsPage) showWarningModalDialog(title, msg, key string) {
 	info := modal.NewInfoModal(pg.Load).
 		Title(title).
@@ -546,8 +531,10 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).
-			Title(values.String(values.StrSpendingPassword)).
-			Body(values.String(values.StrSpendingPasswordInfo)).
+			PositiveButtonStyle(pg.Theme.Color.Primary, pg.Theme.Color.Surface).
+			SetContentAlignment(layout.W, layout.Center).
+			SetupWithTemplate(modal.SecurityToolsInfoTemplate).
+			Title(values.String(values.StrSecurityTools)).
 			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
 				return true
 			})
@@ -623,6 +610,18 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	for pg.updateConnectToPeer.Clicked() {
 		pg.showSPVPeerDialog()
 		break
+	}
+
+	if pg.verifyMessage.Clicked() {
+		pg.ParentNavigator().Display(security.NewVerifyMessagePage(pg.Load))
+	}
+
+	if pg.validateAddr.Clicked() {
+		pg.ParentNavigator().Display(security.NewValidateAddressPage(pg.Load))
+	}
+
+	if pg.signMessage.Clicked() {
+		pg.ParentNavigator().Display(security.NewSignMessagePage(pg.Load))
 	}
 }
 

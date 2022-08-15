@@ -236,7 +236,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 			return layout.Dimensions{}
 		}
 
-		return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
 				return in.dialogIcon.Layout(gtx, values.MarginPadding50)
 			})

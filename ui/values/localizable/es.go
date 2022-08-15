@@ -91,6 +91,7 @@ const ES = `
 "stakeShuffle" = "StakeShuffle";
 "rename" = "Renombrar";
 "renameWalletSheetTitle" = "Change wallet name";
+"securityToolsInfo" = "%v Various tools that help in different aspects of crypto currency security will be located here. %v"
 "settings" = "Configuración";
 "createANewWallet" = "Crear una nueva cartera"
 "importExistingWallet" = "Importar una cartera existente";

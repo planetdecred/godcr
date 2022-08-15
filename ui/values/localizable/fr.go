@@ -51,6 +51,7 @@ const FR = `
 "timeLeft" = "%v restant";
 "exchangeRate" = "Récupérer le taux de change";
 "renameWalletSheetTitle" = "Change wallet name";
+"securityToolsInfo" = "%v Various tools that help in different aspects of crypto currency security will be located here. %v"
 "send" = "Envoyer";
 "transferred" = "Transféré";
 "type" = "Type";

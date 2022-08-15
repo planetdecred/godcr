@@ -8,6 +8,7 @@ import (
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -32,8 +33,7 @@ type ValidateAddressPage struct {
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
 	stateValidate         int
-	walletName            string
-	isEnabled             bool
+	_                     string
 	backButton            decredmaterial.IconButton
 }
 
@@ -66,6 +66,8 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 // Part of the load.Page interface.
 func (pg *ValidateAddressPage) OnNavigatedTo() {
 	pg.addressEditor.Editor.Focus()
+
+	pg.validateBtn.SetEnabled(components.StringNotEmpty(pg.addressEditor.Editor.Text()))
 }
 
 // Layout draws the page UI components into the provided C
@@ -111,7 +113,6 @@ func (pg *ValidateAddressPage) addressSection() layout.Widget {
 				layout.Rigid(pg.description()),
 				layout.Rigid(pg.addressEditor.Layout),
 				layout.Rigid(pg.actionButtons()),
-				layout.Rigid(pg.showDisplayResult()),
 			)
 		})
 	}
@@ -150,83 +151,6 @@ func (pg *ValidateAddressPage) lineSeparator(gtx C) D {
 	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.Theme.Separator().Layout)
 }
 
-func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
-	if pg.stateValidate == none {
-		return func(gtx C) D {
-			return D{}
-		}
-	}
-	return func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(pg.lineSeparator),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-							if pg.stateValidate == invalid {
-								ic := decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
-								return ic.Layout(gtx, values.MarginPadding25)
-							}
-							ic := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
-							return ic.Layout(gtx, values.MarginPadding25)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						if pg.stateValidate == invalid {
-							txt := pg.Theme.Body1(values.String(values.StrInvalidAddress))
-							txt.Color = pg.Theme.Color.Danger
-							txt.TextSize = values.TextSize16
-							return txt.Layout(gtx)
-						}
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								txt := pg.Theme.Body1(values.String(values.StrValidAddress))
-								txt.Color = pg.Theme.Color.Success
-								txt.TextSize = values.TextSize16
-								return txt.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										var text string
-										if pg.stateValidate == valid {
-											text = values.String(values.StrOwned)
-										} else {
-											text = values.String(values.StrNotOwned)
-										}
-										txt := pg.Theme.Body1(text)
-										txt.TextSize = values.TextSize14
-										txt.Color = pg.Theme.Color.GrayText2
-										return txt.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										if pg.stateValidate == valid {
-											if components.StringNotEmpty(pg.walletName) {
-												return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-													return decredmaterial.Card{
-														Color: pg.Theme.Color.Gray4,
-													}.Layout(gtx, func(gtx C) D {
-														return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-															walletText := pg.Theme.Caption(pg.walletName)
-															walletText.Color = pg.Theme.Color.GrayText2
-															return walletText.Layout(gtx)
-														})
-													})
-												})
-											}
-										}
-										return D{}
-									}),
-								)
-							}),
-						)
-					}),
-				)
-			}),
-		)
-	}
-}
-
 func (pg *ValidateAddressPage) pageSections(gtx C, body layout.Widget) D {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
@@ -245,14 +169,14 @@ func (pg *ValidateAddressPage) pageSections(gtx C, body layout.Widget) D {
 // displayed.
 // Part of the load.Page interface.
 func (pg *ValidateAddressPage) HandleUserInteractions() {
-	pg.updateButtonColors()
+	pg.validateBtn.SetEnabled(components.StringNotEmpty(pg.addressEditor.Editor.Text()))
 
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pg.addressEditor.Editor)
 	if isChanged {
 		pg.stateValidate = none
 	}
 
-	if (pg.validateBtn.Clicked() || isSubmit) && pg.isEnabled {
+	if pg.validateBtn.Clicked() || isSubmit {
 		pg.validateAddress()
 	}
 
@@ -275,36 +199,33 @@ func (pg *ValidateAddressPage) validateAddress() {
 		return
 	}
 
+	var verifyMessageStatus *decredmaterial.Icon
+	var verifyMessageText string
+
 	if !pg.WL.MultiWallet.IsAddressValid(address) {
-		pg.stateValidate = invalid
-		return
-	}
-
-	exist, walletName := pg.WL.Wallet.HaveAddress(address)
-	if !exist {
-		pg.stateValidate = notOwned
-		return
-	}
-
-	pg.stateValidate = valid
-	pg.walletName = walletName
-}
-
-func (pg *ValidateAddressPage) updateButtonColors() {
-	if !components.StringNotEmpty(pg.addressEditor.Editor.Text()) {
-		pg.validateBtn.Background = pg.Theme.Color.Gray2
-		pg.clearBtn.Color = pg.Theme.Color.GrayText4
-		pg.isEnabled = false
+		verifyMessageText = values.String(values.StrInvalidAddress)
+		verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
+		verifyMessageStatus.Color = pg.Theme.Color.Danger
 	} else {
-		pg.validateBtn.Background = pg.Theme.Color.Primary
-		pg.clearBtn.Color = pg.Theme.Color.Primary
-		pg.isEnabled = true
-	}
-}
+		verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheck)
+		verifyMessageStatus.Color = pg.Theme.Color.Success
 
-func (pg *ValidateAddressPage) clearInputs() {
-	pg.validateBtn.Background = pg.Theme.Color.Gray2
-	pg.addressEditor.Editor.SetText("")
+		if !pg.WL.SelectedWallet.Wallet.HaveAddress(address) {
+			verifyMessageText = values.String(values.StrNotOwned)
+		} else {
+			verifyMessageText = values.String(values.StrOwned)
+		}
+	}
+
+	info := modal.NewInfoModal(pg.Load).
+		Icon(verifyMessageStatus).
+		Title(verifyMessageText).
+		SetContentAlignment(layout.Center, layout.Center).
+		PositiveButtonStyle(pg.Theme.Color.Primary, pg.Theme.Color.Surface).
+		PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+			return true
+		})
+	pg.ParentWindow().ShowModal(info)
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
