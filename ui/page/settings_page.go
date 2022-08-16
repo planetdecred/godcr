@@ -180,9 +180,9 @@ func (pg *SettingsPage) wrapSection(gtx C, title string, body layout.Widget) D {
 							}
 							if title == values.String(values.StrGeneral) {
 								layout.E.Layout(gtx, func(gtx C) D {
-									appearanceIcon := pg.Theme.Icons.LightMode
+									appearanceIcon := pg.Theme.Icons.DarkMode
 									if pg.isDarkModeOn {
-										appearanceIcon = pg.Theme.Icons.DarkMode
+										appearanceIcon = pg.Theme.Icons.LightMode
 									}
 									return pg.appearanceMode.Layout(gtx, appearanceIcon.Layout24dp)
 								})

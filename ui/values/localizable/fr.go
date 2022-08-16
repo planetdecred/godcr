@@ -49,7 +49,7 @@ const FR = `
 "autoSyncInfo" = "La fonction de synchronisation automatique a été activée et les portefeuilles ne sont pas synchronisés.\nVoulez-vous commencer à synchroniser vos portefeuilles maintenant?";
 "blockHeaderFetchedCount" = "%d de %d";
 "timeLeft" = "%v restant";
-"exchangeRate" = "Fetch exchange rate";
+"exchangeRate" = "Récupérer le taux de change";
 "renameWalletSheetTitle" = "Renommer le porte-monnaie";
 "send" = "Envoyer";
 "transferred" = "Transféré";
@@ -455,5 +455,5 @@ const FR = `
 "selectDexServerToOpen" = "Select the Dex server you would like to open."
 "addDexServer" = "Add dex server"
 "canBuy" = "Can Buy"
-"ok" = "OK"
+"ok" = "D'accord"
 `
