@@ -12,7 +12,7 @@ const ES = `
 "receive" = "Recibir";
 "online" = "En línea, ";
 "offline" = "Desconectado, ";
-"showDetails" = "Mostrar detalles";
+"viewDetails" = "View details";
 "hideDetails" = "Ocultar detalles";
 "peers" = "Compañeros";
 "connectedPeersCount" = "Número de nodos conectados";
@@ -481,4 +481,7 @@ syncCompTime" = "Est. Sync completion time"
 "canBuy" = "Can Buy"
 "ok" = "OK"
 "removeWalletInfo" = "%v Are you sure you want to remove %v %s%v? Enter the name of the wallet below to verify. %v"
+"propNotif" = "Proposal notification"
+"peer" = "Peer"
+"confirmUmixedSpending" = "Confirm to allow spending from unmixed accounts"
 `

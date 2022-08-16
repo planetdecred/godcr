@@ -108,6 +108,10 @@ func (pg *WalletSettingsPage) OnNavigatedTo() {
 		pg.connectToPeer.SetChecked(true)
 	}
 
+	pg.loadWalletAccount()
+}
+
+func (pg *WalletSettingsPage) loadWalletAccount() {
 	walletAccounts := make([]*accountData, 0)
 	accounts, err := pg.wallet.GetAccountsRaw()
 	if err != nil {
@@ -181,9 +185,9 @@ func (pg *WalletSettingsPage) generalSection() layout.Widget {
 				if !pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false) {
 					return D{}
 				}
-				return pg.subSection(gtx, "Proposal notification", pg.proposalNotif.Layout)
+				return pg.subSection(gtx, values.String(values.StrPropNotif), pg.proposalNotif.Layout)
 			}),
-			layout.Rigid(pg.subSectionSwitch("Spend unconfirmed funds", pg.spendUnconfirmed)),
+			layout.Rigid(pg.subSectionSwitch(values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)),
 			layout.Rigid(pg.subSectionSwitch(values.String(values.StrAllowSpendingFromUnmixedAccount), pg.spendUnmixedFunds)),
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -194,7 +198,7 @@ func (pg *WalletSettingsPage) generalSection() layout.Widget {
 						}
 
 						peerAddrRow := clickableRowData{
-							title:     "Peer",
+							title:     values.String(values.StrPeer),
 							clickable: pg.updateConnectToPeer,
 							labelText: pg.peerAddr,
 						}
@@ -216,13 +220,7 @@ func (pg *WalletSettingsPage) account() layout.Widget {
 			layout.Rigid(pg.sectionContent(pg.addAccount, values.String(values.StrAddNewAccount))),
 			layout.Rigid(func(gtx C) D {
 				return pg.accountsList.Layout(gtx, len(pg.accounts), func(gtx C, a int) D {
-					// acctRow := clickableRowData{
-					// 	title:     "View details",
-					// 	clickable: pg.accounts[a].clickable,
-					// 	labelText: pg.accounts[a].Name,
-					// }
-					// return pg.clickableRow(gtx, acctRow)
-					return pg.subSection(gtx, "View details", func(gtx C) D {
+					return pg.subSection(gtx, values.String(values.StrViewDetails), func(gtx C) D {
 						lbl := pg.Theme.Label(values.TextSize16, pg.accounts[a].Name)
 						lbl.Color = pg.Theme.Color.GrayText2
 						return layout.Flex{}.Layout(gtx,
@@ -248,7 +246,7 @@ func (pg *WalletSettingsPage) debug() layout.Widget {
 	dims := func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.sectionContent(pg.rescan, values.String(values.StrRescanBlockchain))),
-			layout.Rigid(pg.sectionContent(pg.checklog, "Check wallet log")),
+			layout.Rigid(pg.sectionContent(pg.checklog, values.String(values.StrCheckWalletLog))),
 			layout.Rigid(pg.sectionContent(pg.checkStats, values.String(values.StrCheckStatistics))),
 			layout.Rigid(pg.sectionContent(pg.resetDexData, values.String(values.StrResetDexClient))),
 		)
@@ -406,7 +404,7 @@ func (pg *WalletSettingsPage) changeSpendingPasswordModal() {
 
 func (pg *WalletSettingsPage) deleteWalletModal() {
 	textModal := modal.NewTextInputModal(pg.Load)
-	textModal.Hint("Wallet name").
+	textModal.Hint(values.String(values.StrWalletName)).
 		SetTextWithTemplate(modal.RemoveWalletInfoTemplate).
 		PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
 		PositiveButton(values.String(values.StrRemove), func(walletName string, tim *modal.TextInputModal) bool {
@@ -480,7 +478,7 @@ func (pg *WalletSettingsPage) deleteWalletModal() {
 
 func (pg *WalletSettingsPage) renameWalletModal() {
 	textModal := modal.NewTextInputModal(pg.Load).
-		Hint("Wallet name").
+		Hint(values.String(values.StrWalletName)).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 			err := pg.WL.MultiWallet.RenameWallet(pg.wallet.ID, newName)
@@ -635,8 +633,8 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 				SetTextWithTemplate(modal.AllowUnmixedSpendingTemplate).
 				Hint("").
 				PositiveButtonStyle(pg.Load.Theme.Color.Danger, pg.Load.Theme.Color.InvText).
-				PositiveButton("Confirm", func(textInput string, tim *modal.TextInputModal) bool {
-					if textInput != "I understand the risks" {
+				PositiveButton(values.String(values.StrConfirm), func(textInput string, tim *modal.TextInputModal) bool {
+					if textInput != values.String(values.StrAwareOfRisk) {
 						tim.SetError("confirmation text is incorrect")
 						tim.SetLoading(false)
 					} else {
@@ -646,8 +644,8 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 					return false
 				})
 
-			textModal.Title("Confirm to allow spending from unmixed accounts").
-				NegativeButton("Cancel", func() {
+			textModal.Title(values.String(values.StrConfirmUmixedSpending)).
+				NegativeButton(values.String(values.StrCancel), func() {
 					pg.spendUnconfirmed.SetChecked(false)
 				})
 			pg.ParentWindow().ShowModal(textModal)
@@ -700,13 +698,13 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 
 	for pg.addAccount.Clicked() {
 		textModal := modal.NewTextInputModal(pg.Load)
-		textModal.Hint("Account name").
+		textModal.Hint(values.String(values.StrAcctName)).
 			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.Surface).
 			PositiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.TextInputModal) bool {
 				if accountName != "" {
 					walletPasswordModal := modal.NewPasswordModal(pg.Load)
 					walletPasswordModal.Title(values.String(values.StrCreateNewAccount)).
-						Hint("Spending password").
+						Hint(values.String(values.StrSpendingPassword)).
 						NegativeButton(values.String(values.StrCancel), func() {}).
 						PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 							go func() {
@@ -715,10 +713,11 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 									pg.Toast.NotifyError(err.Error())
 									tim.SetError(err.Error())
 								} else {
-									pg.Toast.Notify("Account created")
+									pg.Toast.Notify(values.String(values.StrAcctCreated))
+									pg.loadWalletAccount()
+
 									tim.Dismiss()
 								}
-								// pg.updateAccountBalance()
 								pm.Dismiss()
 							}()
 							return false

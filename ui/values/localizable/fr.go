@@ -24,7 +24,7 @@ const FR = `
 "resumeAccountDiscoveryTitle" = "Déverouiller pour reprendre la restauration";
 "unlockWithPassword" = "Déverrouiller avec mot de passe"
 "offline" = "Hors ligne, ";
-"showDetails" = "Montrer les détails";
+"viewDetails" = "View details";
 "walletStatus" = "Statut de porte-monnaie";
 "wallets" = "Porte-monnaies";
 "settings" = "Paramètres";
@@ -458,4 +458,7 @@ const FR = `
 "canBuy" = "Can Buy"
 "ok" = "D'accord"
 "removeWalletInfo" = "%v Are you sure you want to remove %v %s%v? Enter the name of the wallet below to verify. %v"
+"propNotif" = "Proposal notification"
+"peer" = "Peer"
+"confirmUmixedSpending" = "Confirm to allow spending from unmixed accounts"
 `
