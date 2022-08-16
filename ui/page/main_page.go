@@ -465,7 +465,7 @@ func (mp *MainPage) HandleUserInteractions() {
 
 	for mp.openWalletSelector.Clicked() {
 		onWalSelected := func() {
-			mp.ParentNavigator().CloseCurrentPage()
+			mp.ParentNavigator().ClearStackAndDisplay(NewMainPage(mp.Load))
 		}
 		onDexServerSelected := func(server string) {
 			log.Info("Not implemented yet...", server)

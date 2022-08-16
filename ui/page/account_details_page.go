@@ -1,4 +1,4 @@
-package info
+package page
 
 import (
 	"fmt"
@@ -51,7 +51,7 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 	pg := &AcctDetailsPage{
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(AccountDetailsPageID),
-		wallet:           l.WL.MultiWallet.WalletWithID(account.WalletID),
+		wallet:           l.WL.SelectedWallet.Wallet,
 		account:          account,
 
 		theme:                    l.Theme,
@@ -123,7 +123,6 @@ func (pg *AcctDetailsPage) layoutDesktop(gtx layout.Context, widgets []func(gtx 
 		sp := components.SubPage{
 			Load:       pg.Load,
 			Title:      pg.account.Name,
-			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.ParentNavigator().CloseCurrentPage()
@@ -162,7 +161,6 @@ func (pg *AcctDetailsPage) layoutMobile(gtx layout.Context, widgets []func(gtx C
 		sp := components.SubPage{
 			Load:       pg.Load,
 			Title:      pg.account.Name,
-			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.ParentNavigator().CloseCurrentPage()

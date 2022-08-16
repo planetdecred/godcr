@@ -1,7 +1,6 @@
 package page
 
 import (
-	// "fmt"
 	"gioui.org/layout"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -22,6 +21,11 @@ type clickableRowData struct {
 	title     string
 }
 
+type accountData struct {
+	*dcrlibwallet.Account
+	clickable *decredmaterial.Clickable
+}
+
 type WalletSettingsPage struct {
 	*load.Load
 	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()
@@ -30,9 +34,11 @@ type WalletSettingsPage struct {
 	// and the root WindowNavigator.
 	*app.GenericPageModal
 
-	wallet *dcrlibwallet.Wallet
+	wallet   *dcrlibwallet.Wallet
+	accounts []*accountData
 
 	pageContainer layout.List
+	accountsList  *decredmaterial.ClickableList
 
 	changePass, rescan, resetDexData           *decredmaterial.Clickable
 	changeAccount, checklog, checkStats        *decredmaterial.Clickable
@@ -79,6 +85,7 @@ func NewWalletSettingsPage(l *load.Load) *WalletSettingsPage {
 
 		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
 		pageContainer:    layout.List{Axis: layout.Vertical},
+		accountsList:     l.Theme.NewClickableList(layout.Vertical),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -100,6 +107,26 @@ func (pg *WalletSettingsPage) OnNavigatedTo() {
 	if pg.peerAddr != "" {
 		pg.connectToPeer.SetChecked(true)
 	}
+
+	walletAccounts := make([]*accountData, 0)
+	accounts, err := pg.wallet.GetAccountsRaw()
+	if err != nil {
+		log.Errorf("error retrieving wallet accounts: %v", err)
+		return
+	}
+
+	for _, acct := range accounts.Acc {
+		if acct.Number == dcrlibwallet.ImportedAccountNumber {
+			continue
+		}
+
+		walletAccounts = append(walletAccounts, &accountData{
+			Account:   acct,
+			clickable: pg.Theme.NewClickable(false),
+		})
+	}
+
+	pg.accounts = walletAccounts
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -184,9 +211,36 @@ func (pg *WalletSettingsPage) generalSection() layout.Widget {
 }
 
 func (pg *WalletSettingsPage) account() layout.Widget {
+	dim := func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.sectionContent(pg.addAccount, values.String(values.StrAddNewAccount))),
+			layout.Rigid(func(gtx C) D {
+				return pg.accountsList.Layout(gtx, len(pg.accounts), func(gtx C, a int) D {
+					// acctRow := clickableRowData{
+					// 	title:     "View details",
+					// 	clickable: pg.accounts[a].clickable,
+					// 	labelText: pg.accounts[a].Name,
+					// }
+					// return pg.clickableRow(gtx, acctRow)
+					return pg.subSection(gtx, "View details", func(gtx C) D {
+						lbl := pg.Theme.Label(values.TextSize16, pg.accounts[a].Name)
+						lbl.Color = pg.Theme.Color.GrayText2
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(lbl.Layout),
+							layout.Rigid(func(gtx C) D {
+								pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
+								return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+									return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+								})
+							}),
+						)
+					})
+				})
+			}),
+		)
+	}
 	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrAccount),
-			pg.sectionContent(pg.addAccount, values.String(values.StrAddNewAccount)))
+		return pg.pageSections(gtx, values.String(values.StrAccount), dim)
 	}
 }
 
@@ -642,6 +696,45 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 
 	if pg.resetDexData.Clicked() {
 		pg.resetDexDataModal()
+	}
+
+	for pg.addAccount.Clicked() {
+		textModal := modal.NewTextInputModal(pg.Load)
+		textModal.Hint("Account name").
+			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.Surface).
+			PositiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.TextInputModal) bool {
+				if accountName != "" {
+					walletPasswordModal := modal.NewPasswordModal(pg.Load)
+					walletPasswordModal.Title(values.String(values.StrCreateNewAccount)).
+						Hint("Spending password").
+						NegativeButton(values.String(values.StrCancel), func() {}).
+						PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
+							go func() {
+								_, err := pg.wallet.CreateNewAccount(accountName, []byte(password))
+								if err != nil {
+									pg.Toast.NotifyError(err.Error())
+									tim.SetError(err.Error())
+								} else {
+									pg.Toast.Notify("Account created")
+									tim.Dismiss()
+								}
+								// pg.updateAccountBalance()
+								pm.Dismiss()
+							}()
+							return false
+						})
+					pg.ParentWindow().ShowModal(walletPasswordModal)
+				}
+				return true
+			})
+		textModal.Title(values.String(values.StrCreateNewAccount)).
+			NegativeButton(values.String(values.StrCancel), func() {})
+		pg.ParentWindow().ShowModal(textModal)
+		break
+	}
+
+	if clicked, selectedItem := pg.accountsList.ItemClicked(); clicked {
+		pg.ParentNavigator().Display(NewAcctDetailsPage(pg.Load, pg.accounts[selectedItem].Account))
 	}
 }
 
