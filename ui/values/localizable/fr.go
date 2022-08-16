@@ -457,4 +457,5 @@ const FR = `
 "addDexServer" = "Add dex server"
 "canBuy" = "Can Buy"
 "ok" = "D'accord"
+"removeWalletInfo" = "%v Are you sure you want to remove %v %s%v? Enter the name of the wallet below to verify. %v"
 `

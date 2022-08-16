@@ -86,6 +86,8 @@ func (tm *TextInputModal) SetTextWithTemplate(template string) *TextInputModal {
 	switch template {
 	case AllowUnmixedSpendingTemplate:
 		tm.textCustomTemplate = allowUnspendUnmixedAcct(tm.Load)
+	case RemoveWalletInfoTemplate:
+		tm.textCustomTemplate = removeWalletInfo(tm.Load)
 	}
 	return tm
 }
@@ -93,10 +95,8 @@ func (tm *TextInputModal) SetTextWithTemplate(template string) *TextInputModal {
 func (tm *TextInputModal) Handle() {
 
 	if editorsNotEmpty(tm.textInput.Editor) {
-		tm.btnPositive.Background = tm.positiveButtonColor
 		tm.isEnabled = true
 	} else {
-		tm.btnPositive.Background = tm.Theme.Color.Gray3
 		tm.isEnabled = false
 	}
 

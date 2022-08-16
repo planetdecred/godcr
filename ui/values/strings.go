@@ -607,4 +607,5 @@ const (
 	StrConfirmVote                     = "confirmVote"
 	StrPolicySetSuccessful             = "policySetSuccessfully"
 	StrColon                           = "colon"
+	StrRemoveWalletInfo                = "removeWalletInfo"
 )

@@ -144,6 +144,11 @@ func (in *InfoModal) NegativeButton(text string, clicked func()) *InfoModal {
 	return in
 }
 
+func (in *InfoModal) NegativeButtonStyle(background, text color.NRGBA) *InfoModal {
+	in.btnNegative.Background, in.btnNegative.Color = background, text
+	return in
+}
+
 // for backwards compatibilty
 func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	title := in.dialogTitle

@@ -28,7 +28,9 @@ type StatPage struct {
 	// and the root WindowNavigator.
 	*app.GenericPageModal
 
-	txs           []dcrlibwallet.Transaction
+	txs      []dcrlibwallet.Transaction
+	accounts *dcrlibwallet.Accounts
+
 	l             layout.List
 	scrollbarList *widget.List
 	startupTime   string
@@ -63,11 +65,18 @@ func NewStatPage(l *load.Load) *StatPage {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *StatPage) OnNavigatedTo() {
-	txs, err := pg.WL.MultiWallet.GetTransactionsRaw(0, 0, dcrlibwallet.TxFilterAll, true)
+	txs, err := pg.WL.SelectedWallet.Wallet.GetTransactionsRaw(0, 0, dcrlibwallet.TxFilterAll, true)
 	if err != nil {
 		log.Errorf("Error getting txs: %s", err.Error())
 	} else {
 		pg.txs = txs
+	}
+
+	acc, err := pg.WL.SelectedWallet.Wallet.GetAccountsRaw()
+	if err != nil {
+		log.Errorf("Error getting wallet accounts: %s", err.Error())
+	} else {
+		pg.accounts = acc
 	}
 
 	pg.appStartTime()
@@ -81,7 +90,6 @@ func (pg *StatPage) layoutStats(gtx C) D {
 		Top:    values.MarginPadding12,
 		Bottom: values.MarginPadding12,
 		Right:  values.MarginPadding16,
-		Left:   values.MarginPadding16,
 	}
 
 	item := func(t, v string) layout.Widget {
@@ -95,32 +103,35 @@ func (pg *StatPage) layoutStats(gtx C) D {
 		}
 	}
 
-	bestBlock := pg.WL.MultiWallet.GetBestBlock()
-	bestBlockTime := time.Unix(bestBlock.Timestamp, 0)
+	bestBlock := pg.WL.SelectedWallet.Wallet.GetBestBlock()
+	bestBlockTime := time.Unix(pg.WL.SelectedWallet.Wallet.GetBestBlockTimeStamp(), 0)
 	secondsSinceBestBlock := int64(time.Since(bestBlockTime).Seconds())
+
+	line := pg.Theme.Separator()
+	line.Color = pg.Theme.Color.Gray2
 
 	items := []layout.Widget{
 		item(values.String(values.StrBuild), pg.netType+", "+time.Now().Format("2006-01-02")),
-		pg.Theme.Separator().Layout,
+		line.Layout,
 		item(values.String(values.StrPeersConnected), strconv.Itoa(int(pg.WL.MultiWallet.ConnectedPeers()))),
-		pg.Theme.Separator().Layout,
+		line.Layout,
 		item(values.String(values.StrUptime), pg.startupTime),
-		pg.Theme.Separator().Layout,
+		line.Layout,
 		item(values.String(values.StrNetwork), pg.netType),
-		pg.Theme.Separator().Layout,
-		item(values.String(values.StrBestBlocks), fmt.Sprintf("%d", bestBlock.Height)),
-		pg.Theme.Separator().Layout,
+		line.Layout,
+		item(values.String(values.StrBestBlocks), fmt.Sprintf("%d", bestBlock)),
+		line.Layout,
 		item(values.String(values.StrBestBlockTimestamp), bestBlockTime.Format("2006-01-02 03:04:05 -0700")),
-		pg.Theme.Separator().Layout,
+		line.Layout,
 		item(values.String(values.StrBestBlockAge), components.SecondsToDays(secondsSinceBestBlock)),
-		pg.Theme.Separator().Layout,
+		line.Layout,
 		item(values.String(values.StrWalletDirectory), pg.WL.WalletDirectory()),
-		pg.Theme.Separator().Layout,
+		line.Layout,
 		item(values.String(values.StrDateSize), pg.WL.DataSize()),
-		pg.Theme.Separator().Layout,
+		line.Layout,
 		item(values.String(values.StrTransactions), fmt.Sprintf("%d", len(pg.txs))),
-		pg.Theme.Separator().Layout,
-		item(values.String(values.StrWallets), fmt.Sprintf("%d", pg.WL.MultiWallet.LoadedWalletsCount())),
+		line.Layout,
+		item(values.String(values.StrAccount)+"s", fmt.Sprintf("%d", pg.accounts.Count)),
 	}
 
 	return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {

@@ -480,4 +480,5 @@ syncCompTime" = "Est. Sync completion time"
 "addDexServer" = "Add dex server"
 "canBuy" = "Can Buy"
 "ok" = "OK"
+"removeWalletInfo" = "%v Are you sure you want to remove %v %s%v? Enter the name of the wallet below to verify. %v"
 `

@@ -500,4 +500,5 @@ unlockWithPassword = "Unlock with password"
 "confirmVote" = "Confirm your vote"
 "policySetSuccessfully" = "Your treasury policy has been successfully updated!"
 "colon" = ": "
+"removeWalletInfo" = "%v Are you sure you want to remove %v %s%v? Enter the name of the wallet below to verify. %v"
 `
