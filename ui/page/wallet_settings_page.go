@@ -83,10 +83,12 @@ func NewWalletSettingsPage(l *load.Load) *WalletSettingsPage {
 		spendUnmixedFunds: l.Theme.Switch(),
 		connectToPeer:     l.Theme.Switch(),
 
-		chevronRightIcon: decredmaterial.NewIcon(l.Theme.Icons.ChevronRight),
-		pageContainer:    layout.List{Axis: layout.Vertical},
-		accountsList:     l.Theme.NewClickableList(layout.Vertical),
+		pageContainer: layout.List{Axis: layout.Vertical},
+		accountsList:  l.Theme.NewClickableList(layout.Vertical),
 	}
+
+	pg.chevronRightIcon = decredmaterial.NewIcon(l.Theme.Icons.ChevronRight)
+	pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -98,7 +100,9 @@ func NewWalletSettingsPage(l *load.Load) *WalletSettingsPage {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *WalletSettingsPage) OnNavigatedTo() {
+	// set switch button state on page load
 	pg.fetchProposal.SetChecked(pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false))
+	pg.proposalNotif.SetChecked(pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey, false))
 	pg.spendUnconfirmed.SetChecked(pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false))
 	pg.spendUnmixedFunds.SetChecked(pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false))
 
@@ -155,7 +159,8 @@ func (pg *WalletSettingsPage) Layout(gtx C) D {
 				}
 
 				return pg.pageContainer.Layout(gtx, len(w), func(gtx C, i int) D {
-					return w[i](gtx)
+					return layout.Inset{Left: values.MarginPadding50}.Layout(gtx, w[i])
+					// return w[i](gtx)
 				})
 			},
 		}
@@ -220,18 +225,8 @@ func (pg *WalletSettingsPage) account() layout.Widget {
 			layout.Rigid(pg.sectionContent(pg.addAccount, values.String(values.StrAddNewAccount))),
 			layout.Rigid(func(gtx C) D {
 				return pg.accountsList.Layout(gtx, len(pg.accounts), func(gtx C, a int) D {
-					return pg.subSection(gtx, values.String(values.StrViewDetails), func(gtx C) D {
-						lbl := pg.Theme.Label(values.TextSize16, pg.accounts[a].Name)
-						lbl.Color = pg.Theme.Color.GrayText2
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(lbl.Layout),
-							layout.Rigid(func(gtx C) D {
-								pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
-								return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-									return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-								})
-							}),
-						)
+					return pg.subSection(gtx, pg.accounts[a].Name, func(gtx C) D {
+						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 					})
 				})
 			}),
@@ -330,7 +325,6 @@ func (pg *WalletSettingsPage) sectionContent(clickable *decredmaterial.Clickable
 					layout.Rigid(textLabel.Layout),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
 							return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 						})
 					}),
@@ -518,7 +512,6 @@ func (pg *WalletSettingsPage) clickableRow(gtx C, row clickableRowData) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(lbl.Layout),
 				layout.Rigid(func(gtx C) D {
-					pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
 					return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 					})
@@ -595,7 +588,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 			SetContentAlignment(layout.W, layout.Center).
 			SetupWithTemplate(modal.SecurityToolsInfoTemplate).
 			Title(values.String(values.StrSecurityTools)).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+			PositiveButton(values.String(values.StrOK), func(isChecked bool) bool {
 				return true
 			})
 		pg.ParentWindow().ShowModal(info)
@@ -604,19 +597,26 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	if pg.fetchProposal.Changed() {
 		if pg.fetchProposal.IsChecked() {
 			go pg.WL.MultiWallet.Politeia.Sync()
+			// set proposal notification config when proposal fetching is enabled
+			pg.proposalNotif.SetChecked(pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey, false))
 			pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, true)
 		} else {
 			info := modal.NewInfoModal(pg.Load).
 				Title(values.String(values.StrGovernance)).
 				Body(values.String(values.StrGovernanceSettingsInfo)).
-				NegativeButton(values.String(values.StrCancel), func() {}).
+				NegativeButton(values.String(values.StrCancel), func() {
+					pg.fetchProposal.SetChecked(true)
+				}).
 				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
 				PositiveButton(values.String(values.StrDisable), func(isChecked bool) bool {
 					if pg.WL.MultiWallet.Politeia.IsSyncing() {
 						go pg.WL.MultiWallet.Politeia.StopSync()
 					}
+
 					pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, false)
 					pg.WL.MultiWallet.Politeia.ClearSavedProposals()
+					// set proposal notification config when proposal fetching is disabled
+					pg.WL.MultiWallet.SaveUserConfigValue(load.ProposalNotificationConfigKey, false)
 					return true
 				})
 			pg.ParentWindow().ShowModal(info)
@@ -690,6 +690,10 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 
 	if pg.checkStats.Clicked() {
 		pg.ParentNavigator().Display(NewStatPage(pg.Load))
+	}
+
+	if pg.proposalNotif.Changed() {
+		pg.WL.MultiWallet.SaveUserConfigValue(load.ProposalNotificationConfigKey, pg.proposalNotif.IsChecked())
 	}
 
 	if pg.resetDexData.Clicked() {

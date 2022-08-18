@@ -33,7 +33,6 @@ type ValidateAddressPage struct {
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
 	stateValidate         int
-	_                     string
 	backButton            decredmaterial.IconButton
 }
 
@@ -222,7 +221,7 @@ func (pg *ValidateAddressPage) validateAddress() {
 		Title(verifyMessageText).
 		SetContentAlignment(layout.Center, layout.Center).
 		PositiveButtonStyle(pg.Theme.Color.Primary, pg.Theme.Color.Surface).
-		PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+		PositiveButton(values.String(values.StrOK), func(isChecked bool) bool {
 			return true
 		})
 	pg.ParentWindow().ShowModal(info)

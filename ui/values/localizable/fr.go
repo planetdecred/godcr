@@ -461,4 +461,5 @@ const FR = `
 "propNotif" = "Proposal notification"
 "peer" = "Peer"
 "confirmUmixedSpending" = "Confirm to allow spending from unmixed accounts"
+"ok" = "OK"
 `

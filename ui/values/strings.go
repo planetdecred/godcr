@@ -611,4 +611,5 @@ const (
 	StrPropNotif                       = "propNotif"
 	StrPeer                            = "peer"
 	StrConfirmUmixedSpending           = "confirmUmixedSpending"
+	StrOK                              = "ok"
 )

@@ -504,4 +504,5 @@ unlockWithPassword = "Unlock with password"
 "colon" = ": "
 "removeWalletInfo" = "%v Are you sure you want to remove %v %s%v? Enter the name of the wallet below to verify. %v"
 "confirmUmixedSpending" = "Confirm to allow spending from unmixed accounts"
+"ok" = "OK"
 `
