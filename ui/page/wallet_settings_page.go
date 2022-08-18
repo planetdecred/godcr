@@ -221,16 +221,11 @@ func (pg *WalletSettingsPage) generalSection() layout.Widget {
 
 func (pg *WalletSettingsPage) account() layout.Widget {
 	dim := func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(pg.sectionContent(pg.addAccount, values.String(values.StrAddNewAccount))),
-			layout.Rigid(func(gtx C) D {
-				return pg.accountsList.Layout(gtx, len(pg.accounts), func(gtx C, a int) D {
-					return pg.subSection(gtx, pg.accounts[a].Name, func(gtx C) D {
-						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-					})
-				})
-			}),
-		)
+		return pg.accountsList.Layout(gtx, len(pg.accounts), func(gtx C, a int) D {
+			return pg.subSection(gtx, pg.accounts[a].Name, func(gtx C) D {
+				return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+			})
+		})
 	}
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrAccount), dim)
@@ -291,6 +286,12 @@ func (pg *WalletSettingsPage) pageSections(gtx C, title string, body layout.Widg
 								pg.infoButton.Size = values.MarginPadding16
 								return layout.E.Layout(gtx, pg.infoButton.Layout)
 							}
+							if title == values.String(values.StrAccount) {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									return pg.addAccount.Layout(gtx, pg.Theme.Icons.AddIcon.Layout24dp)
+								})
+							}
+
 							return D{}
 						}),
 					)
