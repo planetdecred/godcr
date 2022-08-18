@@ -69,7 +69,7 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 	pg.toggleMixer.SetChecked(pg.WL.SelectedWallet.Wallet.IsAccountMixerActive())
 }
 
-func (pg *AccountMixerPage) toggleMixerAndProgres(gtx C, l *load.Load, button layout.Widget) layout.FlexChild {
+func (pg *AccountMixerPage) toggleMixerAndProgres(l *load.Load, button layout.Widget) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding40).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -115,7 +115,7 @@ func (pg *AccountMixerPage) toggleMixerAndProgres(gtx C, l *load.Load, button la
 	})
 }
 
-func (pg *AccountMixerPage) mixedBalanceInfo(gtx C, l *load.Load, mixedBalance string) layout.FlexChild {
+func (pg *AccountMixerPage) mixedBalanceInfo(l *load.Load, mixedBalance string) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		insetValue := values.MarginPadding15
 		return layout.Inset{Right: insetValue,
@@ -139,7 +139,7 @@ func (pg *AccountMixerPage) mixedBalanceInfo(gtx C, l *load.Load, mixedBalance s
 	})
 }
 
-func (pg *AccountMixerPage) mixerImage(gtx C, l *load.Load) layout.FlexChild {
+func (pg *AccountMixerPage) mixerImage(l *load.Load) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		insetValue := values.MarginPadding40
 		return layout.Inset{Right: insetValue, Left: insetValue}.Layout(gtx, func(gtx C) D {
@@ -161,7 +161,7 @@ func (pg *AccountMixerPage) mixerImage(gtx C, l *load.Load) layout.FlexChild {
 	})
 }
 
-func (pg *AccountMixerPage) unmixedBalanceInfo(gtx C, l *load.Load, unmixedBalance string) layout.FlexChild {
+func (pg *AccountMixerPage) unmixedBalanceInfo(l *load.Load, unmixedBalance string) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		return layout.Inset{Right: values.MarginPadding15, Left: values.MarginPadding15, Bottom: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -196,10 +196,10 @@ func (pg *AccountMixerPage) LayoutMixerPage(gtx C, l *load.Load, mixerActive boo
 
 	return l.Theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			pg.toggleMixerAndProgres(gtx, l, button),
-			pg.mixedBalanceInfo(gtx, l, mixedBalance),
-			pg.mixerImage(gtx, l),
-			pg.unmixedBalanceInfo(gtx, l, unmixedBalance),
+			pg.toggleMixerAndProgres(l, button),
+			pg.mixedBalanceInfo(l, mixedBalance),
+			pg.mixerImage(l),
+			pg.unmixedBalanceInfo(l, unmixedBalance),
 		)
 	})
 }
