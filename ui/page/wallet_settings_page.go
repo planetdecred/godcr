@@ -355,11 +355,11 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 				PositiveButton(values.String(values.StrRescan), func(isChecked bool) bool {
 					err := pg.WL.MultiWallet.RescanBlocks(pg.wallet.ID)
 					if err != nil {
-						errMess := err.Error()
+						errMsg := err.Error()
 						if err.Error() == dcrlibwallet.ErrNotConnected {
-							errMess = values.String(values.StrNotConnected)
+							errMsg = values.String(values.StrNotConnected)
 						}
-						errorModal := modal.NewErrorModal(pg.Load, errMess, func(isChecked bool) bool {
+						errorModal := modal.NewErrorModal(pg.Load, errMsg, func(isChecked bool) bool {
 							return true
 						})
 						pg.ParentWindow().ShowModal(errorModal)
