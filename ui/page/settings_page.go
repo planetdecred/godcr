@@ -91,14 +91,13 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *SettingsPage) OnNavigatedTo() {
-
+	pg.updateSettingOptions()
 }
 
 // Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *SettingsPage) Layout(gtx C) D {
-	pg.updateSettingOptions()
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx)
 	}
@@ -184,7 +183,7 @@ func (pg *SettingsPage) wrapSection(gtx C, title string, body layout.Widget) D {
 									if pg.isDarkModeOn {
 										appearanceIcon = pg.Theme.Icons.LightMode
 									}
-									return pg.appearanceMode.Layout(gtx, appearanceIcon.Layout24dp)
+									return pg.appearanceMode.Layout(gtx, appearanceIcon.Layout16dp)
 								})
 							}
 							return D{}
@@ -387,7 +386,9 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	}
 
 	if pg.transactionNotification.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(load.TransactionNotificationConfigKey, pg.transactionNotification.IsChecked())
+		go func() {
+			pg.WL.MultiWallet.SaveUserConfigValue(load.TransactionNotificationConfigKey, pg.transactionNotification.IsChecked())
+		}()
 		if pg.transactionNotification.IsChecked() {
 			pg.Toast.Notify(values.StringF(values.StrTxNotification, values.String(values.StrEnabled)))
 		} else {

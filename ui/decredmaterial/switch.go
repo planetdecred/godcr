@@ -157,7 +157,7 @@ func (s *Switch) SetChecked(value bool) {
 }
 
 func (s *Switch) SetEnabled(value bool) {
-	s.disabled = value
+	s.disabled = !value
 }
 
 func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
