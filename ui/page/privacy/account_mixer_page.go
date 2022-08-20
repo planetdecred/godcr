@@ -13,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/preference"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -43,6 +44,8 @@ type AccountMixerPage struct {
 	settingsCollapsible                             *decredmaterial.Collapsible
 	chevronRightIcon                                decredmaterial.Icon
 	changeAccount, mixedAccount, coordinationServer *decredmaterial.Clickable
+
+	pageContainer layout.List
 }
 
 func NewAccountMixerPage(l *load.Load) *AccountMixerPage {
@@ -57,6 +60,7 @@ func NewAccountMixerPage(l *load.Load) *AccountMixerPage {
 		changeAccount:       l.Theme.NewClickable(false),
 		mixedAccount:        l.Theme.NewClickable(false),
 		coordinationServer:  l.Theme.NewClickable(false),
+		pageContainer:       layout.List{Axis: layout.Vertical},
 	}
 	pg.mixerProgress.Height = values.MarginPadding18
 	pg.mixerProgress.Radius = decredmaterial.Radius(2)
@@ -251,14 +255,22 @@ func (pg *AccountMixerPage) LayoutMixerPage(gtx C, l *load.Load, mixerActive boo
 	}
 
 	return l.Theme.Card().Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				pg.toggleMixerAndProgres(l, button),
-				pg.mixedBalanceInfo(l, mixedBalance),
-				pg.mixerImage(l),
-				pg.unmixedBalanceInfo(l, unmixedBalance),
-				pg.mixerSettings(l),
-			)
+		wdg := []func(gtx C) D{
+			func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						pg.toggleMixerAndProgres(l, button),
+						pg.mixedBalanceInfo(l, mixedBalance),
+						pg.mixerImage(l),
+						pg.unmixedBalanceInfo(l, unmixedBalance),
+						pg.mixerSettings(l),
+					)
+				})
+			},
+		}
+
+		return pg.pageContainer.Layout(gtx, len(wdg), func(gtx C, i int) D {
+			return wdg[i](gtx)
 		})
 	})
 }
@@ -313,6 +325,32 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 		pg.toggleMixer.SetChecked(false)
 		pg.mixerCompleted = false
 		pg.ParentWindow().Reload()
+	}
+
+	for pg.mixedAccount.Clicked() {
+		selectMixedAccModal := preference.NewListPreference(pg.Load,
+			"", values.String(values.StrDefault), values.ArrMixerAccounts).
+			UpdateValues(func() {
+				// alues.SetUserLanguage(pg.WL.MultiWallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
+			})
+		pg.ParentWindow().ShowModal(selectMixedAccModal)
+		break
+	}
+
+	for pg.coordinationServer.Clicked() {
+		textModal := modal.NewTextInputModal(pg.Load).
+			Hint(values.String(values.StrCoordinationServer)).
+			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+			PositiveButton(values.String(values.StrSave), func(newName string, tim *modal.TextInputModal) bool {
+				return false
+			})
+
+		textModal.NegativeButton(values.String(values.StrCancel), func() {})
+		pg.ParentWindow().ShowModal(textModal)
+	}
+
+	for pg.changeAccount.Clicked() {
+		return
 	}
 }
 

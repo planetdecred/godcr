@@ -612,6 +612,7 @@ const (
 	StrSureToCancelMixer               = "sureToCancelMixer"
 	StrConfirmToMixAccount             = "confirmToMixAcc"
 	StrMixerStart                      = "mixerStart"
+	StrDefault                         = "default"
 	StrRemoveWalletInfo                = "removeWalletInfo"
 	StrPropNotif                       = "propNotif"
 	StrPeer                            = "peer"

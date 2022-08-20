@@ -462,6 +462,7 @@ const FR = `
 "sureToCancelMixer" = "Voulez-vous vraiment annuler l'action du mélangeur ?"
 "confirmToMixAcc" = "Confirmer pour mélanger le compte"
 "mixerStart" = "Le mélangeur démarre avec succès"
+"default" = "default"
 "ok" = "D'accord"
 "removeWalletInfo" = "%v Are you sure you want to remove %v %s%v? Enter the name of the wallet below to verify. %v"
 "propNotif" = "Proposal notification"
