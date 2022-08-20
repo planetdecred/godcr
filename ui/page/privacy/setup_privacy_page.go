@@ -11,7 +11,6 @@ import (
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -46,7 +45,7 @@ func NewSetupPrivacyPage(l *load.Load) *SetupPrivacyPage {
 		Load:             l,
 		GenericPageModal: app.NewGenericPageModal(SetupPrivacyPageID),
 		pageContainer:    layout.List{Axis: layout.Vertical},
-		toPrivacySetup:   l.Theme.Button("Set up mixer for this wallet"),
+		toPrivacySetup:   l.Theme.Button(values.String(values.StrSetupStakeShuffle)),
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -66,79 +65,64 @@ func (pg *SetupPrivacyPage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *SetupPrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
-	d := func(gtx C) D {
-		sp := components.SubPage{
-			Load:       pg.Load,
-			Title:      "StakeShuffle",
-			BackButton: pg.backButton,
-			InfoButton: pg.infoButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
-			},
-			InfoTemplate: modal.PrivacyInfoTemplate,
-			Body: func(gtx layout.Context) layout.Dimensions {
-				return pg.privacyIntroLayout(gtx)
-			},
-		}
-		return sp.Layout(pg.ParentWindow(), gtx)
-	}
-	return components.UniformPadding(gtx, d)
+	return components.UniformPadding(gtx, func(gtx C) D {
+		return pg.privacyIntroLayout(gtx)
+	})
 }
 
 func (pg *SetupPrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions {
-	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-			layout.Flexed(1, func(gtx C) D {
-				return layout.Center.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{
-								Bottom: values.MarginPadding24,
-							}.Layout(gtx, func(gtx C) D {
-								return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+	return layout.Inset{Top: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
+		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Center.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Bottom: values.MarginPadding24,
+								}.Layout(gtx, func(gtx C) D {
+									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{
+												Left: values.MarginPadding5,
+											}.Layout(gtx, pg.Theme.Icons.TransactionFingerprint.Layout48dp)
+										}),
+										layout.Rigid(pg.Theme.Icons.ArrowForward.Layout24dp),
+										layout.Rigid(func(gtx C) D {
+											return pg.Theme.Icons.Mixer.LayoutSize(gtx, values.MarginPadding120)
+										}),
+										layout.Rigid(pg.Theme.Icons.ArrowForward.Layout24dp),
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{
+												Left: values.MarginPadding5,
+											}.Layout(gtx, pg.Theme.Icons.TransactionsIcon.Layout48dp)
+										}),
+									)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := pg.Theme.H6(values.String(values.StrStakeShuffle))
+								txt2 := pg.Theme.Body1(values.String(values.StrSetUpPrivacy))
+
+								txt.Alignment, txt2.Alignment = text.Middle, text.Middle
+
+								return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+									layout.Rigid(txt.Layout),
 									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Left: values.MarginPadding5,
-										}.Layout(gtx, pg.Theme.Icons.TransactionFingerprint.Layout48dp)
-									}),
-									layout.Rigid(pg.Theme.Icons.ArrowForward.Layout24dp),
-									layout.Rigid(func(gtx C) D {
-										return pg.Theme.Icons.Mixer.LayoutSize(gtx, values.MarginPadding120)
-									}),
-									layout.Rigid(pg.Theme.Icons.ArrowForward.Layout24dp),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Left: values.MarginPadding5,
-										}.Layout(gtx, pg.Theme.Icons.TransactionsIcon.Layout48dp)
+										return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, txt2.Layout)
 									}),
 								)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.H6("How does StakeShuffle enhance your privacy?")
-							txt2 := pg.Theme.Body1("StakeShuffle can mix your coins through coinjoin transactions.")
-							txt3 := pg.Theme.Body1("Using mixed coins protects you from exposing your financial activities to")
-							txt4 := pg.Theme.Body1("the public (e.g. how much you own, who pays you).")
-							txt.Alignment, txt2.Alignment, txt3.Alignment, txt4.Alignment = text.Middle, text.Middle, text.Middle, text.Middle
-
-							return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-								layout.Rigid(txt.Layout),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, txt2.Layout)
-								}),
-								layout.Rigid(txt3.Layout),
-								layout.Rigid(txt4.Layout),
-							)
-						}),
-					)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return layout.UniformInset(values.MarginPadding15).Layout(gtx, pg.toPrivacySetup.Layout)
-			}),
-		)
+							}),
+						)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.UniformInset(values.MarginPadding30).Layout(gtx, pg.toPrivacySetup.Layout)
+				}),
+			)
+		})
 	})
 }
 
