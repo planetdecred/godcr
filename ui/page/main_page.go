@@ -480,13 +480,6 @@ func (mp *MainPage) HandleUserInteractions() {
 	}
 
 	for _, item := range mp.drawerNav.DrawerNavItems {
-		var mixerPage app.Page
-		if mp.WL.SelectedWallet.Wallet.AccountMixerConfigIsSet() {
-			mixerPage = privacy.NewAccountMixerPage(mp.Load)
-		}
-
-		mixerPage = privacy.NewSetupPrivacyPage(mp.Load)
-
 		for item.Clickable.Clicked() {
 			var pg app.Page
 			switch item.PageID {
@@ -499,7 +492,10 @@ func (mp *MainPage) HandleUserInteractions() {
 			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
 			case privacy.AccountMixerPageID:
-				pg = mixerPage
+				pg = privacy.NewAccountMixerPage(mp.Load)
+				if mp.WL.SelectedWallet.Wallet.AccountMixerConfigIsSet() {
+					pg = privacy.NewSetupPrivacyPage(mp.Load)
+				}
 			case staking.OverviewPageID:
 				pg = staking.NewStakingPage(mp.Load)
 			case governance.GovernancePageID:
