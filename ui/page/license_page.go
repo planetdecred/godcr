@@ -128,7 +128,7 @@ func (pg *LicensePage) pageContentLayout(gtx layout.Context) layout.Dimensions {
 			return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 				return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 					licenseText := pg.Theme.Body1(license)
-					licenseText.Color = pg.Theme.Color.GrayText2
+					licenseText.Color = pg.Theme.Color.GrayText1
 					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, licenseText.Layout)
 				})
 			})
