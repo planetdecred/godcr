@@ -85,34 +85,53 @@ func (pg *AboutPage) OnNavigatedTo() {
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *AboutPage) Layout(gtx C) D {
-	body := func(gtx C) D {
-		page := components.SubPage{
-			Load:       pg.Load,
-			Title:      values.String(values.StrAbout),
-			BackButton: pg.backButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
-			},
-			Body: func(gtx C) D {
-				return pg.card.Layout(gtx, func(gtx C) D {
-					return pg.layoutRows(gtx)
-				})
-			},
-		}
-		return page.Layout(pg.ParentWindow(), gtx)
-	}
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
-		return pg.layoutMobile(gtx, body)
+		return pg.layoutMobile(gtx)
 	}
-	return pg.layoutDesktop(gtx, body)
+	return pg.layoutDesktop(gtx)
 }
 
-func (pg *AboutPage) layoutDesktop(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformPadding(gtx, body)
+func (pg *AboutPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
+	return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.pageHeaderLayout),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding20}.Layout(gtx, pg.pageContentLayout)
+			}),
+		)
+	})
 }
 
-func (pg *AboutPage) layoutMobile(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return components.UniformMobile(gtx, false, false, body)
+func (pg *AboutPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+	return layout.Dimensions{}
+}
+
+func (pg *AboutPage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.W.Layout(gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Right: values.MarginPadding16,
+							Top:   values.MarginPaddingMinus2,
+						}.Layout(gtx, pg.backButton.Layout)
+					}),
+					layout.Rigid(pg.Theme.Label(values.TextSize20, values.String(values.StrAbout)).Layout),
+				)
+			})
+		}),
+	)
+}
+
+func (pg *AboutPage) pageContentLayout(gtx layout.Context) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Max.X = gtx.Constraints.Min.X
+		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+		return pg.card.Layout(gtx, pg.layoutRows)
+	})
 }
 
 func (pg *AboutPage) layoutRows(gtx C) D {
@@ -189,6 +208,10 @@ func (pg *AboutPage) layoutRows(gtx C) D {
 func (pg *AboutPage) HandleUserInteractions() {
 	if pg.licenseRow.Clicked() {
 		pg.ParentNavigator().Display(NewLicensePage(pg.Load))
+	}
+
+	if pg.backButton.Button.Clicked() {
+		pg.ParentNavigator().CloseCurrentPage()
 	}
 }
 

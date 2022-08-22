@@ -35,31 +35,22 @@ type SettingsPage struct {
 	pageContainer *widget.List
 	wal           *wallet.Wallet
 
-	updateConnectToPeer *decredmaterial.Clickable
-	updateUserAgent     *decredmaterial.Clickable
-	changeStartupPass   *decredmaterial.Clickable
-	language            *decredmaterial.Clickable
-	currency            *decredmaterial.Clickable
+	changeStartupPass *decredmaterial.Clickable
+	language          *decredmaterial.Clickable
+	currency          *decredmaterial.Clickable
+	help              *decredmaterial.Clickable
+	about             *decredmaterial.Clickable
+	appearanceMode    *decredmaterial.Clickable
 
 	chevronRightIcon *decredmaterial.Icon
 	backButton       decredmaterial.IconButton
 	infoButton       decredmaterial.IconButton
 
-	isDarkModeOn            *decredmaterial.Switch
-	spendUnconfirmed        *decredmaterial.Switch
+	isDarkModeOn            bool
 	startupPassword         *decredmaterial.Switch
-	beepNewBlocks           *decredmaterial.Switch
-	connectToPeer           *decredmaterial.Switch
-	userAgent               *decredmaterial.Switch
-	governance              *decredmaterial.Switch
-	proposalNotification    *decredmaterial.Switch
 	transactionNotification *decredmaterial.Switch
 
-	peerLabel, agentLabel decredmaterial.Label
-
 	isStartupPassword bool
-	peerAddr          string
-	agentValue        string
 	errorReceiver     chan error
 }
 
@@ -74,28 +65,23 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		},
 		wal: l.WL.Wallet,
 
-		isDarkModeOn:            l.Theme.Switch(),
-		spendUnconfirmed:        l.Theme.Switch(),
 		startupPassword:         l.Theme.Switch(),
-		beepNewBlocks:           l.Theme.Switch(),
-		connectToPeer:           l.Theme.Switch(),
-		userAgent:               l.Theme.Switch(),
-		governance:              l.Theme.Switch(),
-		proposalNotification:    l.Theme.Switch(),
 		transactionNotification: l.Theme.Switch(),
 
 		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
 
 		errorReceiver: make(chan error),
 
-		updateConnectToPeer: l.Theme.NewClickable(false),
-		updateUserAgent:     l.Theme.NewClickable(false),
-		changeStartupPass:   l.Theme.NewClickable(false),
-		language:            l.Theme.NewClickable(false),
-		currency:            l.Theme.NewClickable(false),
+		changeStartupPass: l.Theme.NewClickable(false),
+		language:          l.Theme.NewClickable(false),
+		currency:          l.Theme.NewClickable(false),
+		help:              l.Theme.NewClickable(false),
+		about:             l.Theme.NewClickable(false),
+		appearanceMode:    l.Theme.NewClickable(false),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.isDarkModeOn = pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
 
 	return pg
 }
@@ -105,14 +91,13 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 // the page is displayed.
 // Part of the load.Page interface.
 func (pg *SettingsPage) OnNavigatedTo() {
-
+	pg.updateSettingOptions()
 }
 
 // Layout draws the page UI components into the provided C
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
 func (pg *SettingsPage) Layout(gtx C) D {
-	pg.updateSettingOptions()
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx)
 	}
@@ -120,85 +105,113 @@ func (pg *SettingsPage) Layout(gtx C) D {
 }
 
 func (pg *SettingsPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
-	body := func(gtx C) D {
-		sp := components.SubPage{
-			Load:       pg.Load,
-			Title:      values.String(values.StrSettings),
-			BackButton: pg.backButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
-			},
-			Body: func(gtx C) D {
-				pageContent := []func(gtx C) D{
-					pg.general(),
-					pg.security(),
-					pg.notification(),
-					pg.connection(),
-				}
+	return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.pageHeaderLayout),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, pg.pageContentLayout)
+			}),
+		)
+	})
+}
 
-				return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
-				})
-			},
-		}
-		return sp.Layout(pg.ParentWindow(), gtx)
+func (pg *SettingsPage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.W.Layout(gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Right: values.MarginPadding16,
+							Top:   values.MarginPaddingMinus2,
+						}.Layout(gtx, pg.backButton.Layout)
+					}),
+					layout.Rigid(pg.Theme.Label(values.TextSize20, values.String(values.StrSettings)).Layout),
+				)
+			})
+		}),
+	)
+}
+
+func (pg *SettingsPage) pageContentLayout(gtx layout.Context) layout.Dimensions {
+	pageContent := []func(gtx C) D{
+		pg.general(),
+		pg.security(),
+		pg.info(),
 	}
-
-	return components.UniformPadding(gtx, body)
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding500)
+		gtx.Constraints.Max.X = gtx.Constraints.Min.X
+		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+		return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+			return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
+		})
+	})
 }
 
 func (pg *SettingsPage) layoutMobile(gtx layout.Context) layout.Dimensions {
-	body := func(gtx C) D {
-		sp := components.SubPage{
-			Load:       pg.Load,
-			Title:      values.String(values.StrSettings),
-			BackButton: pg.backButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
-			},
-			Body: func(gtx C) D {
-				pageContent := []func(gtx C) D{
-					pg.general(),
-					pg.security(),
-					pg.notification(),
-					pg.connection(),
-				}
+	return layout.Dimensions{}
+}
 
-				return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
-				})
-			},
-		}
-		return sp.Layout(pg.ParentWindow(), gtx)
-	}
+func (pg *SettingsPage) settingLine(gtx C) D {
+	line := pg.Theme.Line(1, 0)
+	line.Color = pg.Theme.Color.Gray3
+	return line.Layout(gtx)
+}
 
-	return components.UniformMobile(gtx, false, true, body)
+func (pg *SettingsPage) wrapSection(gtx C, title string, body layout.Widget) D {
+	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := pg.Theme.Body2(title)
+							txt.Color = pg.Theme.Color.GrayText2
+							return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, txt.Layout)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							if title == values.String(values.StrSecurity) {
+								pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
+								pg.infoButton.Size = values.MarginPadding20
+								return layout.E.Layout(gtx, pg.infoButton.Layout)
+							}
+							if title == values.String(values.StrGeneral) {
+								layout.E.Layout(gtx, func(gtx C) D {
+									appearanceIcon := pg.Theme.Icons.DarkMode
+									if pg.isDarkModeOn {
+										appearanceIcon = pg.Theme.Icons.LightMode
+									}
+									return pg.appearanceMode.Layout(gtx, appearanceIcon.Layout16dp)
+								})
+							}
+							return D{}
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, pg.settingLine)
+				}),
+				layout.Rigid(body),
+			)
+		})
+	})
 }
 
 func (pg *SettingsPage) general() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, values.String(values.StrGeneral), func(gtx C) D {
+		return pg.wrapSection(gtx, values.String(values.StrGeneral), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrDarkMode), pg.isDarkModeOn)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrGovernance), pg.governance)
-				}),
-				layout.Rigid(pg.lineSeparator()),
-				layout.Rigid(func(gtx C) D {
-					currencyConversionRow := row{
-						title:     values.String(values.StrCurrencyConversion),
+					exchangeRate := row{
+						title:     values.String(values.StrExchangeRate),
 						clickable: pg.currency,
 						icon:      pg.chevronRightIcon,
 						label:     pg.Theme.Body2(pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
 					}
-					return pg.clickableRow(gtx, currencyConversionRow)
+					return pg.clickableRow(gtx, exchangeRate)
 				}),
-				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
 					languageRow := row{
 						title:     values.String(values.StrLanguage),
@@ -208,23 +221,8 @@ func (pg *SettingsPage) general() layout.Widget {
 					}
 					return pg.clickableRow(gtx, languageRow)
 				}),
-			)
-		})
-	}
-}
-
-func (pg *SettingsPage) notification() layout.Widget {
-	return func(gtx C) D {
-		return pg.mainSection(gtx, values.String(values.StrNotifications), func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
-				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.StringF(values.StrTxNotification, ""), pg.transactionNotification)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.StringF(values.StrPropNotification, ""), pg.proposalNotification)
 				}),
 			)
 		})
@@ -233,7 +231,7 @@ func (pg *SettingsPage) notification() layout.Widget {
 
 func (pg *SettingsPage) security() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, values.String(values.StrSecurity), func(gtx C) D {
+		return pg.wrapSection(gtx, values.String(values.StrSecurity), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.String(values.StrStartupPassword), pg.startupPassword)
@@ -254,104 +252,31 @@ func (pg *SettingsPage) security() layout.Widget {
 	}
 }
 
-func (pg *SettingsPage) connection() layout.Widget {
+func (pg *SettingsPage) info() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, values.String(values.StrConnection), func(gtx C) D {
+		return pg.wrapSection(gtx, values.String(values.StrInfo), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, values.String(values.StrConnectToSpecificPeer), pg.connectToPeer)
+					helpRow := row{
+						title:     values.String(values.StrHelp),
+						clickable: pg.help,
+						icon:      pg.chevronRightIcon,
+						label:     pg.Theme.Body2(""),
+					}
+					return pg.clickableRow(gtx, helpRow)
 				}),
 				layout.Rigid(func(gtx C) D {
-					peerLabel := pg.Theme.Body1(pg.peerAddr)
-					peerLabel.Color = pg.Theme.Color.GrayText2
-					peerAddrRow := row{
-						title:     values.String(values.StrChangeSpecificPeer),
-						clickable: pg.updateConnectToPeer,
+					aboutRow := row{
+						title:     values.String(values.StrAbout),
+						clickable: pg.about,
 						icon:      pg.chevronRightIcon,
-						label:     peerLabel,
+						label:     pg.Theme.Body2(""),
 					}
-					return pg.conditionalDisplay(gtx, pg.peerAddr != "", func(gtx C) D {
-						return pg.clickableRow(gtx, peerAddrRow)
-					})
+					return pg.clickableRow(gtx, aboutRow)
 				}),
-				layout.Rigid(pg.lineSeparator()),
-				layout.Rigid(pg.agent()),
 			)
 		})
 	}
-}
-
-func (pg *SettingsPage) agent() layout.Widget {
-	return func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						m10 := values.MarginPadding10
-						return layout.Inset{Top: m10, Bottom: m10}.Layout(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(pg.subSectionLabel(values.String(values.StrCustomUserAgent))),
-								layout.Rigid(func(gtx C) D {
-									txt := pg.Theme.Body2(values.String(values.StrHTTPRequest))
-									txt.Color = pg.Theme.Color.GrayText2
-									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										return txt.Layout(gtx)
-									})
-								}),
-							)
-						})
-					}),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-							return layout.E.Layout(gtx, pg.userAgent.Layout)
-						})
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx C) D {
-				agentLabel := pg.Theme.Body1(pg.agentValue)
-				agentLabel.Color = pg.Theme.Color.GrayText2
-				return pg.conditionalDisplay(gtx, pg.agentValue != "", func(gtx C) D {
-					userAgentRow := row{
-						title:     values.String(values.StrUserAgentDialogTitle),
-						clickable: pg.updateUserAgent,
-						icon:      pg.chevronRightIcon,
-						label:     agentLabel,
-					}
-					return pg.clickableRow(gtx, userAgentRow)
-				})
-			}),
-		)
-	}
-}
-
-func (pg *SettingsPage) mainSection(gtx C, title string, body layout.Widget) D {
-	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								txt := pg.Theme.Body2(title)
-								txt.Color = pg.Theme.Color.GrayText2
-								return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, txt.Layout)
-							}),
-							layout.Flexed(1, func(gtx C) D {
-								if title == values.String(values.StrSecurity) {
-									pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
-									pg.infoButton.Size = values.MarginPadding20
-									return layout.E.Layout(gtx, pg.infoButton.Layout)
-								}
-								return D{}
-							}),
-						)
-					}),
-					layout.Rigid(body),
-				)
-			})
-		})
-	})
 }
 
 func (pg *SettingsPage) subSection(gtx C, title string, body layout.Widget) D {
@@ -377,7 +302,7 @@ func (pg *SettingsPage) clickableRow(gtx C, row row) D {
 					layout.Rigid(row.label.Layout),
 					layout.Rigid(func(gtx C) D {
 						ic := row.icon
-						ic.Color = pg.Theme.Color.Gray3
+						ic.Color = pg.Theme.Color.Gray1
 						return ic.Layout(gtx, values.MarginPadding22)
 					}),
 				)
@@ -440,64 +365,30 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		break
 	}
 
+	for pg.backButton.Button.Clicked() {
+		pg.ParentNavigator().CloseCurrentPage()
+	}
+
 	for pg.currency.Clicked() {
 		currencySelectorModal := preference.NewListPreference(pg.Load,
 			dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue,
 			values.ArrExchangeCurrencies).
-			Title(values.StrCurrencyConversion).
+			Title(values.StrExchangeRate).
 			UpdateValues(func() {})
 		pg.ParentWindow().ShowModal(currencySelectorModal)
 		break
 	}
 
-	if pg.isDarkModeOn.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())
+	for pg.appearanceMode.Clicked() {
+		pg.isDarkModeOn = !pg.isDarkModeOn
+		pg.WL.MultiWallet.SaveUserConfigValue(load.DarkModeConfigKey, pg.isDarkModeOn)
 		pg.RefreshTheme(pg.ParentWindow())
 	}
 
-	if pg.spendUnconfirmed.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.IsChecked())
-	}
-
-	if pg.governance.Changed() {
-		if pg.governance.IsChecked() {
-			go pg.WL.MultiWallet.Politeia.Sync()
-			pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, pg.governance.IsChecked())
-			pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrEnabled), values.String(values.StrCheckGovernace)))
-		} else {
-			info := modal.NewInfoModal(pg.Load).
-				Title(values.String(values.StrGovernance)).
-				Body(values.String(values.StrGovernanceSettingsInfo)).
-				NegativeButton(values.String(values.StrCancel), func() {}).
-				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-				PositiveButton(values.String(values.StrDisable), func(isChecked bool) bool {
-					if pg.WL.MultiWallet.Politeia.IsSyncing() {
-						go pg.WL.MultiWallet.Politeia.StopSync()
-					}
-					pg.WL.MultiWallet.SaveUserConfigValue(load.FetchProposalConfigKey, !pg.governance.IsChecked())
-					pg.WL.MultiWallet.Politeia.ClearSavedProposals()
-					pg.Toast.Notify(values.StringF(values.StrPropFetching, values.String(values.StrDisabled)))
-					return true
-				})
-			pg.ParentWindow().ShowModal(info)
-		}
-	}
-
-	if pg.beepNewBlocks.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.IsChecked())
-	}
-
-	if pg.proposalNotification.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(load.ProposalNotificationConfigKey, pg.proposalNotification.IsChecked())
-		if pg.proposalNotification.IsChecked() {
-			pg.Toast.Notify(values.StringF(values.StrPropNotification, values.String(values.StrEnabled)))
-		} else {
-			pg.Toast.Notify(values.StringF(values.StrPropNotification, values.String(values.StrDisabled)))
-		}
-	}
-
 	if pg.transactionNotification.Changed() {
-		pg.WL.MultiWallet.SaveUserConfigValue(load.TransactionNotificationConfigKey, pg.transactionNotification.IsChecked())
+		go func() {
+			pg.WL.MultiWallet.SaveUserConfigValue(load.TransactionNotificationConfigKey, pg.transactionNotification.IsChecked())
+		}()
 		if pg.transactionNotification.IsChecked() {
 			pg.Toast.Notify(values.StringF(values.StrTxNotification, values.String(values.StrEnabled)))
 		} else {
@@ -506,13 +397,22 @@ func (pg *SettingsPage) HandleUserInteractions() {
 	}
 
 	if pg.infoButton.Button.Clicked() {
-		info := modal.NewInfoModal(pg.Load).
-			Title(values.String(values.StrSetupStartupPassword)).
+		info := modal.NewInfoModal2(pg.Load).
+			SetContentAlignment(layout.Center, layout.Center).
 			Body(values.String(values.StrStartupPasswordInfo)).
-			PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+			PositiveButtonWidth(values.MarginPadding100).
+			PositiveButton(values.String(values.StrOk), func(isChecked bool) bool {
 				return true
 			})
 		pg.ParentWindow().ShowModal(info)
+	}
+
+	if pg.help.Clicked() {
+		pg.ParentNavigator().Display(NewHelpPage(pg.Load))
+	}
+
+	if pg.about.Clicked() {
+		pg.ParentNavigator().Display(NewAboutPage(pg.Load))
 	}
 
 	for pg.changeStartupPass.Clicked() {
@@ -550,7 +450,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 									m.SetLoading(false)
 									return
 								}
-								pg.Toast.Notify(values.String(values.StrStartupPassConfirm))
+								pg.showNoticeSuccess(values.String(values.StrStartupPassConfirm))
 								m.Dismiss()
 							}()
 							return false
@@ -580,7 +480,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							m.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrEnabled)))
+						pg.showNoticeSuccess(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrEnabled)))
 						m.Dismiss()
 					}()
 					return false
@@ -605,7 +505,7 @@ func (pg *SettingsPage) HandleUserInteractions() {
 							pm.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrDisabled)))
+						pg.showNoticeSuccess(values.StringF(values.StrStartupPasswordEnabled, values.String(values.StrDisabled)))
 						pm.Dismiss()
 					}()
 
@@ -613,40 +513,6 @@ func (pg *SettingsPage) HandleUserInteractions() {
 				})
 			pg.ParentWindow().ShowModal(currentPasswordModal)
 		}
-	}
-
-	specificPeerKey := dcrlibwallet.SpvPersistentPeerAddressesConfigKey
-	if pg.connectToPeer.Changed() {
-		if pg.connectToPeer.IsChecked() {
-			pg.showSPVPeerDialog()
-			return
-		}
-
-		title := values.String(values.StrRemovePeer)
-		msg := values.String(values.StrRemovePeerWarn)
-		pg.showWarningModalDialog(title, msg, specificPeerKey)
-	}
-
-	for pg.updateConnectToPeer.Clicked() {
-		pg.showSPVPeerDialog()
-		break
-	}
-
-	userAgentKey := dcrlibwallet.UserAgentConfigKey
-	for pg.updateUserAgent.Clicked() {
-		pg.showUserAgentDialog()
-		break
-	}
-
-	if pg.userAgent.Changed() {
-		if pg.userAgent.IsChecked() {
-			pg.showUserAgentDialog()
-			return
-		}
-
-		title := values.String(values.StrRemoveUserAgent)
-		msg := values.String(values.StrRemoveUserAgentWarn)
-		pg.showWarningModalDialog(title, msg, userAgentKey)
 	}
 
 	select {
@@ -658,6 +524,20 @@ func (pg *SettingsPage) HandleUserInteractions() {
 		pg.Toast.NotifyError(err.Error())
 	default:
 	}
+}
+
+func (pg *SettingsPage) showNoticeSuccess(title string) {
+	icon := decredmaterial.NewIcon(pg.Theme.Icons.ActionCheckCircle)
+	icon.Color = pg.Theme.Color.Green500
+	info := modal.NewInfoModal2(pg.Load).
+		SetContentAlignment(layout.Center, layout.Center).
+		Title(title).
+		Icon(icon).
+		PositiveButtonWidth(values.MarginPadding100).
+		PositiveButton(values.String(values.StrOk), func(isChecked bool) bool {
+			return true
+		})
+	pg.ParentWindow().ShowModal(info)
 }
 
 func (pg *SettingsPage) showSPVPeerDialog() {
@@ -699,50 +579,6 @@ func (pg *SettingsPage) updateSettingOptions() {
 	if isPassword {
 		pg.startupPassword.SetChecked(isPassword)
 		pg.isStartupPassword = true
-	}
-
-	isDarkModeOn := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false)
-	pg.isDarkModeOn.SetChecked(false)
-	if isDarkModeOn {
-		pg.isDarkModeOn.SetChecked(isDarkModeOn)
-	}
-
-	isSpendUnconfirmed := pg.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false)
-	pg.spendUnconfirmed.SetChecked(false)
-	if isSpendUnconfirmed {
-		pg.spendUnconfirmed.SetChecked(isSpendUnconfirmed)
-	}
-
-	beep := pg.WL.MultiWallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
-	pg.beepNewBlocks.SetChecked(false)
-	if beep {
-		pg.beepNewBlocks.SetChecked(beep)
-	}
-
-	pg.peerAddr = pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
-	pg.connectToPeer.SetChecked(false)
-	if pg.peerAddr != "" {
-		pg.peerLabel.Text = pg.peerAddr
-		pg.connectToPeer.SetChecked(true)
-	}
-
-	pg.agentValue = pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
-	pg.userAgent.SetChecked(false)
-	if pg.agentValue != "" {
-		pg.agentLabel.Text = pg.agentValue
-		pg.userAgent.SetChecked(true)
-	}
-
-	governanceSet := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey, false)
-	pg.governance.SetChecked(false)
-	if governanceSet {
-		pg.governance.SetChecked(governanceSet)
-	}
-
-	proposalNotification := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.ProposalNotificationConfigKey, false)
-	pg.proposalNotification.SetChecked(false)
-	if proposalNotification {
-		pg.proposalNotification.SetChecked(proposalNotification)
 	}
 
 	transactionNotification := pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.TransactionNotificationConfigKey, false)

@@ -132,7 +132,7 @@ const ES = `
 "general" = "General";
 "unconfirmedFunds" = "Gastar fondos no confirmados";
 "confirmed" = "Confirmado";
-"currencyConversion" = "Conversión de Moneda";
+"exchangeRate" = "Obtener tipo de cambio";
 "language" = "Idioma";
 "security" = "Seguridad";
 "newStartupPass" = "Nueva contraseña de inicio"
@@ -478,4 +478,5 @@ syncCompTime" = "Est. Sync completion time"
 "selectDexServerToOpen" = "Select the Dex server you would like to open."
 "addDexServer" = "Add dex server"
 "canBuy" = "Can Buy"
+"ok" = "OK"
 `

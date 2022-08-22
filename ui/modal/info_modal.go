@@ -6,6 +6,7 @@ import (
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/unit"
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -28,7 +29,8 @@ type InfoModal struct {
 
 	positiveButtonText    string
 	positiveButtonClicked func(isChecked bool) bool
-	btnPositve            decredmaterial.Button
+	btnPositive           decredmaterial.Button
+	btnPositiveWidth      unit.Dp
 
 	negativeButtonText    string
 	negativeButtonClicked func()
@@ -45,22 +47,33 @@ type InfoModal struct {
 }
 
 func NewInfoModal(l *load.Load) *InfoModal {
-	return NewInfoModalWithKey(l, "info_modal")
+	return NewInfoModalWithKey(l, "info_modal", false)
 }
 
-func NewInfoModalWithKey(l *load.Load, key string) *InfoModal {
+// This function for normal positive button
+func NewInfoModal2(l *load.Load) *InfoModal {
+	return NewInfoModalWithKey(l, "info_modal", true)
+}
+
+func NewInfoModalWithKey(l *load.Load, key string, isPositiveButtonNormal bool) *InfoModal {
 
 	in := &InfoModal{
-		Load:         l,
-		Modal:        l.Theme.ModalFloatTitle(key),
-		btnPositve:   l.Theme.OutlineButton(values.String(values.StrYes)),
-		btnNegative:  l.Theme.OutlineButton(values.String(values.StrNo)),
-		isCancelable: true,
-		isLoading:    false,
-		btnAlignment: layout.E,
+		Load:             l,
+		Modal:            l.Theme.ModalFloatTitle(key),
+		btnNegative:      l.Theme.OutlineButton(values.String(values.StrNo)),
+		isCancelable:     true,
+		isLoading:        false,
+		btnAlignment:     layout.E,
+		btnPositiveWidth: 0,
 	}
 
-	in.btnPositve.Font.Weight = text.Medium
+	if isPositiveButtonNormal {
+		in.btnPositive = l.Theme.Button(values.String(values.StrYes))
+	} else {
+		in.btnPositive = l.Theme.OutlineButton(values.String(values.StrYes))
+	}
+
+	in.btnPositive.Font.Weight = text.Medium
 	in.btnNegative.Font.Weight = text.Medium
 
 	in.materialLoader = material.Loader(l.Theme.Base)
@@ -116,7 +129,12 @@ func (in *InfoModal) PositiveButton(text string, clicked func(isChecked bool) bo
 }
 
 func (in *InfoModal) PositiveButtonStyle(background, text color.NRGBA) *InfoModal {
-	in.btnPositve.Background, in.btnPositve.Color = background, text
+	in.btnPositive.Background, in.btnPositive.Color = background, text
+	return in
+}
+
+func (in *InfoModal) PositiveButtonWidth(width unit.Dp) *InfoModal {
+	in.btnPositiveWidth = width
 	return in
 }
 
@@ -173,12 +191,12 @@ func (in *InfoModal) KeysToHandle() key.Set {
 // window that match any of the key combinations returned by KeysToHandle().
 // Satisfies the load.KeyEventHandler interface for receiving key events.
 func (in *InfoModal) HandleKeyPress(evt *key.Event) {
-	in.btnPositve.Click()
+	in.btnPositive.Click()
 	in.ParentWindow().Reload()
 }
 
 func (in *InfoModal) Handle() {
-	for in.btnPositve.Clicked() {
+	for in.btnPositive.Clicked() {
 		if in.isLoading {
 			return
 		}
@@ -311,9 +329,12 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 						return layout.Dimensions{}
 					}
 
-					in.btnPositve.Text = in.positiveButtonText
+					in.btnPositive.Text = in.positiveButtonText
 					gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding250)
-					return in.btnPositve.Layout(gtx)
+					if in.btnPositiveWidth > 0 {
+						gtx.Constraints.Min.X = gtx.Dp(in.btnPositiveWidth)
+					}
+					return in.btnPositive.Layout(gtx)
 				}),
 			)
 		})
