@@ -124,14 +124,16 @@ func (pg *HelpPage) pageContentLayout(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding550)
-		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding550)
+		gtx.Constraints.Max.X = gtx.Constraints.Min.X
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 		return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{WeightSum: 3, Axis: layout.Vertical}.Layout(gtx,
+			return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					sub := pg.Load.Theme.Label(values.TextSize14, values.String(values.StrHelpInfo))
 					sub.Color = pg.Load.Theme.Color.GrayText2
-					return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, sub.Layout)
+					return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, sub.Layout)
+					})
 				}),
 				layout.Flexed(1, pg.document()),
 			)
@@ -141,6 +143,7 @@ func (pg *HelpPage) pageContentLayout(gtx layout.Context) layout.Dimensions {
 
 func (pg *HelpPage) document() layout.Widget {
 	return func(gtx C) D {
+		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding372)
 		return pg.pageSections(gtx, pg.Theme.Icons.DocumentationIcon, pg.documentation, values.String(values.StrDocumentation))
 	}
 }
