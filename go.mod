@@ -11,7 +11,7 @@ require (
 	github.com/decred/dcrd/dcrutil/v4 v4.0.0
 	github.com/decred/slog v1.2.0
 	github.com/gen2brain/beeep v0.0.0-20220402123239-6a3042f4b71a
-	github.com/gomarkdown/markdown v0.0.0-20210208175418-bda154fe17d8
+	github.com/gomarkdown/markdown v0.0.0-20220817224203-2206187d3406
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jrick/logrotate v1.0.0
 	github.com/nxadm/tail v1.4.4
