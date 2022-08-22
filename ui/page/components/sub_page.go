@@ -134,8 +134,10 @@ func (sp *SubPage) EventHandler(window app.WindowNavigator) {
 			infoModal := modal.NewInfoModal(sp.Load).
 				Title(sp.Title).
 				SetupWithTemplate(sp.InfoTemplate).
+				SetContentAlignment(layout.W, layout.Center).
 				SetCancelable(true).
-				PositiveButton(values.String(values.StrGotIt), func(isChecked bool) bool {
+				PositiveButtonStyle(sp.Theme.Color.Primary, sp.Theme.Color.Surface).
+				PositiveButton(values.String(values.StrOk), func(isChecked bool) bool {
 					return true
 				})
 			window.ShowModal(infoModal)

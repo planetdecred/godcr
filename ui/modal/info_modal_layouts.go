@@ -23,7 +23,7 @@ const (
 )
 
 func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := values.StringF(values.StrVerifyMessageInfo, `<span style="text-color: gray">`, `<br />`, `<font color="success">`, `</font>`, `<font color="danger">`, `</font>`, `</span>`)
+	text := values.StringF(values.StrVerifyMessageInfo, `<span style="text-color: gray">`, `<br />`, `</span>`)
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,
 	}

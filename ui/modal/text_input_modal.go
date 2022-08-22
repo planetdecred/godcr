@@ -65,7 +65,7 @@ func (tm *TextInputModal) PositiveButton(text string, callback func(string, *Tex
 }
 
 func (tm *TextInputModal) PositiveButtonStyle(background, text color.NRGBA) *TextInputModal {
-	tm.btnPositve.Background, tm.btnPositve.Color = background, text
+	tm.btnPositive.Background, tm.btnPositive.Color = background, text
 	return tm
 }
 
