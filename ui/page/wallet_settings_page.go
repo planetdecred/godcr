@@ -702,38 +702,26 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 	}
 
 	for pg.addAccount.Clicked() {
-		textModal := modal.NewTextInputModal(pg.Load)
-		textModal.Hint(values.String(values.StrAcctName)).
-			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.Surface).
-			PositiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.TextInputModal) bool {
-				if accountName != "" {
-					walletPasswordModal := modal.NewPasswordModal(pg.Load)
-					walletPasswordModal.Title(values.String(values.StrCreateNewAccount)).
-						Hint(values.String(values.StrSpendingPassword)).
-						NegativeButton(values.String(values.StrCancel), func() {}).
-						PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
-							go func() {
-								_, err := pg.wallet.CreateNewAccount(accountName, []byte(password))
-								if err != nil {
-									pg.Toast.NotifyError(err.Error())
-									tim.SetError(err.Error())
-								} else {
-									pg.Toast.Notify(values.String(values.StrAcctCreated))
-									pg.loadWalletAccount()
-
-									tim.Dismiss()
-								}
-								pm.Dismiss()
-							}()
-							return false
-						})
-					pg.ParentWindow().ShowModal(walletPasswordModal)
-				}
-				return true
+		newPasswordModal := modal.NewCreatePasswordModal(pg.Load).
+			Title(values.String(values.StrCreateNewAccount)).
+			EnableName(true).
+			EnableConfirmPassword(false).
+			PasswordHint(values.String(values.StrSpendingPassword)).
+			PasswordCreated(func(accountName, password string, m *modal.CreatePasswordModal) bool {
+				go func() {
+					_, err := pg.wallet.CreateNewAccount(accountName, []byte(password))
+					if err != nil {
+						m.SetError(err.Error())
+						m.SetLoading(false)
+						return
+					}
+					pg.Toast.Notify(values.String(values.StrAcctCreated))
+					pg.loadWalletAccount()
+					m.Dismiss()
+				}()
+				return false
 			})
-		textModal.Title(values.String(values.StrCreateNewAccount)).
-			NegativeButton(values.String(values.StrCancel), func() {})
-		pg.ParentWindow().ShowModal(textModal)
+		pg.ParentWindow().ShowModal(newPasswordModal)
 		break
 	}
 

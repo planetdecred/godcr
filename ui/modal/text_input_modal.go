@@ -18,7 +18,6 @@ type TextInputModal struct {
 	isLoading           bool
 	showAccountWarnInfo bool
 	isCancelable        bool
-	isEnabled           bool
 
 	textInput decredmaterial.Editor
 	callback  func(string, *TextInputModal) bool
@@ -41,6 +40,8 @@ func NewTextInputModal(l *load.Load) *TextInputModal {
 
 func (tm *TextInputModal) OnResume() {
 	tm.textInput.Editor.Focus()
+	// set the positive button state
+	tm.btnPositive.SetEnabled(editorsNotEmpty(tm.textInput.Editor))
 }
 
 func (tm *TextInputModal) Hint(hint string) *TextInputModal {
@@ -93,19 +94,15 @@ func (tm *TextInputModal) SetTextWithTemplate(template string) *TextInputModal {
 }
 
 func (tm *TextInputModal) Handle() {
-
-	if editorsNotEmpty(tm.textInput.Editor) {
-		tm.isEnabled = true
-	} else {
-		tm.isEnabled = false
-	}
+	// set the positive button state
+	tm.btnPositive.SetEnabled(editorsNotEmpty(tm.textInput.Editor))
 
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(tm.textInput.Editor)
 	if isChanged {
 		tm.textInput.SetError("")
 	}
 
-	if (tm.btnPositive.Clicked() || isSubmit) && tm.isEnabled {
+	if tm.btnPositive.Clicked() || isSubmit {
 		if tm.isLoading {
 			return
 		}
