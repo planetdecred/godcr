@@ -267,6 +267,7 @@ const FR = `
 "xpubKeyErr" = "Erreur lors de la vérification de xpub: %v"
 "xpubWalletExist" = "Un portefeuille avec une clé publique étendue identique existe déjà."
 "hint" = "indice"
+"accRenamed" = "Account renamed"
 "addAcctWarn" = "%v Les comptes %v ne peuvent pas %v être supprimés une fois créés.%v"
 "verifyMessageInfo" = "%v You can use this form to verify the signature's validity after you or your counterparty have generated one.%v After you've input the address, message, and signature, you'll see VALID if the signature matches the address and message correctly, and INVALID otherwise.%v"
 "setupMixerInfo" = "%v Deux comptes dédiés %v mixtes %v & %v non mixtes %v seront créés afin d'utiliser le mixeur. %v Cette action ne peut pas être annulée.%v"

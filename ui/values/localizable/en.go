@@ -92,6 +92,7 @@ unlockWithPassword = "Unlock with password"
 "viewProperty" = "View property";
 "stakeShuffle" = "StakeShuffle";
 "rename" = "Rename";
+"accRenamed" = "Account renamed"
 "renameWalletSheetTitle" = "Change wallet name";
 "settings" = "Settings";
 "createANewWallet" = "Create a new wallet"

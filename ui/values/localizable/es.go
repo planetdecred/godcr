@@ -36,6 +36,7 @@ const ES = `
 "blockHeaderFetchedCount" = "%d de %d";
 "timeLeft" = "%v restante";
 "connectedTo" = "Conectado a";
+"accRenamed" = "Account renamed"
 "connecting" = "Conectando...";
 "synced" = "Sincronizado";
 "syncingState" = "Sincronizando...";

@@ -142,30 +142,24 @@ func (pg *WalletSettingsPage) loadWalletAccount() {
 // Part of the load.Page interface.
 func (pg *WalletSettingsPage) Layout(gtx C) D {
 	body := func(gtx C) D {
-		sp := components.SubPage{
-			Load:       pg.Load,
-			Title:      values.String(values.StrSettings),
-			BackButton: pg.backButton,
-			Back: func() {
-				pg.ParentNavigator().CloseCurrentPage()
+		w := []func(gtx C) D{
+			func(gtx C) D {
+				return layout.Inset{
+					Bottom: values.MarginPadding26,
+				}.Layout(gtx, pg.Theme.Label(values.TextSize20, values.String(values.StrSettings)).Layout)
 			},
-			Body: func(gtx C) D {
-				w := []func(gtx C) D{
-					pg.generalSection(),
-					pg.account(),
-					pg.securityTools(),
-					pg.debug(),
-					pg.dangerZone(),
-				}
-
-				return pg.pageContainer.Layout(gtx, len(w), func(gtx C, i int) D {
-					return layout.Inset{Left: values.MarginPadding50}.Layout(gtx, w[i])
-					// return w[i](gtx)
-				})
-			},
+			pg.generalSection(),
+			pg.account(),
+			pg.securityTools(),
+			pg.debug(),
+			pg.dangerZone(),
 		}
-		return sp.Layout(pg.ParentWindow(), gtx)
+
+		return pg.pageContainer.Layout(gtx, len(w), func(gtx C, i int) D {
+			return layout.Inset{Left: values.MarginPadding50}.Layout(gtx, w[i])
+		})
 	}
+
 	if pg.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return pg.layoutMobile(gtx, body)
 	}
