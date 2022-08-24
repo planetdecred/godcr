@@ -159,7 +159,7 @@ const (
 	StrRecentTransactions              = "recentTransactions"
 	StrRecentProposals                 = "recentProposals"
 	StrOffline                         = "offline"
-	StrShowDetails                     = "showDetails"
+	StrViewDetails                     = "viewDetails"
 	StrLastBlockHeight                 = "lastBlockHeight"
 	StrAgo                             = "ago"
 	StrNewest                          = "newest"
@@ -607,4 +607,9 @@ const (
 	StrConfirmVote                     = "confirmVote"
 	StrPolicySetSuccessful             = "policySetSuccessfully"
 	StrColon                           = "colon"
+	StrRemoveWalletInfo                = "removeWalletInfo"
+	StrPropNotif                       = "propNotif"
+	StrPeer                            = "peer"
+	StrConfirmUmixedSpending           = "confirmUmixedSpending"
+	StrOK                              = "ok"
 )

@@ -36,7 +36,7 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 
 	indexUnit := len(amount) - 4
 	if !withUnit {
-		indexUnit = len(amount) - 1
+		indexUnit = len(amount)
 	}
 
 	mainText, subText, unitValue := amount[:startIndex], amount[startIndex:indexUnit], amount[indexUnit:]

@@ -110,7 +110,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget) layout.Dimen
 				widgetFuncs = append(widgetFuncs, widgets...)
 			}
 
-			gtx.Constraints.Max.X = gtx.Dp(unit.Dp(380))
+			gtx.Constraints.Max.X = gtx.Dp(unit.Dp(360))
 			inset := layout.Inset{
 				Top:    unit.Dp(50),
 				Bottom: unit.Dp(50),

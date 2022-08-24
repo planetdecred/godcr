@@ -144,6 +144,11 @@ func (in *InfoModal) NegativeButton(text string, clicked func()) *InfoModal {
 	return in
 }
 
+func (in *InfoModal) NegativeButtonStyle(background, text color.NRGBA) *InfoModal {
+	in.btnNegative.Background, in.btnNegative.Color = background, text
+	return in
+}
+
 // for backwards compatibilty
 func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	title := in.dialogTitle
@@ -236,7 +241,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 			return layout.Dimensions{}
 		}
 
-		return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
 				return in.dialogIcon.Layout(gtx, values.MarginPadding50)
 			})

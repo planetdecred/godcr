@@ -204,8 +204,8 @@ func (mp *MainPage) initNavItems() {
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Theme.Icons.MoreIcon,
 				ImageInactive: mp.Theme.Icons.MoreIconInactive,
-				Title:         values.String(values.StrMore),
-				PageID:        MorePageID,
+				Title:         values.String(values.StrSettings),
+				PageID:        WalletSettingsPageID,
 			},
 		},
 		MinimizeNavDrawerButton: mp.Theme.IconButton(mp.Theme.Icons.NavigationArrowBack),
@@ -242,7 +242,7 @@ func (mp *MainPage) initNavItems() {
 				Image:         mp.Theme.Icons.MoreIcon,
 				ImageInactive: mp.Theme.Icons.MoreIconInactive,
 				Title:         values.String(values.StrMore),
-				PageID:        MorePageID,
+				PageID:        WalletSettingsPageID,
 			},
 		},
 	}
@@ -465,7 +465,7 @@ func (mp *MainPage) HandleUserInteractions() {
 
 	for mp.openWalletSelector.Clicked() {
 		onWalSelected := func() {
-			mp.ParentNavigator().CloseCurrentPage()
+			mp.ParentNavigator().ClearStackAndDisplay(NewMainPage(mp.Load))
 		}
 		onDexServerSelected := func(server string) {
 			log.Info("Not implemented yet...", server)
@@ -507,8 +507,8 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = governance.NewGovernancePage(mp.Load)
 			case dexclient.MarketPageID:
 				pg = dexclient.NewMarketPage(mp.Load)
-			case MorePageID:
-				pg = NewMorePage(mp.Load)
+			case WalletSettingsPageID:
+				pg = NewWalletSettingsPage(mp.Load)
 			}
 
 			if pg == nil || mp.ID() == mp.CurrentPageID() {
@@ -540,8 +540,8 @@ func (mp *MainPage) HandleUserInteractions() {
 				pg = staking.NewStakingPage(mp.Load)
 			case info.InfoID:
 				pg = info.NewInfoPage(mp.Load)
-			case MorePageID:
-				pg = NewMorePage(mp.Load)
+			case WalletSettingsPageID:
+				pg = NewWalletSettingsPage(mp.Load)
 			}
 
 			if pg == nil || mp.ID() == mp.CurrentPageID() {

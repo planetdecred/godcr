@@ -76,7 +76,8 @@ func (ds *DexServerSelector) startDexClient() {
 	if !ds.Dexc().IsLoggedIn() {
 		err := ds.Dexc().Login([]byte(values.DEXClientPass))
 		if err != nil {
-			ds.Toast.NotifyError(err.Error())
+			// todo fix  dex password error
+			// ds.Toast.NotifyError(err.Error())
 			return
 		}
 	}
