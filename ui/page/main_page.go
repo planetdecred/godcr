@@ -86,7 +86,6 @@ type MainPage struct {
 	usdExchangeSet         bool
 	isFetchingExchangeRate bool
 	isBalanceHidden        bool
-	isNavExpanded          bool
 
 	setNavExpanded  func()
 	totalBalanceUSD string
@@ -120,7 +119,7 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp.refreshExchangeRateBtn = mp.Theme.NewClickable(true)
 
 	mp.setNavExpanded = func() {
-		mp.drawerNav.DrawerToggled(mp.isNavExpanded)
+		mp.drawerNav.DrawerToggled(mp.drawerNav.IsNavExpanded)
 	}
 
 	mp.bottomNavigationBar.OnViewCreated()
@@ -470,12 +469,12 @@ func (mp *MainPage) HandleUserInteractions() {
 	mp.floatingActionButton.CurrentPage = mp.CurrentPageID()
 
 	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
-		mp.isNavExpanded = true
+		mp.drawerNav.IsNavExpanded = true
 		mp.setNavExpanded()
 	}
 
 	for mp.drawerNav.MaximizeNavDrawerButton.Button.Clicked() {
-		mp.isNavExpanded = false
+		mp.drawerNav.IsNavExpanded = false
 		mp.setNavExpanded()
 	}
 

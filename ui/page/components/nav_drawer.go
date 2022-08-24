@@ -39,6 +39,7 @@ type NavDrawer struct {
 	MinimizeNavDrawerButton decredmaterial.IconButton
 	MaximizeNavDrawerButton decredmaterial.IconButton
 	activeDrawerBtn         decredmaterial.IconButton
+	IsNavExpanded           bool
 }
 
 func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
@@ -76,17 +77,21 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 						return img.Layout24dp(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Left: nd.leftInset,
-						}.Layout(gtx, func(gtx C) D {
-							textColor := nd.Theme.Color.GrayText1
-							if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
-								textColor = nd.Theme.Color.DeepBlue
-							}
-							txt := nd.Theme.Label(nd.textSize, nd.DrawerNavItems[i].Title)
-							txt.Color = textColor
-							return txt.Layout(gtx)
-						})
+						if !nd.IsNavExpanded {
+							return layout.Inset{
+								Left: nd.leftInset,
+							}.Layout(gtx, func(gtx C) D {
+								textColor := nd.Theme.Color.GrayText1
+								if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
+									textColor = nd.Theme.Color.DeepBlue
+								}
+								txt := nd.Theme.Label(nd.textSize, nd.DrawerNavItems[i].Title)
+								txt.Color = textColor
+								return txt.Layout(gtx)
+							})
+						}
+
+						return D{}
 					}),
 				)
 			})
