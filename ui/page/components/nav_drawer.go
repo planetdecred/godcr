@@ -149,7 +149,6 @@ func (nd *NavDrawer) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 func (nd *NavDrawer) DrawerToggled(min bool) {
 	if min {
 		nd.axis = layout.Vertical
-		nd.textSize = values.TextSize12
 		nd.leftInset = values.MarginPadding0
 		nd.width = navDrawerMinimizedWidth
 		nd.activeDrawerBtn = nd.MaximizeNavDrawerButton
