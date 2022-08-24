@@ -194,9 +194,6 @@ func (pg *TxDetailsPage) Layout(gtx C) D {
 					func(gtx C) D {
 						return pg.Theme.Separator().Layout(gtx)
 					},
-					// func(gtx C) D {
-					// 	return pg.ticketDetails(gtx)
-					// },
 					func(gtx C) D {
 						return pg.associatedTicket(gtx)
 					},
@@ -279,7 +276,13 @@ func (pg *TxDetailsPage) txDetailsHeader(gtx C) D {
 
 										p := pg.Theme.ProgressBarCirle(int(progress))
 										p.Color = pg.txnWidgets.txStatus.ProgressBarColor
-										return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, p.Layout)
+										return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+											gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding22)
+											gtx.Constraints.Min.X = gtx.Constraints.Max.X
+											gtx.Constraints.Max.Y = gtx.Dp(values.MarginPadding22)
+											gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+											return p.Layout(gtx)
+										})
 									}
 									return D{}
 								}),
@@ -293,7 +296,8 @@ func (pg *TxDetailsPage) txDetailsHeader(gtx C) D {
 								blockTime := pg.WL.MultiWallet.TargetTimePerBlockMinutes()
 								maturityDuration := time.Duration(maturity*int32(blockTime)) * time.Minute
 
-								lbl := pg.Theme.Label(values.TextSize16, values.StringF(values.StrImmatureInfo, maturity, maturityDuration))
+								lbl := pg.Theme.Label(values.TextSize16, values.StringF(values.StrImmatureInfo, pg.transaction.BlockHeight, maturity,
+									maturityDuration.String()))
 								lbl.Color = col
 								return lbl.Layout(gtx)
 

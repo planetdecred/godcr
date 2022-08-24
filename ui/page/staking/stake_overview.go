@@ -200,25 +200,27 @@ func (pg *Page) pageSections(gtx C, body layout.Widget) D {
 func (pg *Page) HandleUserInteractions() {
 	pg.setStakingButtonsState()
 
-	if pg.stake.Changed() && pg.stake.IsChecked() {
-		if pg.WL.SelectedWallet.Wallet.TicketBuyerConfigIsSet() {
-			// get ticket buyer config to check if the saved wallet account is mixed
-			//check if mixer is set, if yes check if allow spend from unmixed account
-			//if not set, check if the saved account is mixed before opening modal
-			// if it is not, open stake config modal
-			tbConfig := pg.WL.SelectedWallet.Wallet.AutoTicketsBuyerConfig()
-			if pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
-				!pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) &&
-				(tbConfig.PurchaseAccount == pg.WL.SelectedWallet.Wallet.MixedAccountNumber()) {
-				pg.startTicketBuyerPasswordModal()
+	if pg.stake.Changed() {
+		if pg.stake.IsChecked() {
+			if pg.WL.SelectedWallet.Wallet.TicketBuyerConfigIsSet() {
+				// get ticket buyer config to check if the saved wallet account is mixed
+				//check if mixer is set, if yes check if allow spend from unmixed account
+				//if not set, check if the saved account is mixed before opening modal
+				// if it is not, open stake config modal
+				tbConfig := pg.WL.SelectedWallet.Wallet.AutoTicketsBuyerConfig()
+				if pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) &&
+					!pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false) &&
+					(tbConfig.PurchaseAccount == pg.WL.SelectedWallet.Wallet.MixedAccountNumber()) {
+					pg.startTicketBuyerPasswordModal()
+				} else {
+					pg.ticketBuyerSettingsModal()
+				}
 			} else {
 				pg.ticketBuyerSettingsModal()
 			}
 		} else {
-			pg.ticketBuyerSettingsModal()
+			pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.WL.SelectedWallet.Wallet.ID)
 		}
-	} else {
-		pg.WL.MultiWallet.StopAutoTicketsPurchase(pg.WL.SelectedWallet.Wallet.ID)
 	}
 
 	if pg.stakeSettings.Clicked() && !pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {

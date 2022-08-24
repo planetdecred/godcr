@@ -15,7 +15,9 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jrick/logrotate v1.0.0
 	github.com/nxadm/tail v1.4.4
-	github.com/planetdecred/dcrlibwallet v1.7.1-0.20220802190450-f4374efae977
+	github.com/onsi/ginkgo v1.15.0
+	github.com/onsi/gomega v1.10.5
+	github.com/planetdecred/dcrlibwallet v1.7.1-0.20220823144802-83b0d183c76d
 	github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-20220425133823-833d52a7cdd5 // indirect
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20210722180016-6781d3edade3
@@ -26,7 +28,7 @@ require (
 require (
 	decred.org/cspp/v2 v2.0.0 // indirect
 	decred.org/dcrwallet v1.7.0 // indirect
-	decred.org/dcrwallet/v2 v2.0.2-0.20220505152146-ece5da349895 // indirect
+	decred.org/dcrwallet/v2 v2.0.3-0.20220808190744-3b3e9e04b3c2 // indirect
 	gioui.org/cpu v0.0.0-20210817075930-8d6a761490d2 // indirect
 	gioui.org/shader v1.0.6 // indirect
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
@@ -56,7 +58,7 @@ require (
 	github.com/decred/dcrd/blockchain/stake/v3 v3.0.0 // indirect
 	github.com/decred/dcrd/blockchain/stake/v4 v4.0.0 // indirect
 	github.com/decred/dcrd/blockchain/standalone/v2 v2.1.0 // indirect
-	github.com/decred/dcrd/blockchain/v4 v4.0.0 // indirect
+	github.com/decred/dcrd/blockchain/v4 v4.0.2 // indirect
 	github.com/decred/dcrd/certgen v1.1.1 // indirect
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.3 // indirect
 	github.com/decred/dcrd/chaincfg/v3 v3.1.1 // indirect
@@ -104,7 +106,7 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/h2non/go-is-svg v0.0.0-20160927212452-35e8c4b0612c // indirect
 	github.com/jrick/bitset v1.0.0 // indirect
-	github.com/jrick/wsrpc/v2 v2.3.4 // indirect
+	github.com/jrick/wsrpc/v2 v2.3.5 // indirect
 	github.com/kevinburke/nacl v0.0.0-20190829012316-f3ed23dbd7f8 // indirect
 	github.com/kkdai/bstream v1.0.0 // indirect
 	github.com/lib/pq v1.10.3 // indirect
@@ -120,15 +122,15 @@ require (
 	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	go.etcd.io/bbolt v1.3.7-0.20220130032806-d5db64bdbfde // indirect
-	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
-	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171 // indirect
+	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8 // indirect
+	golang.org/x/net v0.0.0-20220822230855-b0a4917ee28c // indirect
+	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
+	golang.org/x/sys v0.0.0-20220818161305-2296e01440c6 // indirect
+	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	google.golang.org/genproto v0.0.0-20220505152158-f39f71e6c8f3 // indirect
-	google.golang.org/grpc v1.46.0 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/genproto v0.0.0-20220822174746-9e6da59bd2fc // indirect
+	google.golang.org/grpc v1.48.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )

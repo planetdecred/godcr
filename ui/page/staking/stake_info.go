@@ -66,7 +66,7 @@ func (pg *Page) stakePriceSection(gtx C) D {
 									}),
 								)
 							}),
-							pg.dataRows(values.String(values.StrLiveTickets), pg.ticketOverview.Unmined),
+							pg.dataRows(values.String(values.StrLiveTickets), pg.ticketOverview.Live),
 							pg.dataRows(values.String(values.StrCanBuy), pg.CalculateTotalTicketsCanBuy()),
 						)
 					}

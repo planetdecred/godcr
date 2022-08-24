@@ -269,8 +269,14 @@ func ticketStatusDetails(gtx C, l *load.Load, tx *transactionItem) D {
 			}),
 			layout.Rigid(func(gtx C) D {
 				p := l.Theme.ProgressBarCirle(int(tx.progress))
-				p.Color = tx.status.Background
-				return p.Layout(gtx)
+				p.Color = tx.status.ProgressBarColor
+				return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding22)
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					gtx.Constraints.Max.Y = gtx.Dp(values.MarginPadding22)
+					gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+					return p.Layout(gtx)
+				})
 			}),
 		)
 	case dcrlibwallet.TicketStatusLive:
