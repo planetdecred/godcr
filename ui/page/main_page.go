@@ -48,11 +48,6 @@ var (
 	NavDrawerMinimizedWidth = unit.Dp(72)
 )
 
-type HideBalanceItem struct {
-	hideBalanceButton decredmaterial.IconButton
-	tooltip           *decredmaterial.Tooltip
-}
-
 type NavHandler struct {
 	Clickable     *widget.Clickable
 	Image         *decredmaterial.Image
@@ -75,8 +70,6 @@ type MainPage struct {
 	bottomNavigationBar  components.BottomNavigationBar
 	floatingActionButton components.BottomNavigationBar
 
-	hideBalanceItem HideBalanceItem
-
 	sendPage    *send.Page   // reuse value to keep data persistent onresume.
 	receivePage *ReceivePage // pointer to receive page. to avoid duplication.
 
@@ -88,6 +81,10 @@ type MainPage struct {
 	// page state variables
 	dcrUsdtBittrex load.DCRUSDTBittrex
 	totalBalance   dcrutil.Amount
+
+	// hideBalance options
+	hideBalanceButton *decredmaterial.Clickable
+	tooltip           *decredmaterial.Tooltip
 
 	usdExchangeSet         bool
 	isFetchingExchangeRate bool
@@ -105,10 +102,9 @@ func NewMainPage(l *load.Load) *MainPage {
 		checkBox:   l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
 	}
 
-	mp.hideBalanceItem.hideBalanceButton = mp.Theme.IconButton(mp.Theme.Icons.ConcealIcon)
-	mp.hideBalanceItem.hideBalanceButton.Size = unit.Dp(19)
-	mp.hideBalanceItem.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
-	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
+	mp.hideBalanceButton = mp.Theme.NewClickable(true)
+	mp.hideBalanceButton.Radius = decredmaterial.Radius(7)
+	mp.tooltip = mp.Theme.Tooltip()
 
 	mp.darkmode = mp.Theme.NewClickable(false)
 	mp.openWalletSelector = mp.Theme.NewClickable(false)
@@ -583,7 +579,7 @@ func (mp *MainPage) HandleUserInteractions() {
 	}
 
 	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.HideBalanceConfigKey, false)
-	for mp.hideBalanceItem.hideBalanceButton.Button.Clicked() {
+	for mp.hideBalanceButton.Clicked() {
 		mp.isBalanceHidden = !mp.isBalanceHidden
 		mp.WL.MultiWallet.SetBoolConfigValueForKey(load.HideBalanceConfigKey, mp.isBalanceHidden)
 	}
@@ -723,15 +719,10 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 			})
 		})
 	case len(mp.totalBalanceUSD) > 0:
-		inset := layout.Inset{
-			Left: values.MarginPadding8,
-		}
-		return inset.Layout(gtx, func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(mp.Theme.Body1("/ ").Layout),
-				layout.Rigid(mp.Theme.Label(values.TextSize20, mp.totalBalanceUSD).Layout),
-			)
-		})
+		lbl := mp.Theme.Label(values.TextSize20, fmt.Sprintf("/ %s", mp.totalBalanceUSD))
+		lbl.Color = mp.Theme.Color.PageNavText
+		inset := layout.Inset{Left: values.MarginPadding8}
+		return inset.Layout(gtx, lbl.Layout)
 	default:
 		return D{}
 	}
@@ -741,6 +732,7 @@ func (mp *MainPage) totalDCRBalance(gtx C) D {
 	if mp.isBalanceHidden {
 		hiddenBalanceText := mp.Theme.Label(values.TextSize18*0.8, "*******************")
 		return layout.Inset{Bottom: values.MarginPadding0, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			hiddenBalanceText.Color = mp.Theme.Color.PageNavText
 			return hiddenBalanceText.Layout(gtx)
 		})
 	}
@@ -793,9 +785,11 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 								return mp.Theme.Icons.DecredSymbol2.Layout24dp(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
+								lbl := mp.Theme.H6(mp.WL.SelectedWallet.Wallet.Name)
+								lbl.Color = mp.Theme.Color.PageNavText
 								return layout.Inset{
 									Left: values.MarginPadding10,
-								}.Layout(gtx, mp.Theme.H6(mp.WL.SelectedWallet.Wallet.Name).Layout)
+								}.Layout(gtx, lbl.Layout)
 							}),
 						)
 					})
@@ -805,14 +799,16 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
+								icon := mp.Theme.Icons.RevealIcon
 								if mp.isBalanceHidden {
-									mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.ConcealIcon
+									icon = mp.Theme.Icons.ConcealIcon
 								}
 								return layout.Inset{
-									Top:  values.MarginPadding1,
-									Left: values.MarginPadding9,
-								}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+									Top:   values.MarginPadding5,
+									Right: values.MarginPadding9,
+								}.Layout(gtx, func(gtx C) D {
+									return mp.hideBalanceButton.Layout(gtx, icon.Layout16dp)
+								})
 							}),
 							layout.Rigid(func(gtx C) D {
 								return mp.totalDCRBalance(gtx)
