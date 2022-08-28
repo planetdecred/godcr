@@ -615,6 +615,8 @@ const (
 	StrDefault                         = "default"
 	StrSetUpPrivacy                    = "setUpPrivacy"
 	StrSetupStakeShuffle               = "setUpStakeShuffle"
+	StrSelectMixedAcc                  = "selectMixedAcc"
+	StrSelectChangeAcc                 = "selectChangeAcc"
 	StrRemoveWalletInfo                = "removeWalletInfo"
 	StrPropNotif                       = "propNotif"
 	StrPeer                            = "peer"
