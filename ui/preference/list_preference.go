@@ -9,6 +9,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -24,6 +25,7 @@ type ListPreferenceModal struct {
 	items         map[string]string //[key]str-key
 	itemKeys      []string
 	title         string
+	subtitle      string
 	preferenceKey string
 	defaultValue  string // str-key
 	initialValue  string
@@ -82,6 +84,11 @@ func (lp *ListPreferenceModal) Title(title string) *ListPreferenceModal {
 	return lp
 }
 
+func (lp *ListPreferenceModal) Subtitle(subtitle string) *ListPreferenceModal {
+	lp.subtitle = subtitle
+	return lp
+}
+
 func (lp *ListPreferenceModal) UpdateValues(clicked func()) *ListPreferenceModal {
 	lp.updateButtonClicked = clicked
 	return lp
@@ -111,6 +118,14 @@ func (lp *ListPreferenceModal) Layout(gtx layout.Context) layout.Dimensions {
 			txt := lp.Theme.H6(values.String(lp.title))
 			txt.Color = lp.Theme.Color.Text
 			return txt.Layout(gtx)
+		},
+		func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					text := values.StringF(lp.subtitle, `<span style="text-color: text">`, `<span style="font-weight: bold">`, `</span><span style="text-color: danger">`, `</span></span>`)
+					return renderers.RenderHTML(text, lp.Load.Theme).Layout(gtx)
+				}),
+			)
 		},
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, lp.layoutItems()...)
