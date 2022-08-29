@@ -103,6 +103,11 @@ func (cm *CreatePasswordModal) EnableConfirmPassword(enable bool) *CreatePasswor
 	return cm
 }
 
+func (cm *CreatePasswordModal) NameHint(hint string) *CreatePasswordModal {
+	cm.walletName.Hint = hint
+	return cm
+}
+
 func (cm *CreatePasswordModal) PasswordHint(hint string) *CreatePasswordModal {
 	cm.passwordEditor.Hint = hint
 	return cm

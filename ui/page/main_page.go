@@ -640,7 +640,7 @@ func (mp *MainPage) OnNavigatedFrom() {
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
-func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
+func (mp *MainPage) Layout(gtx C) D {
 	mp.Load.SetCurrentAppWidth(gtx.Constraints.Max.X)
 	if mp.Load.GetCurrentAppWidth() <= gtx.Dp(values.StartMobileView) {
 		return mp.layoutMobile(gtx)
@@ -648,7 +648,7 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 	return mp.layoutDesktop(gtx)
 }
 
-func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
+func (mp *MainPage) layoutDesktop(gtx C) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -677,7 +677,7 @@ func (mp *MainPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
+func (mp *MainPage) layoutMobile(gtx C) D {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(mp.LayoutTopBar),
 		layout.Flexed(1, func(gtx C) D {
@@ -685,7 +685,7 @@ func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 				layout.Expanded(func(gtx C) D {
 					currentPage := mp.CurrentPage()
 					if currentPage == nil {
-						return layout.Dimensions{}
+						return D{}
 					}
 					return currentPage.Layout(gtx)
 				}),
@@ -698,7 +698,7 @@ func (mp *MainPage) layoutMobile(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
+func (mp *MainPage) LayoutUSDBalance(gtx C) D {
 	if !mp.usdExchangeSet {
 		return D{}
 	}
@@ -747,7 +747,7 @@ func (mp *MainPage) totalDCRBalance(gtx C) D {
 	return components.LayoutBalanceWithUnit(gtx, mp.Load, mp.totalBalance.String())
 }
 
-func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
+func (mp *MainPage) LayoutTopBar(gtx C) D {
 	return decredmaterial.LinearLayout{
 		Width:       decredmaterial.MatchParent,
 		Height:      decredmaterial.WrapContent,

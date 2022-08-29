@@ -282,7 +282,11 @@ func (pg *WalletSettingsPage) pageSections(gtx C, title string, body layout.Widg
 							}
 							if title == values.String(values.StrAccount) {
 								return layout.E.Layout(gtx, func(gtx C) D {
-									return pg.addAccount.Layout(gtx, pg.Theme.Icons.AddIcon.Layout24dp)
+									mGtx := gtx
+									if pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() {
+										mGtx = gtx.Disabled()
+									}
+									return pg.addAccount.Layout(mGtx, pg.Theme.Icons.AddIcon.Layout24dp)
 								})
 							}
 
@@ -699,6 +703,7 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 		newPasswordModal := modal.NewCreatePasswordModal(pg.Load).
 			Title(values.String(values.StrCreateNewAccount)).
 			EnableName(true).
+			NameHint(values.String(values.StrAcctName)).
 			EnableConfirmPassword(false).
 			PasswordHint(values.String(values.StrSpendingPassword)).
 			PasswordCreated(func(accountName, password string, m *modal.CreatePasswordModal) bool {
