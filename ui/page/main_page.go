@@ -798,8 +798,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-<<<<<<< HEAD
-								mp.hideBalanceItem.hideBalanceButton.Icon = mp.Theme.Icons.RevealIcon
+								icon := mp.Theme.Icons.RevealIcon
 								if mp.isBalanceHidden {
 									icon = mp.Theme.Icons.ConcealIcon
 								}
@@ -812,8 +811,6 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func(gtx C) D {
 								return mp.totalDCRBalance(gtx)
-=======
-								return mp.TotalDCRBalance(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
 								if !mp.isBalanceHidden {
