@@ -73,6 +73,7 @@ type MainPage struct {
 	sendPage    *send.Page   // reuse value to keep data persistent onresume.
 	receivePage *ReceivePage // pointer to receive page. to avoid duplication.
 
+	hideBalanceButton      *decredmaterial.Clickable
 	refreshExchangeRateBtn *decredmaterial.Clickable
 	darkmode               *decredmaterial.Clickable
 	openWalletSelector     *decredmaterial.Clickable
@@ -81,10 +82,6 @@ type MainPage struct {
 	// page state variables
 	dcrUsdtBittrex load.DCRUSDTBittrex
 	totalBalance   dcrutil.Amount
-
-	// hideBalance options
-	hideBalanceButton *decredmaterial.Clickable
-	tooltip           *decredmaterial.Tooltip
 
 	usdExchangeSet         bool
 	isFetchingExchangeRate bool
@@ -99,16 +96,12 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp := &MainPage{
 		Load:       l,
 		MasterPage: app.NewMasterPage(MainPageID),
-		checkBox:   l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
+		checkBox:   l.Theme.CheckBox(new(widget.Bool), values.String(values.StrAwareOfRisk)),
 	}
 
-	mp.hideBalanceButton = mp.Theme.NewClickable(true)
-	mp.hideBalanceButton.Radius = decredmaterial.Radius(7)
-	mp.tooltip = mp.Theme.Tooltip()
-
+	mp.hideBalanceButton = mp.Theme.NewClickable(false)
 	mp.darkmode = mp.Theme.NewClickable(false)
 	mp.openWalletSelector = mp.Theme.NewClickable(false)
-	mp.openWalletSelector.Radius = decredmaterial.Radius(8)
 
 	// init shared page functions
 	toggleSync := func() {
@@ -276,6 +269,9 @@ func (mp *MainPage) OnNavigatedTo() {
 	mp.listenForNotifications()
 
 	backupLater := mp.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
+	// reset the checkbox
+	mp.checkBox.CheckBox.Value = false
+
 	needBackup := mp.WL.SelectedWallet.Wallet.EncryptedSeed != nil
 	if needBackup && !backupLater {
 		mp.showBackupInfo()
