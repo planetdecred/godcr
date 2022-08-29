@@ -355,9 +355,9 @@ func (pg *TxDetailsPage) txDetailsHeader(gtx C) D {
 											}),
 										)
 
-										lbl := pg.Theme.Label(values.TextSize16, dcrutil.Amount(pg.transaction.VoteReward).String())
-										lbl.Color = col
-										return lbl.Layout(gtx)
+										// lbl := pg.Theme.Label(values.TextSize16, dcrutil.Amount(pg.transaction.VoteReward).String())
+										// lbl.Color = col
+										// return lbl.Layout(gtx)
 									}
 								}
 								return D{}
