@@ -137,7 +137,7 @@ const FR = `
 "recentTransactions" = "Transactions récentes";
 "recentProposals" = "Propositions récentes";
 "ago" = "avant";
-"viewOnDcrdata" = "Voir sur dcrdata";
+"viewOnExplorer" = "View on block explorer";
 "beepForNewBlocks" = "Beep pour les nouveaux blocs";
 "connectToSpecificPeer" = "Se connecter à un pair spécifique";
 "staking" = "Jalonnement";
@@ -464,4 +464,5 @@ const FR = `
 "confirmUmixedSpending" = "Confirm to allow spending from unmixed accounts"
 "ok" = "OK"
 "accountMixer" = "AccountMixer"
+"copyBlockLink" = "Copy block explorer link"
 `

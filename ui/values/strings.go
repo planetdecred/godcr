@@ -194,7 +194,7 @@ const (
 	StrRebroadcast                     = "rebroadcast"
 	StrXInputsConsumed                 = "xInputsConsumed"
 	StrXOutputCreated                  = "xOutputCreated"
-	StrViewOnDcrdata                   = "viewOnDcrdata"
+	StrViewOnExplorer                  = "viewOnExplorer"
 	StrViewProperty                    = "viewProperty"
 	StrAddNewAccount                   = "addNewAccount"
 	StrBackupSeedPhrase                = "backupSeedPhrase"
@@ -613,4 +613,5 @@ const (
 	StrConfirmUmixedSpending           = "confirmUmixedSpending"
 	StrOK                              = "ok"
 	StrAccountMixer                    = "accountMixer"
+	StrCopyBlockLink                   = "copyBlockLink"
 )

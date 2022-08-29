@@ -84,7 +84,7 @@ unlockWithPassword = "Unlock with password"
 "transactionId" = "Transaction ID";
 "xInputsConsumed" = "%d Inputs consumed";
 "xOutputCreated" = "%d Outputs created";
-"viewOnDcrdata" = "View on dcrdata";
+"viewOnExplorer" = "View on block explorer";
 "watchOnlyWallets" = "Watch-only wallets";
 "signMessage" = "Sign message";
 "verifyMessage" = "Verify message";
@@ -507,4 +507,5 @@ unlockWithPassword = "Unlock with password"
 "confirmUmixedSpending" = "Confirm to allow spending from unmixed accounts"
 "ok" = "OK"
 "accountMixer" = "AccountMixer"
+"copyBlockLink" = "Copy block explorer link"
 `

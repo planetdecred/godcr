@@ -83,7 +83,7 @@ const ES = `
 "transactionId" = "ID de la transacción";
 "xInputsConsumed" = "%d Entradas consumidas";
 "xOutputCreated" = "%d Salidas creadas";
-"viewOnDcrdata" = "Ver en dcrdata";
+"viewOnExplorer" = "View on block explorer";
 "watchOnlyWallets" = "Carteras de solo mirar";
 "signMessage" = "Firmar mensaje";
 "verifyMessage" = "Verificar mensaje";
@@ -487,4 +487,5 @@ syncCompTime" = "Est. Sync completion time"
 "confirmUmixedSpending" = "Confirm to allow spending from unmixed accounts"
 "ok" = "OK"
 "accountMixer" = "AccountMixer"
+"copyBlockLink" = "Copy block explorer link"
 `

@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"fmt"
+	"gioui.org/op"
 	"strings"
 	"time"
 
@@ -14,21 +15,28 @@ import (
 	"github.com/planetdecred/godcr/app"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const TransactionDetailsPageID = "TransactionDetails"
+const (
+	TransactionDetailsPageID = "TransactionDetails"
+	viewBlockID              = "viewBlock"
+	copyBlockID              = "copyBlock"
+)
 
 type transactionWdg struct {
-	confirmationIcons *decredmaterial.Image
-	// icon                 *decredmaterial.Image
-	// title                string
+	confirmationIcons    *decredmaterial.Image
 	time, status, wallet decredmaterial.Label
 
 	copyTextButtons []decredmaterial.Button
 	txStatus        *components.TxStatus
+}
+
+type moreItem struct {
+	text   string
+	id     string
+	button *decredmaterial.Clickable
 }
 
 type TxDetailsPage struct {
@@ -48,15 +56,15 @@ type TxDetailsPage struct {
 	hashClickable                   *widget.Clickable
 	destAddressClickable            *widget.Clickable
 	dot                             *decredmaterial.Icon
-	toDcrdata                       *decredmaterial.Clickable
 	outputsCollapsible              *decredmaterial.Collapsible
 	inputsCollapsible               *decredmaterial.Collapsible
 	backButton                      decredmaterial.IconButton
 	rebroadcast                     decredmaterial.Label
 	rebroadcastClickable            *decredmaterial.Clickable
 	rebroadcastIcon                 *decredmaterial.Image
-	copyRedirectURL                 *decredmaterial.Clickable
 	moreOption                      *decredmaterial.Clickable
+
+	shadowBox *decredmaterial.Shadow
 
 	txnWidgets    transactionWdg
 	transaction   *dcrlibwallet.Transaction
@@ -65,9 +73,13 @@ type TxDetailsPage struct {
 	txBackStack   *dcrlibwallet.Transaction // track original transaction
 	wallet        *dcrlibwallet.Wallet
 
+	moreItems []moreItem
+
 	txSourceAccount      string
 	txDestinationAddress string
 	title                string
+
+	moreOptionIsOpen bool
 }
 
 func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction, isTicket bool) *TxDetailsPage {
@@ -97,8 +109,7 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		hashClickable:             new(widget.Clickable),
 		destAddressClickable:      new(widget.Clickable),
 		moreOption:                l.Theme.NewClickable(false),
-		toDcrdata:                 l.Theme.NewClickable(true),
-		copyRedirectURL:           l.Theme.NewClickable(false),
+		shadowBox:                 l.Theme.Shadow(),
 
 		transaction:          transaction,
 		wallet:               l.WL.MultiWallet.WalletWithID(transaction.WalletID),
@@ -111,6 +122,8 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 
 	pg.dot = decredmaterial.NewIcon(l.Theme.Icons.ImageBrightness1)
 	pg.dot.Color = l.Theme.Color.Gray1
+
+	pg.moreItems = pg.getMoreItem()
 
 	return pg
 }
@@ -162,6 +175,21 @@ func (pg *TxDetailsPage) OnNavigatedTo() {
 	pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
 }
 
+func (pg *TxDetailsPage) getMoreItem() []moreItem {
+	return []moreItem{
+		{
+			text:   values.String(values.StrViewOnExplorer),
+			button: pg.Theme.NewClickable(true),
+			id:     viewBlockID,
+		},
+		{
+			text:   values.String(values.StrCopyBlockLink),
+			button: pg.Theme.NewClickable(true),
+			id:     copyBlockID,
+		},
+	}
+}
+
 // Layout draws the page UI components into the provided layout context
 // to be eventually drawn on screen.
 // Part of the load.Page interface.
@@ -175,7 +203,17 @@ func (pg *TxDetailsPage) Layout(gtx C) D {
 			BackButton: pg.backButton,
 			ExtraItem:  pg.moreOption,
 			Extra: func(gtx C) D {
-				return layout.E.Layout(gtx, pg.Theme.Icons.EllipseHoriz.Layout24dp)
+				return layout.E.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(pg.Theme.Icons.EllipseHoriz.Layout24dp),
+						layout.Rigid(func(gtx C) D {
+							if pg.moreOptionIsOpen {
+								pg.layoutOptionsMenu(gtx)
+							}
+							return D{}
+						}),
+					)
+				})
 			},
 			Back: func() {
 				if pg.txBackStack == nil {
@@ -214,9 +252,6 @@ func (pg *TxDetailsPage) Layout(gtx C) D {
 					},
 					func(gtx C) D {
 						return pg.Theme.Separator().Layout(gtx)
-					},
-					func(gtx C) D {
-						return pg.viewTxn(gtx)
 					},
 				}
 				return pg.Theme.List(pg.list).Layout(gtx, 1, func(gtx C, i int) D {
@@ -985,16 +1020,34 @@ func (pg *TxDetailsPage) txnIORow(gtx C, amount int64, acctNum int32, address st
 	})
 }
 
-func (pg *TxDetailsPage) viewTxn(gtx C) D {
-	return pg.pageSections(gtx, func(gtx C) D {
-		return pg.toDcrdata.Layout(gtx, func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-				layout.Rigid(pg.Theme.Body1(values.String(values.StrViewOnDcrdata)).Layout),
-				layout.Rigid(pg.Theme.Icons.RedirectIcon.Layout24dp),
-			)
+func (pg *TxDetailsPage) layoutOptionsMenu(gtx C) {
+	inset := layout.Inset{
+		Left: values.MarginPaddingMinus150,
+	}
+
+	m := op.Record(gtx.Ops)
+	inset.Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Max.X = gtx.Dp(values.MarginPadding168)
+		return pg.shadowBox.Layout(gtx, func(gtx C) D {
+			optionsMenuCard := decredmaterial.Card{Color: pg.Theme.Color.Surface}
+			optionsMenuCard.Radius = decredmaterial.Radius(5)
+			return optionsMenuCard.Layout(gtx, func(gtx C) D {
+				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.moreItems), func(gtx C, i int) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return pg.moreItems[i].button.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									return pg.Theme.Label(values.TextSize14, pg.moreItems[i].text).Layout(gtx)
+								})
+							})
+						}),
+					)
+				})
+			})
 		})
 	})
+	op.Defer(gtx.Ops, m.Stop())
 }
 
 func (pg *TxDetailsPage) pageSections(gtx C, body layout.Widget) D {
@@ -1008,58 +1061,7 @@ func (pg *TxDetailsPage) pageSections(gtx C, body layout.Widget) D {
 // Part of the load.Page interface.
 func (pg *TxDetailsPage) HandleUserInteractions() {
 	for pg.moreOption.Clicked() {
-
-	}
-
-	for pg.toDcrdata.Clicked() {
-		redirectURL := pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash)
-		info := modal.NewInfoModal(pg.Load).
-			Title("View on Dcrdata").
-			Body("Copy and paste the link below in your browser, to view transaction on dcrdata dashboard.").
-			SetCancelable(true).
-			UseCustomWidget(func(gtx C) D {
-				return layout.Stack{}.Layout(gtx,
-					layout.Stacked(func(gtx C) D {
-						border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
-						wrapper := pg.Theme.Card()
-						wrapper.Color = pg.Theme.Color.Gray4
-						return border.Layout(gtx, func(gtx C) D {
-							return wrapper.Layout(gtx, func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Flexed(0.9, pg.Theme.Body1(redirectURL).Layout),
-										layout.Flexed(0.1, func(gtx C) D {
-											return layout.E.Layout(gtx, func(gtx C) D {
-												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-													if pg.copyRedirectURL.Clicked() {
-														clipboard.WriteOp{Text: redirectURL}.Add(gtx.Ops)
-														pg.Toast.Notify("URL copied")
-													}
-													return pg.copyRedirectURL.Layout(gtx, pg.Theme.Icons.CopyIcon.Layout24dp)
-												})
-											})
-										}),
-									)
-								})
-							})
-						})
-					}),
-					layout.Stacked(func(gtx C) D {
-						return layout.Inset{
-							Top:  values.MarginPaddingMinus10,
-							Left: values.MarginPadding10,
-						}.Layout(gtx, func(gtx C) D {
-							label := pg.Theme.Body2("Web URL")
-							label.Color = pg.Theme.Color.GrayText2
-							return label.Layout(gtx)
-						})
-					}),
-				)
-			}).
-			PositiveButton("Got it", func(isChecked bool) bool {
-				return true
-			})
-		pg.ParentWindow().ShowModal(info)
+		pg.moreOptionIsOpen = !pg.moreOptionIsOpen
 	}
 
 	for pg.associatedTicketClickable.Clicked() {
@@ -1096,6 +1098,16 @@ func (pg *TxDetailsPage) HandleUserInteractions() {
 			}
 		}()
 	}
+
+	redirectURL := pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash)
+	for _, menu := range pg.moreItems {
+		if menu.button.Clicked() && menu.id == viewBlockID {
+			components.GoToURL(redirectURL)
+			pg.moreOptionIsOpen = false
+			break
+		}
+
+	}
 }
 
 func (pg *TxDetailsPage) handleTextCopyEvent(gtx C) {
@@ -1103,17 +1115,31 @@ func (pg *TxDetailsPage) handleTextCopyEvent(gtx C) {
 		for b.Clicked() {
 			clipboard.WriteOp{Text: b.Text}.Add(gtx.Ops)
 			pg.Toast.Notify(values.String(values.StrCopied))
+			break
 		}
+		break
 	}
 
 	for pg.hashClickable.Clicked() {
 		clipboard.WriteOp{Text: pg.transaction.Hash}.Add(gtx.Ops)
 		pg.Toast.Notify(values.String(values.StrTxHashCopied))
+		break
 	}
 
 	for pg.destAddressClickable.Clicked() {
 		clipboard.WriteOp{Text: pg.txDestinationAddress}.Add(gtx.Ops)
 		pg.Toast.Notify(values.String(values.StrAddressCopied))
+		break
+	}
+
+	redirectURL := pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash)
+	for _, menu := range pg.moreItems {
+		if menu.button.Clicked() && menu.id == copyBlockID {
+			clipboard.WriteOp{Text: redirectURL}.Add(gtx.Ops)
+			pg.Toast.Notify("URL copied")
+			pg.moreOptionIsOpen = false
+			break
+		}
 	}
 }
 
@@ -1150,9 +1176,6 @@ func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transac
 		ticketSpender, _ = wal.TicketSpender(transaction.Hash)
 	}
 	txStatus := components.TransactionTitleIcon(l, wal, transaction, ticketSpender)
-
-	// txn.title = txStatus.Title
-	// txn.icon = txStatus.Icon
 	txn.txStatus = txStatus
 
 	x := len(transaction.Inputs) + len(transaction.Outputs)
