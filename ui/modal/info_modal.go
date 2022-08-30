@@ -81,8 +81,12 @@ func NewNotice(l *load.Load, title string, icon *decredmaterial.Icon, clicked fu
 	return info
 }
 
-func NewInfoModalWithKey(l *load.Load, key string, btnPositiveType ButtonType) *InfoModal {
+// This function for normal positive button
+func NewInfoModal2(l *load.Load) *InfoModal {
+	return NewInfoModalWithKey(l, "info_modal", Outline)
+}
 
+func NewInfoModalWithKey(l *load.Load, key string, btnPositiveType ButtonType) *InfoModal {
 	in := &InfoModal{
 		Load:             l,
 		Modal:            l.Theme.ModalFloatTitle(key),
@@ -172,6 +176,11 @@ func (in *InfoModal) PositiveButtonWidth(width unit.Dp) *InfoModal {
 func (in *InfoModal) NegativeButton(text string, clicked func()) *InfoModal {
 	in.negativeButtonText = text
 	in.negativeButtonClicked = clicked
+	return in
+}
+
+func (in *InfoModal) NegativeButtonStyle(background, text color.NRGBA) *InfoModal {
+	in.btnNegative.Background, in.btnNegative.Color = background, text
 	return in
 }
 
@@ -267,7 +276,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 			return layout.Dimensions{}
 		}
 
-		return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
 				return in.dialogIcon.Layout(gtx, values.MarginPadding50)
 			})

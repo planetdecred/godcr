@@ -28,14 +28,10 @@ type VerifyMessagePage struct {
 	messageEditor          decredmaterial.Editor
 	signatureEditor        decredmaterial.Editor
 	clearBtn, verifyButton decredmaterial.Button
-	verifyMessage          decredmaterial.Label
 	backButton             decredmaterial.IconButton
 	infoButton             decredmaterial.IconButton
 
-	verifyMessageStatus *decredmaterial.Icon
-
 	addressIsValid     bool
-	isEnabled          bool
 	EnableEditorSwitch bool
 }
 
@@ -43,7 +39,6 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg := &VerifyMessagePage{
 		Load:               l,
 		GenericPageModal:   app.NewGenericPageModal(VerifyMessagePageID),
-		verifyMessage:      l.Theme.Body1(""),
 		EnableEditorSwitch: false,
 	}
 
@@ -75,6 +70,8 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 // Part of the load.Page interface.
 func (pg *VerifyMessagePage) OnNavigatedTo() {
 	pg.addressEditor.Editor.Focus()
+
+	pg.verifyButton.SetEnabled(pg.updateBtn())
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -99,7 +96,6 @@ func (pg *VerifyMessagePage) Layout(gtx C) D {
 							layout.Rigid(pg.inputRow(pg.signatureEditor)),
 							layout.Rigid(pg.inputRow(pg.messageEditor)),
 							layout.Rigid(pg.verifyAndClearButtons()),
-							layout.Rigid(pg.verifyMessageResponse()),
 						)
 					})
 				})
@@ -154,27 +150,6 @@ func (pg *VerifyMessagePage) verifyAndClearButtons() layout.Widget {
 	}
 }
 
-func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
-	return func(gtx C) D {
-		if pg.verifyMessageStatus != nil {
-			return layout.Inset{Top: values.MarginPadding30}.Layout(gtx, func(gtx C) D {
-				pg.Theme.Separator().Layout(gtx)
-				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								return pg.verifyMessageStatus.Layout(gtx, values.MarginPadding20)
-							})
-						}),
-						layout.Rigid(pg.verifyMessage.Layout),
-					)
-				})
-			})
-		}
-		return D{}
-	}
-}
-
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
@@ -188,33 +163,39 @@ func (pg *VerifyMessagePage) HandleUserInteractions() {
 		if pg.addressEditor.Editor.Focused() {
 			pg.validateAddress()
 		}
-		pg.clearMessages()
 	}
 
 	if (pg.verifyButton.Clicked() || isSubmit) && pg.validateAllInputs() {
-		pg.verifyMessage.Text = ""
-		pg.verifyMessageStatus = nil
+
+		var verifyMessageStatus *decredmaterial.Icon
+		var verifyMessageText string
+
 		valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text())
 		if err != nil {
-			pg.verifyMessage.Text = values.StringF(values.StrVerifyMsgError, err)
-			pg.verifyMessage.Color = pg.Theme.Color.Danger
-			pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
-			pg.verifyMessageStatus.Color = pg.Theme.Color.Danger
-			return
-		}
-		if !valid {
-			pg.verifyMessage.Text = values.String(values.StrInvalidSignature)
-			pg.verifyMessage.Color = pg.Theme.Color.Danger
-			pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
-			pg.verifyMessageStatus.Color = pg.Theme.Color.Danger
+			verifyMessageText = values.StringF(values.StrVerifyMsgError, err)
+			verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
+			verifyMessageStatus.Color = pg.Theme.Color.Danger
 
-			return
+		} else if !valid {
+			verifyMessageText = values.String(values.StrInvalidSignature)
+			verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.NavigationCancel)
+			verifyMessageStatus.Color = pg.Theme.Color.Danger
+
+		} else {
+			verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheck)
+			verifyMessageStatus.Color = pg.Theme.Color.Success
+			verifyMessageText = values.String(values.StrValidSignature)
 		}
 
-		pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Theme.Icons.ActionCheck)
-		pg.verifyMessageStatus.Color = pg.Theme.Color.Success
-		pg.verifyMessage.Text = values.String(values.StrValidSignature)
-		pg.verifyMessage.Color = pg.Theme.Color.Success
+		info := modal.NewInfoModal(pg.Load).
+			Icon(verifyMessageStatus).
+			Title(verifyMessageText).
+			SetContentAlignment(layout.Center, layout.Center).
+			PositiveButtonStyle(pg.Theme.Color.Primary, pg.Theme.Color.Surface).
+			PositiveButton(values.String(values.StrOk), func(isChecked bool) bool {
+				return true
+			})
+		pg.ParentWindow().ShowModal(info)
 	}
 
 	if pg.clearBtn.Clicked() {
@@ -264,17 +245,9 @@ func (pg *VerifyMessagePage) updateBtn() bool {
 }
 
 func (pg *VerifyMessagePage) clearInputs() {
-	pg.verifyMessageStatus = nil
-	pg.addressEditor.Editor.SetText("")
 	pg.signatureEditor.Editor.SetText("")
 	pg.messageEditor.Editor.SetText("")
-	pg.verifyMessage.Text = ""
 	pg.addressEditor.SetError("")
-}
-
-func (pg *VerifyMessagePage) clearMessages() {
-	pg.verifyMessageStatus = nil
-	pg.verifyMessage.Text = ""
 }
 
 func (pg *VerifyMessagePage) validateAddress() bool {

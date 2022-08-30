@@ -25,11 +25,11 @@ type CreatePasswordModal struct {
 	confirmPasswordEditor decredmaterial.Editor
 	passwordStrength      decredmaterial.ProgressBarStyle
 
-	isLoading          bool
-	isCancelable       bool
-	walletNameEnabled  bool
-	showWalletWarnInfo bool
-	isEnabled          bool
+	isLoading              bool
+	isCancelable           bool
+	walletNameEnabled      bool
+	showWalletWarnInfo     bool
+	confirmPasswordEnabled bool
 
 	dialogTitle string
 	serverError string
@@ -48,12 +48,13 @@ type CreatePasswordModal struct {
 
 func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	cm := &CreatePasswordModal{
-		Load:             l,
-		Modal:            l.Theme.ModalFloatTitle("create_wallet_modal"),
-		passwordStrength: l.Theme.ProgressBar(0),
-		btnPositve:       l.Theme.Button(values.String(values.StrConfirm)),
-		btnNegative:      l.Theme.OutlineButton(values.String(values.StrCancel)),
-		isCancelable:     true,
+		Load:                   l,
+		Modal:                  l.Theme.ModalFloatTitle("create_wallet_modal"),
+		passwordStrength:       l.Theme.ProgressBar(0),
+		btnPositve:             l.Theme.Button(values.String(values.StrConfirm)),
+		btnNegative:            l.Theme.OutlineButton(values.String(values.StrCancel)),
+		isCancelable:           true,
+		confirmPasswordEnabled: true,
 	}
 
 	cm.btnPositve.Font.Weight = text.Medium
@@ -81,6 +82,8 @@ func (cm *CreatePasswordModal) OnResume() {
 	} else {
 		cm.passwordEditor.Editor.Focus()
 	}
+
+	cm.btnPositve.SetEnabled(cm.validToCreate())
 }
 
 func (cm *CreatePasswordModal) OnDismiss() {}
@@ -92,6 +95,11 @@ func (cm *CreatePasswordModal) Title(title string) *CreatePasswordModal {
 
 func (cm *CreatePasswordModal) EnableName(enable bool) *CreatePasswordModal {
 	cm.walletNameEnabled = enable
+	return cm
+}
+
+func (cm *CreatePasswordModal) EnableConfirmPassword(enable bool) *CreatePasswordModal {
+	cm.confirmPasswordEnabled = enable
 	return cm
 }
 
@@ -145,8 +153,14 @@ func (cm *CreatePasswordModal) validToCreate() bool {
 		nameValid = editorsNotEmpty(cm.walletName.Editor)
 	}
 
-	return nameValid && editorsNotEmpty(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) &&
+	validPassword, passwordsMatch := true, true
+	if cm.confirmPasswordEnabled {
+		validPassword = editorsNotEmpty(cm.confirmPasswordEditor.Editor)
 		cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+	}
+
+	return nameValid && editorsNotEmpty(cm.passwordEditor.Editor) && validPassword && passwordsMatch
+
 }
 
 // SetParent sets the page that created PasswordModal as it's parent.
@@ -156,14 +170,7 @@ func (cm *CreatePasswordModal) SetParent(parent app.Page) *CreatePasswordModal {
 }
 
 func (cm *CreatePasswordModal) Handle() {
-	if editorsNotEmpty(cm.passwordEditor.Editor) || editorsNotEmpty(cm.walletName.Editor) ||
-		editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
-		cm.btnPositve.Background = cm.Theme.Color.Primary
-		cm.isEnabled = true
-	} else {
-		cm.btnPositve.Background = cm.Theme.Color.Gray3
-		cm.isEnabled = false
-	}
+	cm.btnPositve.SetEnabled(cm.validToCreate())
 
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor, cm.walletName.Editor)
 	if isChanged {
@@ -174,7 +181,7 @@ func (cm *CreatePasswordModal) Handle() {
 		cm.confirmPasswordEditor.SetError("")
 	}
 
-	if (cm.btnPositve.Clicked() || isSubmit) && cm.isEnabled {
+	if cm.btnPositve.Clicked() || isSubmit {
 
 		if cm.walletNameEnabled {
 			if !editorsNotEmpty(cm.walletName.Editor) {
@@ -188,17 +195,24 @@ func (cm *CreatePasswordModal) Handle() {
 			return
 		}
 
-		if !editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
-			cm.confirmPasswordEditor.SetError(values.String(values.StrConfirmSpendingPassword))
-			return
+		if cm.confirmPasswordEnabled {
+			if !editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
+				cm.confirmPasswordEditor.SetError(values.String(values.StrConfirmSpendingPassword))
+				return
+			}
+
+			if cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
+
+				cm.SetLoading(true)
+				if cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
+					cm.Dismiss()
+				}
+			}
 		}
 
-		if cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
-
-			cm.SetLoading(true)
-			if cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
-				cm.Dismiss()
-			}
+		cm.SetLoading(true)
+		if cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
+			cm.Dismiss()
 		}
 	}
 
@@ -234,7 +248,11 @@ func (cm *CreatePasswordModal) KeysToHandle() key.Set {
 // Satisfies the load.KeyEventHandler interface for receiving key events.
 func (cm *CreatePasswordModal) HandleKeyPress(evt *key.Event) {
 	if cm.walletNameEnabled {
-		decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+		if cm.confirmPasswordEnabled {
+			decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+		} else {
+			decredmaterial.SwitchEditors(evt, cm.walletName.Editor, cm.passwordEditor.Editor)
+		}
 	} else {
 		decredmaterial.SwitchEditors(evt, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 	}
@@ -318,23 +336,25 @@ func (cm *CreatePasswordModal) Layout(gtx C) D {
 		)
 	})
 
-	w = append(w, cm.passwordStrength.Layout)
-	w = append(w, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(cm.confirmPasswordEditor.Layout),
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-					txt := cm.Theme.Label(values.TextSize12, strconv.Itoa(cm.confirmPasswordEditor.Editor.Len()))
-					txt.Color = cm.Theme.Color.GrayText1
-					if txt.Text != "0" {
-						return layout.E.Layout(gtx, txt.Layout)
-					}
+	if cm.confirmPasswordEnabled {
+		w = append(w, cm.passwordStrength.Layout)
+		w = append(w, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(cm.confirmPasswordEditor.Layout),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+						txt := cm.Theme.Label(values.TextSize12, strconv.Itoa(cm.confirmPasswordEditor.Editor.Len()))
+						txt.Color = cm.Theme.Color.GrayText1
+						if txt.Text != "0" {
+							return layout.E.Layout(gtx, txt.Layout)
+						}
 
-					return D{}
-				})
-			}),
-		)
-	})
+						return D{}
+					})
+				}),
+			)
+		})
+	}
 
 	w = append(w, func(gtx C) D {
 		return layout.E.Layout(gtx, func(gtx C) D {

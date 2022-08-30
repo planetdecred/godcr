@@ -36,22 +36,20 @@ type AccountMixerPage struct {
 	pageContainer         layout.List
 	dangerZoneCollapsible *decredmaterial.Collapsible
 
-	backButton              decredmaterial.IconButton
-	infoButton              decredmaterial.IconButton
-	toggleMixer             *decredmaterial.Switch
-	allowUnspendUnmixedAcct *decredmaterial.Switch
+	backButton  decredmaterial.IconButton
+	infoButton  decredmaterial.IconButton
+	toggleMixer *decredmaterial.Switch
 
 	mixerCompleted bool
 }
 
 func NewAccountMixerPage(l *load.Load) *AccountMixerPage {
 	pg := &AccountMixerPage{
-		Load:                    l,
-		GenericPageModal:        app.NewGenericPageModal(AccountMixerPageID),
-		pageContainer:           layout.List{Axis: layout.Vertical},
-		toggleMixer:             l.Theme.Switch(),
-		allowUnspendUnmixedAcct: l.Theme.Switch(),
-		dangerZoneCollapsible:   l.Theme.Collapsible(),
+		Load:                  l,
+		GenericPageModal:      app.NewGenericPageModal(AccountMixerPageID),
+		pageContainer:         layout.List{Axis: layout.Vertical},
+		toggleMixer:           l.Theme.Switch(),
+		dangerZoneCollapsible: l.Theme.Collapsible(),
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -67,9 +65,6 @@ func (pg *AccountMixerPage) OnNavigatedTo() {
 
 	pg.listenForMixerNotifications()
 	pg.toggleMixer.SetChecked(pg.WL.SelectedWallet.Wallet.IsAccountMixerActive())
-
-	isSpendUnmixedFunds := pg.WL.SelectedWallet.Wallet.ReadBoolConfigValueForKey(load.SpendUnmixedFundsKey, false)
-	pg.allowUnspendUnmixedAcct.SetChecked(isSpendUnmixedFunds)
 }
 
 // Layout draws the page UI components into the provided layout context
@@ -138,9 +133,6 @@ func (pg *AccountMixerPage) Layout(gtx layout.Context) layout.Dimensions {
 					},
 					func(gtx C) D {
 						return pg.mixerSettingsLayout(gtx)
-					},
-					func(gtx C) D {
-						return pg.dangerZoneLayout(gtx)
 					},
 				}
 				return pg.pageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
@@ -215,29 +207,6 @@ func (pg *AccountMixerPage) shufflePortForCurrentNet() string {
 	return dcrlibwallet.MainnetShufflePort
 }
 
-func (pg *AccountMixerPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
-	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-			return pg.dangerZoneCollapsible.Layout(gtx,
-				func(gtx C) D {
-					txt := pg.Theme.Label(values.TextSize16, "Danger Zone")
-					txt.Color = pg.Theme.Color.Danger
-					return txt.Layout(gtx)
-				},
-				func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							layout.Flexed(1, pg.Theme.Label(values.TextSize16, "Allow spending from unmixed accounts").Layout),
-							layout.Rigid(pg.allowUnspendUnmixedAcct.Layout),
-						)
-					})
-				},
-			)
-		})
-	})
-}
-
 // HandleUserInteractions is called just before Layout() to determine
 // if any user interaction recently occurred on the page and may be
 // used to update the page's UI components shortly before they are
@@ -266,38 +235,6 @@ func (pg *AccountMixerPage) HandleUserInteractions() {
 		pg.toggleMixer.SetChecked(false)
 		pg.mixerCompleted = false
 		pg.ParentWindow().Reload()
-	}
-
-	if pg.allowUnspendUnmixedAcct.Changed() {
-		if pg.allowUnspendUnmixedAcct.IsChecked() {
-			textModal := modal.NewTextInputModal(pg.Load).
-				SetTextWithTemplate(modal.AllowUnmixedSpendingTemplate).
-				Hint("").
-				PositiveButtonStyle(pg.Load.Theme.Color.Danger, pg.Load.Theme.Color.InvText).
-				PositiveButton("Confirm", func(textInput string, tim *modal.TextInputModal) bool {
-					if textInput != "I understand the risks" {
-						tim.SetError("confirmation text is incorrect")
-						tim.SetLoading(false)
-					} else {
-						pg.WL.SelectedWallet.Wallet.SetBoolConfigValueForKey(load.SpendUnmixedFundsKey, true)
-						tim.Dismiss()
-					}
-					return false
-				})
-
-			textModal.Title("Confirm to allow spending from unmixed accounts").
-				NegativeButton("Cancel", func() {
-					pg.allowUnspendUnmixedAcct.SetChecked(false)
-				})
-			pg.ParentWindow().ShowModal(textModal)
-
-		} else {
-			pg.WL.SelectedWallet.Wallet.SetBoolConfigValueForKey(load.SpendUnmixedFundsKey, false)
-		}
-
-		if pg.dangerZoneCollapsible.IsExpanded() {
-			pg.ParentWindow().Reload()
-		}
 	}
 
 	if pg.backButton.Button.Clicked() {

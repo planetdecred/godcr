@@ -18,6 +18,11 @@ import (
 
 const SignMessagePageID = "SignMessage"
 
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
 type SignMessagePage struct {
 	*load.Load
 	// GenericPageModal defines methods such as ID() and OnAttachedToNavigator()

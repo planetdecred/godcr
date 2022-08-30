@@ -112,7 +112,7 @@ func (pg *Page) fetchTicketPrice() {
 
 func (pg *Page) setStakingButtonsState() {
 	//disable auto ticket purchase if wallet is not synced
-	pg.stake.SetEnabled(!pg.WL.MultiWallet.IsSynced() || pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet())
+	pg.stake.SetEnabled(pg.WL.MultiWallet.IsSynced() || !pg.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet())
 }
 
 func (pg *Page) loadPageData() {

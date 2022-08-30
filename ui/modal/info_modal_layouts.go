@@ -19,10 +19,11 @@ const (
 	AllowUnmixedSpendingTemplate   = "AllowUnmixedSpending"
 	TicketPriceErrorTemplate       = "TicketPriceError"
 	SecurityToolsInfoTemplate      = "SecurityToolsInfo"
+	RemoveWalletInfoTemplate       = "RemoveWalletInfo"
 )
 
 func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := values.StringF(values.StrVerifyMessageInfo, `<span style="text-color: gray">`, `<br />`, `<font color="success">`, `</font>`, `<font color="danger">`, `</font>`, `</span>`)
+	text := values.StringF(values.StrVerifyMessageInfo, `<span style="text-color: gray">`, `<br />`, `</span>`)
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,
 	}
@@ -87,5 +88,12 @@ func allowUnspendUnmixedAcct(l *load.Load) []layout.Widget {
 				}),
 			)
 		},
+	}
+}
+
+func removeWalletInfo(l *load.Load) []layout.Widget {
+	text := values.StringF(values.StrRemoveWalletInfo, `<span style="text-color: gray">`, `<span style="font-weight: bold">`, l.WL.SelectedWallet.Wallet.Name, `</span>`, `</span>`)
+	return []layout.Widget{
+		renderers.RenderHTML(text, l.Theme).Layout,
 	}
 }

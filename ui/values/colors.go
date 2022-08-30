@@ -8,13 +8,14 @@ type Color struct {
 	PrimaryHighlight color.NRGBA
 
 	// text colors
-	Text      color.NRGBA // default color #091440
-	InvText   color.NRGBA // inverted default color #ffffff
-	GrayText1 color.NRGBA // darker shade #3D5873
-	GrayText2 color.NRGBA // lighter shade of GrayText1 #596D81
-	GrayText3 color.NRGBA // lighter shade of GrayText2 #8997A5 (hint)
-	GrayText4 color.NRGBA // lighter shade of GrayText3 ##C4CBD2
-	GreenText color.NRGBA // green text #41BE53
+	PageNavText color.NRGBA
+	Text        color.NRGBA // default color #091440
+	InvText     color.NRGBA // inverted default color #ffffff
+	GrayText1   color.NRGBA // darker shade #3D5873
+	GrayText2   color.NRGBA // lighter shade of GrayText1 #596D81
+	GrayText3   color.NRGBA // lighter shade of GrayText2 #8997A5 (hint)
+	GrayText4   color.NRGBA // lighter shade of GrayText3 ##C4CBD2
+	GreenText   color.NRGBA // green text #41BE53
 
 	// background colors
 	Background       color.NRGBA
@@ -79,13 +80,14 @@ func (c *Color) DefaultThemeColors() *Color {
 		PrimaryHighlight: rgb(0x1B41B3),
 
 		// text colors
-		Text:      rgb(0x091440),
-		InvText:   rgb(0xffffff),
-		GrayText1: rgb(0x3d5873),
-		GrayText2: rgb(0x596D81),
-		GrayText3: rgb(0x8997a5), //hint
-		GrayText4: rgb(0xc4cbd2),
-		GreenText: rgb(0x41BE53),
+		PageNavText: rgb(0x091440),
+		Text:        rgb(0x091440),
+		InvText:     rgb(0xffffff),
+		GrayText1:   rgb(0x3d5873),
+		GrayText2:   rgb(0x596D81),
+		GrayText3:   rgb(0x8997a5), //hint
+		GrayText4:   rgb(0xc4cbd2),
+		GreenText:   rgb(0x41BE53),
 
 		// background colors
 		Background:       argb(0x22444444),

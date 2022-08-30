@@ -4,11 +4,11 @@ import (
 	"sort"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -17,7 +17,9 @@ type ListPreferenceModal struct {
 	*decredmaterial.Modal
 
 	optionsRadioGroup *widget.Enum
-	cancelButton      decredmaterial.IconButton
+
+	btnSave   decredmaterial.Button
+	btnCancel decredmaterial.Button
 
 	items         map[string]string //[key]str-key
 	itemKeys      []string
@@ -45,6 +47,9 @@ func NewListPreference(l *load.Load, preferenceKey, defaultValue string, items m
 		preferenceKey: preferenceKey,
 		defaultValue:  defaultValue,
 
+		btnSave:   l.Theme.Button(values.String(values.StrSave)),
+		btnCancel: l.Theme.OutlineButton(values.String(values.StrCancel)),
+
 		items:    items,
 		itemKeys: sortedKeys,
 
@@ -52,8 +57,8 @@ func NewListPreference(l *load.Load, preferenceKey, defaultValue string, items m
 		Modal:             l.Theme.ModalFloatTitle("list_preference"),
 	}
 
-	lp.cancelButton, _ = components.SubpageHeaderButtons(l)
-	lp.cancelButton.Icon = l.Theme.Icons.ContentClear
+	lp.btnSave.Font.Weight = text.Medium
+	lp.btnCancel.Font.Weight = text.Medium
 
 	return &lp
 }
@@ -83,8 +88,7 @@ func (lp *ListPreferenceModal) UpdateValues(clicked func()) *ListPreferenceModal
 }
 
 func (lp *ListPreferenceModal) Handle() {
-
-	for lp.optionsRadioGroup.Changed() {
+	for lp.btnSave.Button.Clicked() {
 		lp.currentValue = lp.optionsRadioGroup.Value
 		lp.WL.MultiWallet.SaveUserConfigValue(lp.preferenceKey, lp.optionsRadioGroup.Value)
 		lp.updateButtonClicked()
@@ -92,7 +96,7 @@ func (lp *ListPreferenceModal) Handle() {
 		lp.Dismiss()
 	}
 
-	for lp.cancelButton.Button.Clicked() {
+	for lp.btnCancel.Button.Clicked() {
 		lp.Modal.Dismiss()
 	}
 
@@ -106,15 +110,18 @@ func (lp *ListPreferenceModal) Layout(gtx layout.Context) layout.Dimensions {
 		func(gtx layout.Context) layout.Dimensions {
 			txt := lp.Theme.H6(values.String(lp.title))
 			txt.Color = lp.Theme.Color.Text
-			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.
-				Layout(gtx, layout.Rigid(txt.Layout), layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return layout.Inset{
-						Top: values.MarginPaddingMinus2,
-					}.Layout(gtx, lp.cancelButton.Layout)
-				}))
+			return txt.Layout(gtx)
 		},
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, lp.layoutItems()...)
+		},
+		func(gtx layout.Context) layout.Dimensions {
+			return layout.E.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(lp.btnCancel.Layout),
+					layout.Rigid(lp.btnSave.Layout),
+				)
+			})
 		},
 	}
 

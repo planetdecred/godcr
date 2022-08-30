@@ -11,8 +11,7 @@ import (
 type Icons struct {
 	ContentAdd, NavigationCheck, NavigationMore, ActionCheckCircle, ActionInfo, NavigationArrowBack,
 	NavigationArrowForward, ActionCheck, ChevronRight, NavigationCancel, NavMoreIcon,
-	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ConcealIcon, RevealIcon,
-	SearchIcon, PlayIcon, ErrorIcon *widget.Icon
+	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, SearchIcon, PlayIcon, ErrorIcon *widget.Icon
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive, MixerInactive, RedAlert,
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
@@ -23,8 +22,8 @@ type Icons struct {
 	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredLogo,
 	DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon, LogoDarkMode, TimerDarkMode, Rebroadcast,
 	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon,
-	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon,
-	ChevronExpand, ChevronCollapse, ChevronLeft, NotSynced *Image
+	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon, ConcealIcon,
+	RevealIcon, ChevronExpand, ChevronCollapse, ChevronLeft, NotSynced, InfoAction, LightMode, DarkMode, AddIcon *Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -55,8 +54,6 @@ func (i *Icons) StandardMaterialIcons() *Icons {
 	i.DropDownIcon = MustIcon(widget.NewIcon(icons.NavigationArrowDropDown))
 	i.Cached = MustIcon(widget.NewIcon(icons.ActionCached))
 	i.ContentRemove = MustIcon(widget.NewIcon(icons.ContentRemove))
-	i.ConcealIcon = MustIcon(widget.NewIcon(icons.ActionVisibility))
-	i.RevealIcon = MustIcon(widget.NewIcon(icons.ActionVisibilityOff))
 	i.SearchIcon = MustIcon(widget.NewIcon(icons.ActionSearch))
 	i.PlayIcon = MustIcon(widget.NewIcon(icons.AVPlayArrow))
 	i.ErrorIcon = MustIcon(widget.NewIcon(icons.AlertError))
@@ -126,6 +123,8 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.GovernanceActiveIcon = NewImage(decredIcons["governance_active"])
 	i.GovernanceInactiveIcon = NewImage(decredIcons["governance_inactive"])
 	i.Rebroadcast = NewImage(decredIcons["rebroadcast"])
+	i.ConcealIcon = NewImage(decredIcons["reveal"])
+	i.RevealIcon = NewImage(decredIcons["hide"])
 
 	i.SettingsActiveIcon = NewImage(decredIcons["settings_active"])
 	i.SettingsInactiveIcon = NewImage(decredIcons["settings_inactive"])
@@ -152,6 +151,10 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.ChevronCollapse = NewImage(decredIcons["chevron_expand"])
 	i.ChevronLeft = NewImage(decredIcons["chevron_left"])
 	i.NotSynced = NewImage(decredIcons["notSynced"])
+	i.InfoAction = NewImage(decredIcons["info_icon"])
+	i.DarkMode = NewImage(decredIcons["ic_moon"])
+	i.LightMode = NewImage(decredIcons["ic_sun"])
+	i.AddIcon = NewImage(decredIcons["addIcon"])
 
 	return i
 }
@@ -192,7 +195,6 @@ func (i *Icons) DarkModeIcons() *Icons {
 	i.StakeIcon = NewImage(decredIcons["dm_stake"])
 	i.TicketRevokedIcon = NewImage(decredIcons["dm_ticket_revoked"])
 	i.DecredLogo = NewImage(decredIcons["dm_decred_symbol"])
-	i.DecredSymbol2 = NewImage(decredIcons["logo_darkmode"])
 	i.GovernanceActiveIcon = NewImage(decredIcons["dm_governance_active"])
 	i.GovernanceInactiveIcon = NewImage(decredIcons["dm_governance_inactive"])
 	i.Rebroadcast = NewImage(decredIcons["dm_rebroadcast"])

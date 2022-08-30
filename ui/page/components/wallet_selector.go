@@ -65,10 +65,6 @@ func (ws *WalletSelector) Expose(ctx context.Context) {
 	ws.ctx = ctx
 	ws.listenForTxNotifications()
 	ws.loadWallets()
-
-	if ws.WL.MultiWallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey, false) {
-		ws.startSyncing()
-	}
 }
 
 func (ws *WalletSelector) loadWallets() {
@@ -367,7 +363,7 @@ func (ws *WalletSelector) listenForTxNotifications() {
 	ws.TxAndBlockNotificationListener = listeners.NewTxAndBlockNotificationListener()
 	err := ws.WL.MultiWallet.AddTxAndBlockNotificationListener(ws.TxAndBlockNotificationListener, true, WalletSelectorID)
 	if err != nil {
-		// log.Errorf("Error adding tx and block notification listener: %v", err)
+		log.Errorf("Error adding tx and block notification listener: %v", err)
 		return
 	}
 
@@ -381,8 +377,8 @@ func (ws *WalletSelector) listenForTxNotifications() {
 					// only if sync is completed.
 					if ws.WL.MultiWallet.IsSynced() {
 						ws.updateAccountBalance()
-						ws.ParentWindow().Reload()
 					}
+					ws.ParentWindow().Reload()
 				case listeners.NewTransaction:
 					// refresh wallets when new transaction is received
 					ws.updateAccountBalance()
@@ -437,45 +433,4 @@ func (ws *WalletSelector) updateAccountBalance() {
 			item.TotalBalance = dcrutil.Amount(totalBalance).String()
 		}
 	}
-}
-
-func (ws *WalletSelector) startSyncing() {
-	for _, wal := range ws.WL.SortedWalletList() {
-		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
-			ws.UnlockWalletForSyncing(wal)
-			return
-		}
-	}
-
-	err := ws.WL.MultiWallet.SpvSync()
-	if err != nil {
-		// show error dialog
-		log.Info("Error starting sync:", err)
-	}
-}
-
-func (ws *WalletSelector) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
-	spendingPasswordModal := modal.NewPasswordModal(ws.Load).
-		Title(values.String(values.StrResumeAccountDiscoveryTitle)).
-		Hint(values.String(values.StrSpendingPassword)).
-		NegativeButton(values.String(values.StrCancel), func() {}).
-		PositiveButton(values.String(values.StrUnlock), func(password string, pm *modal.PasswordModal) bool {
-			go func() {
-				err := ws.WL.MultiWallet.UnlockWallet(wal.ID, []byte(password))
-				if err != nil {
-					errText := err.Error()
-					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-						errText = values.String(values.StrInvalidPassphrase)
-					}
-					pm.SetError(errText)
-					pm.SetLoading(false)
-					return
-				}
-				pm.Dismiss()
-				ws.startSyncing()
-			}()
-
-			return false
-		})
-	ws.ParentWindow().ShowModal(spendingPasswordModal)
 }
