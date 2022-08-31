@@ -612,4 +612,5 @@ const (
 	StrPeer                            = "peer"
 	StrConfirmUmixedSpending           = "confirmUmixedSpending"
 	StrOK                              = "ok"
+	StrAccountMixer                    = "accountMixer"
 )

@@ -51,8 +51,16 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 		layout.Rigid(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
 			return list.Layout(gtx, len(nd.DrawerNavItems), func(gtx C, i int) D {
-
+				mGtx := gtx
 				background := nd.Theme.Color.Surface
+
+				if nd.WL.SelectedWallet.Wallet.IsWatchingOnlyWallet() && (nd.DrawerNavItems[i].PageID == values.String(values.StrSend) ||
+					nd.DrawerNavItems[i].PageID == values.String(values.StrReceive) ||
+					nd.DrawerNavItems[i].PageID == values.String(values.StrAccountMixer)) {
+					background = decredmaterial.Disabled(nd.Theme.Color.Gray5)
+					mGtx = gtx.Disabled()
+				}
+
 				if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
 					background = nd.Theme.Color.Gray5
 				}
@@ -65,7 +73,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 					Direction:   nd.direction,
 					Background:  background,
 					Clickable:   nd.DrawerNavItems[i].Clickable,
-				}.Layout(gtx,
+				}.Layout(mGtx,
 					layout.Rigid(func(gtx C) D {
 						img := nd.DrawerNavItems[i].ImageInactive
 

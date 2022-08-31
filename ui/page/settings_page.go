@@ -104,7 +104,7 @@ func (pg *SettingsPage) Layout(gtx C) D {
 	return pg.layoutDesktop(gtx)
 }
 
-func (pg *SettingsPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
+func (pg *SettingsPage) layoutDesktop(gtx C) D {
 	return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.pageHeaderLayout),
@@ -115,7 +115,7 @@ func (pg *SettingsPage) layoutDesktop(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *SettingsPage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
+func (pg *SettingsPage) pageHeaderLayout(gtx C) layout.Dimensions {
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Flexed(1, func(gtx C) D {
 			return layout.W.Layout(gtx, func(gtx C) D {
@@ -133,14 +133,14 @@ func (pg *SettingsPage) pageHeaderLayout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *SettingsPage) pageContentLayout(gtx layout.Context) layout.Dimensions {
+func (pg *SettingsPage) pageContentLayout(gtx C) D {
 	pageContent := []func(gtx C) D{
 		pg.general(),
 		pg.security(),
 		pg.info(),
 	}
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+	return layout.Center.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Dp(values.MarginPadding500)
 		gtx.Constraints.Max.X = gtx.Constraints.Min.X
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
@@ -150,8 +150,8 @@ func (pg *SettingsPage) pageContentLayout(gtx layout.Context) layout.Dimensions 
 	})
 }
 
-func (pg *SettingsPage) layoutMobile(gtx layout.Context) layout.Dimensions {
-	return layout.Dimensions{}
+func (pg *SettingsPage) layoutMobile(gtx C) D {
+	return D{}
 }
 
 func (pg *SettingsPage) settingLine(gtx C) D {
