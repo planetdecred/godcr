@@ -8,7 +8,7 @@ import (
 type ClickableList struct {
 	layout.List
 	theme           *Theme
-	clickables      []*Clickable
+	Clickables      []*Clickable
 	Radius          CornerRadius // this radius is used by the clickable
 	selectedItem    int
 	DividerHeight   unit.Dp
@@ -37,16 +37,16 @@ func (cl *ClickableList) ItemClicked() (bool, int) {
 }
 
 func (cl *ClickableList) handleClickables(count int) {
-	if len(cl.clickables) != count {
+	if len(cl.Clickables) != count {
 
-		cl.clickables = make([]*Clickable, count)
+		cl.Clickables = make([]*Clickable, count)
 		for i := 0; i < count; i++ {
 			clickable := cl.theme.NewClickable(cl.IsHoverable)
-			cl.clickables[i] = clickable
+			cl.Clickables[i] = clickable
 		}
 	}
 
-	for index, clickable := range cl.clickables {
+	for index, clickable := range cl.Clickables {
 		for clickable.Clicked() {
 			cl.selectedItem = index
 		}
@@ -56,7 +56,7 @@ func (cl *ClickableList) handleClickables(count int) {
 func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElement) layout.Dimensions {
 	cl.handleClickables(count)
 	return cl.List.Layout(gtx, count, func(gtx C, i int) D {
-		if cl.IsShadowEnabled && cl.clickables[i].button.Hovered() {
+		if cl.IsShadowEnabled && cl.Clickables[i].button.Hovered() {
 			shadow := cl.theme.Shadow()
 			shadow.SetShadowRadius(14)
 			shadow.SetShadowElevation(5)
@@ -70,14 +70,14 @@ func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElem
 
 func (cl *ClickableList) row(gtx layout.Context, count int, i int, w layout.ListElement) layout.Dimensions {
 	if i == 0 { // first item
-		cl.clickables[i].Radius.TopLeft = cl.Radius.TopLeft
-		cl.clickables[i].Radius.TopRight = cl.Radius.TopRight
+		cl.Clickables[i].Radius.TopLeft = cl.Radius.TopLeft
+		cl.Clickables[i].Radius.TopRight = cl.Radius.TopRight
 	}
 	if i == count-1 { // last item
-		cl.clickables[i].Radius.BottomLeft = cl.Radius.BottomLeft
-		cl.clickables[i].Radius.BottomRight = cl.Radius.BottomRight
+		cl.Clickables[i].Radius.BottomLeft = cl.Radius.BottomLeft
+		cl.Clickables[i].Radius.BottomRight = cl.Radius.BottomRight
 	}
-	row := cl.clickables[i].Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+	row := cl.Clickables[i].Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return w(gtx, i)
 	})
 
