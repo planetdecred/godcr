@@ -454,7 +454,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 				Padding:     layout.UniformInset(values.MarginPadding16),
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return components.LayoutBalance(gtx, l, dcrutil.Amount(tx.transaction.Amount).String())
+					return components.LayoutBalanceWithUnit(gtx, l, dcrutil.Amount(tx.transaction.Amount).String())
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{

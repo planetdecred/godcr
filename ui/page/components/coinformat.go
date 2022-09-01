@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -19,9 +20,10 @@ var (
 	noDecimal                 = regexp.MustCompile(`([0-9]{1,3},*)+`)
 )
 
-func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Sp, scale float32, col color.NRGBA, withUnit bool) D {
+func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Sp, scale float32, col color.NRGBA, displayUnitText bool) D {
 
 	startIndex := 0
+	stopIndex := 0
 
 	if doubleOrMoreDecimalPlaces.MatchString(amount) {
 		decimalIndex := strings.Index(amount, ".")
@@ -34,12 +36,9 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 		startIndex = loc[1] // start scaling from the end
 	}
 
-	indexUnit := len(amount) - 4
-	if !withUnit {
-		indexUnit = len(amount)
-	}
+	stopIndex = strings.Index(amount, " DCR")
 
-	mainText, subText, unitValue := amount[:startIndex], amount[startIndex:indexUnit], amount[indexUnit:]
+	mainText, subText, unitText := amount[:startIndex], amount[startIndex:stopIndex], amount[stopIndex:]
 
 	subTextSize := unit.Sp(float32(mainTextSize) * scale)
 
@@ -55,12 +54,14 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			txt := l.Theme.Label(mainTextSize, unitValue)
+			txt := l.Theme.Label(values.TextSize20, unitText)
 			txt.Color = col
-			if withUnit {
+			txt.Font.Weight = text.SemiBold
+			if displayUnitText {
 				return txt.Layout(gtx)
 			}
-			return layout.Dimensions{}
+
+			return D{}
 		}),
 	)
 }

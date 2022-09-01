@@ -418,7 +418,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
 							amount = "-" + amount
 						}
-						return LayoutBalance(gtx, l, amount)
+						return LayoutBalanceWithUnit(gtx, l, amount)
 					}
 
 					return l.Theme.Label(values.TextSize18, txStatus.Title).Layout(gtx)
@@ -614,7 +614,7 @@ func FormatDateOrTime(timestamp int64) string {
 }
 
 // walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
-//// are transactions from multiple wallets
+// // are transactions from multiple wallets
 func WalletLabel(gtx layout.Context, l *load.Load, walletName string) D {
 	return decredmaterial.Card{
 		Color: l.Theme.Color.Gray4,

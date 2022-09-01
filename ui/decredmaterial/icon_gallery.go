@@ -22,8 +22,9 @@ type Icons struct {
 	Restore, DocumentationIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon, DecredLogo,
 	DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon, LogoDarkMode, TimerDarkMode, Rebroadcast,
 	SettingsActiveIcon, SettingsInactiveIcon, ActivatedActiveIcon, ActivatedInactiveIcon, LockinActiveIcon,
-	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon, ConcealIcon,
-	RevealIcon, ChevronExpand, ChevronCollapse, ChevronLeft, NotSynced, InfoAction, LightMode, DarkMode, AddIcon *Image
+	LockinInactiveIcon, SuccessIcon, FailedIcon, ReceiveInactiveIcon, SendInactiveIcon, DarkmodeIcon,
+	ChevronExpand, ChevronCollapse, ChevronLeft, MixedTxIcon, UnmixedTxIcon, MixerIcon, NotSynced, ConcealIcon,
+	RevealIcon, InfoAction, LightMode, DarkMode, AddIcon *Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -146,10 +147,13 @@ func (i *Icons) DefaultIcons() *Icons {
 	i.MixerInactive = NewImage(decredIcons["mixer_inactive"])
 	i.DcrWatchOnly = NewImage(decredIcons["dcr_watch_only"])
 	i.RedAlert = NewImage(decredIcons["red_alert"])
-	i.ChevronExpand = NewImage(decredIcons["chevron_coll"])
-	i.ChevronCollapse = NewImage(decredIcons["chevron_expand"])
+	i.ChevronExpand = NewImage(decredIcons["chevron_expand"])
+	i.ChevronCollapse = NewImage(decredIcons["coll_half"])
 	i.ChevronLeft = NewImage(decredIcons["chevron_left"])
 	i.NotSynced = NewImage(decredIcons["notSynced"])
+	i.UnmixedTxIcon = NewImage(decredIcons["unmixed_icon"])
+	i.MixedTxIcon = NewImage(decredIcons["mixed_icon"])
+	i.MixerIcon = NewImage(decredIcons["mixer_icon"])
 	i.InfoAction = NewImage(decredIcons["info_icon"])
 	i.DarkMode = NewImage(decredIcons["ic_moon"])
 	i.LightMode = NewImage(decredIcons["ic_sun"])

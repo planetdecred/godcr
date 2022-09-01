@@ -282,7 +282,7 @@ func (asm *WalletSelectorModal) walletAccountLayout(gtx layout.Context, wallet *
 								acct := asm.Theme.Label(values.TextSize18, wallet.Name)
 								acct.Color = asm.Theme.Color.Text
 								return components.EndToEndRow(gtx, acct.Layout, func(gtx C) D {
-									return components.LayoutBalance(gtx, asm.Load, walletTotalBalance.String())
+									return components.LayoutBalanceWithUnit(gtx, asm.Load, walletTotalBalance.String())
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
