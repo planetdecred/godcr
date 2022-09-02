@@ -126,7 +126,7 @@ func UniformMobile(gtx layout.Context, isHorizontal, withList bool, body layout.
 	}.Layout(gtx, body)
 }
 
-func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, ticketSpender *dcrlibwallet.Transaction) *TxStatus {
+func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction /*, ticketSpender *dcrlibwallet.Transaction*/) *TxStatus {
 	var txStatus TxStatus
 
 	switch tx.Direction {
@@ -175,6 +175,7 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 					txStatus.TicketStatus = dcrlibwallet.TicketStatusExpired
 					txStatus.Background = l.Theme.Color.Gray4
 				} else {
+					ticketSpender, _ := wal.TicketSpender(tx.Hash)
 					if ticketSpender != nil {
 						if ticketSpender.Type == dcrlibwallet.TxTypeVote {
 							txStatus.Title = values.String(values.StrVoted)
@@ -390,11 +391,11 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
 	wal := l.WL.MultiWallet.WalletWithID(row.Transaction.WalletID)
-	var ticketSpender *dcrlibwallet.Transaction
-	if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
-		ticketSpender, _ = wal.TicketSpender(row.Transaction.Hash)
-	}
-	txStatus := TransactionTitleIcon(l, wal, &row.Transaction, ticketSpender)
+	// var ticketSpender *dcrlibwallet.Transaction
+	// if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
+	// 	ticketSpender, _ = wal.TicketSpender(row.Transaction.Hash)
+	// }
+	txStatus := TransactionTitleIcon(l, wal, &row.Transaction)
 
 	return decredmaterial.LinearLayout{
 		Orientation: layout.Horizontal,
