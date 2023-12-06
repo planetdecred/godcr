@@ -1,4 +1,4 @@
-Development on Godcr has been discontinued, and efforts have now shifted to [Cryptopower](https://github.com/crypto-power/cryptopower)
+# ⚠️ Development on Godcr has been discontinued, and efforts have now shifted to [Cryptopower](https://github.com/crypto-power/cryptopower)
 
 # godcr
 
