@@ -1,3 +1,5 @@
+# ⚠️ Development on Godcr has been discontinued, and efforts have now shifted to [Cryptopower](https://github.com/crypto-power/cryptopower)
+
 # godcr
 
 [![Build Status](https://github.com/planetdecred/godcr/workflows/Build/badge.svg)](https://github.com/planetdecred/godcr/actions)
