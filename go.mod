@@ -19,8 +19,8 @@ require (
 	github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-20220425133823-833d52a7cdd5 // indirect
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20210722180016-6781d3edade3
-	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
-	golang.org/x/text v0.3.7
+	golang.org/x/image v0.18.0
+	golang.org/x/text v0.16.0
 )
 
 require (
@@ -122,7 +122,7 @@ require (
 	go.etcd.io/bbolt v1.3.7-0.20220130032806-d5db64bdbfde // indirect
 	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
 	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
