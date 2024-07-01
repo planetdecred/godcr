@@ -100,7 +100,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/trillian v1.3.13 // indirect
 	github.com/google/uuid v1.1.5 // indirect
-	github.com/gorilla/schema v1.1.0 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/h2non/go-is-svg v0.0.0-20160927212452-35e8c4b0612c // indirect
 	github.com/jrick/bitset v1.0.0 // indirect
